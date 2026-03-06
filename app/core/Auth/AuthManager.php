@@ -49,4 +49,16 @@ final class AuthManager
         SessionManager::start();
         return $_SESSION[self::SESSION_KEY]['permissions'] ?? [];
     }
+
+    public static function sidebarTree(): array
+    {
+        SessionManager::start();
+        return $_SESSION[self::SESSION_KEY]['sidebar_tree'] ?? [];
+    }
+
+    public static function sidebarVersion(): int
+    {
+        SessionManager::start();
+        return (int) ($_SESSION[self::SESSION_KEY]['sidebar_version'] ?? 0);
+    }
 }

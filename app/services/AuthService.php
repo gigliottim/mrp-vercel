@@ -7,14 +7,17 @@ namespace App\Services;
 use App\Core\Database\DatabaseManager;
 use PDO;
 use RuntimeException;
+use Throwable;
 
 final class AuthService
 {
     private PDO $connection;
+    private MenuService $menuService;
 
-    public function __construct(?PDO $connection = null)
+    public function __construct(?PDO $connection = null, ?MenuService $menuService = null)
     {
         $this->connection = $connection ?? DatabaseManager::connection('mrp_auth');
+        $this->menuService = $menuService ?? new MenuService($this->connection);
     }
 
     /**
@@ -62,7 +65,8 @@ final class AuthService
             throw new RuntimeException('No se encontró el tenant solicitado o no tienes acceso.');
         }
 
-        $permissions = $this->permissionsForUser((int) $user['id']);
+        $menuResolution = $this->resolveSidebarPayload((int) $tenant['id'], (int) $user['id']);
+        $permissions = $menuResolution['permissions'];
 
         return [
             'user' => [
@@ -72,6 +76,8 @@ final class AuthService
             ],
             'tenant' => $tenant,
             'permissions' => $permissions,
+            'sidebar_tree' => $menuResolution['sidebar_tree'],
+            'sidebar_version' => 1,
         ];
     }
 
@@ -87,7 +93,8 @@ final class AuthService
             throw new RuntimeException('No se encontró el tenant solicitado o no tienes acceso.');
         }
 
-        $permissions = $this->permissionsForUser((int) $user['id']);
+        $menuResolution = $this->resolveSidebarPayload((int) $tenant['id'], (int) $user['id']);
+        $permissions = $menuResolution['permissions'];
 
         return [
             'user' => [
@@ -97,6 +104,8 @@ final class AuthService
             ],
             'tenant' => $tenant,
             'permissions' => $permissions,
+            'sidebar_tree' => $menuResolution['sidebar_tree'],
+            'sidebar_version' => 1,
         ];
     }
 
@@ -184,5 +193,37 @@ final class AuthService
         $stmt = $this->connection->prepare($sql);
         $stmt->execute(['user_id' => $userId]);
         return array_values(array_map(static fn($row) => $row['name'], $stmt->fetchAll(PDO::FETCH_ASSOC)));
+    }
+
+    /**
+     * @return array{sidebar_tree: array<int, array<string, mixed>>, permissions: array<string, string>}
+     */
+    private function resolveSidebarPayload(int $companyId, int $userId): array
+    {
+        try {
+            return $this->menuService->resolveForUser($companyId, $userId);
+        } catch (Throwable $exception) {
+            // Keep login available while mrp_auth menu tables are being rolled out.
+            return [
+                'sidebar_tree' => [
+                    [
+                        'section_key' => 'panel',
+                        'section_label' => 'Panel',
+                        'items' => [
+                            [
+                                'id' => 0,
+                                'code' => 'panel.inicio',
+                                'label' => 'Panel inicial',
+                                'route' => '/dashboard',
+                                'icon' => 'fa-solid fa-gauge',
+                                'children' => [],
+                                'permission_level' => 'write',
+                            ],
+                        ],
+                    ],
+                ],
+                'permissions' => ['panel.inicio' => 'write'],
+            ];
+        }
     }
 }

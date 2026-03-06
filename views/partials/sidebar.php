@@ -4,248 +4,92 @@ use App\Core\Auth\AuthManager;
 use App\Core\View\View;
 
 $currentPath = strtok($_SERVER['REQUEST_URI'] ?? '/', '?') ?: '/';
-$currentQueryString = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-parse_str($currentQueryString ?? '', $queryParams);
+$baseUrl = rtrim((string) config('app.url'), '/');
+$normalizedCurrentPath = str_replace($baseUrl, '', $currentPath);
+$normalizedCurrentPath = '/' . ltrim((string) $normalizedCurrentPath, '/');
 
-$user = AuthManager::user();
 $tenant = AuthManager::tenant();
+$sections = AuthManager::sidebarTree();
 
-$sections = [
-    [
-        'title' => 'Panel',
-        'items' => array_filter([
-            [
-                'href' => url('dashboard'),
-                'label' => 'Panel inicial',
-                'icon' => 'fa-solid fa-gauge',
-                'tables' => [],
-            ],
-            $user === null ? [
-                'href' => url('login'),
-                'label' => 'Login multiempresa',
-                'icon' => 'fa-solid fa-right-to-bracket',
-                'tables' => [],
-            ] : null,
-        ]),
-    ],
-    [
-        'title' => 'Planeamiento MRP',
-        'items' => [
-            [
-                'href' => url('planeamiento/sugerencias'),
-                'label' => 'Sugerencias MRP',
-                'icon' => 'fa-solid fa-list-check',
-                'tables' => ['mrp_sugerencias', 'vista_mrp_resumen'],
-            ],
-            [
-                'href' => url('planeamiento/ordenes'),
-                'label' => 'Órdenes planificadas',
-                'icon' => 'fa-solid fa-calendar-check',
-                'tables' => ['ordenes_produccion', 'vista_ordenes_completas'],
-            ],
-        ],
-    ],
-    [
-        'title' => 'Producción',
-        'items' => [
-            [
-                'href' => url('produccion'),
-                'label' => 'Dashboard de Operaciones',
-                'icon' => 'fa-solid fa-gauge-high',
-                'tables' => ['ordenes_produccion', 'centros_trabajo'],
-            ],
-            [
-                'href' => url('produccion/centros-trabajo'),
-                'label' => 'Centros de Trabajo',
-                'icon' => 'fa-solid fa-industry',
-                'tables' => ['centros_trabajo'],
-            ],
-            [
-                'href' => url('produccion/rutas'),
-                'label' => 'Rutas de Producción',
-                'icon' => 'fa-solid fa-route',
-                'tables' => ['rutas_produccion'],
-            ],
-            [
-                'href' => url('produccion/ordenes'),
-                'label' => 'Órdenes de Producción',
-                'icon' => 'fa-solid fa-clipboard-list',
-                'tables' => ['ordenes_produccion'],
-            ],
-            [
-                'href' => url('produccion/planificacion'),
-                'label' => 'Planificación de Recursos',
-                'icon' => 'fa-solid fa-calendar-alt',
-                'tables' => ['planificacion_recursos'],
-            ],
-            [
-                'href' => url('produccion/planificacion/gantt'),
-                'label' => 'Vista Gantt',
-                'icon' => 'fa-solid fa-chart-gantt',
-                'tables' => ['planificacion_recursos'],
-            ],
-        ],
-    ],
-    [
-        'title' => 'Productos y BOM',
-        'items' => [
-            [
-                'href' => url('productos/partes'),
-                'label' => 'Listado de Partes',
-                'icon' => 'fa-solid fa-puzzle-piece',
-                'tables' => ['partes', 'tipos_partes'],
-            ],
-            [
-                'href' => url('productos/partes/manager'),
-                'label' => 'Gestor de partes',
-                'icon' => 'fa-solid fa-wrench',
-                'tables' => ['partes', 'tipos_partes'],
-            ],
-            [
-                'href' => url('productos/bom'),
-                'label' => 'BOM activas',
-                'icon' => 'fa-solid fa-diagram-project',
-                'tables' => ['bom_cabecera', 'bom_detalle', 'vista_boms_activas'],
-            ],
-            [
-                'href' => url('productos/maestro'),
-                'label' => 'Composición de variantes',
-                'icon' => 'fa-solid fa-layer-group',
-                'tables' => ['composicion_variantes'],
-            ],
-        ],
-    ],
-    [
-        'title' => 'Inventario y stock',
-        'items' => [
-            [
-                'href' => url('inventario/critico'),
-                'label' => 'Stock crítico',
-                'icon' => 'fa-solid fa-triangle-exclamation',
-                'tables' => ['vista_stock_critico'],
-            ],
-        ],
-    ],
-    [
-        'title' => 'Transacciones',
-        'items' => [
-            [
-                'href' => url('transacciones/movimientos-partes'),
-                'label' => 'Movimientos de Partes',
-                'icon' => 'fa-solid fa-arrow-right-arrow-left',
-                'tables' => ['movimientos_partes'],
-            ],
-            [
-                'href' => url('compras'),
-                'label' => 'Gestión de Compras',
-                'icon' => 'fa-solid fa-shopping-cart',
-                'tables' => ['compras'],
-            ],
-        ],
-    ],
-    [
-        'title' => 'Reportes',
-        'items' => [
-            [
-                'href' => url('reportes/destino-partes'),
-                'label' => 'Destino de Partes',
-                'icon' => 'fa-solid fa-sitemap',
-                'tables' => ['bom_detalle', 'composicion_variantes'],
-            ],
-            [
-                'href' => url('reportes/listado-ingenieria'),
-                'label' => 'Listado de Ingeniería',
-                'icon' => 'fa-solid fa-list-check',
-                'tables' => ['bom_detalle', 'bom_cabecera', 'variantes'],
-            ],
-            [
-                'href' => url('reportes/planificacion-produccion'),
-                'label' => 'Planificación de Producción',
-                'icon' => 'fa-solid fa-calendar-days',
-                'tables' => ['bom_detalle', 'bom_cabecera', 'variantes'],
-            ],
-            [
-                'href' => url('reportes/resumen-grupos'),
-                'label' => 'Resumen por grupos',
-                'icon' => 'fa-solid fa-layer-group',
-                'tables' => ['grupos_partes', 'partes', 'variantes'],
-            ],
-        ],
-    ],
-    [
-        'title' => 'Parámetros y catálogos',
-        'items' => [
-            [
-                'href' => url('configuracion/general'),
-                'label' => 'Configuración',
-                'icon' => 'fa-solid fa-sliders',
-                'tables' => ['configuracion'],
-            ],
-            [
-                'href' => url('configuracion/unidades'),
-                'label' => 'Unidades de medida',
-                'icon' => 'fa-solid fa-ruler-combined',
-                'tables' => ['unidades_medida'],
-            ],
-            [
-                'href' => url('configuracion/tipos-partes'),
-                'label' => 'Tipos de partes',
-                'icon' => 'fa-solid fa-tags',
-                'tables' => ['tipos_partes'],
-            ],
-            [
-                'href' => url('configuracion/tipos-depositos'),
-                'label' => 'Tipos de depósito',
-                'icon' => 'fa-solid fa-warehouse',
-                'tables' => ['tipos_depositos'],
-            ],
-            [
-                'href' => url('configuracion/depositos-validaciones'),
-                'label' => 'Validaciones de movimientos',
-                'icon' => 'fa-solid fa-arrow-right-arrow-left',
-                'tables' => ['tipos_depositos_movimientos'],
-            ],
-            [
-                'href' => url('configuracion/grupos-partes'),
-                'label' => 'Grupos de partes',
-                'icon' => 'fa-solid fa-layer-group',
-                'tables' => ['grupos_partes'],
-            ],
-        ],
-    ],
-];
+$resolveHref = static function (array $item): string {
+    $route = $item['route'] ?? null;
+    if (!is_string($route) || trim($route) === '') {
+        return '#';
+    }
+
+    if (str_starts_with($route, 'http://') || str_starts_with($route, 'https://')) {
+        return $route;
+    }
+
+    return url(ltrim($route, '/'));
+};
+
+$isActiveItem = static function (array $item) use ($normalizedCurrentPath, $baseUrl, $resolveHref): bool {
+    $href = $resolveHref($item);
+    if ($href === '#') {
+        return false;
+    }
+
+    $normalizedItemPath = str_replace($baseUrl, '', $href);
+    $normalizedItemPath = '/' . ltrim((string) $normalizedItemPath, '/');
+
+    return str_starts_with($normalizedCurrentPath, $normalizedItemPath);
+};
+
+$hasActiveChild = null;
+$hasActiveChild = static function (array $item) use (&$hasActiveChild, $isActiveItem): bool {
+    foreach (($item['children'] ?? []) as $child) {
+        if (!is_array($child)) {
+            continue;
+        }
+
+        if ($isActiveItem($child) || $hasActiveChild($child)) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+$renderSidebarItems = null;
+$renderSidebarItems = static function (array $items) use (&$renderSidebarItems, $resolveHref, $isActiveItem, $hasActiveChild): void {
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $href = $resolveHref($item);
+        $isActive = $isActiveItem($item) || $hasActiveChild($item);
+        $children = is_array($item['children'] ?? null) ? $item['children'] : [];
+        $icon = (string) ($item['icon'] ?? 'fa-solid fa-circle');
+        $label = (string) ($item['label'] ?? 'Sin titulo');
+?>
+        <li>
+            <a class="app-sidebar__link<?= $isActive ? ' is-active' : '' ?>" href="<?= View::escape($href) ?>">
+                <i class="<?= View::escape($icon) ?>"></i>
+                <span><?= View::escape($label) ?></span>
+            </a>
+            <?php if ($children !== []) : ?>
+                <ul class="app-sidebar__nav list-unstyled mb-0 ps-3">
+                    <?php $renderSidebarItems($children); ?>
+                </ul>
+            <?php endif; ?>
+        </li>
+<?php
+    }
+};
 
 ?>
 <aside class="app-sidebar">
     <div class="app-sidebar__inner">
         <?php foreach ($sections as $section) : ?>
             <div class="app-sidebar__section">
-                <p class="app-sidebar__section-title"><?= View::escape($section['title']) ?></p>
+                <p class="app-sidebar__section-title"><?= View::escape((string) ($section['section_label'] ?? 'Menu')) ?></p>
                 <ul class="app-sidebar__nav list-unstyled mb-0">
-                    <?php foreach ($section['items'] as $item) :
-                        // Normalizar paths para comparación (remover base URL)
-                        $baseUrl = rtrim(config('app.url'), '/');
-                        $normalizedCurrentPath = str_replace($baseUrl, '', $currentPath);
-                        $normalizedItemHref = str_replace($baseUrl, '', $item['href']);
-
-                        // Lógica especial: si estamos en productos/partes?tab=variantes
-                        $isActive = false;
-
-                        // Si estamos en partes, activar Listado de Partes incluso con tab=variantes
-                        // Lógica normal: comparar paths
-                        $isActive = $item['href'] !== '#' && str_starts_with($normalizedCurrentPath, $normalizedItemHref);
-                        $tablesAttr = '';
-                        if (!empty($item['tables'])) {
-                            $tablesAttr = ' data-tables="' . View::escape(implode(',', $item['tables'])) . '"';
-                        }
+                    <?php
+                    $items = is_array($section['items'] ?? null) ? $section['items'] : [];
+                    $renderSidebarItems($items);
                     ?>
-                        <li>
-                            <a class="app-sidebar__link<?= $isActive ? ' is-active' : '' ?>" href="<?= View::escape($item['href']) ?>" <?= $tablesAttr ?>>
-                                <i class="<?= View::escape($item['icon']) ?>"></i>
-                                <span><?= View::escape($item['label']) ?></span>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
                 </ul>
             </div>
         <?php endforeach; ?>

@@ -158,14 +158,27 @@ $dimensionFields = [
                             ])) ?>)" x-init="init()" class="container-fluid py-4">
 
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-1">
-                <i class="fa-solid fa-cubes text-primary me-2"></i>
-                Gestor de Partes y Variantes
-            </h1>
-            <p class="text-muted small mb-0">Gestión completa de partes y sus variantes</p>
+    <section class="mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">Productos</p>
+                <h1 class="h3 mb-0">Gestión completa de partes y sus variantes</h1>
+            </div>
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= url('productos/partes?tab=partes') ?>">Partes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= url('productos/partes?tab=variantes') ?>">Variantes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="<?= url('productos/partes/manager') ?>">Manager</a>
+                </li>
+            </ul>
         </div>
+    </section>
+
+    <div class="d-flex justify-content-end mb-4">
         <div class="btn-group">
             <a href="<?= url('productos/partes') ?>" class="btn btn-outline-secondary">
                 <i class="fa-solid fa-arrow-left me-2"></i>Vista tradicional

@@ -425,13 +425,25 @@ function parteManager(initialData) {
         return;
       }
 
-      // Validar unidad de medida del peso
-      const peso = parseFloat(this.variantForm.peso) || 0;
+      // Validar unidad de medida del peso.
+      // Si la UM queda vacia (opcion "UM"), permitimos peso vacio.
+      const rawPeso = this.variantForm.peso;
+      const hasPeso = rawPeso !== null && rawPeso !== '' && !Number.isNaN(Number(rawPeso));
+      const peso = hasPeso ? Number(rawPeso) : null;
       const unitPeso = this.variantForm.id_um_peso;
+      const hasUnitPeso = unitPeso !== null && unitPeso !== '' && Number(unitPeso) > 0;
 
-      if (peso !== 0 && (!unitPeso || unitPeso === '' || unitPeso === 'UM')) {
+      if (hasPeso && !hasUnitPeso) {
         alert('El campo Peso tiene un valor pero no tiene unidad de medida seleccionada.\n\nPor favor, seleccione una unidad de medida o deje el valor en 0.');
         return;
+      }
+
+      if (!hasUnitPeso) {
+        this.variantForm.peso = null;
+        this.variantForm.id_um_peso = '';
+      } else if (peso !== null) {
+        this.variantForm.peso = peso;
+        this.variantForm.id_um_peso = String(unitPeso);
       }
 
       this.loading = true;

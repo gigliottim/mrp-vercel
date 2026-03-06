@@ -462,8 +462,10 @@ final class PartesVariantesController extends Controller
             'lote_minimo' => (float) ($body['lote_minimo'] ?? 1),
             'punto_pedido' => (float) ($body['punto_pedido'] ?? 0),
             // 'stock_actual' => (float) ($body['stock_actual'] ?? 0), // Stock es calculado o solo lectura
-            'peso' => $body['peso'] === '' ? null : (float) $body['peso'],
-            'id_um_peso' => $body['id_um_peso'] === '' ? null : (int) $body['id_um_peso'],
+            'peso' => ($body['peso'] ?? '') === '' ? null : (float) $body['peso'],
+            'id_um_peso' => ($body['id_um_peso'] ?? '') === '' || (int) ($body['id_um_peso'] ?? 0) <= 0
+                ? null
+                : (int) $body['id_um_peso'],
             'ubicacion_cuerpo' => trim((string) ($body['ubicacion_cuerpo'] ?? '')),
             'ubicacion_pasillo' => trim((string) ($body['ubicacion_pasillo'] ?? '')),
             'ubicacion_estante' => trim((string) ($body['ubicacion_estante'] ?? '')),

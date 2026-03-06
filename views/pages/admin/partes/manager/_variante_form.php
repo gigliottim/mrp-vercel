@@ -102,7 +102,7 @@ $variantStates = [
                     x-model.number="variantForm.peso"
                     step="0.001"
                     placeholder="0.000">
-                <select class="form-select px-1" x-model.number="variantForm.id_um_peso" style="max-width: 65px;">
+                <select class="form-select px-1" x-model="variantForm.id_um_peso" style="max-width: 65px;">
                     <option value="">UM</option>
                     <?php foreach ($unidadesMasa as $unidad) : ?>
                         <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>

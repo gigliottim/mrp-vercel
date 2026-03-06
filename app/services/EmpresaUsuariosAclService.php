@@ -9,6 +9,8 @@ use PDO;
 
 final class EmpresaUsuariosAclService
 {
+    private const COMPANY_ROLE_GUARD_PREFIX = 'company:';
+
     private PDO $connection;
 
     public function __construct(?PDO $connection = null)
@@ -148,6 +150,13 @@ final class EmpresaUsuariosAclService
     {
         $sql = 'SELECT :role_type AS subject_type, r.id, ( :role_prefix || r.name ) AS label
                 FROM roles r
+                                WHERE r.guard_name LIKE :company_guard
+                                     OR EXISTS (
+                                                SELECT 1
+                                                FROM user_company uc_roles
+                                                WHERE uc_roles.role_id = r.id
+                                                    AND uc_roles.company_id = :company_id
+                                     )
                 UNION ALL
                 SELECT :user_type AS subject_type, u.id, ( :user_prefix || u.name ) AS label
                 FROM user_company uc
@@ -162,6 +171,7 @@ final class EmpresaUsuariosAclService
             'role_prefix' => 'Rol: ',
             'user_prefix' => 'Usuario: ',
             'company_id' => $companyId,
+            'company_guard' => self::COMPANY_ROLE_GUARD_PREFIX . $companyId . ':%',
         ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

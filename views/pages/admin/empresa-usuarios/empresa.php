@@ -45,7 +45,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <p class="text-muted small text-uppercase mb-1">Formulario</p>
-                        <h2 class="h5 mb-0"><?= $editing ? 'Editar empresa' : 'Nueva empresa' ?></h2>
+                        <h2 class="h5 mb-0">Editar empresa activa</h2>
                     </div>
                     <?php if ($editing) : ?>
                         <a class="btn btn-sm btn-outline-secondary" href="<?= url('/empresa-usuarios/empresa') ?>">Cancelar</a>
@@ -60,9 +60,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                     method="post"
                     action="<?= $editing ? url('/empresa-usuarios/empresa/' . (int) $editing['id']) : url('/empresa-usuarios/empresa') ?>"
                     class="vstack gap-3">
-                    <?php if ($editing) : ?>
-                        <input type="hidden" name="_method" value="PUT">
-                    <?php endif; ?>
+                    <input type="hidden" name="_method" value="PUT">
 
                     <div>
                         <label class="form-label" for="nombre">Nombre legal</label>
@@ -126,14 +124,12 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                             class="form-check-input"
                             type="checkbox"
                             name="activo"
-                            <?= (int) $oldValue('activo', 1) === 1 ? 'checked' : '' ?>>
+                            <?= (int) $oldValue('activo', '1') === 1 ? 'checked' : '' ?>>
                         <label class="form-check-label" for="empresa-activa">Empresa activa</label>
                     </div>
 
                     <div class="d-grid">
-                        <button class="btn btn-primary" type="submit">
-                            <?= $editing ? 'Actualizar empresa' : 'Crear empresa' ?>
-                        </button>
+                        <button class="btn btn-primary" type="submit">Actualizar empresa</button>
                     </div>
                 </form>
             </div>
@@ -144,7 +140,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h5 mb-0">Listado de empresas</h2>
+                    <h2 class="h5 mb-0">Empresa activa</h2>
                     <span class="text-muted small"><?= count($empresas) ?> resultados</span>
                 </div>
 
@@ -157,7 +153,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                                 <th>CUIT</th>
                                 <th>Email</th>
                                 <th>Estado</th>
-                                <th></th>
+                                <th>Accion</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -174,22 +170,11 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <div class="btn-group btn-group-sm">
-                                            <a
-                                                class="btn btn-outline-secondary"
-                                                href="<?= url('/empresa-usuarios/empresa/' . (int) ($empresa['id'] ?? 0) . '/editar') ?>">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </a>
-                                            <form
-                                                method="post"
-                                                action="<?= url('/empresa-usuarios/empresa/' . (int) ($empresa['id'] ?? 0)) ?>"
-                                                onsubmit="return confirm('Eliminar empresa?');">
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <button class="btn btn-outline-danger" type="submit">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                        <a
+                                            class="btn btn-sm btn-outline-secondary"
+                                            href="<?= url('/empresa-usuarios/empresa/' . (int) ($empresa['id'] ?? 0) . '/editar') ?>">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

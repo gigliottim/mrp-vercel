@@ -186,6 +186,14 @@ use App\Core\View\View;
                 </a>
                 <button
                     type="button"
+                    class="btn btn-primary"
+                    @click="resetForm()"
+                    x-show="mode !== 'create'">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Nueva Parte
+                </button>
+                <button
+                    type="button"
                     class="btn btn-outline-secondary"
                     @click="resetForm()"
                     x-show="isEditing">

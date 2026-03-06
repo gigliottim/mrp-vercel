@@ -184,10 +184,6 @@ $dimensionFields = [
             <a x-show="mode === 'edit' && form.id" :href="'/mrp/productos/partes/manager/' + form.id" class="btn btn-secondary">
                 <i class="fa-solid fa-eye me-2"></i>Ver Solo Lectura
             </a>
-
-            <button @click="resetForm()" class="btn btn-primary" x-show="mode !== 'create'">
-                <i class="fa-solid fa-plus me-2"></i>Nueva Parte
-            </button>
         </div>
     </div>
 

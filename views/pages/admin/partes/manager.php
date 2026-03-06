@@ -243,15 +243,14 @@ $dimensionFields = [
                     <h5 class="mb-0">
                         <i class="fa-solid fa-box text-primary me-2"></i>
                         Datos de la Parte
-                        <span x-show="isEditing" class="badge bg-success ms-2">Editando</span>
+                        <span x-show="mode === 'edit'" class="badge bg-success ms-2">Editando</span>
+                        <span x-show="mode === 'view'" class="badge bg-secondary ms-2">Solo lectura</span>
                         <span x-show="form.id" class="text-muted ms-2 small">ID: <span x-text="form.id"></span></span>
-                        <span x-show="!isEditing" class="badge bg-info ms-2">Nueva</span>
+                        <span x-show="mode === 'create'" class="badge bg-info ms-2">Nueva</span>
                     </h5>
                 </div>
                 <div class="card-body">
-                    <fieldset :disabled="mode === 'view'">
-                        <?php include __DIR__ . '/manager/_parte_form.php'; ?>
-                    </fieldset>
+                    <?php include __DIR__ . '/manager/_parte_form.php'; ?>
                 </div>
             </div>
         </div>
@@ -271,9 +270,7 @@ $dimensionFields = [
                 <div class="card-body">
                     <!-- Formulario de Variante -->
                     <div class="border rounded-3 p-3 mb-4 bg-light">
-                        <fieldset :disabled="mode === 'view'">
-                            <?php include __DIR__ . '/manager/_variante_form.php'; ?>
-                        </fieldset>
+                        <?php include __DIR__ . '/manager/_variante_form.php'; ?>
                     </div>
 
                     <!-- Tabla de Variantes -->

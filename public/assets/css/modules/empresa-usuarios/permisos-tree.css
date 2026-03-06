@@ -1,79 +1,89 @@
-.acl-tree-panel {
-  max-height: 560px;
-  overflow-y: auto;
+.acl-tree-card {
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fbfcfe;
-  padding-bottom: 0.5rem;
+}
+
+.acl-tree-card .card-body {
+  padding: 0.75rem;
+}
+
+.acl-tree-panel {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.25rem;
 }
 
 .acl-tree-section {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #eef2f7;
-  border-bottom: 1px solid #dbe3ef;
-  color: #455468;
-  font-size: 0.76rem;
-  font-weight: 700;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.6rem;
 }
 
 .acl-tree-list {
   list-style: none;
   margin: 0;
-  padding: 0.35rem 0.45rem 0.35rem 0.6rem;
+  padding: 0.2rem 0.25rem 0.25rem 0.55rem;
 }
 
 .acl-tree-li {
   margin: 0;
-  padding: 0.15rem 0 0.15rem 1rem;
+  padding: 0.12rem 0 0.12rem 0.95rem;
   position: relative;
 }
 
 .acl-tree-li::before {
-  border-left: 1px solid #c9d2e1;
+  border-left: 1px solid #d1d5db;
   content: '';
   left: 0.3rem;
   position: absolute;
-  top: -0.4rem;
-  bottom: -0.4rem;
+  top: -0.3rem;
+  bottom: -0.3rem;
 }
 
 .acl-tree-li::after {
-  border-top: 1px solid #c9d2e1;
+  border-top: 1px solid #d1d5db;
   content: '';
   left: 0.3rem;
   position: absolute;
-  top: 1.25rem;
-  width: 0.7rem;
+  top: 1.15rem;
+  width: 0.62rem;
 }
 
 .acl-tree-li:last-child::before {
-  bottom: 1.25rem;
+  bottom: 1.15rem;
 }
 
 .acl-tree-node {
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0.2rem 0.35rem;
-  padding: 0.42rem 0.55rem;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  margin: 0.15rem 0.2rem;
+  padding: 0.38rem 0.48rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .acl-tree-node:hover {
-  background: #eef5ff;
+  background: #f0f0f0;
+  border-color: #e2e8f0;
   transform: translateX(2px);
 }
 
 .acl-tree-node.is-selected {
-  background: #e8f0fe;
-  border: 1px solid #bfd3ff;
+  background: #e9ecef;
+  border-color: #cbd5e1;
 }
 
 .acl-tree-node-code {

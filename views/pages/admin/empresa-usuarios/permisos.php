@@ -143,78 +143,83 @@ if ($menuTree === []) {
                         <input type="hidden" name="_method" value="PUT">
                     <?php endif; ?>
                     <div class="row g-4">
-                        <div class="col-12 col-xl-7">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label mb-0" for="menu-tree-search">Arbol de menu</label>
-                                <small class="text-muted">Seleccion visual por nodo</small>
-                            </div>
+                        <div class="col-12 col-md-4">
+                            <div class="card h-100 acl-tree-card">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h3 class="h6 mb-0">Estructura</h3>
+                                    <small class="text-muted">Seleccion visual por nodo</small>
+                                </div>
+                                <div class="card-body">
+                                    <label class="form-label mb-2" for="menu-tree-search">Arbol de menu</label>
 
-                            <div class="input-group input-group-sm mb-2">
-                                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                <input id="menu-tree-search" type="text" class="form-control" placeholder="Filtrar por etiqueta o codigo">
-                            </div>
-
-                            <?php
-                            $renderTreeNode = function (array $treeNode) use (&$renderTreeNode, $childrenByParent, $selectedMenuId): string {
-                                $nodeId = (int) ($treeNode['id'] ?? 0);
-                                $nodeLabel = (string) ($treeNode['label'] ?? '');
-                                $nodeCode = (string) ($treeNode['code'] ?? '');
-                                $nodeIcon = (string) ($treeNode['icon'] ?? 'fa-solid fa-circle');
-                                $isSelected = $nodeId === $selectedMenuId;
-                                $children = $childrenByParent[$nodeId] ?? [];
-
-                                $html = '<li class="acl-tree-li" data-tree-li="1">';
-                                $html .= '<div class="acl-tree-node' . ($isSelected ? ' is-selected' : '') . '"';
-                                $html .= ' data-tree-node';
-                                $html .= ' data-node-id="' . $nodeId . '"';
-                                $html .= ' data-node-label="' . esc($nodeLabel) . '"';
-                                $html .= ' data-node-code="' . esc($nodeCode) . '"';
-                                $html .= ' data-search-text="' . esc(mb_strtolower($nodeLabel . ' ' . $nodeCode)) . '">';
-                                $html .= '<i class="' . esc($nodeIcon) . ' text-primary"></i>';
-                                $html .= '<div class="d-flex flex-column">';
-                                $html .= '<span class="fw-semibold">' . esc($nodeLabel) . '</span>';
-                                $html .= '<span class="acl-tree-node-code">' . esc($nodeCode) . '</span>';
-                                $html .= '</div></div>';
-
-                                if ($children !== []) {
-                                    $html .= '<ul class="acl-tree-list">';
-                                    foreach ($children as $childNode) {
-                                        $html .= $renderTreeNode($childNode);
-                                    }
-                                    $html .= '</ul>';
-                                }
-
-                                $html .= '</li>';
-                                return $html;
-                            };
-                            ?>
-
-                            <div class="acl-tree-panel" id="acl-tree-panel">
-                                <?php foreach ($sectionOrder as $sectionKey => $sectionLabel) : ?>
-                                    <?php $sectionRoots = $sectionRootsByKey[$sectionKey] ?? []; ?>
-                                    <?php if ($sectionRoots === []) {
-                                        continue;
-                                    } ?>
-                                    <div class="acl-tree-block" data-tree-section="1">
-                                        <div class="acl-tree-section"><?= View::escape((string) $sectionLabel) ?></div>
-                                        <ul class="acl-tree-list">
-                                            <?php foreach ($sectionRoots as $rootNode) : ?>
-                                                <?= $renderTreeNode($rootNode) ?>
-                                            <?php endforeach; ?>
-                                        </ul>
+                                    <div class="input-group input-group-sm mb-2">
+                                        <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                        <input id="menu-tree-search" type="text" class="form-control" placeholder="Filtrar por etiqueta o codigo">
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
 
-                            <div class="acl-selected-box mt-2">
-                                <div class="small text-muted">Nodo seleccionado</div>
-                                <div id="selected-menu-node" class="fw-semibold">
-                                    <?php if ($selectedMenuInfo !== null) : ?>
-                                        <?= View::escape((string) $selectedMenuInfo['label']) ?>
-                                        <span class="text-muted">(<?= View::escape((string) $selectedMenuInfo['code']) ?>)</span>
-                                    <?php else : ?>
-                                        Ninguno
-                                    <?php endif; ?>
+                                    <?php
+                                    $renderTreeNode = function (array $treeNode) use (&$renderTreeNode, $childrenByParent, $selectedMenuId): string {
+                                        $nodeId = (int) ($treeNode['id'] ?? 0);
+                                        $nodeLabel = (string) ($treeNode['label'] ?? '');
+                                        $nodeCode = (string) ($treeNode['code'] ?? '');
+                                        $nodeIcon = (string) ($treeNode['icon'] ?? 'fa-solid fa-circle');
+                                        $isSelected = $nodeId === $selectedMenuId;
+                                        $children = $childrenByParent[$nodeId] ?? [];
+
+                                        $html = '<li class="acl-tree-li" data-tree-li="1">';
+                                        $html .= '<div class="acl-tree-node' . ($isSelected ? ' is-selected' : '') . '"';
+                                        $html .= ' data-tree-node';
+                                        $html .= ' data-node-id="' . $nodeId . '"';
+                                        $html .= ' data-node-label="' . esc($nodeLabel) . '"';
+                                        $html .= ' data-node-code="' . esc($nodeCode) . '"';
+                                        $html .= ' data-search-text="' . esc(mb_strtolower($nodeLabel . ' ' . $nodeCode)) . '">';
+                                        $html .= '<i class="' . esc($nodeIcon) . ' text-primary"></i>';
+                                        $html .= '<div class="d-flex flex-column">';
+                                        $html .= '<span class="fw-semibold">' . esc($nodeLabel) . '</span>';
+                                        $html .= '<span class="acl-tree-node-code">' . esc($nodeCode) . '</span>';
+                                        $html .= '</div></div>';
+
+                                        if ($children !== []) {
+                                            $html .= '<ul class="acl-tree-list">';
+                                            foreach ($children as $childNode) {
+                                                $html .= $renderTreeNode($childNode);
+                                            }
+                                            $html .= '</ul>';
+                                        }
+
+                                        $html .= '</li>';
+                                        return $html;
+                                    };
+                                    ?>
+
+                                    <div class="acl-tree-panel" id="acl-tree-panel">
+                                        <?php foreach ($sectionOrder as $sectionKey => $sectionLabel) : ?>
+                                            <?php $sectionRoots = $sectionRootsByKey[$sectionKey] ?? []; ?>
+                                            <?php if ($sectionRoots === []) {
+                                                continue;
+                                            } ?>
+                                            <div class="acl-tree-block" data-tree-section="1">
+                                                <div class="acl-tree-section"><?= View::escape((string) $sectionLabel) ?></div>
+                                                <ul class="acl-tree-list">
+                                                    <?php foreach ($sectionRoots as $rootNode) : ?>
+                                                        <?= $renderTreeNode($rootNode) ?>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <div class="acl-selected-box mt-2">
+                                        <div class="small text-muted">Nodo seleccionado</div>
+                                        <div id="selected-menu-node" class="fw-semibold">
+                                            <?php if ($selectedMenuInfo !== null) : ?>
+                                                <?= View::escape((string) $selectedMenuInfo['label']) ?>
+                                                <span class="text-muted">(<?= View::escape((string) $selectedMenuInfo['code']) ?>)</span>
+                                            <?php else : ?>
+                                                Ninguno
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -232,7 +237,7 @@ if ($menuTree === []) {
                             <?php endif; ?>
                         </div>
 
-                        <div class="col-12 col-xl-5">
+                        <div class="col-12 col-md-8">
                             <label class="form-label" for="subject_type">Sujeto</label>
                             <select
                                 id="subject_type"

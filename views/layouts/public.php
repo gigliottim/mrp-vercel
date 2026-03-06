@@ -5,6 +5,8 @@ use App\Core\Support\AssetHelper;
 use App\Core\View\View;
 
 $isAuthenticated = AuthManager::check();
+$appVersion = (string) config('app.version', '0.0.0');
+$appBuild = (int) config('app.build', 0);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -52,7 +54,7 @@ $isAuthenticated = AuthManager::check();
     <footer class="public-footer border-top">
         <div class="container-fluid py-3 d-flex flex-column flex-md-row justify-content-between gap-2">
             <span class="small text-muted">&copy; <?= date('Y') ?> <?= View::escape(config('app.name', 'MRP')) ?></span>
-            <span class="small text-muted">MRP para operaciones industriales y pymes en crecimiento</span>
+            <span class="small text-muted">MRP para operaciones industriales y pymes en crecimiento · v<?= View::escape($appVersion) ?> build <?= View::escape((string) $appBuild) ?></span>
         </div>
     </footer>
 

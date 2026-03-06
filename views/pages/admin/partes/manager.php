@@ -155,7 +155,7 @@ $dimensionFields = [
                                 'variantes' => $parteVariants,
                                 'mode' => $mode,
                                 'editingVariantId' => $editingVariantId,
-                            ])) ?>)" x-init="init()" class="container-fluid py-4">
+                            ])) ?>)" x-init="init()" class="container-fluid pt-0 pb-4">
 
     <!-- Header -->
     <section class="mb-4">
@@ -180,10 +180,6 @@ $dimensionFields = [
 
     <div class="d-flex justify-content-end mb-4">
         <div class="btn-group">
-            <a href="<?= url('productos/partes') ?>" class="btn btn-outline-secondary">
-                <i class="fa-solid fa-arrow-left me-2"></i>Vista tradicional
-            </a>
-
             <!-- Botón Editar (modo view) -->
             <a x-show="mode === 'view'" :href="'/mrp/productos/partes/manager/' + form.id + '/editar'" class="btn btn-warning">
                 <i class="fa-solid fa-pen me-2"></i>Habilitar Edición

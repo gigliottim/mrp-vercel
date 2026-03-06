@@ -1,0 +1,669 @@
+2026-02-17 20:28:01 - Start searchVariantes
+Query: ca
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:28:03 - Start searchVariantes
+Query: cab
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:28:14 - Start searchVariantes
+Query: ca
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:28:59 - Start searchVariantes
+Query: ca
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:31:06 - Start searchVariantes
+Query: ca
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:31:06 - Start searchVariantes
+Query: cab
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:35:10 - Start searchVariantes
+Query: cab
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:35:10 - Start searchVariantes
+Query: cable
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:35:15 - Start searchVariantes
+Query: ro
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:35:16 - Start searchVariantes
+Query: rojo
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:35:21 - Start searchVariantes
+Query: mp
+Error: SQLSTATE[42703]: Undefined column: 7 ERROR:  column um1.codigo does not exist
+LINE 15:                     um1.codigo AS um_compra_codigo,
+                             ^
+HINT:  Perhaps you meant to reference the column "p.codigo" or the column "tp.codigo".
+Trace: #0 /projects/mrp/app/Repositories/SearchRepository.php(95): PDOStatement->execute()
+#1 /projects/mrp/app/Services/SearchService.php(49): App\Repositories\SearchRepository->searchVariantes()
+#2 /projects/mrp/app/Controllers/Api/SearchController.php(133): App\Services\SearchService->searchVariantes()
+#3 /projects/mrp/app/Core/Routing/Router.php(93): App\Controllers\Api\SearchController->searchVariantes()
+#4 /projects/mrp/app/Core/Routing/Router.php(62): App\Core\Routing\Router->executeAction()
+#5 /projects/mrp/app/Core/Kernel.php(44): App\Core\Routing\Router->dispatch()
+#6 /projects/mrp/app/Core/Kernel.php(37): App\Core\Kernel->dispatch()
+#7 /projects/mrp/app/Middleware/SecurityHeadersMiddleware.php(15): App\Core\Kernel->{closure:App\Core\Kernel::handle():36}()
+#8 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SecurityHeadersMiddleware->handle()
+#9 /projects/mrp/app/Middleware/AuthenticateMiddleware.php(30): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#10 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\AuthenticateMiddleware->handle()
+#11 /projects/mrp/app/Middleware/SessionMiddleware.php(17): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#12 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(27): App\Middleware\SessionMiddleware->handle()
+#13 /projects/mrp/app/Core/Middleware/MiddlewarePipeline.php(33): App\Core\Middleware\MiddlewarePipeline->{closure:{closure:App\Core\Middleware\MiddlewarePipeline::process():25}:26}()
+#14 /projects/mrp/app/Core/Kernel.php(36): App\Core\Middleware\MiddlewarePipeline->process()
+#15 /projects/mrp/public/index.php(10): App\Core\Kernel->handle()
+#16 {main}
+2026-02-17 20:55:25 - Start searchVariantes
+Query: te
+2026-02-17 20:55:27 - Start searchVariantes
+Query: tela
+2026-02-17 20:56:43 - Start searchVariantes
+Query: tela
+2026-02-17 20:57:13 - Start searchVariantes
+Query: cu
+2026-02-17 20:57:14 - Start searchVariantes
+Query: cuer
+2026-02-17 20:57:24 - Start searchVariantes
+Query: tela
+2026-02-17 20:57:53 - Start searchVariantes
+Query: tela
+2026-02-17 20:57:58 - Start searchVariantes
+Query: tela
+2026-02-17 20:58:02 - Start searchVariantes
+Query: tela
+2026-02-17 21:32:11 - Start searchVariantes
+Query: ty
+2026-02-17 21:32:14 - Start searchVariantes
+Query: tel
+2026-02-17 21:32:15 - Start searchVariantes
+Query: tela
+2026-02-17 21:33:09 - Start searchVariantes
+Query: te
+2026-02-17 21:33:10 - Start searchVariantes
+Query: tel
+2026-02-17 21:35:29 - Start searchVariantes
+Query: sc
+2026-02-17 21:35:33 - Start searchVariantes
+Query: sc1
+2026-02-17 21:35:35 - Start searchVariantes
+Query: sc1-
+2026-02-17 21:43:42 - Start searchVariantes
+Query: az
+2026-02-17 21:43:43 - Start searchVariantes
+Query: azu
+2026-02-17 21:43:43 - Start searchVariantes
+Query: azul
+2026-02-17 21:43:55 - Start searchVariantes
+Query: te
+2026-02-17 21:43:56 - Start searchVariantes
+Query: tel
+2026-02-17 21:44:08 - Start searchVariantes
+Query: te
+2026-02-17 21:44:08 - Start searchVariantes
+Query: tel
+2026-02-17 21:44:14 - Start searchVariantes
+Query: twe
+2026-02-17 21:44:15 - Start searchVariantes
+Query: twel
+2026-02-17 21:44:16 - Start searchVariantes
+Query: tw
+2026-02-17 21:44:18 - Start searchVariantes
+Query: te
+2026-02-17 21:44:19 - Start searchVariantes
+Query: tel
+2026-02-17 21:44:31 - Start searchVariantes
+Query: te
+2026-02-17 21:44:34 - Start searchVariantes
+Query: tel
+2026-02-17 21:49:20 - Start searchVariantes
+Query: sc
+2026-02-17 21:50:11 - Start searchVariantes
+Query: sc
+2026-02-17 21:50:43 - Start searchVariantes
+Query: sc
+2026-02-17 21:53:06 - Start searchVariantes
+Query: sc
+2026-02-17 22:04:12 - Start searchVariantes
+Query: te
+2026-02-17 22:04:13 - Start searchVariantes
+Query: tel
+2026-02-17 22:04:39 - Start searchVariantes
+Query: te
+2026-02-17 22:04:58 - Start searchVariantes
+Query: tel
+2026-02-17 22:05:17 - Start searchVariantes
+Query: sc
+2026-02-17 22:05:25 - Start searchVariantes
+Query: scq
+2026-02-17 22:05:27 - Start searchVariantes
+Query: sc1
+2026-02-17 22:06:30 - Start searchVariantes
+Query: eid
+2026-02-17 22:06:33 - Start searchVariantes
+Query: te
+2026-02-17 22:06:34 - Start searchVariantes
+Query: tel
+2026-02-17 22:07:11 - Start searchVariantes
+Query: va
+2026-02-17 22:07:12 - Start searchVariantes
+Query: var
+2026-02-17 22:07:16 - Start searchVariantes
+Query: sc
+2026-02-17 22:07:16 - Start searchVariantes
+Query: sc1
+2026-02-17 22:39:58 - Start searchVariantes
+Query: te
+2026-02-17 22:40:48 - Start searchVariantes
+Query: te
+2026-02-17 22:40:49 - Start searchVariantes
+Query: tel
+2026-02-17 22:43:29 - Start searchVariantes
+Query: te
+2026-02-17 22:43:29 - Start searchVariantes
+Query: tel
+2026-02-17 22:58:41 - Start searchVariantes
+Query: te
+2026-02-17 22:58:41 - Start searchVariantes
+Query: tel
+2026-02-18 00:43:18 - Start searchVariantes
+Query: te
+2026-02-18 00:43:18 - Start searchVariantes
+Query: tel
+2026-02-18 00:48:03 - Start searchVariantes
+Query: te
+2026-02-18 00:48:03 - Start searchVariantes
+Query: tel
+2026-02-18 01:02:15 - Start searchVariantes
+Query: te
+2026-02-18 01:02:16 - Start searchVariantes
+Query: tel
+2026-02-18 01:14:58 - Start searchVariantes
+Query: te
+2026-02-18 01:14:58 - Start searchVariantes
+Query: teñ
+2026-02-18 01:14:59 - Start searchVariantes
+Query: telk
+2026-02-18 01:14:59 - Start searchVariantes
+Query: tel
+2026-02-18 01:17:31 - Start searchVariantes
+Query: ed
+2026-02-18 01:19:43 - Start searchVariantes
+Query: te
+2026-02-18 01:19:44 - Start searchVariantes
+Query: tel
+2026-02-18 01:21:42 - Start searchVariantes
+Query: te
+2026-02-18 01:21:43 - Start searchVariantes
+Query: tel
+2026-02-18 01:22:06 - Start searchVariantes
+Query: te
+2026-02-18 01:22:07 - Start searchVariantes
+Query: tel
+2026-02-18 01:22:20 - Start searchVariantes
+Query: te
+2026-02-18 01:22:20 - Start searchVariantes
+Query: tel
+2026-02-18 01:22:31 - Start searchVariantes
+Query: te
+2026-02-18 01:22:31 - Start searchVariantes
+Query: tel
+2026-02-18 01:23:18 - Start searchVariantes
+Query: te
+2026-02-18 01:23:19 - Start searchVariantes
+Query: tel
+2026-02-18 01:42:07 - Start searchVariantes
+Query: te
+2026-02-18 01:42:07 - Start searchVariantes
+Query: tel
+2026-02-18 01:43:51 - Start searchVariantes
+Query: te
+2026-02-18 01:43:52 - Start searchVariantes
+Query: tel
+2026-02-18 01:45:22 - Start searchVariantes
+Query: te
+2026-02-18 01:56:16 - Start searchVariantes
+Query: te
+2026-02-18 01:56:16 - Start searchVariantes
+Query: tel
+2026-02-18 01:56:36 - Start searchVariantes
+Query: sc
+2026-02-18 01:56:36 - Start searchVariantes
+Query: sc1
+2026-02-18 01:56:39 - Start searchVariantes
+Query: sc1-
+2026-02-18 01:59:43 - Start searchVariantes
+Query: mo
+2026-02-18 02:12:42 - Start searchVariantes
+Query: mo
+2026-02-18 02:12:44 - Start searchVariantes
+Query: ca
+2026-02-18 02:12:45 - Start searchVariantes
+Query: cab
+2026-02-18 02:12:55 - Start searchVariantes
+Query: ca
+2026-02-18 02:12:56 - Start searchVariantes
+Query: cab
+2026-02-18 02:12:56 - Start searchVariantes
+Query: cable
+2026-02-18 11:03:51 - Start searchVariantes
+Query: 68
+2026-02-18 11:09:27 - Start searchVariantes
+Query: te
+2026-02-18 11:10:18 - Start searchVariantes
+Query: pt
+2026-02-18 11:10:18 - Start searchVariantes
+Query: pt1
+2026-02-18 11:10:20 - Start searchVariantes
+Query: pt
+2026-02-18 11:11:40 - Start searchVariantes
+Query: mp
+2026-02-18 11:11:40 - Start searchVariantes
+Query: mp1
+2026-02-18 11:16:29 - Start searchVariantes
+Query: sc
+2026-02-18 11:16:29 - Start searchVariantes
+Query: sc1
+2026-02-18 11:18:35 - Start searchVariantes
+Query: sc
+2026-02-18 11:18:35 - Start searchVariantes
+Query: sc1
+2026-02-18 11:23:41 - Start searchVariantes
+Query: sc
+2026-02-18 11:23:41 - Start searchVariantes
+Query: sc1
+2026-02-18 11:24:24 - Start searchVariantes
+Query: sc
+2026-02-18 11:24:25 - Start searchVariantes
+Query: sc1
+2026-02-18 11:25:05 - Start searchVariantes
+Query: sc
+2026-02-18 11:25:05 - Start searchVariantes
+Query: sc1
+2026-02-18 11:29:16 - Start searchVariantes
+Query: sc
+2026-02-18 11:29:17 - Start searchVariantes
+Query: sc3
+2026-02-18 11:29:19 - Start searchVariantes
+Query: sc3-
+2026-02-18 11:31:39 - Start searchVariantes
+Query: mo
+2026-02-18 11:33:51 - Start searchVariantes
+Query: ed
+2026-02-18 11:34:16 - Start searchVariantes
+Query: sc
+2026-02-18 11:34:16 - Start searchVariantes
+Query: sc3
+2026-02-18 11:34:18 - Start searchVariantes
+Query: sc3-
+2026-02-18 11:35:24 - Start searchVariantes
+Query: SC2-STD
+2026-02-18 11:36:01 - Start searchVariantes
+Query: SC2-STD
+2026-02-18 11:39:10 - Start searchVariantes
+Query: sc
+2026-02-18 11:39:10 - Start searchVariantes
+Query: sc3
+2026-02-18 11:40:30 - Start searchVariantes
+Query: sc
+2026-02-18 11:40:31 - Start searchVariantes
+Query: sc3
+2026-02-18 11:40:32 - Start searchVariantes
+Query: sc1
+2026-02-18 11:40:33 - Start searchVariantes
+Query: sc1-
+2026-02-18 11:43:28 - Start searchVariantes
+Query: sc
+2026-02-18 11:43:31 - Start searchVariantes
+Query: sc3
+2026-02-18 11:43:32 - Start searchVariantes
+Query: sc
+2026-02-18 11:43:34 - Start searchVariantes
+Query: sc2
+2026-02-18 11:44:31 - Start searchVariantes
+Query: sc
+2026-02-18 11:44:33 - Start searchVariantes
+Query: sc2
+2026-02-18 11:48:50 - Start searchVariantes
+Query: sc
+2026-02-18 11:48:50 - Start searchVariantes
+Query: sc2
+2026-02-18 11:49:17 - Start searchVariantes
+Query: sc
+2026-02-18 11:49:19 - Start searchVariantes
+Query: sc2
+2026-02-18 11:50:21 - Start searchVariantes
+Query: sc
+2026-02-18 11:50:22 - Start searchVariantes
+Query: sc2
+2026-02-18 11:52:26 - Start searchVariantes
+Query: sc
+2026-02-18 11:52:27 - Start searchVariantes
+Query: sc2
+2026-02-22 12:01:26 - Start searchVariantes
+Query: sc
+2026-02-22 12:01:26 - Start searchVariantes
+Query: sc1
+2026-02-22 12:01:28 - Start searchVariantes
+Query: sc1-
+2026-02-22 12:04:07 - Start searchVariantes
+Query: sc
+2026-02-22 12:04:07 - Start searchVariantes
+Query: sc1
+2026-02-22 12:04:09 - Start searchVariantes
+Query: sc1-
+2026-02-22 12:05:53 - Start searchVariantes
+Query: mp
+2026-02-22 12:05:53 - Start searchVariantes
+Query: mp1
+2026-02-22 12:05:54 - Start searchVariantes
+Query: mp1-
+2026-02-22 12:06:04 - Start searchVariantes
+Query: mp
+2026-02-22 12:06:04 - Start searchVariantes
+Query: mp1
+2026-02-22 12:06:06 - Start searchVariantes
+Query: mp1-
+2026-02-22 12:06:06 - Start searchVariantes
+Query: mp1-s
+2026-02-22 12:11:10 - Start searchVariantes
+Query: mp
+2026-02-22 12:11:10 - Start searchVariantes
+Query: mp1
+2026-02-22 12:11:11 - Start searchVariantes
+Query: mp1-
+2026-02-22 17:11:57 - Start searchVariantes
+Query: sx
+2026-02-22 17:11:59 - Start searchVariantes
+Query: sc
+2026-02-22 17:12:00 - Start searchVariantes
+Query: sc1
+2026-02-22 17:12:04 - Start searchVariantes
+Query: sc1-
+2026-02-22 17:12:46 - Start searchVariantes
+Query: te
+2026-02-22 17:12:47 - Start searchVariantes
+Query: tela
+2026-02-22 17:12:48 - Start searchVariantes
+Query: tela1
+2026-02-24 22:39:18 - Start searchVariantes
+Query: sc
+2026-02-24 22:39:19 - Start searchVariantes
+Query: sc1
+2026-02-24 22:39:21 - Start searchVariantes
+Query: sc1-
+2026-02-24 22:46:44 - Start searchVariantes
+Query: sc
+2026-02-24 22:46:45 - Start searchVariantes
+Query: sc3
+2026-02-24 22:46:46 - Start searchVariantes
+Query: sc3-
+2026-02-24 22:47:19 - Start searchVariantes
+Query: te
+2026-02-24 22:47:20 - Start searchVariantes
+Query: tel
+2026-02-24 23:55:21 - Start searchVariantes
+Query: az
+2026-02-24 23:55:22 - Start searchVariantes
+Query: azu
+2026-02-25 00:05:35 - Start searchVariantes
+Query: 183
+2026-02-25 00:05:38 - Start searchVariantes
+Query: az
+2026-02-25 00:05:40 - Start searchVariantes
+Query: azu
+2026-02-25 00:05:40 - Start searchVariantes
+Query: azul
+2026-02-25 00:55:18 - Start searchVariantes
+Query: az
+2026-02-25 01:17:25 - Start searchVariantes
+Query: az
+2026-02-25 01:17:26 - Start searchVariantes
+Query: azu
+2026-02-25 01:17:26 - Start searchVariantes
+Query: azul
+2026-02-26 09:24:44 - Start searchVariantes
+Query: te
+2026-02-26 09:24:44 - Start searchVariantes
+Query: tel
+2026-02-26 09:40:16 - Start searchVariantes
+Query: te
+2026-02-26 09:47:41 - Start searchVariantes
+Query: te
+2026-02-26 09:47:42 - Start searchVariantes
+Query: tel
+2026-02-26 09:49:39 - Start searchVariantes
+Query: tel
+2026-02-26 10:08:00 - Start searchVariantes
+Query: te
+2026-02-26 10:08:00 - Start searchVariantes
+Query: tel
+2026-03-05 15:00:33 - Start searchVariantes
+Query: sa
+2026-03-05 15:01:14 - Start searchVariantes
+Query: rojo
+2026-03-05 15:01:41 - Start searchVariantes
+Query: sa
+2026-03-05 15:01:41 - Start searchVariantes
+Query: sac
+2026-03-05 15:01:43 - Start searchVariantes
+Query: sa
+2026-03-05 15:02:11 - Start searchVariantes
+Query: sc
+2026-03-05 15:02:16 - Start searchVariantes
+Query: sc3
+2026-03-05 15:02:17 - Start searchVariantes
+Query: sc3-
+2026-03-05 15:02:27 - Start searchVariantes
+Query: sc
+2026-03-05 15:02:28 - Start searchVariantes
+Query: sc1
+2026-03-05 15:02:30 - Start searchVariantes
+Query: sc1-
+2026-03-05 17:41:59 - Start searchVariantes
+Query: SC
+2026-03-05 17:42:00 - Start searchVariantes
+Query: SC1
+2026-03-05 17:42:02 - Start searchVariantes
+Query: SC1-
+2026-03-06 10:15:24 - Start searchVariantes
+Query: te
+2026-03-06 10:15:25 - Start searchVariantes
+Query: tela

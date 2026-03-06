@@ -1,0 +1,57 @@
+{
+    // ============================================================================
+    // Extensiones Recomendadas para el Proyecto
+    // ============================================================================
+    // Estas extensiones ayudan a mantener los estándares definidos en:
+    // .github/instructions/unik.instructions.md
+    //
+    // VS Code preguntará automáticamente si deseas instalar estas extensiones
+    // cuando abras el proyecto por primera vez.
+    // ============================================================================
+    "recommendations": [
+        // PHP
+        "bmewburn.vscode-intelephense-client", // IntelliSense para PHP
+        "xdebug.php-debug", // Depurador PHP
+        "devsense.phptools-vscode", // Herramientas PHP avanzadas
+        // JavaScript/CSS/HTML
+        "dbaeumer.vscode-eslint", // Linter para JavaScript
+        "esbenp.prettier-vscode", // Formateador de código
+        "stylelint.vscode-stylelint", // Linter para CSS
+        "formulahendry.auto-rename-tag", // Renombrar etiquetas HTML automáticamente
+        // Git
+        "eamodio.gitlens", // Git supercharged
+        "donjayamanne.githistory", // Ver historial de Git
+        "mhutchie.git-graph", // Visualizador de gráficos Git
+        // Productividad
+        "usernamehw.errorlens", // Muestra errores inline
+        "gruntfuggly.todo-tree", // Gestión de TODOs
+        "streetsidesoftware.code-spell-checker", // Corrector ortográfico
+        "wayou.vscode-todo-highlight", // Resalta TODOs
+        // Utilidades
+        "editorconfig.editorconfig", // Soporte para EditorConfig
+        "mikestead.dotenv", // Soporte para archivos .env
+        "ms-vscode.powershell", // PowerShell
+        "visualstudioexptteam.vscodeintellicode", // IA para autocompletado
+        // Visualización
+        "yzhang.markdown-all-in-one", // Herramientas para Markdown
+        "bierner.markdown-preview-github-styles", // Preview de Markdown estilo GitHub
+        "pkief.material-icon-theme", // Iconos bonitos
+        // Calidad de Código
+        "sonarsource.sonarlint-vscode", // Análisis de calidad
+        "ryanluker.vscode-coverage-gutters", // Cobertura de tests
+        // Testing
+        "hbenl.vscode-test-explorer", // Explorador de tests
+        // Base de Datos
+        "cweijan.vscode-mysql-client2", // Cliente MySQL
+        // Docker (si se usa)
+        "ms-azuretools.vscode-docker", // Soporte Docker
+        // Snippets útiles
+        "xabikos.javascriptsnippets", // Snippets JavaScript
+        "wongjn.php-sniffer" // PHP CodeSniffer
+    ],
+    // Extensiones NO recomendadas (pueden causar conflictos)
+    "unwantedRecommendations": [
+        "felixfbecker.php-intellisense", // Conflicto con Intelephense
+        "hookyqr.beautify" // Usar Prettier en su lugar
+    ]
+}

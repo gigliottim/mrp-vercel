@@ -1,0 +1,144 @@
+.public-body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f5f9ff 0%, #fdfcf7 50%, #ffffff 100%);
+}
+
+.public-header {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 1040;
+}
+
+.public-brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #173346;
+}
+
+.public-main {
+  flex: 1;
+}
+
+.public-footer {
+  background: #ffffff;
+}
+
+.public-header .btn {
+  border-radius: 0.7rem;
+  font-weight: 600;
+  padding-inline: 1rem;
+}
+
+.public-header .btn-primary {
+  background: #0b4f6c;
+  border-color: #0b4f6c;
+}
+
+.public-header .btn-primary:hover {
+  background: #0e617f;
+  border-color: #0e617f;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-span-3 {
+  grid-column: span 3;
+}
+
+.dashboard-span-6 {
+  grid-column: span 6;
+}
+
+.dashboard-span-12 {
+  grid-column: span 12;
+}
+
+.dashboard-kpi {
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-kpi__value {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 700;
+  color: #102637;
+}
+
+.dashboard-chart {
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-bar__track {
+  width: 100%;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: #e9f0f6;
+  overflow: hidden;
+}
+
+.dashboard-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0e617f 0%, #19a290 100%);
+}
+
+.dashboard-ring {
+  width: 170px;
+  height: 170px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  background: conic-gradient(#0f6d72 var(--progress, 0%), #e7edf3 0%);
+}
+
+.dashboard-ring__inner {
+  width: 122px;
+  height: 122px;
+  border-radius: 999px;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  color: #183547;
+  font-weight: 700;
+}
+
+@media (max-width: 1199.98px) {
+  .dashboard-span-3 {
+    grid-column: span 6;
+  }
+
+  .dashboard-span-6 {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 767.98px) {
+
+  .dashboard-span-3,
+  .dashboard-span-6 {
+    grid-column: span 12;
+  }
+}

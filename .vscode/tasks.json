@@ -1,0 +1,378 @@
+{
+    // ============================================================================
+    // Tareas de VS Code para el Proyecto
+    // ============================================================================
+    // Estas tareas ayudan a mantener los estándares del proyecto
+    // Ejecutar con: Ctrl+Shift+B o Terminal > Run Task
+    // ============================================================================
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🔍 Validar Estándares de Código",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\validate-code-standards.ps1"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Valida que ningún archivo exceda el límite de 400 líneas"
+        },
+        {
+            "label": "📊 Validar Estándares (Detallado)",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\validate-code-standards.ps1",
+                "-Detailed"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Validación detallada con estadísticas por categoría"
+        },
+        {
+            "label": "📁 Validar directorio actual",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\validate-code-standards.ps1",
+                "-Path",
+                "${fileDirname}"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Valida solo el directorio del archivo actual"
+        },
+        {
+            "label": "🚀 Iniciar WebSocket Server (local)",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\websocket-server.php"
+            ],
+            "group": "none",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false
+            },
+            "problemMatcher": [],
+            "detail": "Inicia el servidor WebSocket en modo desarrollo"
+        },
+        {
+            "label": "🔄 Ejecutar Migraciones",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\migrate_database.php"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Ejecuta las migraciones pendientes de la base de datos"
+        },
+        {
+            "label": "🔄 Migraciones (Dry Run)",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\migrate_database.php",
+                "--dry-run"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Lista migraciones detectadas sin conectarse a la base de datos"
+        },
+        {
+            "label": "📌 Estado de Migraciones",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\migrate_database.php",
+                "--status"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Muestra migraciones pendientes según schema_migrations"
+        },
+        {
+            "label": "🧪 Verificar Modelo UM",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\scripts\\verify-unidades-conversion-model.php"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Verifica columnas, unidades bloqueadas y consistencia del modelo doble UM"
+        },
+        {
+            "label": "🧪 Verificar Configuración DB",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\db_check_v3.php"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Verifica la configuración de la base de datos"
+        },
+        {
+            "label": "🧪 Smoke Test Registro Empresa",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\scripts\\smoke-test-register.php"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Alta de empresa de prueba + validación + limpieza automática"
+        },
+        {
+            "label": "📝 Listar Displays",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\list_displays.php"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Lista todos los displays configurados"
+        },
+        {
+            "label": "🔐 Actualizar Password Admin",
+            "type": "shell",
+            "command": "php",
+            "args": [
+                "${workspaceFolder}\\update-admin-password.php"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Actualiza la contraseña del administrador"
+        },
+        {
+            "label": "📦 Composer Install",
+            "type": "shell",
+            "command": "composer",
+            "args": [
+                "install"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Instala las dependencias de Composer"
+        },
+        {
+            "label": "📦 Composer Update",
+            "type": "shell",
+            "command": "composer",
+            "args": [
+                "update"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Actualiza las dependencias de Composer"
+        },
+        {
+            "label": "🧹 Limpiar caché y logs",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-Command",
+                "Remove-Item -Path '${workspaceFolder}\\storage\\logs\\*' -Force -ErrorAction SilentlyContinue; Remove-Item -Path '${workspaceFolder}\\storage\\cache\\*' -Force -ErrorAction SilentlyContinue; Write-Host 'Cache y logs limpiados' -ForegroundColor Green"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Elimina archivos de cache y logs"
+        },
+        {
+            "label": "🔍 Contar líneas del archivo actual",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-Command",
+                "$lines = (Get-Content '${file}' | Measure-Object -Line).Lines; Write-Host ''; Write-Host '📄 Archivo: ${fileBasename}' -ForegroundColor Cyan; Write-Host '📊 Líneas: '$lines -ForegroundColor $(if ($lines -gt 400) {'Red'} elseif ($lines -gt 350) {'Yellow'} else {'Green'}); if ($lines -gt 400) { Write-Host '❌ EXCEDE el límite de 400 líneas' -ForegroundColor Red } elseif ($lines -gt 350) { Write-Host '⚠️  Cerca del límite (400 líneas)' -ForegroundColor Yellow } else { Write-Host '✅ Dentro del límite' -ForegroundColor Green }; Write-Host ''"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Cuenta las líneas del archivo actualmente abierto en el editor"
+        },
+        {
+            "label": "💾 Backup de Bases de Datos",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\backup-databases.ps1"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Realiza backup de todas las bases de datos del proyecto"
+        },
+        {
+            "label": "💾 Backup de Bases de Datos (Comprimido)",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\backup-databases.ps1",
+                "-Compress"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Realiza backup comprimido de todas las bases de datos"
+        },
+        {
+            "label": "📋 Listar Backups Disponibles",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\scripts\\restore-databases.ps1",
+                "-ListBackups"
+            ],
+            "group": "none",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": [],
+            "detail": "Lista todos los backups disponibles de bases de datos"
+        }
+    ]
+}

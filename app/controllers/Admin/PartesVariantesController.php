@@ -1,0 +1,491 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers\Admin;
+
+use App\Core\Controllers\Controller;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
+use App\Models\GrupoParte;
+use App\Models\Parte;
+use App\Models\TipoParte;
+use App\Models\UnidadMedida;
+use App\Models\Variante;
+
+final class PartesVariantesController extends Controller
+{
+    private Parte $partes;
+    private Variante $variantes;
+    private TipoParte $tipos;
+    private GrupoParte $grupos;
+    private UnidadMedida $unidades;
+
+    public function __construct(
+        ?Parte $partes = null,
+        ?Variante $variantes = null,
+        ?TipoParte $tipos = null,
+        ?GrupoParte $grupos = null,
+        ?UnidadMedida $unidades = null
+    ) {
+        $this->partes = $partes ?? new Parte();
+        $this->variantes = $variantes ?? new Variante();
+        $this->tipos = $tipos ?? new TipoParte();
+        $this->grupos = $grupos ?? new GrupoParte();
+        $this->unidades = $unidades ?? new UnidadMedida();
+    }
+
+    public function index(Request $request): Response
+    {
+        $page = max(1, (int) ($request->query['page'] ?? 1));
+        $tab = $request->query['tab'] ?? 'partes';
+        $idParte = isset($request->query['id_parte']) ? (int) $request->query['id_parte'] : null;
+        $search = trim((string) ($request->query['q'] ?? ''));
+        return $this->renderIndex([
+            'page' => $page,
+            'tab' => $tab,
+            'filteredParteId' => $idParte,
+            'search' => $search,
+        ]);
+    }
+
+    public function editPart(Request $request, $id): Response
+    {
+        $id = (int) $id;
+        $record = $this->partes->find($id);
+        if ($record === null) {
+            return Response::redirect(url('/productos/partes'));
+        }
+
+        return $this->renderIndex([
+            'oldPart' => $record,
+            'editingPartId' => $id,
+            'tab' => 'partes',
+        ]);
+    }
+
+    public function editVariant(Request $request, $idParte, $id): Response
+    {
+        $id = (int) $id;
+        $idParte = (int) $idParte;
+        $record = $this->variantes->find($id);
+        if ($record === null || (int) $record['id_parte'] !== $idParte) {
+            return Response::redirect(url('/productos/partes?tab=variantes'));
+        }
+
+        return $this->renderIndex([
+            'oldVariant' => $record,
+            'editingVariantId' => $id,
+            'filteredParteId' => $idParte,
+            'tab' => 'variantes',
+        ]);
+    }
+
+    public function storePart(Request $request): Response
+    {
+        [$data, $errors] = $this->validatePart($request);
+        if ($errors !== []) {
+            return $this->renderIndex([
+                'errors' => $errors,
+                'oldPart' => $request->body,
+                'tab' => 'partes',
+            ]);
+        }
+
+        $this->partes->create($data);
+        return Response::redirect(url('/productos/partes'));
+    }
+
+    public function updatePart(Request $request, $id): Response
+    {
+        $id = (int) $id;
+        if ($this->partes->find($id) === null) {
+            return Response::redirect(url('/productos/partes'));
+        }
+
+        [$data, $errors] = $this->validatePart($request);
+        if ($errors !== []) {
+            return $this->renderIndex([
+                'errors' => $errors,
+                'oldPart' => $request->body,
+                'editingPartId' => $id,
+                'tab' => 'partes',
+            ]);
+        }
+
+        $this->partes->update($id, $data);
+        return Response::redirect(url('/productos/partes'));
+    }
+
+    public function destroyPart(Request $request, $id): Response
+    {
+        $this->partes->delete((int) $id);
+        return Response::redirect(url('/productos/partes'));
+    }
+
+    public function storeVariant(Request $request, $idParte): Response
+    {
+        $idParte = (int) $idParte;
+        [$data, $errors] = $this->validateVariant($request, $idParte);
+        if ($errors !== []) {
+            return $this->renderIndex([
+                'variantErrors' => $errors,
+                'oldVariant' => $request->body,
+                'filteredParteId' => $idParte,
+                'tab' => 'variantes',
+            ]);
+        }
+
+        $this->variantes->create($data);
+
+        // Check if coming from Manager (via Context param)
+        $context = $request->input('context');
+        if ($context === 'manager') {
+            return Response::redirect(url("/productos/partes/manager/{$idParte}"));
+        }
+
+        return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
+    }
+
+    public function updateVariant(Request $request, $idParte, $id): Response
+    {
+        $id = (int) $id;
+        $idParte = (int) $idParte;
+        $record = $this->variantes->find($id);
+        if ($record === null || (int) $record['id_parte'] !== $idParte) {
+            return Response::redirect(url('/productos/partes?tab=variantes'));
+        }
+
+        [$data, $errors] = $this->validateVariant($request, $idParte);
+        if ($errors !== []) {
+            return $this->renderIndex([
+                'variantErrors' => $errors,
+                'oldVariant' => $request->body,
+                'editingVariantId' => $id,
+                'filteredParteId' => $idParte,
+                'tab' => 'variantes',
+            ]);
+        }
+
+        $this->variantes->update($id, $data);
+
+        // Check if coming from Manager (via Context param)
+        $context = $request->input('context');
+        if ($context === 'manager') {
+            return Response::redirect(url("/productos/partes/manager/{$idParte}"));
+        }
+
+        return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
+    }
+
+    public function destroyVariant(Request $request, $idParte, $id): Response
+    {
+        $idParte = (int) $idParte;
+        $this->variantes->delete((int) $id);
+        return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
+    }
+
+    public function manager(Request $request): Response
+    {
+        return $this->renderManager([
+            'mode' => 'create',
+        ]);
+    }
+
+    public function managerShow(Request $request, $id): Response
+    {
+        $id = (int) $id;
+        $record = $this->partes->find($id);
+        if ($record === null) {
+            return Response::redirect(url('/productos/partes/manager'));
+        }
+
+        $variants = $this->variantes->byParteIds([$id]);
+
+        return $this->renderManager([
+            'parte' => $record,
+            'parteVariants' => $variants[$id] ?? [],
+            'mode' => 'view',
+        ]);
+    }
+
+    public function managerEdit(Request $request, $id): Response
+    {
+        $id = (int) $id;
+        $record = $this->partes->find($id);
+        if ($record === null) {
+            return Response::redirect(url('/productos/partes/manager'));
+        }
+
+        $variants = $this->variantes->byParteIds([$id]);
+
+        return $this->renderManager([
+            'parte' => $record,
+            'parteVariants' => $variants[$id] ?? [],
+            'mode' => 'edit',
+        ]);
+    }
+
+    public function managerEditVariant(Request $request, $idParte, $idVariante): Response
+    {
+        $idParte = (int) $idParte;
+        $idVariante = (int) $idVariante;
+
+        $record = $this->partes->find($idParte);
+        if ($record === null) {
+            return Response::redirect(url('/productos/partes/manager'));
+        }
+
+        $variants = $this->variantes->byParteIds([$idParte]);
+
+        return $this->renderManager([
+            'parte' => $record,
+            'parteVariants' => $variants[$idParte] ?? [],
+            'mode' => 'edit',
+            'editingVariantId' => $idVariante,
+        ]);
+    }
+
+    public function managerStorePart(Request $request): Response
+    {
+        [$data, $errors] = $this->validatePart($request);
+        if ($errors !== []) {
+            return $this->renderManager([
+                'errors' => $errors,
+                'oldPart' => $request->body,
+            ]);
+        }
+
+        $newId = $this->partes->create($data);
+        return Response::redirect(url("/productos/partes/manager/{$newId}"));
+    }
+
+    public function managerUpdatePart(Request $request, $id): Response
+    {
+        $id = (int) $id;
+        if ($this->partes->find($id) === null) {
+            return Response::redirect(url('/productos/partes/manager'));
+        }
+
+        [$data, $errors] = $this->validatePart($request);
+        if ($errors !== []) {
+            return $this->renderManager([
+                'errors' => $errors,
+                'oldPart' => $request->body,
+                'parte' => array_merge(['id' => $id], $request->body),
+            ]);
+        }
+
+        $this->partes->update($id, $data);
+        return Response::redirect(url("/productos/partes/manager/{$id}"));
+    }
+
+    private function renderManager(array $overrides = []): Response
+    {
+        $defaults = [
+            'parte' => null,
+            'parteVariants' => [],
+            'partesList' => $this->partes->listAll(),
+            'tipos' => $this->tipos->activos(),
+            'grupos' => $this->grupos->activos(),
+            'unidadesLongitud' => $this->unidades->byTipo('longitud'),
+            'unidadesSuperficie' => $this->unidades->byTipo('superficie'),
+            'unidadesVolumen' => $this->unidades->byTipo('volumen'),
+            'unidadesMasa' => $this->unidades->byTipo('masa'),
+            'unidadesTodas' => $this->unidades->allActive(500, 0),
+            'errors' => [],
+            'oldPart' => [],
+        ];
+
+        return $this->render('pages/admin/partes/manager', array_merge($defaults, $overrides));
+    }
+
+    private function renderIndex(array $overrides = []): Response
+    {
+        $page = max(1, (int) ($overrides['page'] ?? 1));
+        $search = $overrides['search'] ?? '';
+        $listing = $this->partes->paginated($page, 15, $search);
+        $partIds = array_column($listing['items'], 'id');
+
+        // Si hay un filtro de parte específica, solo obtener variantes de esa parte
+        $filteredParteId = $overrides['filteredParteId'] ?? null;
+        if ($filteredParteId !== null && $filteredParteId > 0) {
+            $variants = $this->variantes->byParteIdsWithSearch([$filteredParteId], $search);
+        } else {
+            $variants = $this->variantes->byParteIdsWithSearch($partIds, $search);
+        }
+
+        $defaults = [
+            'title' => 'Partes y variantes',
+            'parts' => $listing,
+            'variants' => $variants,
+            'partOptions' => $this->partes->options(),
+            'tipos' => $this->tipos->activos(),
+            'grupos' => $this->grupos->activos(),
+            'unidadesLongitud' => $this->unidades->byTipo('longitud'),
+            'unidadesSuperficie' => $this->unidades->byTipo('superficie'),
+            'unidadesVolumen' => $this->unidades->byTipo('volumen'),
+            'unidadesMasa' => $this->unidades->byTipo('masa'),
+            'errors' => [],
+            'variantErrors' => [],
+            'oldPart' => [],
+            'oldVariant' => [],
+            'page' => $page,
+            'tab' => 'partes',
+            'editingPartId' => null,
+            'editingVariantId' => null,
+            'filteredParteId' => null,
+            'search' => '',
+        ];
+
+        return $this->render('pages/admin/partes/index', array_merge($defaults, $overrides));
+    }
+
+    private function validatePart(Request $request): array
+    {
+        $body = $request->body;
+        $data = [
+            'codigo' => strtoupper(trim((string) ($body['codigo'] ?? ''))),
+            'id_tipo' => (int) ($body['id_tipo'] ?? 0),
+            'id_grupo' => (int) ($body['id_grupo'] ?? 0),
+            'detalle' => trim((string) ($body['detalle'] ?? '')),
+            'activo' => (int) ($body['activo'] ?? 0),
+            'id_um_compra' => $body['id_um_compra'] === '' || $body['id_um_compra'] === null ? null : (int) $body['id_um_compra'],
+            'id_um_uso' => $body['id_um_uso'] === '' || $body['id_um_uso'] === null ? null : (int) $body['id_um_uso'],
+            'factor_conversion' => isset($body['factor_conversion']) && $body['factor_conversion'] !== '' ? (float) $body['factor_conversion'] : null,
+        ];
+
+        $optionalNumeric = [
+            'largo_alto' => 'longitud',
+            'ancho' => 'longitud',
+            'espesor_profundidad' => 'longitud',
+            'superficie' => 'superficie',
+            'volumen' => 'volumen',
+        ];
+
+        foreach ($optionalNumeric as $field => $type) {
+            $value = $body[$field] ?? null;
+            $unitKey = 'id_um_' . ($field === 'espesor_profundidad' ? 'espesor' : $field);
+            $unitValue = $body[$unitKey] ?? null;
+            $data[$field] = $value === '' || $value === null ? null : (float) $value;
+            $data[$unitKey] = $unitValue === '' || $unitValue === null ? null : (int) $unitValue;
+        }
+
+        $errors = [];
+
+        if (
+            ($data['factor_conversion'] === null || $data['factor_conversion'] <= 0)
+            && $this->isLinearToAreaConversion($data['id_um_compra'], $data['id_um_uso'])
+        ) {
+            $anchoMetros = $this->toMeters((float) ($data['ancho'] ?? 0), $data['id_um_ancho'] ?? null);
+            if ($anchoMetros !== null && $anchoMetros > 0) {
+                $data['factor_conversion'] = $anchoMetros;
+            }
+        }
+
+        // Validar Factor de Conversión
+        if ($data['id_um_compra'] && $data['id_um_uso'] && $data['id_um_compra'] !== $data['id_um_uso']) {
+            if (empty($data['factor_conversion']) || $data['factor_conversion'] <= 0) {
+                $errors['factor_conversion'] = 'El factor de conversión es requerido cuando las unidades son diferentes.';
+            }
+        } elseif ($data['id_um_compra'] && $data['id_um_uso'] && $data['id_um_compra'] === $data['id_um_uso']) {
+            // Si son iguales, forzar factor a 1
+            $data['factor_conversion'] = 1.0;
+        }
+
+        if ($data['codigo'] === '') {
+            $errors['codigo'] = 'Código requerido.';
+        }
+        if ($data['detalle'] === '') {
+            $errors['detalle'] = 'Detalle requerido.';
+        }
+        if ($data['id_tipo'] <= 0) {
+            $errors['id_tipo'] = 'Selecciona un tipo.';
+        }
+        if ($data['id_grupo'] <= 0) {
+            $errors['id_grupo'] = 'Selecciona un grupo.';
+        }
+
+        return [$data, $errors];
+    }
+
+    private function isLinearToAreaConversion(?int $idUmCompra, ?int $idUmUso): bool
+    {
+        if (empty($idUmCompra) || empty($idUmUso)) {
+            return false;
+        }
+
+        $umCompra = $this->unidades->find((int) $idUmCompra);
+        $umUso = $this->unidades->find((int) $idUmUso);
+
+        if ($umCompra === null || $umUso === null) {
+            return false;
+        }
+
+        return ($umCompra['tipo'] ?? null) === 'longitud'
+            && ($umUso['tipo'] ?? null) === 'superficie'
+            && ($umCompra['simbolo'] ?? '') === 'mL'
+            && ($umUso['simbolo'] ?? '') === 'm²';
+    }
+
+    private function toMeters(float $value, ?int $unitId): ?float
+    {
+        if ($value <= 0 || empty($unitId)) {
+            return null;
+        }
+
+        $unit = $this->unidades->find((int) $unitId);
+        if ($unit === null) {
+            return null;
+        }
+
+        if (($unit['tipo'] ?? null) !== 'longitud') {
+            return null;
+        }
+
+        $equivalencia = (float) ($unit['equivalencia_base'] ?? 0);
+        if ($equivalencia <= 0) {
+            return null;
+        }
+
+        return $value * $equivalencia;
+    }
+
+    private function validateVariant(Request $request, ?int $idParte = null): array
+    {
+        $body = $request->body;
+        $data = [
+            'id_parte' => $idParte ?? (int) ($body['id_parte'] ?? 0),
+            'codigo_variante' => strtoupper(trim((string) ($body['codigo_variante'] ?? ''))),
+            'detalle' => trim((string) ($body['detalle'] ?? '')),
+            'estado' => trim((string) ($body['estado'] ?? 'activa')),
+            'lote_minimo' => (float) ($body['lote_minimo'] ?? 1),
+            'punto_pedido' => (float) ($body['punto_pedido'] ?? 0),
+            // 'stock_actual' => (float) ($body['stock_actual'] ?? 0), // Stock es calculado o solo lectura
+            'peso' => $body['peso'] === '' ? null : (float) $body['peso'],
+            'id_um_peso' => $body['id_um_peso'] === '' ? null : (int) $body['id_um_peso'],
+            'ubicacion_cuerpo' => trim((string) ($body['ubicacion_cuerpo'] ?? '')),
+            'ubicacion_pasillo' => trim((string) ($body['ubicacion_pasillo'] ?? '')),
+            'ubicacion_estante' => trim((string) ($body['ubicacion_estante'] ?? '')),
+        ];
+
+        $errors = [];
+        if ($data['id_parte'] <= 0) {
+            $errors['id_parte'] = 'Selecciona la parte.';
+        }
+        if ($data['codigo_variante'] === '') {
+            $errors['codigo_variante'] = 'Código requerido.';
+        }
+        if ($data['detalle'] === '') {
+            $errors['detalle'] = 'Detalle requerido.';
+        }
+        if (!in_array($data['estado'], ['activa', 'obsoleta', 'descontinuada', 'desarrollo'], true)) {
+            $errors['estado'] = 'Estado inválido.';
+        }
+        if ($data['peso'] !== null && $data['id_um_peso'] === null) {
+            $errors['id_um_peso'] = 'Selecciona la unidad de peso.';
+        }
+
+        return [$data, $errors];
+    }
+}

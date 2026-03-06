@@ -1,0 +1,13 @@
+{
+    "folders": [
+        {
+            "path": ".."
+        }
+    ],
+    "settings": {
+        "cline.preferredLanguage": "Spanish - Español",
+        "chat.tools.terminal.autoApprove": {
+            "docker compose": true
+        }
+    }
+}

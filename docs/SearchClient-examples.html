@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SearchClient - Ejemplos de Uso</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .example-section {
+      margin-bottom: 3rem;
+      padding: 2rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      background: #f8f9fa;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      overflow-x: auto;
+    }
+
+    #search-results-1,
+    #search-results-2,
+    #search-results-3 {
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container py-5">
+    <h1 class="mb-4">🔍 SearchClient - Ejemplos de Uso</h1>
+    <p class="lead">Este archivo muestra diferentes formas de usar el módulo SearchClient.</p>
+
+    <!-- Ejemplo 1: Búsqueda Básica -->
+    <div class="example-section">
+      <h2>1️⃣ Búsqueda Básica</h2>
+      <p>Configuración mínima con valores por defecto.</p>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Buscar Variante:</label>
+          <input type="text" id="search-basic" class="form-control" placeholder="Escribe para buscar...">
+          <input type="hidden" id="hidden-basic">
+          <div id="search-results-1" class="list-group position-relative"></div>
+          <small class="text-muted">Mínimo 2 caracteres</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Código:</label>
+          <pre class="code-block"><code>const searchClient = new SearchClient({
+    endpoint: '/api/v1/search/variantes',
+    inputElement: document.getElementById('search-basic'),
+    resultsContainer: document.getElementById('search-results-1'),
+    hiddenInput: document.getElementById('hidden-basic')
+});</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ejemplo 2: Con Filtros Dinámicos -->
+    <div class="example-section">
+      <h2>2️⃣ Con Filtros Dinámicos</h2>
+      <p>Aplicar filtros por tipo de parte y actualizar en tiempo real.</p>
+
+      <div class="row mb-3">
+        <div class="col-12">
+          <label class="form-label d-block">Tipo de Parte:</label>
+          <div class="btn-group" role="group">
+            <button class="btn btn-outline-secondary" onclick="applyFilter('')">Todos</button>
+            <button class="btn btn-outline-info" onclick="applyFilter('MP')">MP</button>
+            <button class="btn btn-outline-success" onclick="applyFilter('PT')">PT</button>
+            <button class="btn btn-outline-warning" onclick="applyFilter('SC')">SC</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Buscar Variante:</label>
+          <input type="text" id="search-filtered" class="form-control" placeholder="Buscar con filtros...">
+          <div id="search-results-2" class="list-group position-relative"></div>
+          <div id="selected-info-2" class="alert alert-info mt-2 d-none"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Código:</label>
+          <pre class="code-block"><code>let searchWithFilters;
+
+function initFilteredSearch() {
+    searchWithFilters = new SearchClient({
+        endpoint: '/api/v1/search/variantes',
+        inputElement: document.getElementById('search-filtered'),
+        resultsContainer: document.getElementById('search-results-2'),
+        filters: { tipo_codigo: '' },
+        onSelect: (item) => {
+            const info = document.getElementById('selected-info-2');
+            info.textContent = `Seleccionado: ${item.display_text}`;
+            info.classList.remove('d-none');
+        }
+    });
+}
+
+function applyFilter(type) {
+    searchWithFilters.updateFilters({ tipo_codigo: type });
+}</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ejemplo 3: Renderizado Personalizado -->
+    <div class="example-section">
+      <h2>3️⃣ Renderizado Personalizado</h2>
+      <p>Personalizar la forma en que se muestran los resultados.</p>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Buscar con formato custom:</label>
+          <input type="text" id="search-custom" class="form-control" placeholder="Buscar...">
+          <div id="search-results-3" class="list-group position-relative"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Código:</label>
+          <pre class="code-block"><code>const customSearch = new SearchClient({
+    endpoint: '/api/v1/search/variantes',
+    inputElement: document.getElementById('search-custom'),
+    resultsContainer: document.getElementById('search-results-3'),
+    renderItem: (item, index) => {
+        const div = document.createElement('button');
+        div.type = 'button';
+        div.className = 'list-group-item list-group-item-action';
+        div.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-cube me-3 text-primary"></i>
+                <div class="flex-grow-1">
+                    <strong>${item.codigo_variante}</strong>
+                    <br><small>${item.detalle}</small>
+                </div>
+                <span class="badge bg-primary">${item.tipo_codigo}</span>
+            </div>
+        `;
+        return div;
+    }
+});</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ejemplo 4: Con Callbacks -->
+    <div class="example-section">
+      <h2>4️⃣ Con Callbacks y Validación</h2>
+      <p>Ejecutar lógica adicional al seleccionar un item.</p>
+
+      <div class="row">
+        <div class="col-md-6">
+          <form id="form-with-callback">
+            <label class="form-label">Seleccionar Material:</label>
+            <input type="text" id="search-callback" class="form-control" placeholder="Buscar material...">
+            <input type="hidden" id="hidden-callback" name="id_material">
+            <div id="search-results-4" class="list-group position-relative"></div>
+            <button type="submit" class="btn btn-primary mt-3" disabled id="btn-submit">
+              Agregar Material
+            </button>
+          </form>
+          <div id="callback-log" class="mt-3" style="font-family: monospace; font-size: 0.875rem;"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Código:</label>
+          <pre class="code-block"><code>const callbackSearch = new SearchClient({
+    endpoint: '/api/v1/search/variantes',
+    inputElement: document.getElementById('search-callback'),
+    resultsContainer: document.getElementById('search-results-4'),
+    hiddenInput: document.getElementById('hidden-callback'),
+    onSelect: (item) => {
+        // Validar
+        if (item.tipo_codigo === 'MO') {
+            alert('No se puede agregar mano de obra aquí');
+            callbackSearch.clear();
+            return;
+        }
+
+        // Habilitar botón
+        document.getElementById('btn-submit').disabled = false;
+
+        // Log
+        const log = document.getElementById('callback-log');
+        log.innerHTML += `<div>✅ ${new Date().toLocaleTimeString()}:
+                          Seleccionado ID ${item.id}</div>`;
+    }
+});</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información Técnica -->
+    <div class="example-section">
+      <h2>📚 Información Técnica</h2>
+      <div class="row">
+        <div class="col-md-6">
+          <h5>Métodos Disponibles:</h5>
+          <ul>
+            <li><code>updateFilters(newFilters)</code> - Actualizar filtros</li>
+            <li><code>clear()</code> - Limpiar selección</li>
+            <li><code>destroy()</code> - Destruir instancia</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h5>Navegación por Teclado:</h5>
+          <ul>
+            <li><kbd>↓</kbd> - Siguiente resultado</li>
+            <li><kbd>↑</kbd> - Resultado anterior</li>
+            <li><kbd>Enter</kbd> - Seleccionar</li>
+            <li><kbd>Esc</kbd> - Cerrar</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="../public/assets/js/modules/SearchClient.js"></script>
+  <script>
+    // Ejemplo 1: Básico
+    const basicSearch = new SearchClient({
+      endpoint: '/api/v1/search/variantes',
+      inputElement: document.getElementById('search-basic'),
+      resultsContainer: document.getElementById('search-results-1'),
+      hiddenInput: document.getElementById('hidden-basic')
+    });
+
+    // Ejemplo 2: Con filtros
+    let searchWithFilters;
+
+    function initFilteredSearch() {
+      searchWithFilters = new SearchClient({
+        endpoint: '/api/v1/search/variantes',
+        inputElement: document.getElementById('search-filtered'),
+        resultsContainer: document.getElementById('search-results-2'),
+        filters: { tipo_codigo: '' },
+        onSelect: (item) => {
+          const info = document.getElementById('selected-info-2');
+          info.textContent = `✅ Seleccionado: ${item.display_text}`;
+          info.classList.remove('d-none');
+        }
+      });
+    }
+
+    function applyFilter(type) {
+      if (searchWithFilters) {
+        searchWithFilters.updateFilters({ tipo_codigo: type || undefined });
+
+        // Resaltar botón activo
+        document.querySelectorAll('.btn-group button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+      }
+    }
+
+    // Ejemplo 3: Custom render
+    const customSearch = new SearchClient({
+      endpoint: '/api/v1/search/variantes',
+      inputElement: document.getElementById('search-custom'),
+      resultsContainer: document.getElementById('search-results-3'),
+      renderItem: (item, index) => {
+        const div = document.createElement('button');
+        div.type = 'button';
+        div.className = 'list-group-item list-group-item-action';
+        div.dataset.index = index;
+        div.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-cube me-3 text-primary"></i>
+                    <div class="flex-grow-1">
+                        <strong>${item.codigo_variante}</strong>
+                        <br><small class="text-muted">${item.detalle || 'Sin detalle'}</small>
+                    </div>
+                    <span class="badge bg-primary">${item.tipo_codigo}</span>
+                </div>
+            `;
+        return div;
+      }
+    });
+
+    // Ejemplo 4: Con callbacks
+    const callbackSearch = new SearchClient({
+      endpoint: '/api/v1/search/variantes',
+      inputElement: document.getElementById('search-callback'),
+      resultsContainer: document.getElementById('search-results-4'),
+      hiddenInput: document.getElementById('hidden-callback'),
+      onSelect: (item) => {
+        // Validación: no permitir MO
+        if (item.tipo_codigo === 'MO') {
+          alert('❌ No se puede agregar mano de obra en este contexto');
+          callbackSearch.clear();
+          document.getElementById('btn-submit').disabled = true;
+          return;
+        }
+
+        // Habilitar submit
+        document.getElementById('btn-submit').disabled = false;
+
+        // Log de actividad
+        const log = document.getElementById('callback-log');
+        const time = new Date().toLocaleTimeString();
+        log.innerHTML += `
+                <div class="text-success">
+                    ✅ ${time}: Seleccionado <strong>${item.codigo_variante}</strong> (ID: ${item.id})
+                </div>
+            `;
+      }
+    });
+
+    // Form submit handler
+    document.getElementById('form-with-callback').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const hiddenValue = document.getElementById('hidden-callback').value;
+      const log = document.getElementById('callback-log');
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML += `
+            <div class="text-primary">
+                📤 ${time}: Formulario enviado con ID: <strong>${hiddenValue}</strong>
+            </div>
+        `;
+
+      // Resetear
+      callbackSearch.clear();
+      document.getElementById('btn-submit').disabled = true;
+    });
+
+    // Inicializar al cargar
+    document.addEventListener('DOMContentLoaded', function () {
+      initFilteredSearch();
+      console.log('✅ SearchClient ejemplos inicializados');
+    });
+  </script>
+
+</body>
+
+</html>

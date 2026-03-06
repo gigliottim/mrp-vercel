@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Test SearchClient - Standalone</title>
+</head>
+
+<body>
+  <h1>Test SearchClient Standalone</h1>
+
+  <p>Session Cookie: <strong id="session-cookie"></strong></p>
+  <p>Status: <span id="status">Esperando...</span></p>
+
+  <input type="text" id="search-input" placeholder="Escribe algo (ej: motor)" style="padding: 10px; width: 300px;">
+  <div id="search-results" style="border: 1px solid #ccc; min-height: 100px; margin-top: 10px; padding: 10px;">
+    Resultados aparecerán aquí...
+  </div>
+
+  <h2>Logs:</h2>
+  <pre id="logs" style="background: #f5f5f5; padding: 10px; overflow: auto; max-height: 400px;"></pre>
+
+  <script>
+    // Mostrar cookie de sesión
+    document.getElementById('session-cookie').textContent = document.cookie;
+
+    const logsEl = document.getElementById('logs');
+    function log(msg) {
+      logsEl.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    log('1. Página cargada');
+    log('2. Cookie: ' + document.cookie);
+
+    // Hacer la llamada fetch exacta
+    document.getElementById('search-input').addEventListener('input', async (e) => {
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        document.getElementById('search-results').innerHTML = 'Escribe al menos 2 caracteres...';
+        return;
+      }
+
+      document.getElementById('status').textContent = 'Buscando...';
+      log(`\n3. Buscando: "${query}"`);
+
+      try {
+        const url = '/mrp/api/v1/search/variantes';
+        const body = {
+          query: query,
+          filters: {},
+          limit: 5,
+          format: 'detailed'
+        };
+
+        log('4. URL: ' + url);
+        log('5. Body: ' + JSON.stringify(body));
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+          credentials: 'same-origin'
+        });
+
+        log('6. Response status: ' + response.status);
+        log('7. Response statusText: ' + response.statusText);
+
+        const data = await response.json();
+
+        log('8. Response data: ' + JSON.stringify(data, null, 2));
+
+        if (!response.ok) {
+          document.getElementById('status').textContent = '❌ Error ' + response.status;
+          document.getElementById('search-results').innerHTML =
+            '<pre style="color: red;">' + JSON.stringify(data, null, 2) + '</pre>';
+        } else {
+          document.getElementById('status').textContent = '✅ OK';
+          document.getElementById('search-results').innerHTML =
+            '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+      } catch (error) {
+        log('💥 Exception: ' + error.message);
+        document.getElementById('status').textContent = '💥 Exception';
+        document.getElementById('search-results').innerHTML =
+          '<pre style="color: red;">' + error.message + '</pre>';
+      }
+    });
+
+    log('✅ Event listener añadido');
+  </script>
+</body>
+
+</html>

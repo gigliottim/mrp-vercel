@@ -1,0 +1,1400 @@
+### USER
+crear la **Arquitectura:** JSONB (PostgreSQL) para un MRP basico simple para una empresa de 1 a  5 trabajadores y que contemple el crecimiento para ampliar mediante modulos a MRP 1 completo y MRP 2 completo. el  proyecto va a ser multi empresa y multi usuario, teniendo en una bd aparte la gestion de usuarios, empresas, permisos, etc y en una bd separada el MRP
+
+### ASSISTANT
+Para diseñar una **arquitectura basada en JSONB en PostgreSQL** que soporte un **MRP (Material Requirements Planning)** básico, escalable a MRP I y MRP II, con soporte **multiempresa y multiusuario**, y separación lógica entre la **base de datos de gestión de usuarios/empresas/permisos** y la **base de datos del MRP**, se puede estructurar como sigue:
+
+---
+
+### 🧱 Principios Arquitectónicos
+
+1. **Separación de responsabilidades**:
+   - **DB Auth**: Gestión de usuarios, empresas, roles, permisos.
+   - **DB MRP**: Datos operativos del MRP, con `tenant_id` para aislar por empresa.
+
+2. **Escalabilidad mediante JSONB**:
+   - Usar columnas `JSONB` para campos flexibles o en evolución.
+   - Mantener campos críticos normalizados (IDs, fechas, cantidades, etc.).
+   - Permitir evolución sin migraciones complejas.
+
+3. **Multiempresa**:
+   - Cada registro en DB MRP incluye `tenant_id` (UUID o ID de empresa).
+   - Aplicación filtra siempre por `tenant_id`.
+
+4. **Fases de evolución**:
+   - **MRP Básico**: Órdenes de producción, inventario, lista de materiales (BOM).
+   - **MRP I**: Agrega planificación de necesidades, explosión de BOM, cálculo de requerimientos netos.
+   - **MRP II**: Agrega capacidad, rutas de producción, tiempos estándar, carga de recursos, integración con compras.
+
+---
+
+## 🗃️ Estructura de la Base de Datos MRP (PostgreSQL)
+
+### 1. **Tabla: `tenants`** *(solo si se replica info de empresa en DB MRP)*
+```sql
+CREATE TABLE tenants (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+> ⚠️ Alternativa: No duplicar; solo usar `tenant_id` como FK lógica desde la app.
+
+---
+
+### 2. **Tabla: `items`** *(Productos / Materiales)*
+```sql
+CREATE TABLE items (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    code TEXT NOT NULL UNIQUE, -- dentro del tenant
+    name TEXT NOT NULL,
+    type TEXT CHECK (type IN ('raw', 'semi', 'finished')), -- materia prima, semielaborado, terminado
+    unit TEXT, -- kg, unidades, m, etc.
+    metadata JSONB DEFAULT '{}', -- para extensibilidad: peso, volumen, proveedor predet., etc.
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_items_tenant ON items(tenant_id);
+```
+
+---
+
+### 3. **Tabla: `bom`** *(Bill of Materials – Lista de Materiales)*
+```sql
+CREATE TABLE bom (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    parent_item_id UUID NOT NULL REFERENCES items(id),
+    child_item_id UUID NOT NULL REFERENCES items(id),
+    quantity NUMERIC(15,5) NOT NULL, -- cantidad requerida por unidad de padre
+    metadata JSONB DEFAULT '{}', -- scrap %, alternativas, etc.
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_bom_tenant_parent ON bom(tenant_id, parent_item_id);
+```
+
+---
+
+### 4. **Tabla: `inventory`**
+```sql
+CREATE TABLE inventory (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    item_id UUID NOT NULL REFERENCES items(id),
+    location TEXT, -- opcional: almacén, zona
+    quantity_on_hand NUMERIC(15,5) DEFAULT 0,
+    reserved_quantity NUMERIC(15,5) DEFAULT 0,
+    metadata JSONB DEFAULT '{}', -- lote, fecha vencimiento, costo promedio
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_inventory_unique ON inventory(tenant_id, item_id, location);
+```
+
+---
+
+### 5. **Tabla: `production_orders`**
+```sql
+CREATE TABLE production_orders (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    item_id UUID NOT NULL REFERENCES items(id),
+    quantity NUMERIC(15,5) NOT NULL,
+    status TEXT CHECK (status IN ('draft', 'released', 'in_progress', 'completed', 'cancelled')),
+    scheduled_start TIMESTAMPTZ,
+    scheduled_end TIMESTAMPTZ,
+    actual_start TIMESTAMPTZ,
+    actual_end TIMESTAMPTZ,
+    metadata JSONB DEFAULT '{}', -- ruta de producción, centro de trabajo, prioridad
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_prod_orders_tenant ON production_orders(tenant_id);
+```
+
+---
+
+### 6. **Tabla: `material_requirements`** *(para MRP I)*
+```sql
+CREATE TABLE material_requirements (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    item_id UUID NOT NULL REFERENCES items(id),
+    required_date DATE NOT NULL,
+    gross_requirement NUMERIC(15,5),
+    scheduled_receipts NUMERIC(15,5) DEFAULT 0,
+    projected_on_hand NUMERIC(15,5),
+    net_requirement NUMERIC(15,5),
+    planned_order_release DATE,
+    source_type TEXT, -- 'production_order', 'purchase_order'
+    source_id UUID, -- referencia a orden fuente
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_reqs_tenant_date ON material_requirements(tenant_id, required_date);
+```
+
+---
+
+### 7. **Tabla: `resources` y `routing`** *(para MRP II)*
+```sql
+CREATE TABLE resources (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT CHECK (type IN ('machine', 'labor', 'workcenter')),
+    capacity_per_day NUMERIC(10,2), -- horas, unidades, etc.
+    metadata JSONB DEFAULT '{}'
+);
+
+CREATE TABLE routing (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    item_id UUID NOT NULL REFERENCES items(id),
+    step INTEGER NOT NULL, -- secuencia
+    resource_id UUID REFERENCES resources(id),
+    setup_time NUMERIC(8,2), -- horas
+    run_time_per_unit NUMERIC(8,2),
+    metadata JSONB DEFAULT '{}'
+);
+```
+
+---
+
+## 🔐 Base de Datos de Autenticación y Empresas (Separada)
+
+- **Tablas típicas**:
+  - `users`: id, email, password_hash, active
+  - `companies` (o `tenants`): id, name, plan, status
+  - `user_company_roles`: user_id, company_id, role (admin, operator, viewer)
+  - `permissions`: role → feature access
+
+> Esta BD **no contiene datos del MRP**. La app consulta ambas bases:
+> - Valida usuario/empresa en DB Auth.
+> - Usa `company_id` como `tenant_id` en DB MRP.
+
+---
+
+## 🔄 Estrategia de Evolución
+
+| Fase | Nuevas Tablas/Columnas | Uso de JSONB |
+|------|------------------------|-------------|
+| **MRP Básico** | `items`, `bom`, `inventory`, `production_orders` | `metadata` para atributos futuros |
+| **MRP I** | `material_requirements` | Almacena fuentes, flags de recompra, etc. |
+| **MRP II** | `resources`, `routing`, `capacity_load` | Horarios, eficiencias, turnos en `metadata` |
+
+---
+
+## ✅ Ventajas de JSONB
+
+- **Sin alterar esquema** al agregar funcionalidades (ej: trazabilidad, lotes, sustitutos).
+- **Soporte a multiempresa** sin particionamiento complejo.
+- **Índices GIN** en campos JSONB críticos si es necesario:
+  ```sql
+  CREATE INDEX idx_items_meta ON items USING GIN (metadata);
+  ```
+
+---
+
+## 🛡️ Consideraciones de Seguridad
+
+- **Nunca confiar en el cliente** para `tenant_id`.
+- Validar en backend que el usuario tiene acceso a la empresa antes de cualquier operación en DB MRP.
+- Usar **Row Level Security (RLS)** en PostgreSQL si se desea seguridad a nivel de base de datos:
+  ```sql
+  ALTER TABLE items ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY tenant_isolation ON items
+    USING (tenant_id = current_setting('app.current_tenant')::UUID);
+  ```
+
+---
+
+¿Deseas que genere también el esquema de la base de datos de autenticación (`users`, `companies`, etc.) o un ejemplo de cómo escalar un módulo específico (como compras o planificación avanzada)?
+
+### USER
+si
+
+### ASSISTANT
+Perfecto. A continuación, te presento el **esquema de la base de datos de autenticación y gestión multiempresa** (separada de la BD del MRP), diseñada para ser ligera, segura y escalable para 1–5 usuarios iniciales, con capacidad de crecer a múltiples empresas y cientos de usuarios.
+
+---
+
+## 🔐 Base de Datos: `auth_db`  
+*(Gestión de usuarios, empresas, roles y permisos)*
+
+### 1. **Tabla: `users`**
+Almacena credenciales y estado global del usuario (independiente de la empresa).
+
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL, -- bcrypt, scrypt, etc.
+    full_name TEXT NOT NULL,
+    email_verified BOOLEAN DEFAULT FALSE,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_users_email ON users(email);
+```
+
+---
+
+### 2. **Tabla: `companies`** *(también llamada "tenants")*
+Representa cada empresa cliente del sistema.
+
+```sql
+CREATE TABLE companies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE, -- para URLs amigables: ej. "mi-empresa"
+    status TEXT CHECK (status IN ('active', 'suspended', 'trial')) DEFAULT 'active',
+    plan TEXT CHECK (plan IN ('basic', 'mrp1', 'mrp2')) DEFAULT 'basic',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_companies_slug ON companies(slug);
+```
+
+> El campo `plan` permite habilitar/deshabilitar módulos (MRP básico → MRP I → MRP II) por empresa.
+
+---
+
+### 3. **Tabla: `user_company_memberships`**
+Relación muchos-a-muchos entre usuarios y empresas, con rol.
+
+```sql
+CREATE TABLE user_company_memberships (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'operator', 'viewer')),
+    invited_by UUID REFERENCES users(id),
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, company_id)
+);
+
+CREATE INDEX idx_memberships_company ON user_company_memberships(company_id);
+CREATE INDEX idx_memberships_user ON user_company_memberships(user_id);
+```
+
+> - `owner`: único por empresa, puede eliminarla o cambiar plan.
+> - `admin`: gestiona usuarios y configuraciones.
+> - `operator`: crea órdenes, actualiza inventario.
+> - `viewer`: solo lectura.
+
+---
+
+### 4. **Tabla: `permissions`** *(opcional, si necesitas control fino)*
+Define qué acciones puede realizar cada rol. Útil si los roles no son suficientes.
+
+```sql
+CREATE TABLE permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    resource TEXT NOT NULL, -- ej. "production_order", "bom", "inventory"
+    action TEXT NOT NULL,   -- ej. "create", "read", "update", "delete"
+    role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'operator', 'viewer')),
+    company_plan TEXT CHECK (company_plan IN ('basic', 'mrp1', 'mrp2')),
+    allowed BOOLEAN DEFAULT TRUE,
+    UNIQUE (resource, action, role, company_plan)
+);
+```
+
+> Ejemplo:  
+> - `resource = 'routing'`, `action = 'read'`, `role = 'operator'`, `company_plan = 'mrp2'` → permitido.  
+> - Si la empresa está en `basic`, esta acción se deniega automáticamente.
+
+> ⚠️ Alternativa más simple: codificar permisos en la aplicación según `role + plan`.
+
+---
+
+### 5. **Tabla: `sessions`** *(opcional, si manejas sesiones en DB)*
+Útil para invalidar tokens o auditoría.
+
+```sql
+CREATE TABLE sessions (
+    id TEXT PRIMARY KEY, -- token JWT ID o session ID
+    user_id UUID NOT NULL REFERENCES users(id),
+    company_id UUID NOT NULL REFERENCES companies(id),
+    ip_address INET,
+    user_agent TEXT,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## 🔗 Integración con la BD del MRP
+
+Cuando un usuario inicia sesión:
+
+1. La app valida credenciales en `auth_db.users`.
+2. Obtiene las empresas a las que pertenece (`user_company_memberships`).
+3. Al seleccionar una empresa, la app:
+   - Usa `company.id` como `tenant_id` en todas las consultas a la **BD MRP**.
+   - Verifica el `plan` para habilitar/deshabilitar funcionalidades (ej. ocultar "Rutas de Producción" si es `basic`).
+
+> ✅ **Ventaja**: Puedes tener un solo backend que sirve a múltiples empresas, con aislamiento total de datos.
+
+---
+
+## 🧩 Estrategia de Escalabilidad Modular
+
+| Módulo       | Tablas nuevas en MRP DB         | Requiere plan ≥ |
+|--------------|----------------------------------|-----------------|
+| Compras      | `purchase_orders`, `suppliers`  | `basic`         |
+| Calidad      | `quality_inspections`           | `mrp1`          |
+| Capacidad    | `work_centers`, `capacity_load` | `mrp2`          |
+| Trazabilidad | Extender `metadata` en `inventory` con lotes/series | `mrp1` |
+
+Cada módulo puede activarse/desactivarse según el `plan` de la empresa.
+
+---
+
+## 🛡️ Seguridad Recomendada
+
+- **Nunca exponer `tenant_id` al frontend sin validación**.
+- Usar **JWT** con claims:
+  ```json
+  {
+    "sub": "user-id",
+    "company": "company-id",
+    "role": "operator",
+    "plan": "mrp1"
+  }
+  ```
+- Validar en cada API que el usuario tiene acceso a esa `company`.
+
+---
+
+¿Te gustaría que genere también:
+- Un ejemplo de **API REST** para crear una orden de producción con validación multiempresa?
+- Un script de **migración inicial** (SQL)?
+- O el diseño de **microservicios/Docker** para separar `auth-service` y `mrp-service`?
+
+Dime cómo deseas continuar.
+
+### USER
+1- Todas las tablas incluyen tenant_id UUID NOT NULL.
+2- Activa RLS en todas las tablas sensibles.
+3- En tu app/web al autenticar:
+company_id = get_company_from_token()
+db.execute("SET app.current_tenant = %s", company_id)
+4-Haz backups completos (y si necesitas backup por empresa, usa pg_dump con --data-only --table=items --where="tenant_id='...'").
+
+
+
+### ASSISTANT
+Perfecto. A continuación, integro tus **cuatro requisitos clave** en una arquitectura robusta, segura y operativa para tu sistema MRP multiempresa con PostgreSQL y JSONB.
+
+---
+
+## ✅ Requisitos Aplicados
+
+1. **Todas las tablas del MRP incluyen `tenant_id UUID NOT NULL`**  
+2. **RLS (Row Level Security) activado en todas las tablas sensibles**  
+3. **La app establece `app.current_tenant` al autenticar**  
+4. **Estrategia de respaldo: global + por empresa**
+
+---
+
+## 🗃️ Esquema Actualizado de la BD MRP con RLS
+
+> Suponemos que la base de datos se llama `mrp_db`.
+
+### 1. Habilitar `app.current_tenant` como variable de sesión
+```sql
+-- Permitir que la app defina esta variable
+ALTER DATABASE mrp_db SET app.current_tenant = '';
+```
+
+### 2. Tabla de ejemplo: `items` (con RLS)
+```sql
+CREATE TABLE items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT CHECK (type IN ('raw', 'semi', 'finished')),
+    unit TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Restricción: tenant_id debe existir en auth_db.companies (validado en app)
+    CONSTRAINT valid_tenant CHECK (tenant_id IS NOT NULL)
+);
+
+-- Índice
+CREATE INDEX idx_items_tenant ON items(tenant_id);
+
+-- 🔒 Activar RLS
+ALTER TABLE items ENABLE ROW LEVEL SECURITY;
+
+-- Política: solo ver/modificar filas del tenant actual
+CREATE POLICY tenant_isolation_policy ON items
+    USING (tenant_id = current_setting('app.current_tenant')::UUID)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant')::UUID);
+```
+
+### 3. Aplicar lo mismo a **todas las tablas del MRP**
+Ejemplo para `bom`, `inventory`, `production_orders`, etc.:
+
+```sql
+-- Plantilla genérica (reemplazar <table_name>)
+ALTER TABLE <table_name> ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation_policy ON <table_name>
+    USING (tenant_id = current_setting('app.current_tenant')::UUID)
+    WITH CHECK (tenant_id = current_setting('app.current_tenant')::UUID);
+```
+
+> ✅ Esto garantiza que **ni siquiera un superusuario** pueda acceder a datos de otra empresa **a menos que cambie manualmente `app.current_tenant`**, lo cual solo haría en operaciones administrativas controladas.
+
+---
+
+## 🔐 Flujo de Autenticación en la Aplicación (Web/API)
+
+```python
+# Ejemplo en Python (FastAPI/Flask/Django)
+def authenticate_user(token: str):
+    payload = decode_jwt(token)  # Valida firma y expiración
+    user_id = payload["sub"]
+    company_id = payload["company"]  # UUID de la empresa seleccionada
+    
+    # Validar que el usuario pertenece a esa empresa (opcional, ya hecho en auth_db)
+    if not user_has_access_to_company(user_id, company_id):
+        raise Forbidden()
+    
+    # Establecer el tenant en la conexión PostgreSQL
+    db.execute("SET app.current_tenant = %s", (str(company_id),))
+    
+    return user_id, company_id
+```
+
+> 📌 **Importante**: Cada conexión de base de datos debe ejecutar `SET app.current_tenant` **al inicio de cada request**. No reutilices conexiones sin limpiar o restablecer este valor.
+
+---
+
+## 💾 Estrategia de Backups
+
+### 1. **Backup completo diario (recomendado)**
+```bash
+pg_dump -h localhost -U mrp_user -d mrp_db --format=custom --file=mrp_full_$(date +%Y%m%d).dump
+```
+
+### 2. **Backup por empresa (para cumplimiento o migración)**
+Usa `pg_dump` con `--data-only` y filtro por `tenant_id`:
+
+```bash
+# Ejemplo: respaldar solo datos de la empresa 'abc123...'
+TENANT_ID="abc12345-6789-0000-0000-000000000000"
+
+pg_dump -h localhost -U mrp_user -d mrp_db \
+  --data-only \
+  --table=items \
+  --table=bom \
+  --table=inventory \
+  --table=production_orders \
+  --where="tenant_id = '$TENANT_ID'" \
+  --format=plain \
+  --file=backup_tenant_$TENANT_ID.sql
+```
+
+> ⚠️ Nota: `--where` aplica a **todas las tablas listadas**. Asegúrate de incluir todas las tablas del MRP que contengan `tenant_id`.
+
+> ✅ Ventaja: Puedes entregar un backup limpio a un cliente o migrar una empresa a otro entorno.
+
+---
+
+## 🧪 Pruebas de Seguridad (Recomendadas)
+
+1. **Conexión sin `app.current_tenant`** → debe devolver 0 filas.
+2. **Conexión con `tenant_id` incorrecto** → debe devolver 0 filas.
+3. **Intento de INSERT con `tenant_id` distinto al actual** → debe fallar (`WITH CHECK` en RLS).
+
+Ejemplo de prueba SQL:
+```sql
+-- Simular conexión de app
+SET app.current_tenant = 'abc12345-6789-0000-0000-000000000001';
+
+-- Esto funciona
+INSERT INTO items (tenant_id, code, name, type)
+VALUES ('abc12345-6789-0000-0000-000000000001', 'ITEM-001', 'Tornillo', 'raw');
+
+-- Esto FALLA (gracias a RLS + WITH CHECK)
+INSERT INTO items (tenant_id, code, name, type)
+VALUES ('otro-tenant-id...', 'ITEM-002', 'Tuerca', 'raw');
+-- ERROR: new row violates row-level security policy for table "items"
+```
+
+---
+
+## 📦 Resumen Final
+
+| Componente | Implementación |
+|----------|----------------|
+| **Aislamiento** | `tenant_id` + RLS + `app.current_tenant` |
+| **Seguridad** | RLS obligatorio en todas las tablas del MRP |
+| **Autenticación** | JWT → `SET app.current_tenant = ...` por request |
+| **Backups** | Global (diario) + por empresa (on-demand con `pg_dump --where`) |
+| **Escalabilidad** | Módulos activados por `plan` en `auth_db.companies` |
+
+---
+
+¿Deseas que genere:
+- Un **script SQL completo** con todas las tablas del MRP + RLS?
+- Un **docker-compose.yml** para separar `auth_db` y `mrp_db` en contenedores distintos?
+- O un ejemplo de **función de respaldo automático por empresa** en Bash/Python?
+
+Estoy listo para ayudarte a implementarlo.
+
+### USER
+Un docker-compose.yml para separar auth_db y mrp_db en contenedores distintos? y con -V
+
+### ASSISTANT
+Claro. A continuación, te presento un archivo **`docker-compose.yml`** que:
+
+- Crea **dos contenedores PostgreSQL separados**:  
+  - `auth_db`: para gestión de usuarios, empresas y permisos.  
+  - `mrp_db`: para los datos del MRP (con soporte a `tenant_id` y RLS).  
+- Usa **volúmenes persistentes (`-v`)** para preservar los datos entre reinicios.  
+- Expone puertos distintos (opcional, útil para desarrollo).  
+- Incluye configuración mínima de seguridad (contraseñas, redes internas).  
+
+---
+
+### 📄 `docker-compose.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  # === Base de datos de autenticación y multiempresa ===
+  auth_db:
+    image: postgres:16
+    container_name: auth_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: secure_auth_password_123  # ⚠️ Cambia en producción
+    volumes:
+      - ./volumes/auth_db:/var/lib/postgresql/data  # Persistencia
+      - ./init/auth_init.sql:/docker-entrypoint-initdb.d/init.sql  # Opcional: script inicial
+    networks:
+      - mrp_net
+    ports:
+      - "5433:5432"  # Acceso externo en puerto 5433 (opcional, solo para desarrollo)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # === Base de datos del MRP (multiempresa) ===
+  mrp_db:
+    image: postgres:16
+    container_name: mrp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mrp_db
+      POSTGRES_USER: mrp_user
+      POSTGRES_PASSWORD: secure_mrp_password_456  # ⚠️ Cambia en producción
+    volumes:
+      - ./volumes/mrp_db:/var/lib/postgresql/data  # Persistencia
+      - ./init/mrp_init.sql:/docker-entrypoint-initdb.d/init.sql  # Opcional: habilitar app.current_tenant
+    networks:
+      - mrp_net
+    ports:
+      - "5434:5432"  # Acceso externo en puerto 5434 (opcional, solo para desarrollo)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mrp_user -d mrp_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  mrp_net:
+    driver: bridge
+```
+
+---
+
+### 📁 Estructura de directorios recomendada
+
+```bash
+tu-proyecto/
+├── docker-compose.yml
+├── volumes/               # ← Datos persistentes (¡no se borran al recrear contenedores!)
+│   ├── auth_db/
+│   └── mrp_db/
+└── init/                  # ← Scripts de inicialización (opcionales)
+    ├── auth_init.sql
+    └── mrp_init.sql
+```
+
+> 🔒 **Importante**: Los directorios `volumes/` se crean automáticamente con permisos correctos la primera vez.
+
+---
+
+### 🛠️ Script opcional: `init/mrp_init.sql`
+
+Para habilitar la variable de sesión `app.current_tenant` en la base `mrp_db`:
+
+```sql
+-- init/mrp_init.sql
+ALTER DATABASE mrp_db SET app.current_tenant = '';
+```
+
+> Este script se ejecuta **una sola vez** al crear el contenedor por primera vez.
+
+---
+
+### ▶️ Cómo usarlo
+
+1. **Crear los directorios**:
+   ```bash
+   mkdir -p volumes/auth_db volumes/mrp_db init
+   ```
+
+2. **(Opcional)** Crear `mrp_init.sql` como arriba.
+
+3. **Levantar los servicios**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Conectarte (desde tu app o psql)**:
+   - `auth_db`: `host=localhost`, `port=5433`, `db=auth_db`
+   - `mrp_db`: `host=localhost`, `port=5434`, `db=mrp_db`
+
+   > En producción, **no expongas los puertos** (`ports:`). Solo la app (en otro servicio) accedería vía red interna `mrp_net`.
+
+---
+
+### 🧼 Limpieza (solo desarrollo)
+
+```bash
+# Detener y eliminar contenedores
+docker-compose down
+
+# ¡CUIDADO! Esto borra TODOS los datos:
+# rm -rf volumes/
+```
+
+---
+
+### ✅ Ventajas de esta arquitectura
+
+- **Aislamiento total**: una caída o corrupción en `auth_db` no afecta `mrp_db`.
+- **Escalabilidad**: puedes mover `mrp_db` a otro servidor más potente sin tocar `auth_db`.
+- **Backups independientes**: respaldas cada BD por separado.
+- **Seguridad**: credenciales distintas, redes aisladas.
+
+---
+
+¿Quieres que agregue también un **servicio de aplicación** (ej. `mrp-api`) en el mismo `docker-compose.yml` que se conecte a ambas bases? Puedo incluirlo con variables de entorno seguras.
+
+### USER
+si
+
+### ASSISTANT
+Perfecto. A continuación, te presento una versión **completa y lista para desarrollo** de tu `docker-compose.yml`, que incluye:
+
+- ✅ `auth_db` (gestión de usuarios/empresas)  
+- ✅ `mrp_db` (datos del MRP con soporte a `tenant_id` y RLS)  
+- ✅ `mrp-api` (tu aplicación backend, ejemplo en Python/Node.js genérico)  
+- ✅ Red interna segura (`mrp_net`)  
+- ✅ Volúmenes persistentes (`-v`)  
+- ✅ Variables de entorno seguras  
+- ✅ Sin exposición innecesaria de puertos en producción (solo API expone puerto)
+
+---
+
+### 📄 `docker-compose.yml` (versión completa)
+
+```yaml
+version: '3.8'
+
+services:
+  # === Base de datos: Autenticación y multiempresa ===
+  auth_db:
+    image: postgres:16
+    container_name: auth_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/auth_db_password
+    secrets:
+      - auth_db_password
+    volumes:
+      - ./volumes/auth_db:/var/lib/postgresql/data
+    networks:
+      - mrp_net
+    # No exponer puerto en producción; solo accesible desde la red interna
+    # ports:
+    #   - "5433:5432"  # ← descomenta solo si necesitas acceso externo (ej. pgAdmin)
+
+  # === Base de datos: MRP (multiempresa) ===
+  mrp_db:
+    image: postgres:16
+    container_name: mrp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mrp_db
+      POSTGRES_USER: mrp_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/mrp_db_password
+    secrets:
+      - mrp_db_password
+    volumes:
+      - ./volumes/mrp_db:/var/lib/postgresql/data
+      - ./init/mrp_init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mrp_net
+    # ports:
+    #   - "5434:5432"  # ← descomenta solo para desarrollo
+
+  # === Aplicación backend (API) ===
+  mrp-api:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: mrp_api
+    restart: unless-stopped
+    environment:
+      AUTH_DB_HOST: auth_db
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: auth_db
+      AUTH_DB_USER: auth_user
+      AUTH_DB_PASSWORD_FILE: /run/secrets/auth_db_password
+
+      MRP_DB_HOST: mrp_db
+      MRP_DB_PORT: 5432
+      MRP_DB_NAME: mrp_db
+      MRP_DB_USER: mrp_user
+      MRP_DB_PASSWORD_FILE: /run/secrets/mrp_db_password
+
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      # Puerto interno de la app (ej. FastAPI en 8000, Express en 3000)
+    secrets:
+      - auth_db_password
+      - mrp_db_password
+      - jwt_secret
+    ports:
+      - "8000:8000"  # Expone solo la API al host
+    networks:
+      - mrp_net
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      mrp_db:
+        condition: service_healthy
+
+# === Secretos (mejor que hardcodear contraseñas) ===
+secrets:
+  auth_db_password:
+    file: ./secrets/auth_db_password.txt
+  mrp_db_password:
+    file: ./secrets/mrp_db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+
+networks:
+  mrp_net:
+    driver: bridge
+```
+
+---
+
+### 🔐 Cómo configurar los secretos
+
+Crea los archivos de contraseñas **fuera del repositorio** (nunca los commitees):
+
+```bash
+mkdir -p secrets
+echo "secure_auth_password_123" > secrets/auth_db_password.txt
+echo "secure_mrp_password_456" > secrets/mrp_db_password.txt
+openssl rand -hex 32 > secrets/jwt_secret.txt  # Genera clave segura
+chmod 600 secrets/*.txt
+```
+
+> ✅ Esto sigue las buenas prácticas de seguridad de Docker: **nunca contraseñas en el YAML**.
+
+---
+
+### 📁 Estructura de proyecto recomendada
+
+```bash
+tu-proyecto/
+├── docker-compose.yml
+├── secrets/
+│   ├── auth_db_password.txt
+│   ├── mrp_db_password.txt
+│   └── jwt_secret.txt
+├── volumes/
+│   ├── auth_db/
+│   └── mrp_db/
+├── init/
+│   └── mrp_init.sql
+└── app/
+    ├── Dockerfile
+    ├── requirements.txt      # o package.json
+    └── main.py               # o index.js
+```
+
+---
+
+### 📜 Ejemplo de `init/mrp_init.sql`
+
+```sql
+-- Habilita la variable de sesión para RLS
+ALTER DATABASE mrp_db SET app.current_tenant = '';
+```
+
+---
+
+### 🐍 Ejemplo mínimo de `app/Dockerfile` (Python + FastAPI)
+
+```dockerfile
+# app/Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+Y `app/requirements.txt`:
+```txt
+fastapi
+uvicorn
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+```
+
+---
+
+### 🧪 Cómo leer secretos en tu app (Python ejemplo)
+
+```python
+# app/main.py
+import os
+
+def read_secret(name):
+    with open(f"/run/secrets/{name}", "r") as f:
+        return f.read().strip()
+
+AUTH_DB_PASSWORD = read_secret("auth_db_password")
+MRP_DB_PASSWORD = read_secret("mrp_db_password")
+JWT_SECRET = read_secret("jwt_secret")
+```
+
+> En Node.js, harías algo similar con `fs.readFileSync('/run/secrets/...')`.
+
+---
+
+### ▶️ Iniciar todo
+
+```bash
+# 1. Crear estructura
+mkdir -p secrets volumes/auth_db volumes/mrp_db init app
+
+# 2. Generar secretos (como arriba)
+
+# 3. Crear mrp_init.sql e init/
+
+# 4. Levantar
+docker-compose up -d --build
+```
+
+---
+
+### ✅ Beneficios de esta arquitectura
+
+- **Seguridad**: secretos fuera del código, redes aisladas.
+- **Escalabilidad**: puedes escalar `mrp-api` sin tocar las BDs.
+- **Portabilidad**: funciona igual en desarrollo, staging y producción.
+- **Cumplimiento**: respaldos por empresa, aislamiento total de datos.
+
+---
+
+¿Quieres que genere también:
+- Un **script de backup automatizado por empresa** (Bash)?
+- Un **archivo `.gitignore`** adecuado?
+- O un **ejemplo de conexión a ambas BDs desde la app**?
+
+Estoy listo para ayudarte a completar el stack.
+
+### USER
+mrp-api para usar con php8.3 con NGINX + PHP-FPM 
+
+### ASSISTANT
+Perfecto. A continuación, te proporciono una configuración completa para **`mrp-api` usando PHP 8.3 con NGINX + PHP-FPM**, integrada en tu arquitectura Docker multi-base de datos (`auth_db` y `mrp_db`), con soporte para **secretos**, **red interna segura** y listo para desarrollo o producción.
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+tu-proyecto/
+├── docker-compose.yml
+├── secrets/
+│   ├── auth_db_password.txt
+│   ├── mrp_db_password.txt
+│   └── jwt_secret.txt
+├── volumes/
+│   ├── auth_db/
+│   └── mrp_db/
+├── init/
+│   └── mrp_init.sql
+└── app/
+    ├── src/
+    │   └── index.php          # Tu API (ejemplo básico)
+    ├── nginx/
+    │   └── default.conf       # Configuración de NGINX
+    ├── php/
+    │   └── www.conf           # Configuración de PHP-FPM (opcional)
+    └── Dockerfile             # Multi-stage: NGINX + PHP-FPM
+```
+
+---
+
+## 🐳 `docker-compose.yml` (actualizado para PHP 8.3 + NGINX)
+
+```yaml
+version: '3.8'
+
+services:
+  auth_db:
+    image: postgres:16
+    container_name: auth_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/auth_db_password
+    secrets:
+      - auth_db_password
+    volumes:
+      - ./volumes/auth_db:/var/lib/postgresql/data
+    networks:
+      - mrp_net
+
+  mrp_db:
+    image: postgres:16
+    container_name: mrp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mrp_db
+      POSTGRES_USER: mrp_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/mrp_db_password
+    secrets:
+      - mrp_db_password
+    volumes:
+      - ./volumes/mrp_db:/var/lib/postgresql/data
+      - ./init/mrp_init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mrp_net
+
+  mrp-api:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: mrp_api
+    restart: unless-stopped
+    environment:
+      AUTH_DB_HOST: auth_db
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: auth_db
+      AUTH_DB_USER: auth_user
+      MRP_DB_HOST: mrp_db
+      MRP_DB_PORT: 5432
+      MRP_DB_NAME: mrp_db
+      MRP_DB_USER: mrp_user
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+    secrets:
+      - auth_db_password
+      - mrp_db_password
+      - jwt_secret
+    ports:
+      - "8080:80"  # Acceso a la API vía http://localhost:8080
+    networks:
+      - mrp_net
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      mrp_db:
+        condition: service_healthy
+
+secrets:
+  auth_db_password:
+    file: ./secrets/auth_db_password.txt
+  mrp_db_password:
+    file: ./secrets/mrp_db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+
+networks:
+  mrp_net:
+    driver: bridge
+```
+
+> ✅ Puerto **8080** en host → **puerto 80** en contenedor (NGINX).
+
+---
+
+## 🐘 `Dockerfile` (PHP 8.3 + NGINX + PHP-FPM)
+
+```dockerfile
+# app/Dockerfile
+FROM php:8.3-fpm AS php_base
+
+# Instalar extensiones necesarias
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+
+# Copiar código fuente
+WORKDIR /var/www/html
+COPY src/ .
+
+# === NGINX ===
+FROM nginx:alpine
+
+# Copiar configuración de NGINX
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Copiar código desde la etapa PHP
+COPY --from=php_base /var/www/html /var/www/html
+
+# Exponer puerto
+EXPOSE 80
+```
+
+---
+
+## ⚙️ `app/nginx/default.conf`
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass php_base:9000;  # ← ¡Nombre del servicio FPM!
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # Bloquear archivos sensibles
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+> ❗ **Importante**: `fastcgi_pass php_base:9000` **no funcionará** porque NGINX y PHP-FPM están en el mismo contenedor en esta configuración.
+
+### 🔧 Solución: usar un solo contenedor con supervisión (más simple para PHP)
+
+Vamos a ajustar el `Dockerfile` para ejecutar **NGINX y PHP-FPM en el mismo contenedor** (común en apps PHP pequeñas):
+
+---
+
+## ✅ `Dockerfile` corregido (NGINX + PHP-FPM en un contenedor)
+
+```dockerfile
+# app/Dockerfile
+FROM php:8.3-fpm
+
+# Instalar NGINX y extensiones
+RUN apt-get update && apt-get install -y \
+    nginx \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+
+# Copiar configuración de NGINX
+COPY nginx/default.conf /etc/nginx/sites-available/default
+
+# Copiar código
+WORKDIR /var/www/html
+COPY src/ .
+
+# Limpiar caché
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Exponer puerto
+EXPOSE 80
+
+# Iniciar NGINX y PHP-FPM
+CMD service nginx start && php-fpm
+```
+
+> ✅ Ahora NGINX y PHP-FPM corren en el mismo contenedor → `fastcgi_pass 127.0.0.1:9000;`
+
+---
+
+## 🔄 `app/nginx/default.conf` (ajustado para localhost)
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;  # PHP-FPM en el mismo contenedor
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+---
+
+## 🧪 `app/src/index.php` (ejemplo mínimo de API)
+
+```php
+<?php
+// Leer secretos
+function getSecret($name) {
+    return trim(file_get_contents("/run/secrets/$name"));
+}
+
+// Variables de entorno
+$authDbPassword = getSecret('auth_db_password');
+$mrpDbPassword  = getSecret('mrp_db_password');
+$jwtSecret      = getSecret('jwt_secret');
+
+$authHost = $_ENV['AUTH_DB_HOST'] ?? 'auth_db';
+$mrpHost  = $_ENV['MRP_DB_HOST']  ?? 'mrp_db';
+
+// Conexión de ejemplo a auth_db
+try {
+    $authDsn = "pgsql:host=$authHost;port=5432;dbname=auth_db;";
+    $authConn = new PDO($authDsn, 'auth_user', $authDbPassword);
+    $authConn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Auth DB error: " . $e->getMessage());
+}
+
+// Conexión de ejemplo a mrp_db
+try {
+    $mrpDsn = "pgsql:host=$mrpHost;port=5432;dbname=mrp_db;";
+    $mrpConn = new PDO($mrpDsn, 'mrp_user', $mrpDbPassword);
+    $mrpConn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("MRP DB error: " . $e->getMessage());
+}
+
+// Endpoint simple
+header('Content-Type: application/json');
+echo json_encode([
+    "status" => "OK",
+    "message" => "Conectado a auth_db y mrp_db",
+    "time" => date('c')
+]);
+```
+
+---
+
+## 🔐 Generar secretos (una sola vez)
+
+```bash
+mkdir -p secrets
+echo "secure_auth_password_123" > secrets/auth_db_password.txt
+echo "secure_mrp_password_456" > secrets/mrp_db_password.txt
+openssl rand -hex 32 > secrets/jwt_secret.txt
+chmod 600 secrets/*.txt
+```
+
+---
+
+## ▶️ Levantar todo
+
+```bash
+# Crear estructura
+mkdir -p secrets volumes/auth_db volumes/mrp_db init app/src app/nginx
+
+# Guardar los archivos anteriores en sus rutas
+
+# Levantar
+docker-compose up -d --build
+
+# Probar
+curl http://localhost:8080
+# Debe responder: {"status":"OK","message":"Conectado a auth_db y mrp_db",...}
+```
+
+---
+
+## ✅ Ventajas
+
+- Usa **PHP 8.3 oficial** con FPM.
+- **NGINX ligero** como servidor web.
+- **Secretos seguros** (sin variables en claro).
+- **Aislamiento total** entre bases de datos.
+- Listo para escalar a microservicios si lo necesitas más adelante.
+
+---
+
+¿Quieres que agregue:
+- Soporte para **Xdebug** (desarrollo)?
+- Un **archivo `.gitignore`**?
+- O un script para **crear backups por empresa desde dentro del contenedor**?
+
+¡Avísame y lo integro!
+
+### USER
+listarme todos los módulos que puede tener un MRP BÁSICOS, MRP 1 y MRP 2
+
+### ASSISTANT
+Claro. A continuación, te presento una **lista estructurada y clara** de los módulos típicos que componen un sistema MRP en sus tres niveles de madurez:
+
+- **MRP Básico** (para microempresas o arranque)  
+- **MRP I** (Material Requirements Planning – Planificación de Necesidades de Materiales)  
+- **MRP II** (Manufacturing Resource Planning – Planificación de Recursos de Manufactura)
+
+Esta clasificación sigue estándares industriales (APICS, ISO) y es compatible con tu arquitectura multiempresa, escalable y basada en PostgreSQL + JSONB.
+
+---
+
+## 🟢 **MRP BÁSICO**  
+*(Ideal para 1–5 trabajadores, taller o pequeña fábrica)*
+
+| Módulo | Descripción |
+|-------|-------------|
+| **Catálogo de Ítems** | Productos terminados, semielaborados y materias primas (código, nombre, unidad, tipo). |
+| **Lista de Materiales (BOM)** | Estructura de qué componentes se necesitan para fabricar un ítem. |
+| **Inventario Básico** | Control de stock físico (entradas, salidas, saldo). Puede incluir ubicaciones simples. |
+| **Órdenes de Producción (OP)** | Crear, liberar y cerrar órdenes de fabricación. |
+| **Gestión de Empresas/Usuarios** | Multiempresa, roles básicos (operador, admin), autenticación. |
+
+> ✅ **Objetivo**: Reemplazar hojas de Excel o procesos manuales.  
+> 🔧 **Tecnología**: Tablas normalizadas + `metadata JSONB` para flexibilidad (ej: lote, vencimiento).
+
+---
+
+## 🔵 **MRP I**  
+*(Planificación de Necesidades de Materiales – Enfoque en materiales)*
+
+Agrega a lo anterior:
+
+| Módulo | Descripción |
+|-------|-------------|
+| **Plan Maestro de Producción (MPS)** | Plan de producción a nivel de producto terminado (qué, cuánto, cuándo). |
+| **Explosión de BOM** | Cálculo automático de requerimientos de componentes a partir del MPS. |
+| **Requerimientos Netos** | Ajuste de necesidades brutas por inventario disponible y recepciones programadas. |
+| **Sugerencias de Órdenes** | Generación automática de OPs o solicitudes de compra. |
+| **Gestión de Compras Básica** | Proveedores, solicitudes de compra, recepción de materiales. |
+| **Reportes de Faltantes** | Alertas de materiales insuficientes para cumplir el plan. |
+
+> ✅ **Objetivo**: Asegurar que los materiales estén disponibles cuando se necesiten.  
+> 📊 **Salidas clave**: Lista de compras, lista de órdenes de producción sugeridas.
+
+---
+
+## 🔴 **MRP II**  
+*(Planificación de Recursos de Manufactura – Enfoque integral: materiales + capacidad)*
+
+Agrega a lo anterior:
+
+| Módulo | Descripción |
+|-------|-------------|
+| **Rutas de Producción** | Secuencia de operaciones, centros de trabajo, tiempos estándar (setup + corrida). |
+| **Centros de Trabajo / Recursos** | Máquinas, líneas, personal calificado; con capacidad definida (horas/día). |
+| **Carga de Recursos** | Asignación de órdenes a recursos y visualización de sobrecarga/subutilización. |
+| **Programación Finita** | Secuenciación realista de órdenes respetando disponibilidad de recursos. |
+| **Costeo Estándar** | Cálculo de costos de producción (materiales + mano de obra + gastos indirectos). |
+| **Control de Calidad** | Inspecciones en recepción, en proceso o final (con no conformidades). |
+| **Gestión de Inventarios Avanzada** | Lotes, números de serie, fechas de vencimiento, trazabilidad. |
+| **Integración Financiera Básica** | Conciliación de costos, valorización de inventario. |
+
+> ✅ **Objetivo**: Sincronizar **materiales**, **capacidad** y **tiempos** para una ejecución eficiente.  
+> 🏭 **Resultado**: Capacidad para planificar y ejecutar la producción de forma realista y rentable.
+
+---
+
+## 📦 Visión Modular (para tu arquitectura)
+
+Puedes implementar estos módulos como **extensiones independientes** activadas por el `plan` de la empresa (`basic`, `mrp1`, `mrp2`):
+
+| Módulo Técnico (BD) | Plan mínimo | Tablas nuevas (ej.) |
+|---------------------|------------|---------------------|
+| `items`, `bom`, `inventory`, `production_orders` | `basic` | Ya definidas |
+| `mps`, `material_requirements`, `purchase_orders`, `suppliers` | `mrp1` | Nuevas tablas |
+| `routing`, `work_centers`, `capacity_load`, `quality_inspections` | `mrp2` | Nuevas tablas |
+| `lots`, `serial_numbers` | `mrp1` o `mrp2` | Extensión vía `JSONB` o tablas separadas |
+
+> 💡 **Consejo**: Usa `metadata JSONB` en tablas existentes para evitar migraciones complejas al agregar funcionalidades (ej: agregar `lote` a `inventory.metadata` antes de crear tabla `lots`).
+
+---
+
+## ✅ Resumen Visual
+
+```
+MRP BÁSICO
+├── Ítems
+├── BOM
+├── Inventario
+├── Órdenes de Producción
+└── Usuarios/Empresas
+
+MRP I (+ MRP Básico)
+├── MPS
+├── Explosión de BOM
+├── Requerimientos Netos
+├── Compras
+└── Reportes de Faltantes
+
+MRP II (+ MRP I)
+├── Rutas de Producción
+├── Centros de Trabajo
+├── Carga y Capacidad
+├── Programación Finita
+├── Costeo
+├── Calidad
+└── Trazabilidad (lotes/serie)
+```
+
+---
+
+¿Te gustaría que genere:
+- Un **diagrama entidad-relación (ERD)** para MRP II?
+- Una **hoja de ruta de implementación** por fases?
+- O una **tabla de permisos por módulo y rol** (`owner`, `admin`, `operator`)?
+
+Estoy listo para ayudarte a priorizar el desarrollo.

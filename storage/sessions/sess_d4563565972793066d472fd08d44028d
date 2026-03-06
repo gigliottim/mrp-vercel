@@ -1,0 +1,1 @@
+auth|a:2:{s:4:"user";a:3:{s:2:"id";i:1;s:8:"username";s:4:"demo";s:4:"role";s:5:"admin";}s:6:"tenant";a:3:{s:2:"id";i:1;s:11:"schema_name";s:6:"public";s:8:"database";a:1:{s:4:"name";s:3:"mrp";}}}

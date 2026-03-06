@@ -1,0 +1,427 @@
+/**
+ * ComposicionMaestro - Alpine.js Component
+ *
+ * Módulo para la gestión de composición en vista maestro (árbol).
+ * Cumple con normativa: código JavaScript externalizado.
+ *
+ * @version 1.0.0
+ */
+
+/**
+ * Crea el componente Alpine.js para maestro de composición
+ *
+ * @param {Object} config Configuración del componente
+ * @param {Array} config.treeData Datos del árbol BOM
+ * @param {Object} config.variantes Diccionario de variantes disponibles
+ * @param {string} config.apiSearchUrl URL del endpoint de búsqueda
+ * @param {string} config.baseActionUrl URL base para acciones CRUD
+ * @returns {Object} Objeto de datos Alpine.js
+ */
+window.createComposicionMaestroApp = function (config) {
+  return {
+    // Estado
+    flatTree: config.treeData || [],
+    selectedNode: null,
+    variantes: config.variantes || {},
+    editingItem: {},
+    editActionUrl: '',
+    activeFilter: '',
+    forbiddenIds: [],
+    filteredVariants: [],
+    selectedMaterial: '',
+    searchQuery: '',
+    showSearchResults: false,
+    searchResults: [],
+    searchClient: null,
+    addItemParentId: null,
+    addActionUrl: '',
+    replacementItem: {},
+    availableReplacements: [],
+    replaceActionUrl: '',
+    viewMode: 'list', // 'list' o 'tree'
+
+    /**
+     * Inicialización del componente
+     */
+    init() {
+      this.logInitialization();
+      this.normalizeVariantes();
+      this.autoSelectRoot();
+      this.enhanceTreeWithIcons();
+      this.setupWatchers();
+      this.initializeTooltips();
+    },
+
+    /**
+     * Log de inicialización
+     */
+    logInitialization() {
+      console.group('🚀 Maestro App Init');
+      console.log('Variantes loaded:', this.variantes);
+      console.log('Type:', typeof this.variantes, 'IsArray:', Array.isArray(this.variantes));
+      console.log('Keys count:', Object.keys(this.variantes).length);
+      console.log('Values count:', Object.values(this.variantes).length);
+      console.groupEnd();
+    },
+
+    /**
+     * Normaliza variantes si es array vacío
+     */
+    normalizeVariantes() {
+      if (Array.isArray(this.variantes) && this.variantes.length === 0) {
+        console.warn('⚠️ Variantes is empty array, converting to empty object');
+        this.variantes = {};
+      }
+    },
+
+    /**
+     * Auto-selecciona el nodo raíz
+     */
+    autoSelectRoot() {
+      if (this.flatTree.length > 0) {
+        this.selectNode(this.flatTree[0]);
+      }
+    },
+
+    /**
+     * Agrega iconos a los nodos del árbol
+     */
+    enhanceTreeWithIcons() {
+      this.flatTree = this.flatTree.map(node => ({
+        ...node,
+        icon_class: this.hasChildrenInTree(node)
+          ? 'fa-folder text-warning me-2'
+          : 'fa-cube text-info me-2'
+      }));
+    },
+
+    /**
+     * Configura watchers reactivos
+     */
+    setupWatchers() {
+      this.updateFilteredVariants();
+      this.$watch('activeFilter', () => this.updateFilteredVariants());
+    },
+
+    /**
+     * Inicializa tooltips de Bootstrap
+     */
+    initializeTooltips() {
+      this.$nextTick(() => {
+        const tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        tooltipTriggerList.map(tooltipTriggerEl =>
+          new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+      });
+    },
+
+    /**
+     * Establece filtro de tipo
+     */
+    setFilter(type) {
+      this.activeFilter = type;
+    },
+
+    /**
+     * Selecciona un nodo del árbol
+     */
+    selectNode(node) {
+      this.selectedNode = node;
+    },
+
+    /**
+     * Cambia el modo de visualización
+     */
+    setViewMode(mode) {
+      this.viewMode = mode;
+    },
+
+    /**
+     * Obtiene el árbol recursivo del nodo seleccionado
+     */
+    getNodeTree(parentNode, level = 0) {
+      if (!parentNode) return [];
+
+      const children = this.getChildren(parentNode);
+      const result = [];
+
+      children.forEach(child => {
+        result.push({
+          ...child,
+          level: level
+        });
+
+        // Recursivamente obtener hijos
+        const subChildren = this.getNodeTree(child, level + 1);
+        result.push(...subChildren);
+      });
+
+      return result;
+    },
+
+    /**
+     * Obtiene hijos de un nodo
+     */
+    getChildren(parentNode) {
+      if (!parentNode) return [];
+
+      const parentId = parentNode.variante_id;
+      return this.flatTree.filter(n => n.parent_id === parentId);
+    },
+
+    /**
+     * Verifica si un nodo tiene hijos
+     */
+    hasChildrenInTree(node) {
+      return this.flatTree.some(n => n.parent_id === node.variante_id);
+    },
+
+    /**
+     * Actualiza variantes filtradas
+     */
+    updateFilteredVariants() {
+      const rawVariants = Object.values(this.variantes);
+
+      console.group('updateFilteredVariants');
+      console.log('Raw variants count:', rawVariants.length);
+      console.log('Forbidden IDs:', this.forbiddenIds);
+      console.log('Active Filter:', this.activeFilter);
+
+      const forbiddenSet = new Set(this.forbiddenIds.map(id => String(id)));
+
+      this.filteredVariants = rawVariants.filter(v => {
+        if (!v || !v.id) {
+          console.warn('Invalid variant object:', v);
+          return false;
+        }
+
+        // Prevención de ciclos
+        if (forbiddenSet.has(String(v.id))) {
+          return false;
+        }
+
+        // Filtro por tipo
+        if (this.activeFilter !== '') {
+          const tipo = v.tipo_codigo;
+
+          if (this.activeFilter === 'PART') {
+            return ['SC', 'PT', 'PART'].includes(tipo);
+          }
+
+          if (!tipo) return false;
+          return tipo === this.activeFilter;
+        }
+
+        return true;
+      });
+
+      // Ordenar alfabéticamente
+      this.filteredVariants.sort((a, b) => {
+        const na = (a.parte_codigo + a.codigo_variante).toLowerCase();
+        const nb = (b.parte_codigo + b.codigo_variante).toLowerCase();
+        return na.localeCompare(nb);
+      });
+
+      console.log('Filtered count:', this.filteredVariants.length);
+      console.groupEnd();
+    },
+
+    /**
+     * Actualiza resultados de búsqueda
+     */
+    updateSearchResults() {
+      const query = this.searchQuery.trim();
+
+      if (query.length < 2) {
+        this.searchResults = [];
+        this.showSearchResults = false;
+        return;
+      }
+
+      this.performSearch(query);
+    },
+
+    /**
+     * Realiza búsqueda via API
+     */
+    async performSearch(query) {
+      try {
+        const response = await fetch(config.apiSearchUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            query: query,
+            filters: {
+              tipo_codigo: this.activeFilter || undefined,
+              exclude_ids: this.forbiddenIds
+            },
+            limit: 10,
+            format: 'standard'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          this.searchResults = data.results || [];
+          this.showSearchResults = true;
+        } else {
+          console.error('Search error:', data.message);
+          this.searchResults = [];
+          this.showSearchResults = false;
+        }
+      } catch (error) {
+        console.error('Search API error:', error);
+        this.searchResults = [];
+        this.showSearchResults = false;
+      }
+    },
+
+    /**
+     * Selecciona resultado de búsqueda
+     */
+    selectSearchResult(item) {
+      this.selectedMaterial = item.id;
+      this.searchQuery = `[${item.tipo_codigo || 'OTRO'}] ${item.codigo_variante} - ${item.detalle || item.variante_detalle || 'Sin detalle'}`;
+      this.showSearchResults = false;
+    },
+
+    /**
+     * Obtiene ID de parte de un nodo
+     */
+    getPartId(node) {
+      const v = this.variantes[node.variante_id];
+      return v ? v.id_parte : 0;
+    },
+
+    /**
+     * Abre modal de edición
+     */
+    editItem(item) {
+      this.editingItem = { ...item };
+      this.editActionUrl = `${config.baseActionUrl}/${item.bom_detalle_id}`;
+
+      const modalEl = document.getElementById('modalEditar');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    },
+
+    /**
+     * Elimina un item (con confirmación)
+     */
+    deleteItem(item) {
+      if (!confirm('¿Estás seguro de quitar este componente?')) {
+        return;
+      }
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `${config.baseActionUrl}/${item.bom_detalle_id}`;
+
+      const methodField = document.createElement('input');
+      methodField.type = 'hidden';
+      methodField.name = '_method';
+      methodField.value = 'DELETE';
+      form.appendChild(methodField);
+
+      const redirField = document.createElement('input');
+      redirField.type = 'hidden';
+      redirField.name = 'redirect_to';
+      redirField.value = window.location.href;
+      form.appendChild(redirField);
+
+      document.body.appendChild(form);
+      form.submit();
+    },
+
+    /**
+     * Abre modal de reemplazo
+     */
+    replaceItem(item) {
+      this.replacementItem = { ...item };
+      const partId = this.getPartId(item);
+
+      this.availableReplacements = Object.values(this.variantes).filter(v =>
+        v.id_parte == partId && v.id != item.variante_id
+      );
+
+      this.replaceActionUrl = `${config.baseActionUrl}/${item.bom_detalle_id}`;
+
+      const modalEl = document.getElementById('modalReemplazar');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    },
+
+    /**
+     * Muestra destino de partes
+     */
+    destinoPartes(item) {
+      console.group('📦 Destino de Partes');
+      console.log('Item:', item);
+      console.log('Código Variante:', item.codigo_variante);
+      console.log('Variante ID:', item.variante_id);
+      console.groupEnd();
+
+      // TODO: Implementar funcionalidad de destino de partes
+      alert(`Destino de Partes\n\nCódigo: ${item.codigo_variante}\nVariante: ${item.variante_detalle}\n\n(Funcionalidad pendiente de implementación)`);
+    },
+
+    /**
+     * Abre modal de agregar componente
+     */
+    openAddModal() {
+      if (!this.selectedNode) {
+        alert('Por favor selecciona un nodo primero');
+        return;
+      }
+
+      console.group('🔵 openAddModal');
+      console.log('Selected Node:', this.selectedNode);
+
+      // Reset
+      this.selectedMaterial = '';
+      this.searchQuery = '';
+      this.showSearchResults = false;
+      this.searchResults = [];
+      this.activeFilter = '';
+
+      // Configurar acción
+      this.addItemParentId = this.selectedNode.variante_id;
+      this.addActionUrl = config.baseActionUrl;
+
+      // Calcular IDs prohibidos (prevenir ciclos)
+      this.forbiddenIds = [this.selectedNode.variante_id];
+
+      if (this.selectedNode.path) {
+        const pathString = String(this.selectedNode.path);
+        const cleanPath = pathString.replace(/^\{|\}$/g, '');
+        if (cleanPath) {
+          const ancestorIds = cleanPath.split(',').map(id => parseInt(id));
+          ancestorIds.forEach(id => {
+            if (!this.forbiddenIds.includes(id)) {
+              this.forbiddenIds.push(id);
+            }
+          });
+        }
+      }
+
+      console.log('Forbidden IDs calculated:', this.forbiddenIds);
+      this.updateFilteredVariants();
+      console.log('Filtered Variants result:', this.filteredVariants.length);
+      console.groupEnd();
+
+      const modalEl = document.getElementById('modalAgregar');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+  };
+};

@@ -1,0 +1,1 @@
+ALTER TABLE tipos_partes ADD COLUMN requiere_stock BOOLEAN DEFAULT TRUE;

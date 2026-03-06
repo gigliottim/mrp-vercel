@@ -11,29 +11,44 @@ final class EmpresaUsuariosController extends Controller
 {
     public function empresa(): Response
     {
-        return $this->render('pages/placeholder', [
-            'title' => 'Empresa',
+        return $this->render('pages/admin/empresa-usuarios/empresa', [
+            'empresas' => [],
+            'editing' => null,
+            'old' => [],
+            'errors' => [],
         ]);
     }
 
     public function usuarios(): Response
     {
-        return $this->render('pages/placeholder', [
-            'title' => 'Usuarios',
+        return $this->render('pages/admin/empresa-usuarios/usuarios', [
+            'usuarios' => [],
+            'roles' => [],
+            'editing' => null,
+            'old' => [],
+            'errors' => [],
         ]);
     }
 
     public function roles(): Response
     {
-        return $this->render('pages/placeholder', [
-            'title' => 'Roles',
+        return $this->render('pages/admin/empresa-usuarios/roles', [
+            'roles' => [],
+            'editing' => null,
+            'old' => [],
+            'errors' => [],
         ]);
     }
 
     public function permisos(): Response
     {
-        return $this->render('pages/placeholder', [
-            'title' => 'Permisos',
+        return $this->render('pages/admin/empresa-usuarios/permisos', [
+            'aclRows' => [],
+            'menuTree' => [],
+            'subjects' => [],
+            'editing' => null,
+            'old' => [],
+            'errors' => [],
         ]);
     }
 }

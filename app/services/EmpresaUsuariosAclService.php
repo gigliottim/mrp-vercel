@@ -19,7 +19,7 @@ final class EmpresaUsuariosAclService
     public function listMenuTree(): array
     {
         $stmt = $this->connection->query(
-            'SELECT id, code, label
+            'SELECT id, code, label, route, icon, section_key, section_label, parent_id, sort_order
              FROM menu_items
              WHERE is_active = TRUE
              ORDER BY section_key ASC, sort_order ASC, id ASC'

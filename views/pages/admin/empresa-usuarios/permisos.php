@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Core\View\View;
+use App\Core\Support\AssetHelper;
 
 $old = $old ?? [];
 $editing = $editing ?? null;
@@ -23,21 +24,71 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
     return $default;
 };
 
-$subjectTypeOptions = [
-    'role' => 'Rol',
-    'user' => 'Usuario',
-];
+$subjectTypeOptions = ['role' => 'Rol', 'user' => 'Usuario'];
+$scopeOptions = ['item' => 'Item', 'branch' => 'Branch'];
+$permissionOptions = ['read' => 'Read', 'write' => 'Write', 'deny' => 'Deny'];
 
-$scopeOptions = [
-    'item' => 'Item',
-    'branch' => 'Branch',
-];
+$selectedMenuId = (int) $oldValue('menu_item_id', 0);
+$selectedSubjectType = (string) $oldValue('subject_type', 'role');
+$selectedSubjectId = (int) $oldValue('subject_id', 0);
 
-$permissionOptions = [
-    'read' => 'Read',
-    'write' => 'Write',
-    'deny' => 'Deny',
-];
+$nodesById = [];
+$sectionOrder = [];
+foreach ($menuTree as $node) {
+    $id = (int) ($node['id'] ?? 0);
+    if ($id <= 0) {
+        continue;
+    }
+
+    $sectionKey = (string) ($node['section_key'] ?? 'general');
+    if (!isset($sectionOrder[$sectionKey])) {
+        $sectionOrder[$sectionKey] = (string) ($node['section_label'] ?? 'General');
+    }
+
+    $nodesById[$id] = [
+        'id' => $id,
+        'label' => (string) ($node['label'] ?? ''),
+        'code' => (string) ($node['code'] ?? ''),
+        'icon' => (string) ($node['icon'] ?? 'fa-solid fa-circle'),
+        'parent_id' => isset($node['parent_id']) && $node['parent_id'] !== null ? (int) $node['parent_id'] : 0,
+        'sort_order' => (int) ($node['sort_order'] ?? 0),
+        'section_key' => $sectionKey,
+        'section_label' => (string) ($node['section_label'] ?? 'General'),
+    ];
+}
+
+$childrenByParent = [];
+foreach ($nodesById as $node) {
+    $parentId = $node['parent_id'];
+    if (!isset($nodesById[$parentId])) {
+        $parentId = 0;
+    }
+    $childrenByParent[$parentId][] = $node;
+}
+
+foreach ($childrenByParent as &$children) {
+    usort($children, static function (array $a, array $b): int {
+        $orderDiff = ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0);
+        if ($orderDiff !== 0) {
+            return $orderDiff;
+        }
+        return strcmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
+    });
+}
+unset($children);
+
+$sectionRootsByKey = [];
+foreach ($sectionOrder as $sectionKey => $sectionLabel) {
+    $sectionRootsByKey[$sectionKey] = array_values(array_filter(
+        $childrenByParent[0] ?? [],
+        static fn(array $node): bool => (string) ($node['section_key'] ?? '') === $sectionKey
+    ));
+}
+
+$selectedMenuInfo = null;
+if ($selectedMenuId > 0 && isset($nodesById[$selectedMenuId])) {
+    $selectedMenuInfo = $nodesById[$selectedMenuId];
+}
 
 if ($menuTree === []) {
     $menuTree = [
@@ -48,6 +99,7 @@ if ($menuTree === []) {
     ];
 }
 ?>
+<link rel="stylesheet" href="<?= AssetHelper::css('modules/empresa-usuarios/permisos-tree.css') ?>">
 
 <section class="mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -66,7 +118,7 @@ if ($menuTree === []) {
 </nav>
 
 <div class="row g-4">
-    <div class="col-12 col-xl-4">
+    <div class="col-12">
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -90,124 +142,196 @@ if ($menuTree === []) {
                     <?php if ($editing) : ?>
                         <input type="hidden" name="_method" value="PUT">
                     <?php endif; ?>
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-7">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0" for="menu-tree-search">Arbol de menu</label>
+                                <small class="text-muted">Seleccion visual por nodo</small>
+                            </div>
 
-                    <div>
-                        <label class="form-label" for="menu_item_id">Arbol</label>
-                        <select
-                            id="menu_item_id"
-                            class="form-select<?= isset($errors['menu_item_id']) ? ' is-invalid' : '' ?>"
-                            name="menu_item_id"
-                            required>
-                            <?php $selectedMenu = (string) $oldValue('menu_item_id', ''); ?>
-                            <?php foreach ($menuTree as $node) : ?>
-                                <?php
-                                $nodeId = (string) ($node['id'] ?? '');
-                                $nodeLabel = (string) ($node['label'] ?? $nodeId);
-                                $nodeCode = (string) ($node['code'] ?? '');
-                                ?>
-                                <option value="<?= View::escape($nodeId) ?>" <?= $selectedMenu === $nodeId ? 'selected' : '' ?>>
-                                    <?= View::escape($nodeLabel . ($nodeCode !== '' ? ' (' . $nodeCode . ')' : '')) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <?php if (isset($errors['menu_item_id'])) : ?>
-                            <div class="invalid-feedback"><?= View::escape($errors['menu_item_id']) ?></div>
-                        <?php endif; ?>
-                    </div>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input id="menu-tree-search" type="text" class="form-control" placeholder="Filtrar por etiqueta o codigo">
+                            </div>
 
-                    <div>
-                        <label class="form-label" for="subject_type">Sujeto</label>
-                        <select
-                            id="subject_type"
-                            class="form-select<?= isset($errors['subject_type']) ? ' is-invalid' : '' ?>"
-                            name="subject_type"
-                            required>
-                            <?php $selectedSubjectType = (string) $oldValue('subject_type', 'role'); ?>
-                            <?php foreach ($subjectTypeOptions as $key => $label) : ?>
-                                <option value="<?= $key ?>" <?= $selectedSubjectType === $key ? 'selected' : '' ?>><?= $label ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <?php if (isset($errors['subject_type'])) : ?>
-                            <div class="invalid-feedback"><?= View::escape($errors['subject_type']) ?></div>
-                        <?php endif; ?>
-                    </div>
+                            <?php
+                            $renderTreeNode = function (array $treeNode) use (&$renderTreeNode, $childrenByParent, $selectedMenuId): string {
+                                $nodeId = (int) ($treeNode['id'] ?? 0);
+                                $nodeLabel = (string) ($treeNode['label'] ?? '');
+                                $nodeCode = (string) ($treeNode['code'] ?? '');
+                                $nodeIcon = (string) ($treeNode['icon'] ?? 'fa-solid fa-circle');
+                                $isSelected = $nodeId === $selectedMenuId;
+                                $children = $childrenByParent[$nodeId] ?? [];
 
-                    <div>
-                        <label class="form-label" for="subject_id">ID Rol/Usuario</label>
-                        <input
-                            id="subject_id"
-                            class="form-control<?= isset($errors['subject_id']) ? ' is-invalid' : '' ?>"
-                            type="number"
-                            min="1"
-                            step="1"
-                            name="subject_id"
-                            value="<?= View::escape((string) $oldValue('subject_id')) ?>"
-                            required>
-                        <?php if (isset($errors['subject_id'])) : ?>
-                            <div class="invalid-feedback"><?= View::escape($errors['subject_id']) ?></div>
-                        <?php endif; ?>
-                    </div>
+                                $html = '<li class="acl-tree-li" data-tree-li="1">';
+                                $html .= '<div class="acl-tree-node' . ($isSelected ? ' is-selected' : '') . '"';
+                                $html .= ' data-tree-node';
+                                $html .= ' data-node-id="' . $nodeId . '"';
+                                $html .= ' data-node-label="' . esc($nodeLabel) . '"';
+                                $html .= ' data-node-code="' . esc($nodeCode) . '"';
+                                $html .= ' data-search-text="' . esc(mb_strtolower($nodeLabel . ' ' . $nodeCode)) . '">';
+                                $html .= '<i class="' . esc($nodeIcon) . ' text-primary"></i>';
+                                $html .= '<div class="d-flex flex-column">';
+                                $html .= '<span class="fw-semibold">' . esc($nodeLabel) . '</span>';
+                                $html .= '<span class="acl-tree-node-code">' . esc($nodeCode) . '</span>';
+                                $html .= '</div></div>';
 
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <label class="form-label" for="scope">Scope</label>
-                            <select
-                                id="scope"
-                                class="form-select<?= isset($errors['scope']) ? ' is-invalid' : '' ?>"
-                                name="scope"
-                                required>
-                                <?php $selectedScope = (string) $oldValue('scope', 'item'); ?>
-                                <?php foreach ($scopeOptions as $key => $label) : ?>
-                                    <option value="<?= $key ?>" <?= $selectedScope === $key ? 'selected' : '' ?>><?= $label ?></option>
+                                if ($children !== []) {
+                                    $html .= '<ul class="acl-tree-list">';
+                                    foreach ($children as $childNode) {
+                                        $html .= $renderTreeNode($childNode);
+                                    }
+                                    $html .= '</ul>';
+                                }
+
+                                $html .= '</li>';
+                                return $html;
+                            };
+                            ?>
+
+                            <div class="acl-tree-panel" id="acl-tree-panel">
+                                <?php foreach ($sectionOrder as $sectionKey => $sectionLabel) : ?>
+                                    <?php $sectionRoots = $sectionRootsByKey[$sectionKey] ?? []; ?>
+                                    <?php if ($sectionRoots === []) {
+                                        continue;
+                                    } ?>
+                                    <div class="acl-tree-block" data-tree-section="1">
+                                        <div class="acl-tree-section"><?= View::escape((string) $sectionLabel) ?></div>
+                                        <ul class="acl-tree-list">
+                                            <?php foreach ($sectionRoots as $rootNode) : ?>
+                                                <?= $renderTreeNode($rootNode) ?>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
                                 <?php endforeach; ?>
-                            </select>
-                            <?php if (isset($errors['scope'])) : ?>
-                                <div class="invalid-feedback"><?= View::escape($errors['scope']) ?></div>
+                            </div>
+
+                            <div class="acl-selected-box mt-2">
+                                <div class="small text-muted">Nodo seleccionado</div>
+                                <div id="selected-menu-node" class="fw-semibold">
+                                    <?php if ($selectedMenuInfo !== null) : ?>
+                                        <?= View::escape((string) $selectedMenuInfo['label']) ?>
+                                        <span class="text-muted">(<?= View::escape((string) $selectedMenuInfo['code']) ?>)</span>
+                                    <?php else : ?>
+                                        Ninguno
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <input
+                                id="menu_item_id"
+                                class="form-control d-none<?= isset($errors['menu_item_id']) ? ' is-invalid' : '' ?>"
+                                type="number"
+                                name="menu_item_id"
+                                value="<?= View::escape((string) $selectedMenuId) ?>"
+                                min="1"
+                                required>
+
+                            <?php if (isset($errors['menu_item_id'])) : ?>
+                                <div class="text-danger small mt-1"><?= View::escape($errors['menu_item_id']) ?></div>
                             <?php endif; ?>
                         </div>
-                        <div class="col-6">
-                            <label class="form-label" for="permission_level">Permiso</label>
+
+                        <div class="col-12 col-xl-5">
+                            <label class="form-label" for="subject_type">Sujeto</label>
                             <select
-                                id="permission_level"
-                                class="form-select<?= isset($errors['permission_level']) ? ' is-invalid' : '' ?>"
-                                name="permission_level"
+                                id="subject_type"
+                                class="form-select<?= isset($errors['subject_type']) ? ' is-invalid' : '' ?>"
+                                name="subject_type"
                                 required>
-                                <?php $selectedPerm = (string) $oldValue('permission_level', 'read'); ?>
-                                <?php foreach ($permissionOptions as $key => $label) : ?>
-                                    <option value="<?= $key ?>" <?= $selectedPerm === $key ? 'selected' : '' ?>><?= $label ?></option>
+                                <?php foreach ($subjectTypeOptions as $key => $label) : ?>
+                                    <option value="<?= $key ?>" <?= $selectedSubjectType === $key ? 'selected' : '' ?>><?= $label ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <?php if (isset($errors['permission_level'])) : ?>
-                                <div class="invalid-feedback"><?= View::escape($errors['permission_level']) ?></div>
+                            <?php if (isset($errors['subject_type'])) : ?>
+                                <div class="invalid-feedback d-block"><?= View::escape($errors['subject_type']) ?></div>
                             <?php endif; ?>
-                        </div>
-                    </div>
 
-                    <div class="d-grid">
-                        <button class="btn btn-primary" type="submit">
-                            <?= $editing ? 'Actualizar permiso' : 'Crear permiso' ?>
-                        </button>
+                            <div class="mt-3">
+                                <label class="form-label" for="subject_ref">Seleccion rapida (rol/usuario)</label>
+                                <select id="subject_ref" class="form-select">
+                                    <option value="">Seleccionar...</option>
+                                    <?php foreach ($subjects as $subject) : ?>
+                                        <?php
+                                        $sType = (string) ($subject['subject_type'] ?? '');
+                                        $sId = (int) ($subject['id'] ?? 0);
+                                        $selected = $sType === $selectedSubjectType && $sId === $selectedSubjectId;
+                                        ?>
+                                        <option
+                                            value="<?= View::escape($sType . ':' . $sId) ?>"
+                                            data-subject-type="<?= View::escape($sType) ?>"
+                                            data-subject-id="<?= $sId ?>"
+                                            <?= $selected ? 'selected' : '' ?>>
+                                            <?= View::escape((string) ($subject['label'] ?? '')) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="form-label" for="subject_id">ID Rol/Usuario</label>
+                                <input
+                                    id="subject_id"
+                                    class="form-control<?= isset($errors['subject_id']) ? ' is-invalid' : '' ?>"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    name="subject_id"
+                                    value="<?= View::escape((string) $selectedSubjectId) ?>"
+                                    required>
+                                <?php if (isset($errors['subject_id'])) : ?>
+                                    <div class="invalid-feedback d-block"><?= View::escape($errors['subject_id']) ?></div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-6">
+                                    <label class="form-label" for="scope">Scope</label>
+                                    <select
+                                        id="scope"
+                                        class="form-select<?= isset($errors['scope']) ? ' is-invalid' : '' ?>"
+                                        name="scope"
+                                        required>
+                                        <?php $selectedScope = (string) $oldValue('scope', 'item'); ?>
+                                        <?php foreach ($scopeOptions as $key => $label) : ?>
+                                            <option value="<?= $key ?>" <?= $selectedScope === $key ? 'selected' : '' ?>><?= $label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if (isset($errors['scope'])) : ?>
+                                        <div class="invalid-feedback d-block"><?= View::escape($errors['scope']) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label" for="permission_level">Permiso</label>
+                                    <select
+                                        id="permission_level"
+                                        class="form-select<?= isset($errors['permission_level']) ? ' is-invalid' : '' ?>"
+                                        name="permission_level"
+                                        required>
+                                        <?php $selectedPerm = (string) $oldValue('permission_level', 'read'); ?>
+                                        <?php foreach ($permissionOptions as $key => $label) : ?>
+                                            <option value="<?= $key ?>" <?= $selectedPerm === $key ? 'selected' : '' ?>><?= $label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php if (isset($errors['permission_level'])) : ?>
+                                        <div class="invalid-feedback d-block"><?= View::escape($errors['permission_level']) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-3">
+                                <button class="btn btn-primary" type="submit">
+                                    <?= $editing ? 'Actualizar permiso' : 'Crear permiso' ?>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
-
-                <?php if ($subjects !== []) : ?>
-                    <div class="mt-4">
-                        <p class="text-muted small text-uppercase mb-2">Referencia sujetos</p>
-                        <ul class="list-group list-group-flush border rounded">
-                            <?php foreach ($subjects as $subject) : ?>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><?= View::escape((string) ($subject['label'] ?? '')) ?></span>
-                                    <span class="badge text-bg-light">ID <?= View::escape((string) ($subject['id'] ?? '')) ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-xl-8">
+    <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -246,12 +370,12 @@ if ($menuTree === []) {
                                     <td><?= View::escape((string) ($row['scope'] ?? 'item')) ?></td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
-                                            <a class="btn btn-outline-secondary" href="<?= url('/roles-permisos/acl/' . (int) ($row['id'] ?? 0) . '/editar') ?>">
+                                            <a class="btn btn-outline-secondary" href="<?= url('/empresa-usuarios/permisos/' . (int) ($row['id'] ?? 0) . '/editar') ?>">
                                                 <i class="fa-solid fa-pen"></i>
                                             </a>
                                             <form
                                                 method="post"
-                                                action="<?= url('/roles-permisos/acl/' . (int) ($row['id'] ?? 0)) ?>"
+                                                action="<?= url('/empresa-usuarios/permisos/' . (int) ($row['id'] ?? 0)) ?>"
                                                 onsubmit="return confirm('Eliminar permiso ACL?');">
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <button class="btn btn-outline-danger" type="submit">
@@ -275,3 +399,5 @@ if ($menuTree === []) {
         </div>
     </div>
 </div>
+
+<script src="<?= AssetHelper::js('modules/empresa-usuarios/permisos-tree.js') ?>" defer></script>

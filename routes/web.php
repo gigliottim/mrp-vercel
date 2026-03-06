@@ -10,6 +10,7 @@ use App\Controllers\Admin\DepositosValidacionesController;
 use App\Controllers\Admin\ConfiguracionController;
 use App\Controllers\Admin\UnidadesMedidaController;
 use App\Controllers\Admin\PartesVariantesController;
+use App\Controllers\Admin\EmpresaUsuariosController;
 use App\Controllers\Planeamiento\SugerenciasController;
 use App\Controllers\Planeamiento\OrdenesController;
 use App\Controllers\Produccion\EjecucionController;
@@ -146,6 +147,12 @@ $router->delete('/configuracion/depositos-validaciones/{id}', [DepositosValidaci
 
 // Configuracion - General
 $router->get('/configuracion/general', [ConfiguracionController::class, 'index']);
+
+// Empresa y Usuarios
+$router->get('/empresa-usuarios/empresa', [EmpresaUsuariosController::class, 'empresa']);
+$router->get('/empresa-usuarios/usuarios', [EmpresaUsuariosController::class, 'usuarios']);
+$router->get('/empresa-usuarios/roles', [EmpresaUsuariosController::class, 'roles']);
+$router->get('/empresa-usuarios/permisos', [EmpresaUsuariosController::class, 'permisos']);
 
 // Configuracion - Unidades de medida
 $router->get('/configuracion/unidades', [UnidadesMedidaController::class, 'index']);

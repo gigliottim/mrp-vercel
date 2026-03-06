@@ -67,10 +67,10 @@ WITH seed_items (code, label, route, icon, section_key, section_label, sort_orde
         ('catalogos.tipos_depositos', 'Tipos de deposito', '/configuracion/tipos-depositos', 'fa-solid fa-warehouse', 'parametros_catalogos', 'Parametros y catalogos', 40),
         ('catalogos.validaciones_depositos', 'Validaciones de movimientos', '/configuracion/depositos-validaciones', 'fa-solid fa-arrow-right-arrow-left', 'parametros_catalogos', 'Parametros y catalogos', 50),
         ('catalogos.grupos_partes', 'Grupos de partes', '/configuracion/grupos-partes', 'fa-solid fa-layer-group', 'parametros_catalogos', 'Parametros y catalogos', 60),
-        ('admin.empresa', 'Empresa', '/configuracion/general', 'fa-solid fa-building', 'empresa_usuarios', 'Empresa y Usuarios', 10),
-        ('admin.usuarios', 'Usuarios', NULL, 'fa-solid fa-users', 'empresa_usuarios', 'Empresa y Usuarios', 20),
-        ('admin.roles', 'Roles', NULL, 'fa-solid fa-user-shield', 'empresa_usuarios', 'Empresa y Usuarios', 30),
-        ('admin.permisos', 'Permisos', NULL, 'fa-solid fa-key', 'empresa_usuarios', 'Empresa y Usuarios', 40)
+        ('admin.empresa', 'Empresa', '/empresa-usuarios/empresa', 'fa-solid fa-building', 'empresa_usuarios', 'Empresa y Usuarios', 10),
+        ('admin.usuarios', 'Usuarios', '/empresa-usuarios/usuarios', 'fa-solid fa-users', 'empresa_usuarios', 'Empresa y Usuarios', 20),
+        ('admin.roles', 'Roles', '/empresa-usuarios/roles', 'fa-solid fa-user-shield', 'empresa_usuarios', 'Empresa y Usuarios', 30),
+        ('admin.permisos', 'Permisos', '/empresa-usuarios/permisos', 'fa-solid fa-key', 'empresa_usuarios', 'Empresa y Usuarios', 40)
 )
 INSERT INTO menu_items (code, label, route, icon, section_key, section_label, sort_order, is_active)
 SELECT code, label, route, icon, section_key, section_label, sort_order, TRUE

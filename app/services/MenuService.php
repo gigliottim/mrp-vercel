@@ -10,6 +10,17 @@ use PDO;
 final class MenuService
 {
     private const BYPASS_ROLE_NAMES = ['super_admin', 'admin_empresa', 'administrator'];
+    private const SECTION_VISUAL_ORDER = [
+        'panel',
+        'productos_bom',
+        'planeamiento_mrp',
+        'produccion',
+        'transacciones',
+        'inventario_stock',
+        'reportes',
+        'parametros_catalogos',
+        'empresa_usuarios',
+    ];
 
     private PDO $connection;
 
@@ -56,10 +67,24 @@ final class MenuService
     private function fetchActiveMenuItems(): array
     {
         $stmt = $this->connection->query(
-            'SELECT id, code, label, route, icon, section_key, section_label, parent_id, sort_order
+            "SELECT id, code, label, route, icon, section_key, section_label, parent_id, sort_order
              FROM menu_items
              WHERE is_active = TRUE
-             ORDER BY section_key ASC, sort_order ASC, id ASC'
+             ORDER BY
+                CASE section_key
+                    WHEN 'panel' THEN 10
+                    WHEN 'productos_bom' THEN 20
+                    WHEN 'planeamiento_mrp' THEN 30
+                    WHEN 'produccion' THEN 40
+                    WHEN 'transacciones' THEN 50
+                    WHEN 'inventario_stock' THEN 60
+                    WHEN 'reportes' THEN 70
+                    WHEN 'parametros_catalogos' THEN 80
+                    WHEN 'empresa_usuarios' THEN 90
+                    ELSE 999
+                END ASC,
+                sort_order ASC,
+                id ASC"
         );
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -291,6 +316,21 @@ final class MenuService
             unset($menuItem);
         }
         unset($section);
+
+        $orderMap = array_flip(self::SECTION_VISUAL_ORDER);
+        uksort(
+            $sections,
+            static function (string $left, string $right) use ($orderMap): int {
+                $leftOrder = $orderMap[$left] ?? PHP_INT_MAX;
+                $rightOrder = $orderMap[$right] ?? PHP_INT_MAX;
+
+                if ($leftOrder === $rightOrder) {
+                    return $left <=> $right;
+                }
+
+                return $leftOrder <=> $rightOrder;
+            }
+        );
 
         return array_values($sections);
     }

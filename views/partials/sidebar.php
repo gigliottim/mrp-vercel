@@ -11,6 +11,15 @@ $normalizedCurrentPath = '/' . ltrim((string) $normalizedCurrentPath, '/');
 $tenant = AuthManager::tenant();
 $sections = AuthManager::sidebarTree();
 
+$normalizePath = static function (string $path): string {
+    $trimmed = '/' . ltrim($path, '/');
+    if ($trimmed !== '/' && str_ends_with($trimmed, '/')) {
+        return rtrim($trimmed, '/');
+    }
+
+    return $trimmed;
+};
+
 $resolveHref = static function (array $item): string {
     $route = $item['route'] ?? null;
     if (!is_string($route) || trim($route) === '') {
@@ -36,14 +45,63 @@ $isActiveItem = static function (array $item) use ($normalizedCurrentPath, $base
     return str_starts_with($normalizedCurrentPath, $normalizedItemPath);
 };
 
+$resolveItemPath = static function (array $item) use ($resolveHref, $baseUrl, $normalizePath): string {
+    $href = $resolveHref($item);
+    if ($href === '#') {
+        return '#';
+    }
+
+    $itemPath = str_replace($baseUrl, '', $href);
+    return $normalizePath((string) $itemPath);
+};
+
+$normalizedCurrentPath = $normalizePath($normalizedCurrentPath);
+$selectedItemPath = null;
+$selectedScore = -1;
+
+$scanBestItemMatch = null;
+$scanBestItemMatch = static function (array $items) use (&$scanBestItemMatch, $resolveItemPath, $normalizedCurrentPath, &$selectedItemPath, &$selectedScore): void {
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $itemPath = $resolveItemPath($item);
+        if ($itemPath !== '#') {
+            $score = -1;
+
+            if ($normalizedCurrentPath === $itemPath) {
+                $score = 10000 + strlen($itemPath);
+            } elseif ($itemPath !== '/' && str_starts_with($normalizedCurrentPath, $itemPath . '/')) {
+                $score = strlen($itemPath);
+            }
+
+            if ($score > $selectedScore) {
+                $selectedScore = $score;
+                $selectedItemPath = $itemPath;
+            }
+        }
+
+        $children = is_array($item['children'] ?? null) ? $item['children'] : [];
+        if ($children !== []) {
+            $scanBestItemMatch($children);
+        }
+    }
+};
+
+foreach ($sections as $section) {
+    $items = is_array($section['items'] ?? null) ? $section['items'] : [];
+    $scanBestItemMatch($items);
+}
+
 $hasActiveChild = null;
-$hasActiveChild = static function (array $item) use (&$hasActiveChild, $isActiveItem): bool {
+$hasActiveChild = static function (array $item) use (&$hasActiveChild, $resolveItemPath, $selectedItemPath): bool {
     foreach (($item['children'] ?? []) as $child) {
         if (!is_array($child)) {
             continue;
         }
 
-        if ($isActiveItem($child) || $hasActiveChild($child)) {
+        if ($resolveItemPath($child) === $selectedItemPath || $hasActiveChild($child)) {
             return true;
         }
     }
@@ -52,14 +110,14 @@ $hasActiveChild = static function (array $item) use (&$hasActiveChild, $isActive
 };
 
 $renderSidebarItems = null;
-$renderSidebarItems = static function (array $items) use (&$renderSidebarItems, $resolveHref, $isActiveItem, $hasActiveChild): void {
+$renderSidebarItems = static function (array $items) use (&$renderSidebarItems, $resolveHref, $resolveItemPath, $selectedItemPath, $hasActiveChild): void {
     foreach ($items as $item) {
         if (!is_array($item)) {
             continue;
         }
 
         $href = $resolveHref($item);
-        $isActive = $isActiveItem($item) || $hasActiveChild($item);
+        $isActive = $resolveItemPath($item) === $selectedItemPath || $hasActiveChild($item);
         $children = is_array($item['children'] ?? null) ? $item['children'] : [];
         $icon = (string) ($item['icon'] ?? 'fa-solid fa-circle');
         $label = (string) ($item['label'] ?? 'Sin titulo');

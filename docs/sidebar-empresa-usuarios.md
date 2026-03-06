@@ -22,7 +22,7 @@ Todo se resuelve al login y se cachea en sesion.
 
 ## Modelo de datos
 
-### 1) `menu_items`
+### 1) `menu_items` en `mrp_auth`
 Define el arbol canonico del sidebar.
 
 Campos sugeridos:
@@ -40,7 +40,7 @@ Campos sugeridos:
 - `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 - `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 
-### 2) `menu_acl`
+### 2) `menu_acl` en `mrp_auth`
 Define permisos sobre nodos del menu por rol o por usuario.
 
 Campos sugeridos:
@@ -144,6 +144,17 @@ Ejemplo:
 ## Integracion en `views/partials/sidebar.php`
 
 `sidebar.php` no define menu; solo renderiza `auth.sidebar_tree`.
+
+## Seccion requerida: Empresa y Usuarios
+
+El menu inicial debe incluir una seccion especifica para administracion con los siguientes items:
+
+- `Empresa`
+- `Usuarios`
+- `Roles`
+- `Permisos`
+
+Esta seccion debe crearse en `menu_items` (seed o migracion de datos), no hardcodeada en la vista.
 
 Contrato recomendado de datos en sesion:
 

@@ -10,6 +10,16 @@ $normalizedCurrentPath = '/' . ltrim((string) $normalizedCurrentPath, '/');
 
 $tenant = AuthManager::tenant();
 $sections = AuthManager::sidebarTree();
+$argentinaNow = new \DateTimeImmutable('now', new \DateTimeZone('America/Argentina/Buenos_Aires'));
+$tenantRole = trim((string) ($tenant['role_name'] ?? ''));
+
+if ($tenantRole === '' && isset($tenant['role_id']) && $tenant['role_id'] !== null) {
+    $tenantRole = 'Rol #' . (string) $tenant['role_id'];
+}
+
+if ($tenantRole === '') {
+    $tenantRole = 'Sin rol asignado';
+}
 
 $normalizePath = static function (string $path): string {
     $trimmed = '/' . ltrim($path, '/');
@@ -178,9 +188,13 @@ $renderSidebarItems = static function (array $items) use (&$renderSidebarItems, 
                                 <i class="fa-solid fa-server text-success me-2"></i>
                                 <span><?= View::escape($tenant['database']['host'] ?? 'n/d') ?></span>
                             </li>
+                            <li class="mb-2">
+                                <i class="fa-solid fa-user-shield text-primary me-2"></i>
+                                <span><?= View::escape($tenantRole) ?></span>
+                            </li>
                             <li>
                                 <i class="fa-solid fa-clock text-warning me-2"></i>
-                                <span><?= date('d/m H:i') ?></span>
+                                <span><?= View::escape($argentinaNow->format('d/m H:i')) ?> (AR)</span>
                             </li>
                         </ul>
                     </div>

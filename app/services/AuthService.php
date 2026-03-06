@@ -122,9 +122,10 @@ final class AuthService
      */
     private function companiesForUser(int $userId): array
     {
-        $sql = 'SELECT c.id, c.name, c.slug, c.status, cd.database_name, cd.host, cd.port, cd.username, cd.password_encrypted, uc.role_id
+        $sql = 'SELECT c.id, c.name, c.slug, c.status, cd.database_name, cd.host, cd.port, cd.username, cd.password_encrypted, uc.role_id, r.name AS role_name
             FROM user_company uc
             INNER JOIN companies c ON c.id = uc.company_id
+            LEFT JOIN roles r ON r.id = uc.role_id
             LEFT JOIN company_databases cd ON cd.company_id = c.id
             WHERE uc.user_id = :user_id';
 
@@ -164,6 +165,7 @@ final class AuthService
                     'name' => $company['name'],
                     'slug' => $company['slug'],
                     'role_id' => isset($company['role_id']) ? (int) $company['role_id'] : null,
+                    'role_name' => $company['role_name'] ?? null,
                     'database' => [
                         'name' => $company['database_name'] ?? null,
                         'host' => $company['host'] ?? null,

@@ -155,10 +155,10 @@ $dimensionFields = [
                                 'variantes' => $parteVariants,
                                 'mode' => $mode,
                                 'editingVariantId' => $editingVariantId,
-                            ])) ?>)" x-init="init()" class="container-fluid pt-0 pb-4">
+                            ])) ?>)" x-init="init()" class="pt-0 pb-4 px-0">
 
     <!-- Header -->
-    <section class="mb-4">
+    <section class="mb-1">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <p class="text-uppercase text-muted small mb-1">Productos</p>

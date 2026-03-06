@@ -173,9 +173,7 @@ $renderSidebarItems = static function (array $items) use (&$renderSidebarItems, 
                         </div>
                         <div class="flex-grow-1">
                             <p class="mb-0 fw-bold text-dark"><?= View::escape($tenant['name'] ?? 'Tenant') ?></p>
-                            <p class="text-muted small mb-0">
-                                <i class="fa-solid fa-tag me-1"></i><?= View::escape($tenant['slug'] ?? 'n/d') ?>
-                            </p>
+
                         </div>
                     </div>
                     <div class="border-top border-info border-opacity-25 pt-3">

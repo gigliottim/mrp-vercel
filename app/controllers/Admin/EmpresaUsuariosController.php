@@ -5,50 +5,425 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Core\Controllers\Controller;
+use App\Core\Http\Request;
 use App\Core\Http\Response;
+use App\Services\EmpresaUsuariosAclService;
+use App\Services\EmpresaUsuariosService;
+use RuntimeException;
 
 final class EmpresaUsuariosController extends Controller
 {
-    public function empresa(): Response
+    private EmpresaUsuariosService $service;
+    private EmpresaUsuariosAclService $aclService;
+
+    public function __construct(?EmpresaUsuariosService $service = null, ?EmpresaUsuariosAclService $aclService = null)
+    {
+        $this->service = $service ?? new EmpresaUsuariosService();
+        $this->aclService = $aclService ?? new EmpresaUsuariosAclService();
+    }
+
+    public function empresa(Request $request): Response
+    {
+        return $this->renderEmpresa(null, [], []);
+    }
+
+    public function empresaEdit(Request $request, $id): Response
+    {
+        $editing = $this->service->findCompany((int) $id);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        }
+
+        return $this->renderEmpresa($editing, [], $editing);
+    }
+
+    public function empresaStore(Request $request): Response
+    {
+        [$data, $errors] = $this->validateEmpresaData($request);
+        if ($errors !== []) {
+            return $this->renderEmpresa(null, $errors, $request->body);
+        }
+
+        try {
+            $this->service->createCompany($data);
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        } catch (RuntimeException $exception) {
+            return $this->renderEmpresa(null, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function empresaUpdate(Request $request, $id): Response
+    {
+        $companyId = (int) $id;
+        $editing = $this->service->findCompany($companyId);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        }
+
+        [$data, $errors] = $this->validateEmpresaData($request);
+        if ($errors !== []) {
+            return $this->renderEmpresa($editing, $errors, $request->body);
+        }
+
+        try {
+            $this->service->updateCompany($companyId, $data);
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        } catch (RuntimeException $exception) {
+            return $this->renderEmpresa($editing, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function empresaDestroy(Request $request, $id): Response
+    {
+        try {
+            $this->service->deleteCompany((int) $id);
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        } catch (RuntimeException $exception) {
+            return $this->renderEmpresa(null, ['general' => $exception->getMessage()], []);
+        }
+    }
+
+    public function usuarios(Request $request): Response
+    {
+        return $this->renderUsuarios(null, [], []);
+    }
+
+    public function usuariosEdit(Request $request, $id): Response
+    {
+        $companyId = $this->service->currentCompanyId();
+        $editing = $this->service->findUserForCompany($companyId, (int) $id);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/usuarios'));
+        }
+
+        return $this->renderUsuarios($editing, [], $editing);
+    }
+
+    public function usuariosStore(Request $request): Response
+    {
+        [$data, $errors] = $this->validateUsuarioData($request, false);
+        if ($errors !== []) {
+            return $this->renderUsuarios(null, $errors, $request->body);
+        }
+
+        try {
+            $this->service->createUserForCompany($this->service->currentCompanyId(), $data);
+            return Response::redirect(url('/empresa-usuarios/usuarios'));
+        } catch (RuntimeException $exception) {
+            return $this->renderUsuarios(null, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function usuariosUpdate(Request $request, $id): Response
+    {
+        $companyId = $this->service->currentCompanyId();
+        $userId = (int) $id;
+        $editing = $this->service->findUserForCompany($companyId, $userId);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/usuarios'));
+        }
+
+        [$data, $errors] = $this->validateUsuarioData($request, true);
+        if ($errors !== []) {
+            return $this->renderUsuarios($editing, $errors, $request->body);
+        }
+
+        try {
+            $this->service->updateUserForCompany($companyId, $userId, $data);
+            return Response::redirect(url('/empresa-usuarios/usuarios'));
+        } catch (RuntimeException $exception) {
+            return $this->renderUsuarios($editing, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function usuariosDestroy(Request $request, $id): Response
+    {
+        try {
+            $this->service->deleteUserForCompany($this->service->currentCompanyId(), (int) $id);
+            return Response::redirect(url('/empresa-usuarios/usuarios'));
+        } catch (RuntimeException $exception) {
+            return $this->renderUsuarios(null, ['general' => $exception->getMessage()], []);
+        }
+    }
+
+    public function roles(Request $request): Response
+    {
+        return $this->renderRoles(null, [], []);
+    }
+
+    public function rolesEdit(Request $request, $id): Response
+    {
+        $editing = $this->service->findRole((int) $id);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/roles'));
+        }
+
+        return $this->renderRoles($editing, [], $editing);
+    }
+
+    public function rolesStore(Request $request): Response
+    {
+        [$data, $errors] = $this->validateRoleData($request);
+        if ($errors !== []) {
+            return $this->renderRoles(null, $errors, $request->body);
+        }
+
+        try {
+            $this->service->createRole($data);
+            return Response::redirect(url('/empresa-usuarios/roles'));
+        } catch (RuntimeException $exception) {
+            return $this->renderRoles(null, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function rolesUpdate(Request $request, $id): Response
+    {
+        $roleId = (int) $id;
+        $editing = $this->service->findRole($roleId);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/roles'));
+        }
+
+        [$data, $errors] = $this->validateRoleData($request);
+        if ($errors !== []) {
+            return $this->renderRoles($editing, $errors, $request->body);
+        }
+
+        try {
+            $this->service->updateRole($roleId, $data);
+            return Response::redirect(url('/empresa-usuarios/roles'));
+        } catch (RuntimeException $exception) {
+            return $this->renderRoles($editing, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function rolesDestroy(Request $request, $id): Response
+    {
+        try {
+            $this->service->deleteRole((int) $id);
+            return Response::redirect(url('/empresa-usuarios/roles'));
+        } catch (RuntimeException $exception) {
+            return $this->renderRoles(null, ['general' => $exception->getMessage()], []);
+        }
+    }
+
+    public function permisos(Request $request): Response
+    {
+        return $this->renderPermisos(null, [], []);
+    }
+
+    public function permisosEdit(Request $request, $id): Response
+    {
+        $companyId = $this->service->currentCompanyId();
+        $editing = $this->aclService->findAclByIdForCompany($companyId, (int) $id);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/permisos'));
+        }
+
+        return $this->renderPermisos($editing, [], $editing);
+    }
+
+    public function permisosStore(Request $request): Response
+    {
+        [$data, $errors] = $this->validateAclData($request);
+        if ($errors !== []) {
+            return $this->renderPermisos(null, $errors, $request->body);
+        }
+
+        try {
+            $this->aclService->upsertAclForCompany($this->service->currentCompanyId(), $data);
+            return Response::redirect(url('/empresa-usuarios/permisos'));
+        } catch (RuntimeException $exception) {
+            return $this->renderPermisos(null, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function permisosUpdate(Request $request, $id): Response
+    {
+        $companyId = $this->service->currentCompanyId();
+        $aclId = (int) $id;
+        $editing = $this->aclService->findAclByIdForCompany($companyId, $aclId);
+        if ($editing === null) {
+            return Response::redirect(url('/empresa-usuarios/permisos'));
+        }
+
+        [$data, $errors] = $this->validateAclData($request);
+        if ($errors !== []) {
+            return $this->renderPermisos($editing, $errors, $request->body);
+        }
+
+        try {
+            $this->aclService->updateAclForCompany($companyId, $aclId, $data);
+            return Response::redirect(url('/empresa-usuarios/permisos'));
+        } catch (RuntimeException $exception) {
+            return $this->renderPermisos($editing, ['general' => $exception->getMessage()], $request->body);
+        }
+    }
+
+    public function permisosDestroy(Request $request, $id): Response
+    {
+        $this->aclService->deleteAclForCompany($this->service->currentCompanyId(), (int) $id);
+        return Response::redirect(url('/empresa-usuarios/permisos'));
+    }
+
+    public function permisosTree(Request $request): Response
+    {
+        return $this->json([
+            'data' => $this->aclService->listMenuTree(),
+        ]);
+    }
+
+    public function permisosAcl(Request $request): Response
+    {
+        return $this->json([
+            'data' => $this->aclService->listAclRowsByCompany($this->service->currentCompanyId()),
+        ]);
+    }
+
+    private function renderEmpresa(?array $editing, array $errors, array $old): Response
     {
         return $this->render('pages/admin/empresa-usuarios/empresa', [
-            'empresas' => [],
-            'editing' => null,
-            'old' => [],
-            'errors' => [],
+            'empresas' => $this->service->listCompanies(),
+            'editing' => $editing,
+            'old' => $old,
+            'errors' => $errors,
         ]);
     }
 
-    public function usuarios(): Response
+    private function renderUsuarios(?array $editing, array $errors, array $old): Response
     {
+        $companyId = $this->service->currentCompanyId();
         return $this->render('pages/admin/empresa-usuarios/usuarios', [
-            'usuarios' => [],
-            'roles' => [],
-            'editing' => null,
-            'old' => [],
-            'errors' => [],
+            'usuarios' => $this->service->listUsersByCompany($companyId),
+            'roles' => $this->service->listRoles(),
+            'editing' => $editing,
+            'old' => $old,
+            'errors' => $errors,
         ]);
     }
 
-    public function roles(): Response
+    private function renderRoles(?array $editing, array $errors, array $old): Response
     {
         return $this->render('pages/admin/empresa-usuarios/roles', [
-            'roles' => [],
-            'editing' => null,
-            'old' => [],
-            'errors' => [],
+            'roles' => $this->service->listRoles(),
+            'editing' => $editing,
+            'old' => $old,
+            'errors' => $errors,
         ]);
     }
 
-    public function permisos(): Response
+    private function renderPermisos(?array $editing, array $errors, array $old): Response
     {
+        $companyId = $this->service->currentCompanyId();
         return $this->render('pages/admin/empresa-usuarios/permisos', [
-            'aclRows' => [],
-            'menuTree' => [],
-            'subjects' => [],
-            'editing' => null,
-            'old' => [],
-            'errors' => [],
+            'aclRows' => $this->aclService->listAclRowsByCompany($companyId),
+            'menuTree' => $this->aclService->listMenuTree(),
+            'subjects' => $this->aclService->listSubjectsForCompany($companyId),
+            'editing' => $editing,
+            'old' => $old,
+            'errors' => $errors,
         ]);
+    }
+
+    private function validateEmpresaData(Request $request): array
+    {
+        $body = $request->body;
+        $data = [
+            'nombre' => trim((string) ($body['nombre'] ?? '')),
+            'slug' => trim((string) ($body['slug'] ?? '')),
+            'cuit' => trim((string) ($body['cuit'] ?? '')),
+            'email' => mb_strtolower(trim((string) ($body['email'] ?? ''))),
+            'activo' => isset($body['activo']) ? 1 : 0,
+        ];
+
+        $errors = [];
+        if ($data['nombre'] === '') {
+            $errors['nombre'] = 'El nombre es obligatorio.';
+        }
+        if ($data['slug'] === '') {
+            $errors['slug'] = 'El slug es obligatorio.';
+        }
+        if ($data['email'] !== '' && filter_var($data['email'], FILTER_VALIDATE_EMAIL) === false) {
+            $errors['email'] = 'Email invalido.';
+        }
+
+        return [$data, $errors];
+    }
+
+    private function validateUsuarioData(Request $request, bool $isUpdate): array
+    {
+        $body = $request->body;
+        $data = [
+            'nombre' => trim((string) ($body['nombre'] ?? '')),
+            'email' => mb_strtolower(trim((string) ($body['email'] ?? ''))),
+            'password' => (string) ($body['password'] ?? ''),
+            'role_id' => (int) ($body['role_id'] ?? 0),
+        ];
+
+        $errors = [];
+        if ($data['nombre'] === '') {
+            $errors['nombre'] = 'El nombre es obligatorio.';
+        }
+        if ($data['email'] === '' || filter_var($data['email'], FILTER_VALIDATE_EMAIL) === false) {
+            $errors['email'] = 'Email invalido.';
+        }
+        if (!$isUpdate && $data['password'] === '') {
+            $errors['password'] = 'La password es obligatoria.';
+        }
+        if ($data['role_id'] <= 0) {
+            $errors['role_id'] = 'Debes seleccionar un rol valido.';
+        }
+
+        return [$data, $errors];
+    }
+
+    private function validateRoleData(Request $request): array
+    {
+        $body = $request->body;
+        $data = [
+            'nombre' => trim((string) ($body['nombre'] ?? '')),
+            'codigo' => trim((string) ($body['codigo'] ?? 'web')),
+        ];
+
+        $errors = [];
+        if ($data['nombre'] === '') {
+            $errors['nombre'] = 'El nombre es obligatorio.';
+        }
+        if ($data['codigo'] === '') {
+            $errors['codigo'] = 'El codigo es obligatorio.';
+        }
+
+        return [$data, $errors];
+    }
+
+    private function validateAclData(Request $request): array
+    {
+        $body = $request->body;
+        $data = [
+            'menu_item_id' => (int) ($body['menu_item_id'] ?? 0),
+            'subject_type' => trim((string) ($body['subject_type'] ?? '')),
+            'subject_id' => (int) ($body['subject_id'] ?? 0),
+            'scope' => trim((string) ($body['scope'] ?? '')),
+            'permission_level' => trim((string) ($body['permission_level'] ?? 'read')),
+        ];
+
+        $errors = [];
+        if ($data['menu_item_id'] <= 0) {
+            $errors['menu_item_id'] = 'Debes seleccionar un item de menu valido.';
+        }
+        if (!in_array($data['subject_type'], ['role', 'user'], true)) {
+            $errors['subject_type'] = 'Sujeto invalido.';
+        }
+        if ($data['subject_id'] <= 0) {
+            $errors['subject_id'] = 'ID de sujeto invalido.';
+        }
+        if (!in_array($data['scope'], ['item', 'branch'], true)) {
+            $errors['scope'] = 'Scope invalido.';
+        }
+        if (!in_array($data['permission_level'], ['read', 'write', 'deny'], true)) {
+            $errors['permission_level'] = 'Permiso invalido.';
+        }
+
+        return [$data, $errors];
     }
 }

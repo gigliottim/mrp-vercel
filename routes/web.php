@@ -150,9 +150,36 @@ $router->get('/configuracion/general', [ConfiguracionController::class, 'index']
 
 // Empresa y Usuarios
 $router->get('/empresa-usuarios/empresa', [EmpresaUsuariosController::class, 'empresa']);
+$router->get('/empresa-usuarios/empresa/{id}/editar', [EmpresaUsuariosController::class, 'empresaEdit']);
+$router->post('/empresa-usuarios/empresa', [EmpresaUsuariosController::class, 'empresaStore']);
+$router->put('/empresa-usuarios/empresa/{id}', [EmpresaUsuariosController::class, 'empresaUpdate']);
+$router->delete('/empresa-usuarios/empresa/{id}', [EmpresaUsuariosController::class, 'empresaDestroy']);
+
 $router->get('/empresa-usuarios/usuarios', [EmpresaUsuariosController::class, 'usuarios']);
+$router->get('/empresa-usuarios/usuarios/{id}/editar', [EmpresaUsuariosController::class, 'usuariosEdit']);
+$router->post('/empresa-usuarios/usuarios', [EmpresaUsuariosController::class, 'usuariosStore']);
+$router->put('/empresa-usuarios/usuarios/{id}', [EmpresaUsuariosController::class, 'usuariosUpdate']);
+$router->delete('/empresa-usuarios/usuarios/{id}', [EmpresaUsuariosController::class, 'usuariosDestroy']);
+
 $router->get('/empresa-usuarios/roles', [EmpresaUsuariosController::class, 'roles']);
+$router->get('/empresa-usuarios/roles/{id}/editar', [EmpresaUsuariosController::class, 'rolesEdit']);
+$router->post('/empresa-usuarios/roles', [EmpresaUsuariosController::class, 'rolesStore']);
+$router->put('/empresa-usuarios/roles/{id}', [EmpresaUsuariosController::class, 'rolesUpdate']);
+$router->delete('/empresa-usuarios/roles/{id}', [EmpresaUsuariosController::class, 'rolesDestroy']);
+
 $router->get('/empresa-usuarios/permisos', [EmpresaUsuariosController::class, 'permisos']);
+$router->get('/empresa-usuarios/permisos/{id}/editar', [EmpresaUsuariosController::class, 'permisosEdit']);
+$router->post('/empresa-usuarios/permisos', [EmpresaUsuariosController::class, 'permisosStore']);
+$router->put('/empresa-usuarios/permisos/{id}', [EmpresaUsuariosController::class, 'permisosUpdate']);
+$router->delete('/empresa-usuarios/permisos/{id}', [EmpresaUsuariosController::class, 'permisosDestroy']);
+
+// Roles/Permisos (endpoints sugeridos)
+$router->get('/roles-permisos/arbol', [EmpresaUsuariosController::class, 'permisosTree']);
+$router->get('/roles-permisos/acl', [EmpresaUsuariosController::class, 'permisosAcl']);
+$router->post('/roles-permisos/acl', [EmpresaUsuariosController::class, 'permisosStore']);
+$router->get('/roles-permisos/acl/{id}/editar', [EmpresaUsuariosController::class, 'permisosEdit']);
+$router->put('/roles-permisos/acl/{id}', [EmpresaUsuariosController::class, 'permisosUpdate']);
+$router->delete('/roles-permisos/acl/{id}', [EmpresaUsuariosController::class, 'permisosDestroy']);
 
 // Configuracion - Unidades de medida
 $router->get('/configuracion/unidades', [UnidadesMedidaController::class, 'index']);

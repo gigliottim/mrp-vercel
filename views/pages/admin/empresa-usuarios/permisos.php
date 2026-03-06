@@ -209,17 +209,6 @@ if ($menuTree === []) {
                                         <?php endforeach; ?>
                                     </div>
 
-                                    <div class="acl-selected-box mt-2">
-                                        <div class="small text-muted">Nodo seleccionado</div>
-                                        <div id="selected-menu-node" class="fw-semibold">
-                                            <?php if ($selectedMenuInfo !== null) : ?>
-                                                <?= View::escape((string) $selectedMenuInfo['label']) ?>
-                                                <span class="text-muted">(<?= View::escape((string) $selectedMenuInfo['code']) ?>)</span>
-                                            <?php else : ?>
-                                                Ninguno
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -238,6 +227,18 @@ if ($menuTree === []) {
                         </div>
 
                         <div class="col-12 col-md-8">
+                            <div class="acl-selected-box mb-3">
+                                <div class="small text-muted">Nodo seleccionado</div>
+                                <div id="selected-menu-node" class="fw-semibold">
+                                    <?php if ($selectedMenuInfo !== null) : ?>
+                                        <?= View::escape((string) $selectedMenuInfo['label']) ?>
+                                        <span class="text-muted">(<?= View::escape((string) $selectedMenuInfo['code']) ?>)</span>
+                                    <?php else : ?>
+                                        Ninguno
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
                             <label class="form-label" for="subject_type">Sujeto</label>
                             <select
                                 id="subject_type"
@@ -273,21 +274,16 @@ if ($menuTree === []) {
                                 </select>
                             </div>
 
-                            <div class="mt-3">
-                                <label class="form-label" for="subject_id">ID Rol/Usuario</label>
-                                <input
-                                    id="subject_id"
-                                    class="form-control<?= isset($errors['subject_id']) ? ' is-invalid' : '' ?>"
-                                    type="number"
-                                    min="1"
-                                    step="1"
-                                    name="subject_id"
-                                    value="<?= View::escape((string) $selectedSubjectId) ?>"
-                                    required>
-                                <?php if (isset($errors['subject_id'])) : ?>
-                                    <div class="invalid-feedback d-block"><?= View::escape($errors['subject_id']) ?></div>
-                                <?php endif; ?>
-                            </div>
+                            <input
+                                id="subject_id"
+                                type="hidden"
+                                name="subject_id"
+                                value="<?= View::escape((string) $selectedSubjectId) ?>"
+                                required>
+
+                            <?php if (isset($errors['subject_id'])) : ?>
+                                <div class="text-danger small mt-2"><?= View::escape($errors['subject_id']) ?></div>
+                            <?php endif; ?>
 
                             <div class="row g-3 mt-1">
                                 <div class="col-6">

@@ -180,11 +180,6 @@ $dimensionFields = [
 
     <div class="d-flex justify-content-end mb-4">
         <div class="btn-group">
-            <!-- Botón Editar (modo view) -->
-            <a x-show="mode === 'view'" :href="'/mrp/productos/partes/manager/' + form.id + '/editar'" class="btn btn-warning">
-                <i class="fa-solid fa-pen me-2"></i>Habilitar Edición
-            </a>
-
             <!-- Botón Cancelar Edición (modo edit) -->
             <a x-show="mode === 'edit' && form.id" :href="'/mrp/productos/partes/manager/' + form.id" class="btn btn-secondary">
                 <i class="fa-solid fa-eye me-2"></i>Ver Solo Lectura

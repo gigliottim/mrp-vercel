@@ -177,6 +177,13 @@ use App\Core\View\View;
         <div class="col-12">
             <hr class="my-2">
             <div class="d-flex gap-2 justify-content-end">
+                <a
+                    class="btn btn-warning"
+                    x-show="mode === 'view' && form.id"
+                    :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
+                    <i class="fa-solid fa-pen me-2"></i>
+                    Habilitar Edicion
+                </a>
                 <button
                     type="button"
                     class="btn btn-outline-secondary"

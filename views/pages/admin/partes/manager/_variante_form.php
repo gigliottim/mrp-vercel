@@ -128,6 +128,13 @@ $variantStates = [
 
     <!-- Botones -->
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-1">
+        <a
+            class="btn btn-sm btn-warning"
+            x-show="mode === 'view' && form.id"
+            :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
+            <i class="fa-solid fa-pen me-2"></i>
+            Habilitar Edicion
+        </a>
         <button
             type="submit"
             class="btn btn-sm"

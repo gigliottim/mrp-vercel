@@ -1,42 +1,52 @@
-// Sidebar active state handler
+// Keeps active item state without forcing sidebar reposition on every navigation.
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Highlight active link based on current URL
+  const sidebar = document.querySelector('.app-sidebar');
+  if (!sidebar) {
+    return;
+  }
+
   const currentPath = window.location.pathname;
-  const links = document.querySelectorAll('.app-sidebar__link');
+  const links = sidebar.querySelectorAll('.app-sidebar__link');
+  const scrollKey = 'mrp.sidebar.scrollTop';
   let activeLink = null;
 
-  links.forEach(link => {
-    // Remove trailing slash for comparison if needed
+  const restoreScroll = () => {
+    const stored = window.sessionStorage.getItem(scrollKey);
+    if (stored === null) {
+      return;
+    }
+
+    const scrollTop = Number.parseInt(stored, 10);
+    if (!Number.isNaN(scrollTop) && scrollTop >= 0) {
+      sidebar.scrollTop = scrollTop;
+    }
+  };
+
+  const persistScroll = () => {
+    window.sessionStorage.setItem(scrollKey, String(sidebar.scrollTop));
+  };
+
+  restoreScroll();
+  sidebar.addEventListener('scroll', persistScroll, { passive: true });
+  window.addEventListener('beforeunload', persistScroll);
+
+  links.forEach((link) => {
     const href = new URL(link.href).pathname;
+
     if (currentPath === href || (href !== '/' && currentPath.startsWith(href))) {
-      // If multiple matches (e.g. /mrp/ and /mrp/users), prefer the longer one
       if (!activeLink || href.length > new URL(activeLink.href).pathname.length) {
         activeLink = link;
       }
     }
+
+    // Ensure current position is saved right before navigation.
+    link.addEventListener('click', persistScroll);
   });
 
-  if (activeLink) {
-    // Remove active class from all first (server-side might have added it but we refine here)
-    links.forEach(l => l.classList.remove('is-active'));
-    activeLink.classList.add('is-active');
-
-    // Scroll to the active group
-    const section = activeLink.closest('.app-sidebar__section');
-    if (section) {
-      // Scroll sidebar to show this section at top
-      const sidebar = document.querySelector('.app-sidebar');
-      if (sidebar) {
-        // Calculate position to scroll
-        const sectionTop = section.offsetTop;
-        const sidebarTop = sidebar.getBoundingClientRect().top;
-        // We want sectionTop relative to sidebar container
-        // But offsetTop is relative to parent. Sidebar inner structure?
-
-        // Simpler: scrollIntoView on the section
-        // Use block: 'start' to align to top
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+  if (!activeLink) {
+    return;
   }
+
+  links.forEach((link) => link.classList.remove('is-active'));
+  activeLink.classList.add('is-active');
 });

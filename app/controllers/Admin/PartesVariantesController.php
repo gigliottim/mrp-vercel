@@ -236,6 +236,11 @@ final class PartesVariantesController extends Controller
             return Response::redirect(url('/productos/partes/manager'));
         }
 
+        $variantRecord = $this->variantes->find($idVariante);
+        if ($variantRecord === null || (int) $variantRecord['id_parte'] !== $idParte) {
+            return Response::redirect(url("/productos/partes/manager/{$idParte}"));
+        }
+
         $variants = $this->variantes->byParteIds([$idParte]);
 
         return $this->renderManager([
@@ -243,6 +248,7 @@ final class PartesVariantesController extends Controller
             'parteVariants' => $variants[$idParte] ?? [],
             'mode' => 'edit',
             'editingVariantId' => $idVariante,
+            'editingVariant' => $variantRecord,
         ]);
     }
 
@@ -285,6 +291,7 @@ final class PartesVariantesController extends Controller
         $defaults = [
             'parte' => null,
             'parteVariants' => [],
+            'editingVariant' => null,
             'partesList' => $this->partes->listAll(),
             'tipos' => $this->tipos->activos(),
             'grupos' => $this->grupos->activos(),

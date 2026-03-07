@@ -168,7 +168,7 @@ use App\Core\View\View;
     <!-- Fila 8: Botones de acción -->
     <div class="mt-3">
         <hr class="my-2">
-        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pm-form-actions">
+        <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center pm-form-actions">
             <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode === 'edit'">
                 <input
                     class="form-check-input"
@@ -178,40 +178,38 @@ use App\Core\View\View;
                 <label class="form-check-label small fw-semibold" for="parte-activa">Activa</label>
             </div>
 
-            <div class="d-flex flex-wrap gap-2 justify-content-end">
-                <a
-                    class="btn btn-sm btn-warning"
-                    x-show="mode === 'view' && form.id"
-                    :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
-                    <i class="fa-solid fa-pen me-2"></i>
-                    Habilitar Edicion
-                </a>
-                <button
-                    type="button"
-                    class="btn btn-sm btn-primary"
-                    @click="resetForm()"
-                    x-show="mode !== 'create'">
-                    <i class="fa-solid fa-plus me-2"></i>
-                    Nueva Parte
-                </button>
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary"
-                    @click="resetForm()"
-                    x-show="mode !== 'view' && isEditing">
-                    <i class="fa-solid fa-times me-2"></i>
-                    Cancelar
-                </button>
-                <button
-                    type="submit"
-                    class="btn btn-sm"
-                    :class="isEditing ? 'btn-success' : 'btn-primary'"
-                    :disabled="loading"
-                    x-show="mode !== 'view'">
-                    <i class="fa-solid me-2" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
-                    <span x-text="isEditing ? 'Actualizar Parte' : 'Crear Parte'"></span>
-                </button>
-            </div>
+            <a
+                class="btn btn-sm btn-warning"
+                x-show="mode === 'view' && form.id"
+                :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
+                <i class="fa-solid fa-pen me-2"></i>
+                Habilitar Edicion
+            </a>
+            <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                @click="resetForm()"
+                x-show="mode !== 'create'">
+                <i class="fa-solid fa-plus me-2"></i>
+                Nueva Parte
+            </button>
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                @click="resetForm()"
+                x-show="mode !== 'view' && isEditing">
+                <i class="fa-solid fa-times me-2"></i>
+                Cancelar
+            </button>
+            <button
+                type="submit"
+                class="btn btn-sm"
+                :class="isEditing ? 'btn-success' : 'btn-primary'"
+                :disabled="loading"
+                x-show="mode !== 'view'">
+                <i class="fa-solid me-2" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
+                <span x-text="isEditing ? 'Actualizar Parte' : 'Crear Parte'"></span>
+            </button>
         </div>
     </div>
 </form>

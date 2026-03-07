@@ -9,6 +9,8 @@ function parteManager(initialData) {
     mode: initialData.mode || 'create',
     isEditing: initialData.mode !== 'create',
     editingVariantId: initialData.editingVariantId || null,
+    editingVariant: initialData.editingVariant || null,
+    isVariantFormEnabled: initialData.mode === 'edit',
     loading: false,
     parte: initialData.parte || null,
     variantes: initialData.variantes || [],
@@ -60,13 +62,13 @@ function parteManager(initialData) {
         this.loadParteData(this.parte);
       }
 
-      // Auto-cargar variante si estamos en modo edición de variante
-      if (this.editingVariantId && this.variantes && this.variantes.length > 0) {
+      // Auto-cargar variante cuando venimos desde /variantes/{id}/editar
+      if (this.editingVariant && this.editingVariant.id) {
+        this.loadVarianteIntoForm(this.editingVariant);
+      } else if (this.editingVariantId && this.variantes && this.variantes.length > 0) {
         const variante = this.variantes.find(v => v.id == this.editingVariantId);
         if (variante) {
-          setTimeout(() => {
-            this.loadVarianteIntoForm(variante);
-          }, 500);
+          this.loadVarianteIntoForm(variante);
         }
       }
 
@@ -135,6 +137,9 @@ function parteManager(initialData) {
       this.parte = null;
       this.variantes = [];
       this.isEditing = false;
+      this.isVariantFormEnabled = false;
+      this.editingVariantId = null;
+      this.editingVariant = null;
       this.resetVariantForm();
 
       // Limpiar el campo de búsqueda
@@ -419,6 +424,11 @@ function parteManager(initialData) {
       };
     },
 
+    enableNewVariante() {
+      this.resetVariantForm();
+      this.isVariantFormEnabled = true;
+    },
+
     async saveVariante() {
       if (!this.form.id) {
         alert('Primero debes guardar la parte');
@@ -527,7 +537,18 @@ function parteManager(initialData) {
     },
 
     cancelEditVariante() {
+      // Si estamos editando una variante existente, volver al estado de vista de la parte.
+      if (this.variantForm.id && this.form.id) {
+        window.location.href = `/mrp/productos/partes/manager/${this.form.id}`;
+        return;
+      }
+
       this.resetVariantForm();
+
+      // En modo vista, cancelar una nueva variante vuelve a bloquear el formulario.
+      if (this.mode === 'view') {
+        this.isVariantFormEnabled = false;
+      }
     },
 
     async deleteVariante(varianteId, index) {

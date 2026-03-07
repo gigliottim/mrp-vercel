@@ -288,10 +288,6 @@
     width: 100%;
   }
 
-  .partes-manager-page .pm-active-toggle {
-    width: 100%;
-  }
-
   .partes-manager-page .pm-form-actions .btn,
   .partes-manager-page .pm-variant-actions .btn {
     flex: 1 1 auto;

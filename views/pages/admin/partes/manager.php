@@ -38,6 +38,7 @@ $dimensionFields = [
                                 'variantes' => $parteVariants,
                                 'mode' => $mode,
                                 'editingVariantId' => $editingVariantId,
+                                'editingVariant' => $editingVariant ?? null,
                             ])) ?>)" x-init="init()" class="partes-manager-page pt-0 pb-4 px-0">
 
     <!-- Header -->

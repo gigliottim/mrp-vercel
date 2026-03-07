@@ -60,8 +60,10 @@
                                 type="button"
                                 class="btn btn-outline-danger"
                                 @click="deleteVariante(variante.id, index)"
-                                :disabled="isVariantFormEnabled"
-                                :title="isVariantFormEnabled ? 'Guarda o cancela el formulario variante antes de eliminar' : 'Eliminar'"
+                                :disabled="isVariantFormEnabled || variantes.length <= 1"
+                                :title="isVariantFormEnabled
+                                    ? 'Guarda o cancela el formulario variante antes de eliminar'
+                                    : (variantes.length <= 1 ? 'No se puede eliminar la ultima variante de una parte' : 'Eliminar')"
                                 title="Eliminar">
                                 <i class="fa-solid fa-trash"></i>
                             </button>

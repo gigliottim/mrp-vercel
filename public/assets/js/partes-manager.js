@@ -588,14 +588,20 @@ function parteManager(initialData) {
     },
 
     async deleteVariante(varianteId, index) {
+      if (this.variantes.length <= 1) {
+        alert('No se puede eliminar la ultima variante de una parte.');
+        return;
+      }
+
       if (!confirm('¿Eliminar esta variante?')) return;
 
       this.loading = true;
 
       try {
-        const url = `/mrp/productos/partes/${this.form.id}/variantes/${varianteId}`;
+        const url = `/mrp/productos/partes/${this.form.id}/variantes/${varianteId}?context=manager`;
         const formData = new URLSearchParams();
         formData.append('_method', 'DELETE');
+        formData.append('context', 'manager');
 
         const response = await fetch(url, {
           method: 'POST',
@@ -611,7 +617,16 @@ function parteManager(initialData) {
           // Eliminar del array local
           this.variantes.splice(index, 1);
         } else {
-          alert('Error al eliminar la variante');
+          let errorMessage = 'Error al eliminar la variante';
+          try {
+            const payload = await response.json();
+            if (payload && payload.message) {
+              errorMessage = payload.message;
+            }
+          } catch (e) {
+            // Ignore JSON parse failures and keep default message.
+          }
+          alert(errorMessage);
         }
       } catch (error) {
         console.error('Error:', error);

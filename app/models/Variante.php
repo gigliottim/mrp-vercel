@@ -20,6 +20,13 @@ final class Variante extends BaseTenantModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function countByParteId(int $parteId): int
+    {
+        $stmt = $this->connection->prepare('SELECT COUNT(*) FROM variantes WHERE id_parte = :parte');
+        $stmt->execute(['parte' => $parteId]);
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * @param array<int,int> $ids
      */

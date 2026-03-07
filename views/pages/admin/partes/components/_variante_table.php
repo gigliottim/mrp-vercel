@@ -56,6 +56,7 @@ use App\Core\View\View;
                 </thead>
                 <tbody>
                     <?php foreach ($variants as $parteId => $items) : ?>
+                        <?php $canDeletePartVariants = count($items) > 1; ?>
                         <?php foreach ($items as $variant) : ?>
                             <tr>
                                 <td>
@@ -92,9 +93,9 @@ use App\Core\View\View;
                                         <a class="btn btn-outline-warning" href="<?= url('productos/partes/manager/' . (int) $parteId . '/variantes/' . (int) $variant['id'] . '/editar') ?>" title="Gestionar Variante">
                                             <i class="fa-solid fa-gear"></i>
                                         </a>
-                                        <form method="post" action="<?= url('productos/partes/' . (int) $parteId . '/variantes/' . (int) $variant['id']) ?>" onsubmit="return confirm('¿Eliminar variante?');">
+                                        <form method="post" action="<?= url('productos/partes/' . (int) $parteId . '/variantes/' . (int) $variant['id']) ?>" onsubmit="return <?= $canDeletePartVariants ? "confirm('¿Eliminar variante?');" : 'false;' ?>">
                                             <input type="hidden" name="_method" value="DELETE">
-                                            <button class="btn btn-outline-danger" type="submit">
+                                            <button class="btn btn-outline-danger" type="submit" <?= $canDeletePartVariants ? '' : 'disabled title="No se puede eliminar la ultima variante de una parte"' ?>>
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </form>

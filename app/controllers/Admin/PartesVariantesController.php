@@ -12,6 +12,7 @@ use App\Models\Parte;
 use App\Models\TipoParte;
 use App\Models\UnidadMedida;
 use App\Models\Variante;
+use Throwable;
 
 final class PartesVariantesController extends Controller
 {
@@ -92,7 +93,16 @@ final class PartesVariantesController extends Controller
             ]);
         }
 
-        $this->partes->create($data);
+        try {
+            $this->createParteWithDefaultVariant($data);
+        } catch (Throwable $exception) {
+            return $this->renderIndex([
+                'errors' => ['general' => 'No se pudo crear la parte y su variante inicial.'],
+                'oldPart' => $request->body,
+                'tab' => 'partes',
+            ]);
+        }
+
         return Response::redirect(url('/productos/partes'));
     }
 
@@ -181,7 +191,38 @@ final class PartesVariantesController extends Controller
     public function destroyVariant(Request $request, $idParte, $id): Response
     {
         $idParte = (int) $idParte;
-        $this->variantes->delete((int) $id);
+        $id = (int) $id;
+        $context = (string) $request->input('context', '');
+
+        $variant = $this->variantes->find($id);
+        if ($variant === null || (int) ($variant['id_parte'] ?? 0) !== $idParte) {
+            if ($context === 'manager') {
+                return Response::json([
+                    'status' => 'error',
+                    'message' => 'La variante no existe para la parte indicada.',
+                ], 404);
+            }
+
+            return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
+        }
+
+        if ($this->variantes->countByParteId($idParte) <= 1) {
+            if ($context === 'manager') {
+                return Response::json([
+                    'status' => 'error',
+                    'message' => 'No se puede eliminar la ultima variante de una parte.',
+                ], 409);
+            }
+
+            return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
+        }
+
+        $this->variantes->delete($id);
+
+        if ($context === 'manager') {
+            return Response::json(['status' => 'ok']);
+        }
+
         return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
     }
 
@@ -288,8 +329,52 @@ final class PartesVariantesController extends Controller
             ]);
         }
 
-        $newId = $this->partes->create($data);
+        try {
+            $newId = $this->createParteWithDefaultVariant($data);
+        } catch (Throwable $exception) {
+            return $this->renderManager([
+                'errors' => ['general' => 'No se pudo crear la parte y su variante inicial.'],
+                'oldPart' => $request->body,
+            ]);
+        }
+
         return Response::redirect(url("/productos/partes/manager/{$newId}"));
+    }
+
+    private function createParteWithDefaultVariant(array $partData): int
+    {
+        $connection = $this->partes->getConnection();
+
+        $connection->beginTransaction();
+        try {
+            $newParteId = $this->partes->create($partData);
+
+            $variantModel = new Variante($connection);
+            $variantModel->create($this->buildDefaultVariantData($partData, $newParteId));
+
+            $connection->commit();
+            return $newParteId;
+        } catch (Throwable $exception) {
+            if ($connection->inTransaction()) {
+                $connection->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
+    private function buildDefaultVariantData(array $partData, int $parteId): array
+    {
+        $parteDetalle = trim((string) ($partData['detalle'] ?? ''));
+
+        return [
+            'id_parte' => $parteId,
+            'codigo_variante' => 'BASE',
+            'detalle' => $parteDetalle !== '' ? $parteDetalle : 'Variante base',
+            'estado' => 'activa',
+            'lote_minimo' => 1,
+            'punto_pedido' => 0,
+        ];
     }
 
     public function managerUpdatePart(Request $request, $id): Response

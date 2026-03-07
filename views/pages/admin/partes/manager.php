@@ -121,7 +121,8 @@ $dimensionFields = [
                         <span x-show="mode === 'edit' && !isPartFormReadOnly" class="badge bg-success ms-2">Editando</span>
                         <span x-show="isPartFormReadOnly && form.id" class="badge bg-secondary ms-2">Solo lectura</span>
                         <span x-show="form.id" class="text-muted ms-2 small">ID: <span x-text="form.id"></span></span>
-                        <span x-show="mode === 'create'" class="badge bg-info ms-2">Nueva</span>
+                        <span x-show="mode === 'create' && isPartFormReadOnly && !form.id" class="badge bg-secondary ms-2">Esperando Nueva Parte</span>
+                        <span x-show="mode === 'create' && !isPartFormReadOnly && !form.id" class="badge bg-info ms-2">Nueva</span>
                     </h5>
                 </div>
                 <div class="card-body">

@@ -7,6 +7,7 @@ function parteManager(initialData) {
   const isEditingVariantContext = Boolean(
     (initialData.editingVariant && initialData.editingVariant.id) || initialData.editingVariantId
   );
+  const startsLockedWithoutPart = initialData.mode === 'create' && !initialData.parte;
 
   return {
     // Estado
@@ -14,7 +15,7 @@ function parteManager(initialData) {
     isEditing: initialData.mode !== 'create',
     editingVariantId: initialData.editingVariantId || null,
     editingVariant: initialData.editingVariant || null,
-    isPartFormReadOnly: initialData.mode === 'view' || isEditingVariantContext,
+    isPartFormReadOnly: initialData.mode === 'view' || isEditingVariantContext || startsLockedWithoutPart,
     isVariantFormEnabled: initialData.mode === 'edit',
     loading: false,
     parte: initialData.parte || null,
@@ -141,6 +142,7 @@ function parteManager(initialData) {
 
       this.parte = null;
       this.variantes = [];
+      this.mode = 'create';
       this.isEditing = false;
       this.isPartFormReadOnly = false;
       this.isVariantFormEnabled = false;
@@ -441,6 +443,8 @@ function parteManager(initialData) {
         return;
       }
 
+      const isUpdatingVariant = Boolean(this.variantForm.id);
+
       // Validar unidad de medida del peso.
       // Si la UM queda vacia (opcion "UM"), permitimos peso vacio.
       const rawPeso = this.variantForm.peso;
@@ -498,10 +502,16 @@ function parteManager(initialData) {
           body: formData
         });
 
+        const managerViewUrl = `/mrp/productos/partes/manager/${this.form.id}`;
+
         if (response.redirected) {
-          window.location.href = response.url;
+          window.location.href = isUpdatingVariant ? managerViewUrl : response.url;
         } else if (response.ok) {
-          window.location.reload();
+          if (isUpdatingVariant) {
+            window.location.href = managerViewUrl;
+          } else {
+            window.location.reload();
+          }
         } else {
           alert('Error al guardar la variante');
         }

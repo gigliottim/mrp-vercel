@@ -189,7 +189,7 @@ use App\Core\View\View;
                 type="button"
                 class="btn btn-sm btn-primary"
                 @click="resetForm()"
-                x-show="mode !== 'create'">
+                x-show="mode !== 'create' || isPartFormReadOnly">
                 <i class="fa-solid fa-plus me-2"></i>
                 Nueva Parte
             </button>

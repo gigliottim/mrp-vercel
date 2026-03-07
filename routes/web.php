@@ -10,6 +10,7 @@ use App\Controllers\Admin\DepositosValidacionesController;
 use App\Controllers\Admin\ConfiguracionController;
 use App\Controllers\Admin\UnidadesMedidaController;
 use App\Controllers\Admin\PartesVariantesController;
+use App\Controllers\Admin\PartesImportController;
 use App\Controllers\Admin\EmpresaUsuariosController;
 use App\Controllers\Planeamiento\SugerenciasController;
 use App\Controllers\Planeamiento\OrdenesController;
@@ -202,6 +203,11 @@ $router->post('/productos/partes', [PartesVariantesController::class, 'storePart
 $router->get('/productos/partes/{id}/editar', [PartesVariantesController::class, 'editPart']);
 $router->put('/productos/partes/{id}', [PartesVariantesController::class, 'updatePart']);
 $router->delete('/productos/partes/{id}', [PartesVariantesController::class, 'destroyPart']);
+
+// Productos - Importacion de partes y variantes
+$router->get('/productos/partes/importar', [PartesImportController::class, 'index']);
+$router->get('/productos/partes/importar/template', [PartesImportController::class, 'downloadTemplate']);
+$router->post('/productos/partes/importar', [PartesImportController::class, 'import']);
 
 // Productos - Manager moderno (nueva interfaz)
 $router->get('/productos/partes/manager', [PartesVariantesController::class, 'manager']);

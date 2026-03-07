@@ -123,6 +123,9 @@ $clearUrlVariantes = url('productos/partes?tab=variantes' . ($filteredParteId ? 
             <li class="nav-item">
                 <a class="nav-link<?= $tab === 'variantes' ? ' active' : '' ?>" href="<?= url('productos/partes?tab=variantes') ?>">Variantes</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= url('productos/partes/importar') ?>">Importar</a>
+            </li>
         </ul>
     </div>
 </section>

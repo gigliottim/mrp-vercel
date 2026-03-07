@@ -374,6 +374,8 @@ function parteManager(initialData) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
           },
           body: formData
         });
@@ -381,17 +383,33 @@ function parteManager(initialData) {
         if (response.redirected) {
           window.location.href = response.url;
         } else if (response.ok) {
-          // Si es creación nueva, recargar con el nuevo ID
-          if (!this.form.id) {
-            const text = await response.text();
-            // Intentar extraer el ID de la respuesta o recargar la página
-            window.location.reload();
-          } else {
-            alert('Parte actualizada correctamente');
-            window.location.reload();
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const payload = await response.json();
+            if (payload.redirect_url) {
+              window.location.href = payload.redirect_url;
+              return;
+            }
+
+            if (payload.status === 'error') {
+              alert(payload.message || 'Error al guardar la parte');
+              return;
+            }
           }
+
+          // Fallback para respuestas sin JSON
+          window.location.reload();
         } else {
-          alert('Error al guardar la parte');
+          let errorMessage = 'Error al guardar la parte';
+          try {
+            const payload = await response.json();
+            if (payload && payload.message) {
+              errorMessage = payload.message;
+            }
+          } catch (e) {
+            // Keep default message when response is not JSON.
+          }
+          alert(errorMessage);
         }
       } catch (error) {
         console.error('Error:', error);

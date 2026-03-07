@@ -323,6 +323,14 @@ final class PartesVariantesController extends Controller
     {
         [$data, $errors] = $this->validatePart($request);
         if ($errors !== []) {
+            if ($this->isAjaxRequest($request)) {
+                return Response::json([
+                    'status' => 'error',
+                    'message' => 'Revisa los datos obligatorios de la parte.',
+                    'errors' => $errors,
+                ], 422);
+            }
+
             return $this->renderManager([
                 'errors' => $errors,
                 'oldPart' => $request->body,
@@ -332,9 +340,25 @@ final class PartesVariantesController extends Controller
         try {
             $newId = $this->createParteWithDefaultVariant($data);
         } catch (Throwable $exception) {
+            $errorMessage = $this->resolvePartCreateErrorMessage($exception);
+
+            if ($this->isAjaxRequest($request)) {
+                return Response::json([
+                    'status' => 'error',
+                    'message' => $errorMessage,
+                ], 409);
+            }
+
             return $this->renderManager([
-                'errors' => ['general' => 'No se pudo crear la parte y su variante inicial.'],
+                'errors' => ['general' => $errorMessage],
                 'oldPart' => $request->body,
+            ]);
+        }
+
+        if ($this->isAjaxRequest($request)) {
+            return Response::json([
+                'status' => 'ok',
+                'redirect_url' => url("/productos/partes/manager/{$newId}"),
             ]);
         }
 
@@ -366,10 +390,12 @@ final class PartesVariantesController extends Controller
     private function buildDefaultVariantData(array $partData, int $parteId): array
     {
         $parteDetalle = trim((string) ($partData['detalle'] ?? ''));
+        $parteCodigo = strtoupper(trim((string) ($partData['codigo'] ?? '')));
+        $defaultCode = $parteCodigo !== '' ? $parteCodigo : 'BASE-' . $parteId;
 
         return [
             'id_parte' => $parteId,
-            'codigo_variante' => 'BASE',
+            'codigo_variante' => substr($defaultCode, 0, 50),
             'detalle' => $parteDetalle !== '' ? $parteDetalle : 'Variante base',
             'estado' => 'activa',
             'lote_minimo' => 1,
@@ -386,6 +412,14 @@ final class PartesVariantesController extends Controller
 
         [$data, $errors] = $this->validatePart($request);
         if ($errors !== []) {
+            if ($this->isAjaxRequest($request)) {
+                return Response::json([
+                    'status' => 'error',
+                    'message' => 'Revisa los datos obligatorios de la parte.',
+                    'errors' => $errors,
+                ], 422);
+            }
+
             return $this->renderManager([
                 'errors' => $errors,
                 'oldPart' => $request->body,
@@ -395,6 +429,32 @@ final class PartesVariantesController extends Controller
 
         $this->partes->update($id, $data);
         return Response::redirect(url("/productos/partes/manager/{$id}"));
+    }
+
+    private function isAjaxRequest(Request $request): bool
+    {
+        $xRequestedWith = (string) ($request->headers['X-Requested-With'] ?? $request->headers['x-requested-with'] ?? '');
+        if (strtolower($xRequestedWith) === 'xmlhttprequest') {
+            return true;
+        }
+
+        $accept = (string) ($request->headers['Accept'] ?? $request->headers['accept'] ?? '');
+        return str_contains(strtolower($accept), 'application/json');
+    }
+
+    private function resolvePartCreateErrorMessage(Throwable $exception): string
+    {
+        $message = $exception->getMessage();
+
+        if (str_contains($message, 'partes_codigo_key')) {
+            return 'Ya existe una parte con ese codigo.';
+        }
+
+        if (str_contains($message, 'variantes_id_parte_codigo_variante_key')) {
+            return 'No se pudo crear la variante inicial por codigo duplicado.';
+        }
+
+        return 'No se pudo crear la parte y su variante inicial.';
     }
 
     private function renderManager(array $overrides = []): Response

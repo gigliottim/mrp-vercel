@@ -45,8 +45,8 @@
                                 type="button"
                                 class="btn btn-outline-primary"
                                 @click="editVariante(variante)"
-                                :disabled="mode !== 'edit'"
-                                :title="mode !== 'edit' ? 'Habilita la edición para editar variantes' : 'Editar'"
+                                :disabled="isVariantFormEnabled"
+                                :title="isVariantFormEnabled ? 'Guarda o cancela el formulario variante antes de cambiar de acción' : 'Editar'"
                                 title="Editar">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
@@ -60,8 +60,8 @@
                                 type="button"
                                 class="btn btn-outline-danger"
                                 @click="deleteVariante(variante.id, index)"
-                                :disabled="mode !== 'edit'"
-                                :title="mode !== 'edit' ? 'Habilita la edición para eliminar variantes' : 'Eliminar'"
+                                :disabled="isVariantFormEnabled"
+                                :title="isVariantFormEnabled ? 'Guarda o cancela el formulario variante antes de eliminar' : 'Eliminar'"
                                 title="Eliminar">
                                 <i class="fa-solid fa-trash"></i>
                             </button>

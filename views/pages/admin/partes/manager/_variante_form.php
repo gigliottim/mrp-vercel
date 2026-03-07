@@ -134,13 +134,6 @@ $variantStates = [
             Nueva variante
         </button>
 
-        <a
-            class="btn btn-sm btn-warning"
-            x-show="mode === 'view' && form.id"
-            :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
-            <i class="fa-solid fa-pen me-2"></i>
-            Habilitar Edicion
-        </a>
         <button
             type="submit"
             class="btn btn-sm"

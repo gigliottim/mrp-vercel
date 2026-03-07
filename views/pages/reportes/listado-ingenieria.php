@@ -108,9 +108,15 @@ $datosReporte = $datosReporte ?? [];
                 <div class="flex-grow-1">
                     <div class="alert alert-success mb-0 py-2 px-3">
                         <i class="fa-solid fa-check-circle me-2"></i>
-                        <strong><?= View::escape($varianteSeleccionada['codigo_variante']) ?></strong>
-                        <span class="text-muted mx-2">•</span>
-                        <span><?= View::escape($varianteSeleccionada['detalle']) ?></span>
+                        <span class="fw-semibold">Parte:</span>
+                        <strong><?= View::escape((string) ($varianteSeleccionada['parte_codigo'] ?? 'N/A')) ?></strong>
+                        <span class="text-muted mx-1">-</span>
+                        <span><?= View::escape((string) ($varianteSeleccionada['parte_detalle'] ?? '')) ?></span>
+                        <span class="text-muted mx-2">|</span>
+                        <span class="fw-semibold">Variante:</span>
+                        <strong><?= View::escape((string) ($varianteSeleccionada['codigo_variante'] ?? 'N/A')) ?></strong>
+                        <span class="text-muted mx-1">-</span>
+                        <span><?= View::escape((string) ($varianteSeleccionada['detalle'] ?? '')) ?></span>
                     </div>
                 </div>
                 <a href="<?= url('reportes/listado-ingenieria') ?>" class="btn btn-outline-primary">

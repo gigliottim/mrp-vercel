@@ -364,8 +364,13 @@ use App\Core\Support\AssetHelper;
                 maxResults: 15,
                 format: 'detailed',
                 onSelect: (item) => {
+                    const parteCodigo = item.parte_codigo || 'N/A';
+                    const parteDetalle = item.parte_detalle || 'Sin detalle';
+                    const varianteCodigo = item.codigo_variante || 'N/A';
+                    const varianteDetalle = item.detalle || item.variante_detalle || 'Sin detalle';
+
                     varianteIdInput.value = item.id;
-                    searchInput.value = item.codigo_variante + ' - ' + item.detalle;
+                    searchInput.value = `Parte: ${parteCodigo} - ${parteDetalle} | Variante: ${varianteCodigo} - ${varianteDetalle}`;
                     cantidadInput.focus();
                 }
                 // customItemRender removido para usar el nuevo default moderno de SearchClient.js

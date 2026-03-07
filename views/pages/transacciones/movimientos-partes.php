@@ -389,6 +389,15 @@ use App\Core\Support\AssetHelper;
         // Estado de la parte seleccionada
         let parteSeleccionada = null;
 
+        function buildSearchSelectionLabel(item) {
+            const parteCodigo = item.parte_codigo || 'N/A';
+            const parteDetalle = item.parte_detalle || 'Sin detalle';
+            const varianteCodigo = item.codigo_variante || 'N/A';
+            const varianteDetalle = item.detalle || item.variante_detalle || 'Sin detalle';
+
+            return `Parte: ${parteCodigo} - ${parteDetalle} | Variante: ${varianteCodigo} - ${varianteDetalle}`;
+        }
+
         // Mapa de tipos de depósito para determinar si es compra o uso
         const depositosCompra = ['PROVEEDOR', 'PROVEED'];
         const depositosCliente = ['CLIENTE', 'VENTA', 'PT'];
@@ -523,19 +532,22 @@ use App\Core\Support\AssetHelper;
                 format: 'detailed',
                 // Usar renderizado por defecto actualizado en SearchClient.js
                 onSelect: (item) => {
+                    const selectedLabel = buildSearchSelectionLabel(item);
+
                     // Guardar la parte seleccionada
                     parteSeleccionada = {
                         id: item.id,
                         id_parte: item.id_parte,
                         codigo: item.codigo_variante || item.parte_codigo,
                         detalle: item.detalle || item.variante_detalle,
+                        selectedLabel: selectedLabel,
                         id_um_compra: item.id_um_compra,
                         id_um_uso: item.id_um_uso,
                         factor_conversion: item.factor_conversion || 1 // Asumimos 1 si no viene
                     };
 
                     // Actualizar el input visible con el texto de la parte
-                    searchInput.value = parteSeleccionada.codigo + ' - ' + parteSeleccionada.detalle;
+                    searchInput.value = selectedLabel;
                     searchInput.classList.add('parte-seleccionada');
 
                     // Actualizar el campo oculto para validación
@@ -570,7 +582,7 @@ use App\Core\Support\AssetHelper;
 
             // Limpiar selección cuando el usuario empieza a escribir de nuevo
             searchInput.addEventListener('input', function() {
-                if (parteSeleccionada && this.value !== (parteSeleccionada.codigo + ' - ' + parteSeleccionada.detalle)) {
+                if (parteSeleccionada && this.value !== parteSeleccionada.selectedLabel) {
                     parteSeleccionada = null;
                     inputParteHidden.value = '';
                     this.classList.remove('parte-seleccionada');

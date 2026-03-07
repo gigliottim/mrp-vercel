@@ -210,6 +210,18 @@
   max-width: 230px;
 }
 
+.partes-manager-page .pm-active-toggle {
+  padding-inline: 0.25rem;
+}
+
+.partes-manager-page .pm-active-toggle .form-check-input {
+  cursor: pointer;
+}
+
+.partes-manager-page .pm-active-toggle .form-check-label {
+  cursor: pointer;
+}
+
 /* Tablet: una columna principal, variantes debajo; densidad media */
 @media (max-width: 1199.98px) {
   .partes-manager-page {
@@ -273,6 +285,10 @@
 
   .partes-manager-page .pm-form-actions,
   .partes-manager-page .pm-variant-actions {
+    width: 100%;
+  }
+
+  .partes-manager-page .pm-active-toggle {
     width: 100%;
   }
 

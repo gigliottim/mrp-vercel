@@ -129,30 +129,42 @@ $variantStates = [
     </fieldset>
 
     <!-- Botones -->
-    <div class="d-flex flex-wrap gap-2 justify-content-end mt-1 pm-variant-actions">
-        <a
-            class="btn btn-sm btn-warning"
-            x-show="mode === 'view' && form.id"
-            :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
-            <i class="fa-solid fa-pen me-2"></i>
-            Habilitar Edicion
-        </a>
-        <button
-            type="submit"
-            class="btn btn-sm"
-            :class="variantForm.id ? 'btn-success' : 'btn-primary'"
-            :disabled="loading"
-            x-show="mode !== 'view'">
-            <i class="fa-solid fa-check me-2"></i>
-            <span x-text="variantForm.id ? 'Actualizar' : 'Agregar'"></span>
-        </button>
-        <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            @click="cancelEditVariante()"
-            x-show="mode !== 'view' && variantForm.id">
-            <i class="fa-solid fa-times me-2"></i>
-            Cancelar
-        </button>
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-1 pm-variant-actions">
+        <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode !== 'view'">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="variante-activa"
+                :checked="variantForm.estado === 'activa'"
+                @change="variantForm.estado = $event.target.checked ? 'activa' : 'descontinuada'">
+            <label class="form-check-label small fw-semibold" for="variante-activa">Activa</label>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-end">
+            <a
+                class="btn btn-sm btn-warning"
+                x-show="mode === 'view' && form.id"
+                :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
+                <i class="fa-solid fa-pen me-2"></i>
+                Habilitar Edicion
+            </a>
+            <button
+                type="submit"
+                class="btn btn-sm"
+                :class="variantForm.id ? 'btn-success' : 'btn-primary'"
+                :disabled="loading"
+                x-show="mode !== 'view'">
+                <i class="fa-solid fa-check me-2"></i>
+                <span x-text="variantForm.id ? 'Actualizar' : 'Agregar'"></span>
+            </button>
+            <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                @click="cancelEditVariante()"
+                x-show="mode !== 'view' && variantForm.id">
+                <i class="fa-solid fa-times me-2"></i>
+                Cancelar
+            </button>
+        </div>
     </div>
 </form>

@@ -6,7 +6,7 @@ use App\Core\View\View;
     <fieldset :disabled="mode === 'view'">
         <div class="row g-2 g-xl-3">
             <!-- Fila 1: Datos Generales (Compacto) -->
-            <div class="col-sm-6 col-xl-3">
+            <div class="col-sm-6 col-xl-4">
                 <label class="form-label fw-semibold mb-1">Código <span class="text-danger">*</span></label>
                 <input
                     type="text"
@@ -16,7 +16,7 @@ use App\Core\View\View;
                     required
                     style="text-transform: uppercase">
             </div>
-            <div class="col-sm-6 col-xl-3">
+            <div class="col-sm-6 col-xl-4">
                 <label class="form-label fw-semibold mb-1">Tipo <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" x-model.number="form.id_tipo" required>
                     <option value="">-- Seleccionar --</option>
@@ -25,7 +25,7 @@ use App\Core\View\View;
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-sm-6 col-xl-3">
+            <div class="col-sm-6 col-xl-4">
                 <label class="form-label fw-semibold mb-1">Grupo <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" x-model.number="form.id_grupo" required>
                     <option value="">-- Seleccionar --</option>
@@ -33,16 +33,6 @@ use App\Core\View\View;
                         <option value="<?= (int) $grupo['id'] ?>"><?= View::escape($grupo['nombre']) ?></option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-            <div class="col-sm-6 col-xl-3 d-flex align-items-end">
-                <div class="form-check form-switch mt-4">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        x-model="form.activo"
-                        id="parte-activa">
-                    <label class="form-check-label small fw-semibold" for="parte-activa">Activa</label>
-                </div>
             </div>
 
             <!-- Fila 2: Detalle -->
@@ -178,39 +168,50 @@ use App\Core\View\View;
     <!-- Fila 8: Botones de acción -->
     <div class="mt-3">
         <hr class="my-2">
-        <div class="d-flex flex-wrap gap-2 justify-content-end pm-form-actions">
-            <a
-                class="btn btn-sm btn-warning"
-                x-show="mode === 'view' && form.id"
-                :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
-                <i class="fa-solid fa-pen me-2"></i>
-                Habilitar Edicion
-            </a>
-            <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                @click="resetForm()"
-                x-show="mode !== 'create'">
-                <i class="fa-solid fa-plus me-2"></i>
-                Nueva Parte
-            </button>
-            <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                @click="resetForm()"
-                x-show="mode !== 'view' && isEditing">
-                <i class="fa-solid fa-times me-2"></i>
-                Cancelar
-            </button>
-            <button
-                type="submit"
-                class="btn btn-sm"
-                :class="isEditing ? 'btn-success' : 'btn-primary'"
-                :disabled="loading"
-                x-show="mode !== 'view'">
-                <i class="fa-solid me-2" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
-                <span x-text="isEditing ? 'Actualizar Parte' : 'Crear Parte'"></span>
-            </button>
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pm-form-actions">
+            <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode !== 'view'">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    x-model="form.activo"
+                    id="parte-activa">
+                <label class="form-check-label small fw-semibold" for="parte-activa">Activa</label>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                <a
+                    class="btn btn-sm btn-warning"
+                    x-show="mode === 'view' && form.id"
+                    :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
+                    <i class="fa-solid fa-pen me-2"></i>
+                    Habilitar Edicion
+                </a>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-primary"
+                    @click="resetForm()"
+                    x-show="mode !== 'create'">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    Nueva Parte
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="resetForm()"
+                    x-show="mode !== 'view' && isEditing">
+                    <i class="fa-solid fa-times me-2"></i>
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    class="btn btn-sm"
+                    :class="isEditing ? 'btn-success' : 'btn-primary'"
+                    :disabled="loading"
+                    x-show="mode !== 'view'">
+                    <i class="fa-solid me-2" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
+                    <span x-text="isEditing ? 'Actualizar Parte' : 'Crear Parte'"></span>
+                </button>
+            </div>
         </div>
     </div>
 </form>

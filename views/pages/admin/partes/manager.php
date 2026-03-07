@@ -61,15 +61,6 @@ $dimensionFields = [
         </div>
     </section>
 
-    <div class="d-flex justify-content-end mb-4">
-        <div class="btn-group">
-            <!-- Botón Cancelar Edición (modo edit) -->
-            <a x-show="mode === 'edit' && form.id" :href="'/mrp/productos/partes/manager/' + form.id" class="btn btn-secondary">
-                <i class="fa-solid fa-eye me-2"></i>Ver Solo Lectura
-            </a>
-        </div>
-    </div>
-
     <!-- Buscador de Partes (siempre visible, ancho completo) -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
@@ -174,7 +165,7 @@ $dimensionFields = [
         <!-- Mensaje cuando no hay parte seleccionada (ocupa columna derecha) -->
         <div class="col-12 col-xl-5" x-show="!isEditing">
             <div class="card shadow-sm border-0 h-100 bg-light d-flex align-items-center justify-content-center">
-            <div class="text-center p-4 p-lg-5 pm-empty-state">
+                <div class="text-center p-4 p-lg-5 pm-empty-state">
                     <i class="fa-solid fa-arrow-left fa-3x text-muted mb-3 d-none d-lg-block"></i>
                     <i class="fa-solid fa-arrow-up fa-3x text-muted mb-3 d-lg-none"></i>
                     <h5 class="text-muted">Gestión de Variantes</h5>

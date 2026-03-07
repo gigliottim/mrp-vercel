@@ -34,10 +34,6 @@
                         <div class="text-nowrap">
                             <span x-text="variante.stock_actual || 0"></span>
                         </div>
-                        <small class="text-muted text-nowrap">
-                            Min: <span x-text="variante.lote_minimo || 0"></span> /
-                            PP: <span x-text="variante.punto_pedido || 0"></span>
-                        </small>
                     </td>
                     <td>
                         <span class="text-nowrap" x-text="variante.peso ? variante.peso : '--'"></span>

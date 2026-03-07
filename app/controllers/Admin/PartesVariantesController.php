@@ -146,12 +146,12 @@ final class PartesVariantesController extends Controller
             ]);
         }
 
-        $this->variantes->create($data);
+        $newVariantId = $this->variantes->create($data);
 
         // Check if coming from Manager (via Context param)
         $context = $request->input('context');
         if ($context === 'manager') {
-            return Response::redirect(url("/productos/partes/manager/{$idParte}/editar"));
+            return Response::redirect(url("/productos/partes/manager/{$idParte}/variantes/{$newVariantId}"));
         }
 
         return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));

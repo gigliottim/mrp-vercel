@@ -4,9 +4,9 @@ use App\Core\View\View;
 ?>
 <form @submit.prevent="saveParte()">
     <fieldset :disabled="mode === 'view'">
-        <div class="row g-3">
+        <div class="row g-2 g-xl-3">
             <!-- Fila 1: Datos Generales (Compacto) -->
-            <div class="col-md-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label fw-semibold mb-1">Código <span class="text-danger">*</span></label>
                 <input
                     type="text"
@@ -16,7 +16,7 @@ use App\Core\View\View;
                     required
                     style="text-transform: uppercase">
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label fw-semibold mb-1">Tipo <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" x-model.number="form.id_tipo" required>
                     <option value="">-- Seleccionar --</option>
@@ -25,7 +25,7 @@ use App\Core\View\View;
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label fw-semibold mb-1">Grupo <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" x-model.number="form.id_grupo" required>
                     <option value="">-- Seleccionar --</option>
@@ -34,7 +34,7 @@ use App\Core\View\View;
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-xl-3 d-flex align-items-end">
                 <div class="form-check form-switch mt-4">
                     <input
                         class="form-check-input"
@@ -57,7 +57,7 @@ use App\Core\View\View;
             </div>
 
             <!-- Fila 3: Unidades de Medida -->
-            <div class="col-md-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label fw-semibold mb-1">
                     UM Compra
                     <i class="fa-solid fa-circle-info text-muted"
@@ -73,7 +73,7 @@ use App\Core\View\View;
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label fw-semibold mb-1">
                     UM Uso
                     <i class="fa-solid fa-circle-info text-muted"
@@ -91,7 +91,7 @@ use App\Core\View\View;
             </div>
 
             <!-- Factor de conversión (visible si UM Compra != UM Uso) -->
-            <div class="col-md-6" x-show="form.id_um_compra && form.id_um_uso && form.id_um_compra != form.id_um_uso" x-transition>
+            <div class="col-12 col-xl-6" x-show="form.id_um_compra && form.id_um_uso && form.id_um_compra != form.id_um_uso" x-transition>
                 <label class="form-label fw-semibold mb-1 text-primary">
                     Factor de Conversión
                     <i class="fa-solid fa-circle-question" title="Cuántas unidades de USO equivale 1 unidad de COMPRA"></i>
@@ -128,7 +128,7 @@ use App\Core\View\View;
 
             <!-- Fila 4: Dimensiones (3 por fila en escritorio) -->
             <?php foreach ($dimensionFields as $field) : ?>
-                <div class="col-6 col-lg-4">
+                <div class="col-sm-6 col-xl-4">
                     <label class="form-label small mb-0 text-truncate"><?= View::escape($field['label']) ?></label>
                     <div class="input-group input-group-sm">
                         <input
@@ -148,7 +148,7 @@ use App\Core\View\View;
             <?php endforeach; ?>
 
             <!-- Fila 5: Superficie y Volumen -->
-            <div class="col-6">
+            <div class="col-sm-6 col-xl-6">
                 <label class="form-label small mb-0">Superficie</label>
                 <div class="input-group input-group-sm">
                     <input type="number" class="form-control px-2" x-model.number="form.superficie" step="0.0001">
@@ -160,7 +160,7 @@ use App\Core\View\View;
                     </select>
                 </div>
             </div>
-            <div class="col-6">
+            <div class="col-sm-6 col-xl-6">
                 <label class="form-label small mb-0">Volumen</label>
                 <div class="input-group input-group-sm">
                     <input type="number" class="form-control px-2" x-model.number="form.volumen" step="0.01">
@@ -178,9 +178,9 @@ use App\Core\View\View;
     <!-- Fila 8: Botones de acción -->
     <div class="mt-3">
         <hr class="my-2">
-        <div class="d-flex gap-2 justify-content-end">
+        <div class="d-flex flex-wrap gap-2 justify-content-end pm-form-actions">
             <a
-                class="btn btn-warning"
+                class="btn btn-sm btn-warning"
                 x-show="mode === 'view' && form.id"
                 :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
                 <i class="fa-solid fa-pen me-2"></i>
@@ -188,7 +188,7 @@ use App\Core\View\View;
             </a>
             <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-sm btn-primary"
                 @click="resetForm()"
                 x-show="mode !== 'create'">
                 <i class="fa-solid fa-plus me-2"></i>
@@ -196,7 +196,7 @@ use App\Core\View\View;
             </button>
             <button
                 type="button"
-                class="btn btn-outline-secondary"
+                class="btn btn-sm btn-outline-secondary"
                 @click="resetForm()"
                 x-show="mode !== 'view' && isEditing">
                 <i class="fa-solid fa-times me-2"></i>
@@ -204,7 +204,7 @@ use App\Core\View\View;
             </button>
             <button
                 type="submit"
-                class="btn"
+                class="btn btn-sm"
                 :class="isEditing ? 'btn-success' : 'btn-primary'"
                 :disabled="loading"
                 x-show="mode !== 'view'">

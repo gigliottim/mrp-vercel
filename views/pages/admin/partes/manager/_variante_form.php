@@ -26,9 +26,9 @@ $variantStates = [
             </button>
         </div>
 
-        <div class="row g-2">
+        <div class="row g-2 align-items-end">
             <!-- Fila 1: Datos Básicos -->
-            <div class="col-4">
+            <div class="col-sm-4 col-xl-3">
                 <label class="form-label small fw-semibold mb-0">Código <span class="text-danger">*</span></label>
                 <input
                     type="text"
@@ -38,17 +38,17 @@ $variantStates = [
                     required
                     style="text-transform: uppercase">
             </div>
-            <div class="col-8">
+            <div class="col-sm-8 col-xl-9">
                 <label class="form-label small fw-semibold mb-0">Detalle <span class="text-danger">*</span></label>
                 <textarea
                     class="form-control form-control-sm"
                     x-model="variantForm.detalle"
-                    rows="1"
+                    rows="2"
                     required></textarea>
             </div>
 
             <!-- Fila 2: Gestión de Inventario (compacto 2x3 o 3x2) -->
-            <div class="col-6 col-lg-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label small fw-semibold mb-0">Status</label>
                 <select class="form-select form-select-sm" x-model="variantForm.estado">
                     <?php foreach ($variantStates as $key => $label) : ?>
@@ -56,7 +56,7 @@ $variantStates = [
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label small fw-semibold mb-0 text-truncate">Lote Mín.</label>
                 <div class="input-group input-group-sm">
                     <input
@@ -68,7 +68,7 @@ $variantStates = [
                     <span class="input-group-text px-2" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label small fw-semibold mb-0 text-truncate">Pedir al</label>
                 <div class="input-group input-group-sm">
                     <input
@@ -80,7 +80,7 @@ $variantStates = [
                     <span class="input-group-text px-2" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-sm-6 col-xl-3">
                 <label class="form-label small fw-semibold mb-0">Stock (Calc)</label>
                 <div class="input-group input-group-sm">
                     <input
@@ -94,7 +94,7 @@ $variantStates = [
             </div>
 
             <!-- Fila 3 y 4: Peso y Ubicación -->
-            <div class="col-12 col-lg-4">
+            <div class="col-sm-6 col-xl-4">
                 <label class="form-label small fw-semibold mb-0">Peso Unit.</label>
                 <div class="input-group input-group-sm">
                     <input
@@ -112,7 +112,7 @@ $variantStates = [
                 </div>
             </div>
 
-            <div class="col-12 col-lg-8">
+            <div class="col-sm-6 col-xl-8">
                 <label class="form-label small fw-semibold mb-0">Ubicación Física</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text px-2" style="font-size: 0.8rem;">Cuerpo</span>
@@ -129,7 +129,7 @@ $variantStates = [
     </fieldset>
 
     <!-- Botones -->
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-1">
+    <div class="d-flex flex-wrap gap-2 justify-content-end mt-1 pm-variant-actions">
         <a
             class="btn btn-sm btn-warning"
             x-show="mode === 'view' && form.id"

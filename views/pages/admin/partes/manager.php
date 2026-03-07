@@ -32,134 +32,17 @@ $dimensionFields = [
 ];
 
 ?>
-<style>
-    /* Estilos para el buscador de partes */
-    #parte-search-container {
-        position: relative;
-    }
-
-    #parte-search-results {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        z-index: 1050;
-        max-height: 400px;
-        overflow-y: auto;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        margin-top: 0.25rem;
-        display: none;
-    }
-
-    #parte-search-results .search-result-item {
-        padding: 0.75rem;
-        cursor: pointer;
-        border-bottom: 1px solid #f0f0f0;
-        transition: background-color 0.2s;
-    }
-
-    #parte-search-results .search-result-item:hover,
-    #parte-search-results .search-result-item.active {
-        background-color: #f8f9fa;
-    }
-
-    #parte-search-results .search-result-item:last-child {
-        border-bottom: none;
-    }
-
-    #parte-search-input:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-
-    /* Estilos para botones de filtro */
-    .btn-tipo-filter {
-        transition: all 0.3s ease;
-        font-weight: 500;
-        min-width: 60px;
-    }
-
-    .btn-tipo-filter:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-tipo-filter.active {
-        font-weight: bold;
-        box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 0, 0, 0.1);
-        transform: scale(1.05);
-    }
-
-    .btn-outline-secondary.active {
-        background-color: #6c757d !important;
-        color: white !important;
-        border-color: #6c757d !important;
-    }
-
-    .btn-outline-info.active {
-        background-color: #0dcaf0 !important;
-        color: white !important;
-        border-color: #0dcaf0 !important;
-    }
-
-    .btn-outline-success.active {
-        background-color: #198754 !important;
-        color: white !important;
-        border-color: #198754 !important;
-    }
-
-    .btn-outline-warning.active {
-        background-color: #ffc107 !important;
-        color: #000 !important;
-        border-color: #ffc107 !important;
-    }
-
-    .btn-outline-danger.active {
-        background-color: #dc3545 !important;
-        color: white !important;
-        border-color: #dc3545 !important;
-    }
-
-    .btn-outline-primary.active {
-        background-color: #0d6efd !important;
-        color: white !important;
-        border-color: #0d6efd !important;
-    }
-
-    .btn-outline-dark.active {
-        background-color: #212529 !important;
-        color: white !important;
-        border-color: #212529 !important;
-    }
-
-    /* Estilos para badge de estado */
-    .badge.ms-2 {
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    /* Animación suave para el buscador */
-    #parte-search-container {
-        transition: all 0.3s ease;
-    }
-
-    #parte-search-input:focus+#parte-search-results {
-        border-color: #0d6efd;
-    }
-</style>
+<link rel="stylesheet" href="<?= AssetHelper::css('modules/partes/manager.css') ?>">
 <div x-data="parteManager(<?= View::escape(json_encode([
                                 'parte' => $parte,
                                 'variantes' => $parteVariants,
                                 'mode' => $mode,
                                 'editingVariantId' => $editingVariantId,
-                            ])) ?>)" x-init="init()" class="pt-0 pb-4 px-0">
+                            ])) ?>)" x-init="init()" class="partes-manager-page pt-0 pb-4 px-0">
 
     <!-- Header -->
     <section class="mb-1">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center pm-page-header">
             <div>
                 <p class="text-uppercase text-muted small mb-1">Productos</p>
                 <h1 class="h3 mb-0">Gestión completa de partes y sus variantes</h1>
@@ -200,7 +83,7 @@ $dimensionFields = [
                 <button type="button"
                     class="btn btn-tipo-filter btn-outline-secondary active"
                     data-tipo=""
-                    onclick="updateParteSearchFilter('')">
+                    onclick="updateParteSearchFilter('', this)">
                     <i class="fa-solid fa-border-all"></i> Todos
                 </button>
                 <?php
@@ -211,7 +94,7 @@ $dimensionFields = [
                     <button type="button"
                         class="btn btn-tipo-filter btn-outline-<?= $color ?>"
                         data-tipo="<?= View::escape($tipo['codigo']) ?>"
-                        onclick="updateParteSearchFilter('<?= View::escape($tipo['codigo']) ?>')"
+                        onclick="updateParteSearchFilter('<?= View::escape($tipo['codigo']) ?>', this)"
                         title="<?= View::escape($tipo['nombre']) ?>">
                         <strong><?= View::escape($tipo['codigo']) ?></strong>
                     </button>
@@ -220,7 +103,7 @@ $dimensionFields = [
 
             <!-- Buscador -->
             <div id="parte-search-container">
-                <div class="input-group input-group-lg">
+                <div class="input-group pm-search-group">
                     <span class="input-group-text bg-white">
                         <i class="fa-solid fa-search text-muted"></i>
                     </span>
@@ -235,11 +118,11 @@ $dimensionFields = [
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-3 pm-main-grid">
         <!-- Columna Izquierda: Formulario de Parte -->
-        <div class="col-lg-6">
+        <div class="col-12 col-xl-7">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom py-3">
+                <div class="card-header bg-white border-bottom pm-card-header">
                     <h5 class="mb-0">
                         <i class="fa-solid fa-box text-primary me-2"></i>
                         Datos de la Parte
@@ -256,9 +139,9 @@ $dimensionFields = [
         </div>
 
         <!-- Columna Derecha: Variantes -->
-        <div class="col-lg-6" x-show="isEditing">
+        <div class="col-12 col-xl-5" x-show="isEditing">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom py-3">
+                <div class="card-header bg-white border-bottom pm-card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fa-solid fa-layer-group text-success me-2"></i>
@@ -269,17 +152,17 @@ $dimensionFields = [
                 </div>
                 <div class="card-body">
                     <!-- Formulario de Variante -->
-                    <div class="border rounded-3 p-3 mb-4 bg-light">
+                    <div class="pm-variant-form mb-3">
                         <?php include __DIR__ . '/manager/_variante_form.php'; ?>
                     </div>
 
                     <!-- Tabla de Variantes -->
-                    <div x-show="variantes.length > 0">
+                    <div x-show="variantes.length > 0" class="pm-variants-table">
                         <?php include __DIR__ . '/manager/_variantes_table.php'; ?>
                     </div>
 
                     <!-- Estado vacío -->
-                    <div x-show="variantes.length === 0" class="text-center py-5">
+                    <div x-show="variantes.length === 0" class="text-center py-5 pm-empty-state">
                         <i class="fa-solid fa-inbox fa-3x text-muted mb-3"></i>
                         <p class="text-muted">No hay variantes registradas</p>
                         <p class="small text-muted">Completa el formulario para agregar la primera variante</p>
@@ -289,9 +172,9 @@ $dimensionFields = [
         </div>
 
         <!-- Mensaje cuando no hay parte seleccionada (ocupa columna derecha) -->
-        <div class="col-lg-6" x-show="!isEditing">
+        <div class="col-12 col-xl-5" x-show="!isEditing">
             <div class="card shadow-sm border-0 h-100 bg-light d-flex align-items-center justify-content-center">
-                <div class="text-center p-5">
+            <div class="text-center p-4 p-lg-5 pm-empty-state">
                     <i class="fa-solid fa-arrow-left fa-3x text-muted mb-3 d-none d-lg-block"></i>
                     <i class="fa-solid fa-arrow-up fa-3x text-muted mb-3 d-lg-none"></i>
                     <h5 class="text-muted">Gestión de Variantes</h5>
@@ -348,12 +231,14 @@ $dimensionFields = [
     });
 
     // Función para actualizar filtro de tipo
-    function updateParteSearchFilter(tipoFilter) {
+    function updateParteSearchFilter(tipoFilter, clickedButton = null) {
         // Actualizar botones activos
         document.querySelectorAll('#tipo-filters .btn-tipo-filter').forEach(btn => {
             btn.classList.remove('active');
         });
-        event.target.closest('.btn-tipo-filter').classList.add('active');
+        if (clickedButton) {
+            clickedButton.classList.add('active');
+        }
 
         // Actualizar filtros
         currentParteFilters = tipoFilter ? {

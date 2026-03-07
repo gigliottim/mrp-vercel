@@ -1,23 +1,23 @@
 <div class="table-responsive">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover table-sm align-middle mb-0">
         <thead class="table-light">
             <tr>
-                <th style="width: 18%">Código</th>
+                <th class="text-nowrap" style="width: 16%">Código</th>
                 <th style="width: 30%">Detalle</th>
-                <th style="width: 15%">Estado</th>
-                <th style="width: 15%">Stock</th>
-                <th style="width: 12%">Peso</th>
-                <th style="width: 10%" class="text-end">Acciones</th>
+                <th class="text-nowrap" style="width: 14%">Estado</th>
+                <th class="text-nowrap" style="width: 16%">Stock</th>
+                <th class="text-nowrap" style="width: 12%">Peso</th>
+                <th class="text-end text-nowrap" style="width: 12%">Acciones</th>
             </tr>
         </thead>
         <tbody>
             <template x-for="(variante, index) in variantes" :key="variante.id || index">
                 <tr>
                     <td>
-                        <span class="badge bg-secondary" x-text="variante.codigo_variante"></span>
+                        <span class="badge bg-secondary text-truncate" x-text="variante.codigo_variante"></span>
                     </td>
                     <td>
-                        <span x-text="variante.detalle"></span>
+                        <span class="d-inline-block text-truncate" style="max-width: 260px;" x-text="variante.detalle"></span>
                     </td>
                     <td>
                         <span
@@ -31,20 +31,20 @@
                             x-text="getEstadoLabel(variante.estado)"></span>
                     </td>
                     <td>
-                        <div>
+                        <div class="text-nowrap">
                             <span x-text="variante.stock_actual || 0"></span>
                         </div>
-                        <small class="text-muted">
+                        <small class="text-muted text-nowrap">
                             Min: <span x-text="variante.lote_minimo || 0"></span> /
                             PP: <span x-text="variante.punto_pedido || 0"></span>
                         </small>
                     </td>
                     <td>
-                        <span x-text="variante.peso ? variante.peso : '--'"></span>
+                        <span class="text-nowrap" x-text="variante.peso ? variante.peso : '--'"></span>
                         <small class="text-muted" x-show="variante.peso" x-text="getPesoUM(variante.id_um_peso)"></small>
                     </td>
                     <td class="text-end">
-                        <div class="btn-group btn-group-sm" role="group">
+                        <div class="btn-group btn-group-sm flex-nowrap" role="group">
                             <button
                                 type="button"
                                 class="btn btn-outline-primary"

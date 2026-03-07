@@ -118,8 +118,8 @@ $dimensionFields = [
                     <h5 class="mb-0">
                         <i class="fa-solid fa-box text-primary me-2"></i>
                         Datos de la Parte
-                        <span x-show="mode === 'edit'" class="badge bg-success ms-2">Editando</span>
-                        <span x-show="mode === 'view'" class="badge bg-secondary ms-2">Solo lectura</span>
+                        <span x-show="mode === 'edit' && !isPartFormReadOnly" class="badge bg-success ms-2">Editando</span>
+                        <span x-show="isPartFormReadOnly && form.id" class="badge bg-secondary ms-2">Solo lectura</span>
                         <span x-show="form.id" class="text-muted ms-2 small">ID: <span x-text="form.id"></span></span>
                         <span x-show="mode === 'create'" class="badge bg-info ms-2">Nueva</span>
                     </h5>
@@ -140,9 +140,9 @@ $dimensionFields = [
                             Formulario Variante
                         </h5>
                         <span x-show="variantForm && variantForm.id" class="text-muted small">ID: <span x-text="variantForm.id"></span></span>
-                        <span x-show="variantForm && !variantForm.id" class="badge bg-info">Nueva</span>
-                        <span x-show="mode === 'view'" class="badge bg-secondary">Solo lectura</span>
-                        <span x-show="mode === 'edit'" class="badge bg-success">Editando</span>
+                        <span x-show="isVariantFormEnabled && variantForm && !variantForm.id" class="badge bg-info">Nueva</span>
+                        <span x-show="mode === 'view' && isVariantFormEnabled && variantForm && variantForm.id" class="badge bg-secondary">Solo lectura</span>
+                        <span x-show="isVariantFormEnabled" class="badge bg-success">Editando</span>
                     </div>
                 </div>
                 <div class="card-body">

@@ -4,12 +4,17 @@
  */
 
 function parteManager(initialData) {
+  const isEditingVariantContext = Boolean(
+    (initialData.editingVariant && initialData.editingVariant.id) || initialData.editingVariantId
+  );
+
   return {
     // Estado
     mode: initialData.mode || 'create',
     isEditing: initialData.mode !== 'create',
     editingVariantId: initialData.editingVariantId || null,
     editingVariant: initialData.editingVariant || null,
+    isPartFormReadOnly: initialData.mode === 'view' || isEditingVariantContext,
     isVariantFormEnabled: initialData.mode === 'edit',
     loading: false,
     parte: initialData.parte || null,
@@ -137,6 +142,7 @@ function parteManager(initialData) {
       this.parte = null;
       this.variantes = [];
       this.isEditing = false;
+      this.isPartFormReadOnly = false;
       this.isVariantFormEnabled = false;
       this.editingVariantId = null;
       this.editingVariant = null;

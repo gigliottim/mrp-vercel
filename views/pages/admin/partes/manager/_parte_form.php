@@ -3,7 +3,7 @@
 use App\Core\View\View;
 ?>
 <form @submit.prevent="saveParte()">
-    <fieldset :disabled="mode === 'view'">
+    <fieldset :disabled="isPartFormReadOnly">
         <div class="row g-2 g-xl-3">
             <!-- Fila 1: Datos Generales (Compacto) -->
             <div class="col-sm-6 col-xl-4">
@@ -169,7 +169,7 @@ use App\Core\View\View;
     <div class="mt-3">
         <hr class="my-2">
         <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center pm-form-actions">
-            <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode === 'edit'">
+            <div class="form-check form-switch mb-0 pm-active-toggle" x-show="!isPartFormReadOnly">
                 <input
                     class="form-check-input"
                     type="checkbox"
@@ -180,7 +180,7 @@ use App\Core\View\View;
 
             <a
                 class="btn btn-sm btn-warning"
-                x-show="mode === 'view' && form.id"
+                x-show="isPartFormReadOnly && form.id"
                 :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
                 <i class="fa-solid fa-pen me-2"></i>
                 Habilitar Edicion
@@ -197,7 +197,7 @@ use App\Core\View\View;
                 type="button"
                 class="btn btn-sm btn-outline-secondary"
                 @click="resetForm()"
-                x-show="mode !== 'view' && isEditing">
+                x-show="!isPartFormReadOnly && isEditing">
                 <i class="fa-solid fa-times me-2"></i>
                 Cancelar
             </button>
@@ -206,7 +206,7 @@ use App\Core\View\View;
                 class="btn btn-sm"
                 :class="isEditing ? 'btn-success' : 'btn-primary'"
                 :disabled="loading"
-                x-show="mode !== 'view'">
+                x-show="!isPartFormReadOnly">
                 <i class="fa-solid me-2" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
                 <span x-text="isEditing ? 'Actualizar Parte' : 'Crear Parte'"></span>
             </button>

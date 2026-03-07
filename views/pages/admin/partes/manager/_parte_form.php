@@ -169,7 +169,7 @@ use App\Core\View\View;
     <div class="mt-3">
         <hr class="my-2">
         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pm-form-actions">
-            <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode !== 'view'">
+            <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode === 'edit'">
                 <input
                     class="form-check-input"
                     type="checkbox"

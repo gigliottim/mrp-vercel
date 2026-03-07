@@ -12,10 +12,13 @@ $variantStates = [
 <form @submit.prevent="saveVariante()" class="vstack gap-2">
     <fieldset :disabled="mode === 'view'">
         <div class="d-flex justify-content-between align-items-center mb-1">
-            <h6 class="mb-0 small">
-                <i class="fa-solid" :class="variantForm.id ? 'fa-edit' : 'fa-plus-circle'" class="me-2"></i>
-                <span x-text="variantForm.id ? 'Editar Variante' : 'Nueva Variante'"></span>
-                <span x-show="variantForm.id" class="text-muted ms-2">(ID: <span x-text="variantForm.id"></span>)</span>
+            <h6 class="mb-0 small d-flex flex-wrap align-items-center gap-2">
+                <i class="fa-solid" :class="variantForm.id ? 'fa-edit' : 'fa-plus-circle'" class="me-1"></i>
+                <span class="fw-semibold">Variante</span>
+                <span x-show="variantForm.id" class="text-muted">ID: <span x-text="variantForm.id"></span></span>
+                <span x-show="!variantForm.id" class="badge bg-info">Nueva</span>
+                <span x-show="mode === 'view'" class="badge bg-secondary">Solo lectura</span>
+                <span x-show="mode === 'edit'" class="badge bg-success">Editando</span>
             </h6>
             <button
                 type="button"
@@ -130,7 +133,7 @@ $variantStates = [
 
     <!-- Botones -->
     <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-1 pm-variant-actions">
-        <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode !== 'view'">
+        <div class="form-check form-switch mb-0 pm-active-toggle" x-show="mode === 'edit'">
             <input
                 class="form-check-input"
                 type="checkbox"

@@ -142,7 +142,7 @@ $dimensionFields = [
                         </h5>
                         <span x-show="variantForm && variantForm.id" class="text-muted small">ID: <span x-text="variantForm.id"></span></span>
                         <span x-show="isVariantFormEnabled && variantForm && !variantForm.id" class="badge bg-info">Nueva</span>
-                        <span x-show="mode === 'view' && isVariantFormEnabled && variantForm && variantForm.id" class="badge bg-secondary">Solo lectura</span>
+                        <span x-show="mode === 'view' && !isVariantFormEnabled && variantForm && variantForm.id" class="badge bg-secondary">Solo lectura</span>
                         <span x-show="isVariantFormEnabled" class="badge bg-success">Editando</span>
                     </div>
                 </div>

@@ -172,7 +172,7 @@ final class PartesVariantesController extends Controller
         // Check if coming from Manager (via Context param)
         $context = $request->input('context');
         if ($context === 'manager') {
-            return Response::redirect(url("/productos/partes/manager/{$idParte}"));
+            return Response::redirect(url("/productos/partes/manager/{$idParte}/variantes/{$id}"));
         }
 
         return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
@@ -223,6 +223,32 @@ final class PartesVariantesController extends Controller
             'parte' => $record,
             'parteVariants' => $variants[$id] ?? [],
             'mode' => 'edit',
+        ]);
+    }
+
+    public function managerShowVariant(Request $request, $idParte, $idVariante): Response
+    {
+        $idParte = (int) $idParte;
+        $idVariante = (int) $idVariante;
+
+        $record = $this->partes->find($idParte);
+        if ($record === null) {
+            return Response::redirect(url('/productos/partes/manager'));
+        }
+
+        $variantRecord = $this->variantes->find($idVariante);
+        if ($variantRecord === null || (int) $variantRecord['id_parte'] !== $idParte) {
+            return Response::redirect(url("/productos/partes/manager/{$idParte}"));
+        }
+
+        $variants = $this->variantes->byParteIds([$idParte]);
+
+        return $this->renderManager([
+            'parte' => $record,
+            'parteVariants' => $variants[$idParte] ?? [],
+            'mode' => 'view',
+            'editingVariantId' => $idVariante,
+            'editingVariant' => $variantRecord,
         ]);
     }
 

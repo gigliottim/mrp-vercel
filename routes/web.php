@@ -208,6 +208,7 @@ $router->get('/productos/partes/manager', [PartesVariantesController::class, 'ma
 $router->post('/productos/partes/manager', [PartesVariantesController::class, 'managerStorePart']);
 $router->get('/productos/partes/manager/{id}', [PartesVariantesController::class, 'managerShow']);
 $router->get('/productos/partes/manager/{id}/editar', [PartesVariantesController::class, 'managerEdit']);
+$router->get('/productos/partes/manager/{idParte}/variantes/{idVariante}', [PartesVariantesController::class, 'managerShowVariant']);
 $router->get('/productos/partes/manager/{idParte}/variantes/{idVariante}/editar', [PartesVariantesController::class, 'managerEditVariant']);
 $router->put('/productos/partes/manager/{id}', [PartesVariantesController::class, 'managerUpdatePart']);
 

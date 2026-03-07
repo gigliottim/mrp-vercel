@@ -503,12 +503,13 @@ function parteManager(initialData) {
         });
 
         const managerViewUrl = `/mrp/productos/partes/manager/${this.form.id}`;
+        const managerVariantViewUrl = `/mrp/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;
 
         if (response.redirected) {
-          window.location.href = isUpdatingVariant ? managerViewUrl : response.url;
+          window.location.href = isUpdatingVariant ? managerVariantViewUrl : response.url;
         } else if (response.ok) {
           if (isUpdatingVariant) {
-            window.location.href = managerViewUrl;
+            window.location.href = managerVariantViewUrl;
           } else {
             window.location.reload();
           }
@@ -555,7 +556,7 @@ function parteManager(initialData) {
     cancelEditVariante() {
       // Si estamos editando una variante existente, volver al estado de vista de la parte.
       if (this.variantForm.id && this.form.id) {
-        window.location.href = `/mrp/productos/partes/manager/${this.form.id}`;
+        window.location.href = `/mrp/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;
         return;
       }
 

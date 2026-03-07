@@ -111,8 +111,8 @@ $dimensionFields = [
 
     <div class="row g-3 pm-main-grid">
         <!-- Columna Izquierda: Formulario de Parte -->
-        <div class="col-12 col-xl-7">
-            <div class="card shadow-sm border-0 h-100">
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm border-0 h-100 pm-part-card">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <h5 class="mb-0">
                         <i class="fa-solid fa-box text-primary me-2"></i>
@@ -130,7 +130,7 @@ $dimensionFields = [
         </div>
 
         <!-- Columna Derecha: Variantes -->
-        <div class="col-12 col-xl-5" x-show="isEditing">
+        <div class="col-12 col-md-8" x-show="isEditing">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -163,7 +163,7 @@ $dimensionFields = [
         </div>
 
         <!-- Mensaje cuando no hay parte seleccionada (ocupa columna derecha) -->
-        <div class="col-12 col-xl-5" x-show="!isEditing">
+        <div class="col-12 col-md-8" x-show="!isEditing">
             <div class="card shadow-sm border-0 h-100 bg-light d-flex align-items-center justify-content-center">
                 <div class="text-center p-4 p-lg-5 pm-empty-state">
                     <i class="fa-solid fa-arrow-left fa-3x text-muted mb-3 d-none d-lg-block"></i>

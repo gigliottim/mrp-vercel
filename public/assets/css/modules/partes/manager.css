@@ -21,6 +21,18 @@
   width: 100%;
 }
 
+.partes-manager-page .pm-part-card {
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+
+.partes-manager-page .pm-part-card .card-body {
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .partes-manager-page .card-body {
   padding: var(--pm-card-body-padding);
 }
@@ -172,6 +184,17 @@
   min-height: 320px;
 }
 
+.partes-manager-page .pm-dimension-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.partes-manager-page .pm-dimension-input-group {
+  width: 100%;
+  max-width: 230px;
+}
+
 /* Tablet: una columna principal, variantes debajo; densidad media */
 @media (max-width: 1199.98px) {
   .partes-manager-page {
@@ -228,5 +251,9 @@
   .partes-manager-page .pm-form-actions .btn,
   .partes-manager-page .pm-variant-actions .btn {
     flex: 1 1 auto;
+  }
+
+  .partes-manager-page .pm-dimension-input-group {
+    max-width: none;
   }
 }

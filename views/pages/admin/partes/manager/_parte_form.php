@@ -128,9 +128,9 @@ use App\Core\View\View;
 
             <!-- Fila 4: Dimensiones (3 por fila en escritorio) -->
             <?php foreach ($dimensionFields as $field) : ?>
-                <div class="col-sm-6 col-xl-4">
+                <div class="col-sm-6 col-xl-4 pm-dimension-col">
                     <label class="form-label small mb-0 text-truncate"><?= View::escape($field['label']) ?></label>
-                    <div class="input-group input-group-sm">
+                    <div class="input-group input-group-sm pm-dimension-input-group">
                         <input
                             type="number"
                             class="form-control px-2"
@@ -148,9 +148,9 @@ use App\Core\View\View;
             <?php endforeach; ?>
 
             <!-- Fila 5: Superficie y Volumen -->
-            <div class="col-sm-6 col-xl-6">
+            <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Superficie</label>
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm pm-dimension-input-group">
                     <input type="number" class="form-control px-2" x-model.number="form.superficie" step="0.0001">
                     <select class="form-select px-1" x-model.number="form.id_um_superficie" style="max-width: 65px;">
                         <option value="">UM</option>
@@ -160,9 +160,9 @@ use App\Core\View\View;
                     </select>
                 </div>
             </div>
-            <div class="col-sm-6 col-xl-6">
+            <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Volumen</label>
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm pm-dimension-input-group">
                     <input type="number" class="form-control px-2" x-model.number="form.volumen" step="0.01">
                     <select class="form-select px-1" x-model.number="form.id_um_volumen" style="max-width: 65px;">
                         <option value="">UM</option>

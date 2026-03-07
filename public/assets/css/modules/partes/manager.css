@@ -26,13 +26,13 @@
   min-height: var(--pm-shell-height-desktop);
 }
 
-.partes-manager-page .pm-main-grid>.col-md-8 .card {
+.partes-manager-page .pm-scroll-card {
   display: flex;
   flex-direction: column;
   max-height: var(--pm-shell-height-desktop);
 }
 
-.partes-manager-page .pm-main-grid>.col-md-8 .card>.card-body {
+.partes-manager-page .pm-scroll-card>.card-body {
   overflow-y: auto;
   min-height: 0;
 }
@@ -258,11 +258,11 @@
     min-height: 0;
   }
 
-  .partes-manager-page .pm-main-grid>.col-md-8 .card {
+  .partes-manager-page .pm-scroll-card {
     max-height: none;
   }
 
-  .partes-manager-page .pm-main-grid>.col-md-8 .card>.card-body {
+  .partes-manager-page .pm-scroll-card>.card-body {
     overflow-y: visible;
   }
 

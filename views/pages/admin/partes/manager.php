@@ -129,23 +129,42 @@ $dimensionFields = [
             </div>
         </div>
 
-        <!-- Columna Derecha: Variantes -->
-        <div class="col-12 col-md-8" x-show="isEditing">
-            <div class="card shadow-sm border-0 h-100">
+        <!-- Columna Centro: Formulario de Variante -->
+        <div class="col-12 col-md-4" x-show="isEditing">
+            <div class="card shadow-sm border-0 h-100 pm-scroll-card">
+                <div class="card-header bg-white border-bottom pm-card-header">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <h5 class="mb-0">
+                            <i class="fa-solid fa-pen-ruler text-success me-2"></i>
+                            Formulario Variante
+                        </h5>
+                        <span x-show="variantForm && variantForm.id" class="text-muted small">ID: <span x-text="variantForm.id"></span></span>
+                        <span x-show="variantForm && !variantForm.id" class="badge bg-info">Nueva</span>
+                        <span x-show="mode === 'view'" class="badge bg-secondary">Solo lectura</span>
+                        <span x-show="mode === 'edit'" class="badge bg-success">Editando</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="pm-variant-form mb-0">
+                        <?php include __DIR__ . '/manager/_variante_form.php'; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Tabla de Variantes -->
+        <div class="col-12 col-md-4" x-show="isEditing">
+            <div class="card shadow-sm border-0 h-100 pm-scroll-card">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fa-solid fa-layer-group text-success me-2"></i>
-                            Variantes
+                            Tabla de Variantes
                         </h5>
                         <span class="badge bg-primary rounded-pill" x-text="variantes.length"></span>
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- Formulario de Variante -->
-                    <div class="pm-variant-form mb-3">
-                        <?php include __DIR__ . '/manager/_variante_form.php'; ?>
-                    </div>
 
                     <!-- Tabla de Variantes -->
                     <div x-show="variantes.length > 0" class="pm-variants-table">
@@ -162,7 +181,7 @@ $dimensionFields = [
             </div>
         </div>
 
-        <!-- Mensaje cuando no hay parte seleccionada (ocupa columna derecha) -->
+        <!-- Mensaje cuando no hay parte seleccionada (ocupa columnas centro+derecha) -->
         <div class="col-12 col-md-8" x-show="!isEditing">
             <div class="card shadow-sm border-0 h-100 bg-light d-flex align-items-center justify-content-center">
                 <div class="text-center p-4 p-lg-5 pm-empty-state">

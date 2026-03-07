@@ -11,24 +11,6 @@ $variantStates = [
 ?>
 <form @submit.prevent="saveVariante()" class="vstack gap-2">
     <fieldset :disabled="mode === 'view'">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <h6 class="mb-0 small d-flex flex-wrap align-items-center gap-2">
-                <i class="fa-solid" :class="variantForm.id ? 'fa-edit' : 'fa-plus-circle'" class="me-1"></i>
-                <span class="fw-semibold">Variante</span>
-                <span x-show="variantForm.id" class="text-muted">ID: <span x-text="variantForm.id"></span></span>
-                <span x-show="!variantForm.id" class="badge bg-info">Nueva</span>
-                <span x-show="mode === 'view'" class="badge bg-secondary">Solo lectura</span>
-                <span x-show="mode === 'edit'" class="badge bg-success">Editando</span>
-            </h6>
-            <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                @click="cancelEditVariante()"
-                x-show="variantForm.id">
-                <i class="fa-solid fa-times"></i>
-            </button>
-        </div>
-
         <div class="row g-2 align-items-end">
             <!-- Fila 1: Datos Básicos -->
             <div class="col-sm-4 col-xl-3">

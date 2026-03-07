@@ -173,6 +173,11 @@
   padding: 0.875rem;
 }
 
+.partes-manager-page .pm-variant-detail {
+  resize: none;
+  overflow-y: hidden;
+}
+
 .partes-manager-page .pm-variants-table .table {
   font-size: var(--pm-table-font-size);
 }

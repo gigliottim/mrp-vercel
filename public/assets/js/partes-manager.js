@@ -16,7 +16,7 @@ function parteManager(initialData) {
     editingVariantId: initialData.editingVariantId || null,
     editingVariant: initialData.editingVariant || null,
     isPartFormReadOnly: initialData.mode === 'view' || isEditingVariantContext || startsLockedWithoutPart,
-    isVariantFormEnabled: initialData.mode === 'edit',
+    isVariantFormEnabled: initialData.mode === 'edit' && isEditingVariantContext,
     loading: false,
     parte: initialData.parte || null,
     variantes: initialData.variantes || [],
@@ -83,6 +83,8 @@ function parteManager(initialData) {
       this.$watch('form.id_um_uso', () => this.autoCalculateFactorConversion());
       this.$watch('form.ancho', () => this.autoCalculateFactorConversion());
       this.$watch('form.id_um_ancho', () => this.autoCalculateFactorConversion());
+
+      this.$nextTick(() => this.adjustVariantDetalleHeight());
     },
 
     // Cargar datos de una parte
@@ -430,6 +432,23 @@ function parteManager(initialData) {
         ubicacion_pasillo: '',
         ubicacion_estante: ''
       };
+
+      this.$nextTick(() => this.adjustVariantDetalleHeight());
+    },
+
+    adjustVariantDetalleHeight() {
+      const detalleEl = this.$refs.variantDetalle;
+      if (!detalleEl) return;
+
+      const codigoEl = this.$refs.variantCodigo;
+      const fallbackMinHeight = 31;
+      const minHeight = codigoEl
+        ? Math.ceil(codigoEl.getBoundingClientRect().height)
+        : fallbackMinHeight;
+
+      detalleEl.style.height = 'auto';
+      const nextHeight = Math.max(detalleEl.scrollHeight, minHeight);
+      detalleEl.style.height = `${nextHeight}px`;
     },
 
     enableNewVariante() {
@@ -546,6 +565,8 @@ function parteManager(initialData) {
         ubicacion_estante: variante.ubicacion_estante || ''
       };
 
+      this.$nextTick(() => this.adjustVariantDetalleHeight());
+
       // Scroll al formulario
       const form = document.querySelector('form[\\@submit\\.prevent="saveVariante()"]');
       if (form) {
@@ -562,10 +583,8 @@ function parteManager(initialData) {
 
       this.resetVariantForm();
 
-      // En modo vista, cancelar una nueva variante vuelve a bloquear el formulario.
-      if (this.mode === 'view') {
-        this.isVariantFormEnabled = false;
-      }
+      // Al cancelar una nueva variante, volver al estado bloqueado del formulario.
+      this.isVariantFormEnabled = false;
     },
 
     async deleteVariante(varianteId, index) {

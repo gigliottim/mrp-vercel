@@ -18,6 +18,7 @@ $variantStates = [
                 <input
                     type="text"
                     class="form-control form-control-sm"
+                    x-ref="variantCodigo"
                     x-model="variantForm.codigo_variante"
                     placeholder=""
                     required
@@ -26,9 +27,11 @@ $variantStates = [
             <div class="col-sm-8 col-xl-9">
                 <label class="form-label small fw-semibold mb-0">Detalle <span class="text-danger">*</span></label>
                 <textarea
-                    class="form-control form-control-sm"
+                    class="form-control form-control-sm pm-variant-detail"
+                    x-ref="variantDetalle"
                     x-model="variantForm.detalle"
-                    rows="2"
+                    rows="1"
+                    @input="adjustVariantDetalleHeight()"
                     required></textarea>
             </div>
 
@@ -129,7 +132,7 @@ $variantStates = [
             type="button"
             class="btn btn-sm btn-primary"
             @click="enableNewVariante()"
-            x-show="mode === 'view' && form.id && !isVariantFormEnabled">
+            x-show="form.id && !isVariantFormEnabled">
             <i class="fa-solid fa-plus me-2"></i>
             Nueva variante
         </button>

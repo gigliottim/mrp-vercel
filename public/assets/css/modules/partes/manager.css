@@ -3,6 +3,7 @@
   --pm-card-body-padding: 1rem;
   --pm-header-gap: 0.75rem;
   --pm-table-font-size: 0.875rem;
+  --pm-shell-height-desktop: calc(100dvh - 190px);
 }
 
 .partes-manager-page .pm-page-header {
@@ -21,11 +22,25 @@
   width: 100%;
 }
 
+.partes-manager-page .pm-main-grid {
+  min-height: var(--pm-shell-height-desktop);
+}
+
+.partes-manager-page .pm-main-grid>.col-md-8 .card {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--pm-shell-height-desktop);
+}
+
+.partes-manager-page .pm-main-grid>.col-md-8 .card>.card-body {
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .partes-manager-page .pm-part-card {
   display: flex;
   flex-direction: column;
-  max-height: 100vh;
-  max-height: 100dvh;
+  max-height: var(--pm-shell-height-desktop);
 }
 
 .partes-manager-page .pm-part-card .card-body {
@@ -148,7 +163,7 @@
 }
 
 .partes-manager-page .pm-card-header {
-  padding: 0.75rem 1rem;
+  padding: 0.55rem 0.85rem;
 }
 
 .partes-manager-page .pm-variant-form {
@@ -181,7 +196,7 @@
 }
 
 .partes-manager-page .pm-empty-state {
-  min-height: 320px;
+  min-height: 240px;
 }
 
 .partes-manager-page .pm-dimension-col {
@@ -199,6 +214,7 @@
 @media (max-width: 1199.98px) {
   .partes-manager-page {
     --pm-card-body-padding: 0.875rem;
+    --pm-shell-height-desktop: auto;
   }
 
   .partes-manager-page .pm-main-grid {
@@ -226,6 +242,18 @@
 
 /* Tablet angosta y móvil: mayor legibilidad de acciones */
 @media (max-width: 991.98px) {
+  .partes-manager-page .pm-main-grid {
+    min-height: 0;
+  }
+
+  .partes-manager-page .pm-main-grid>.col-md-8 .card {
+    max-height: none;
+  }
+
+  .partes-manager-page .pm-main-grid>.col-md-8 .card>.card-body {
+    overflow-y: visible;
+  }
+
   .partes-manager-page .pm-main-grid>[class*="col-"] {
     display: block;
   }

@@ -50,6 +50,17 @@ body {
     color: #e2e8f0;
     overflow-y: auto;
     flex-shrink: 0;
+    transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
+}
+
+body.sidebar-desktop-hidden .app-sidebar {
+    width: 0;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .app-sidebar__inner {
@@ -156,6 +167,13 @@ body {
 }
 
 @media (max-width: 991.98px) {
+    body.sidebar-desktop-hidden .app-sidebar {
+        width: 260px;
+        padding: 2rem 1.25rem;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .app-shell {
         flex-direction: column;
     }

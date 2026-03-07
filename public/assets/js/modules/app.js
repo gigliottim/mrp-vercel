@@ -2,7 +2,11 @@ export class AppShell {
     constructor() {
         this.initTheme();
         this.sidebar = document.querySelector('.app-sidebar');
+        this.sidebarPinToggles = document.querySelectorAll('[data-sidebar-pin-toggle]');
+        this.storageKey = 'mrp.sidebar.desktop.visible';
+        this.applyDesktopSidebarPreference();
         this.bindSidebarToggle();
+        this.bindDesktopSidebarPinToggle();
         this.bindSidebarAutoClose();
     }
 
@@ -21,6 +25,61 @@ export class AppShell {
                 const isOpen = this.toggleSidebar();
                 toggle.setAttribute('aria-expanded', String(isOpen));
             });
+        });
+    }
+
+    bindDesktopSidebarPinToggle() {
+        if (!this.sidebar || this.sidebarPinToggles.length === 0) {
+            return;
+        }
+
+        this.sidebarPinToggles.forEach((toggle) => {
+            toggle.addEventListener('click', () => {
+                const isVisible = !document.body.classList.contains('sidebar-desktop-hidden');
+                this.setDesktopSidebarVisibility(!isVisible);
+            });
+        });
+
+        this.updateDesktopSidebarToggleUI();
+    }
+
+    applyDesktopSidebarPreference() {
+        if (!this.sidebar || window.matchMedia('(max-width: 991px)').matches) {
+            return;
+        }
+
+        const stored = window.localStorage.getItem(this.storageKey);
+        if (stored === null) {
+            this.setDesktopSidebarVisibility(true, false);
+            return;
+        }
+
+        this.setDesktopSidebarVisibility(stored === '1', false);
+    }
+
+    setDesktopSidebarVisibility(isVisible, persist = true) {
+        document.body.classList.toggle('sidebar-desktop-hidden', !isVisible);
+
+        if (persist) {
+            window.localStorage.setItem(this.storageKey, isVisible ? '1' : '0');
+        }
+
+        this.updateDesktopSidebarToggleUI();
+    }
+
+    updateDesktopSidebarToggleUI() {
+        if (this.sidebarPinToggles.length === 0) {
+            return;
+        }
+
+        const isVisible = !document.body.classList.contains('sidebar-desktop-hidden');
+
+        this.sidebarPinToggles.forEach((toggle) => {
+            toggle.setAttribute('aria-pressed', String(isVisible));
+            toggle.setAttribute('title', isVisible ? 'Ocultar sidebar' : 'Fijar sidebar');
+            toggle.innerHTML = isVisible
+                ? '<i class="fa-solid fa-thumbtack"></i>'
+                : '<i class="fa-solid fa-bars"></i>';
         });
     }
 
@@ -50,4 +109,3 @@ export class AppShell {
         return shouldOpen;
     }
 }
-

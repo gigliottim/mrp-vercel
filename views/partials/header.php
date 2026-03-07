@@ -14,6 +14,15 @@ $tenant = AuthManager::tenant();
             <button class="btn btn-outline-primary d-lg-none" type="button" data-sidebar-toggle aria-label="Mostrar menú" aria-expanded="false">
                 <i class="fa-solid fa-bars"></i>
             </button>
+            <button
+                class="btn btn-outline-secondary btn-sm d-none d-lg-inline-flex"
+                type="button"
+                data-sidebar-pin-toggle
+                aria-label="Ocultar o fijar sidebar"
+                aria-pressed="false"
+                title="Ocultar/Fijar sidebar">
+                <i class="fa-solid fa-thumbtack"></i>
+            </button>
             <a class="navbar-brand fw-semibold text-decoration-none text-dark" href="<?= url('dashboard') ?>">
                 <?= View::escape($appName) ?>
             </a>

@@ -255,16 +255,16 @@ final class ComposicionController extends Controller
     {
         $id = (int) $id;
         $varianteId = (int) $request->input('id_variante'); // Assuming sent via query or hidden
+        $existingItem = $this->bomModel->getDetalleById($id);
 
         // If not sent, we might lose context where to redirect, so we try to find it first if crucial
-        if (!$varianteId) {
-            $item = $this->bomModel->getDetalleById($id);
-            $varianteId = $item['variante_padre_id'] ?? null;
+        if (!$varianteId && $existingItem) {
+            $varianteId = (int) ($existingItem['variante_padre_id'] ?? 0);
         }
 
         $this->bomModel->deleteDetail($id);
 
-        $redirectUrl = url('/productos/maestro?id_variante=' . $varianteId);
+        $redirectUrl = $this->resolveMaestroRedirectUrl($request, $varianteId);
 
         return Response::redirect($redirectUrl);
     }

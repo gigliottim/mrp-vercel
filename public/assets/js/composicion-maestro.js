@@ -668,7 +668,7 @@ window.createComposicionMaestroApp = function (config) {
       const redirField = document.createElement('input');
       redirField.type = 'hidden';
       redirField.name = 'redirect_to';
-      redirField.value = window.location.href;
+      redirField.value = this.getReturnUrl(this.selectedNode?.variante_id || null);
       form.appendChild(redirField);
 
       document.body.appendChild(form);

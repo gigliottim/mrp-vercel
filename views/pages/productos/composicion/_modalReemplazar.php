@@ -5,6 +5,8 @@
             <form method="post" :action="replaceActionUrl">
                 <input type="hidden" name="_method" value="PUT">
                 <input type="hidden" name="action" value="replace_variant">
+                <input type="hidden" name="id_variante" :value="getEditParentVariantId(replacementItem) || ''">
+                <input type="hidden" name="redirect_to" :value="getReturnUrl(getEditParentVariantId(replacementItem))">
                 <div class="modal-header">
                     <h5 class="modal-title">Reemplazar Variante</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

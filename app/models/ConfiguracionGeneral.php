@@ -93,7 +93,7 @@ final class ConfiguracionGeneral extends BaseTenantModel
         $this->connection->exec(
             "CREATE TABLE IF NOT EXISTS configuracion_general (
                 id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-                decimal_places SMALLINT NOT NULL DEFAULT 4 CHECK (decimal_places BETWEEN 1 AND 6),
+                decimal_places SMALLINT NOT NULL DEFAULT 4 CHECK (decimal_places BETWEEN 1 AND 10),
                 rounding_mode VARCHAR(20) NOT NULL DEFAULT 'half_up',
                 thousand_separator VARCHAR(1) NOT NULL DEFAULT '.',
                 decimal_separator VARCHAR(1) NOT NULL DEFAULT ',',

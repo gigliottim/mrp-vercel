@@ -45,14 +45,14 @@ $formatExampleDateTime = static fn(string $format) => $dateTimeExample->format($
         <form method="post" action="<?= url('/configuracion/general') ?>">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label" for="decimal_places">Cantidad de decimales (1-6)</label>
+                    <label class="form-label" for="decimal_places">Cantidad de decimales (1-10)</label>
                     <input
                         type="number"
                         class="form-control<?= isset($errors['decimal_places']) ? ' is-invalid' : '' ?>"
                         id="decimal_places"
                         name="decimal_places"
                         min="1"
-                        max="6"
+                        max="10"
                         value="<?= View::escape((string) $oldValue('decimal_places', $settings['decimal_places'] ?? 4)) ?>"
                         required>
                     <?php if (isset($errors['decimal_places'])): ?>

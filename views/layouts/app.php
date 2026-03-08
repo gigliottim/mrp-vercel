@@ -54,8 +54,8 @@ $appFormattingSettings = app_general_settings();
             };
 
             const usedDecimals = Number.isInteger(decimals) ?
-                Math.max(0, Math.min(6, decimals)) :
-                Math.max(1, Math.min(6, Number.parseInt(settings.decimal_places, 10) || 4));
+                Math.max(0, Math.min(10, decimals)) :
+                Math.max(1, Math.min(10, Number.parseInt(settings.decimal_places, 10) || 4));
 
             const factor = 10 ** usedDecimals;
             const mode = String(settings.rounding_mode || 'half_up');

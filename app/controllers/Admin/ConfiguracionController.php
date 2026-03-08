@@ -81,8 +81,8 @@ class ConfiguracionController extends Controller
 
         $errors = [];
 
-        if ($data['decimal_places'] < 1 || $data['decimal_places'] > 6) {
-            $errors['decimal_places'] = 'La cantidad de decimales debe estar entre 1 y 6.';
+        if ($data['decimal_places'] < 1 || $data['decimal_places'] > 10) {
+            $errors['decimal_places'] = 'La cantidad de decimales debe estar entre 1 y 10.';
         }
 
         if (!in_array($data['rounding_mode'], self::ROUNDING_MODES, true)) {

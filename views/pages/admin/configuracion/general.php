@@ -19,6 +19,8 @@ $labelsRoundingMode = [
 ];
 
 $formatExampleNumber = static fn(string $thousandSep, string $decimalSep): string => '12' . $thousandSep . '345' . $decimalSep . '6789';
+$dateTimeExample = new DateTimeImmutable('2026-03-08 14:35:10');
+$formatExampleDateTime = static fn(string $format) => $dateTimeExample->format($format);
 ?>
 
 <section class="mb-4">
@@ -117,7 +119,7 @@ $formatExampleNumber = static fn(string $thousandSep, string $decimalSep): strin
                     <select class="form-select<?= isset($errors['date_format']) ? ' is-invalid' : '' ?>" id="date_format" name="date_format" required>
                         <?php foreach ($dateFormatOptions as $format): ?>
                             <option value="<?= View::escape((string) $format) ?>" <?= $selectedDateFormat === (string) $format ? 'selected' : '' ?>>
-                                <?= View::escape((string) $format) ?>
+                                <?= View::escape((string) $format . ' (' . $formatExampleDateTime((string) $format) . ')') ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -132,7 +134,7 @@ $formatExampleNumber = static fn(string $thousandSep, string $decimalSep): strin
                     <select class="form-select<?= isset($errors['time_format']) ? ' is-invalid' : '' ?>" id="time_format" name="time_format" required>
                         <?php foreach ($timeFormatOptions as $format): ?>
                             <option value="<?= View::escape((string) $format) ?>" <?= $selectedTimeFormat === (string) $format ? 'selected' : '' ?>>
-                                <?= View::escape((string) $format) ?>
+                                <?= View::escape((string) $format . ' (' . $formatExampleDateTime((string) $format) . ')') ?>
                             </option>
                         <?php endforeach; ?>
                     </select>

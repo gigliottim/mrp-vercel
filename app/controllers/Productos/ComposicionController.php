@@ -121,7 +121,7 @@ final class ComposicionController extends Controller
         $cantidad = $this->normalizeCantidad((float) $request->input('cantidad'));
         $unidadId = (int) $request->input('id_unidad');
 
-        $redirectUrl = url('/productos/maestro?id_variante=' . $varianteId);
+        $redirectUrl = $this->resolveMaestroRedirectUrl($request, $varianteId);
 
         if (!$varianteId || !$materialId || !$cantidad || !$unidadId) {
             // TODO: Handle validation errors properly
@@ -226,9 +226,19 @@ final class ComposicionController extends Controller
             }
         }
 
-        $redirectUrl = url('/productos/maestro?id_variante=' . $varianteId);
+        $redirectUrl = $this->resolveMaestroRedirectUrl($request, $varianteId);
 
         return Response::redirect($redirectUrl);
+    }
+
+    private function resolveMaestroRedirectUrl(Request $request, int $fallbackVarianteId): string
+    {
+        $requestedRedirect = trim((string) $request->input('redirect_to'));
+        if ($requestedRedirect !== '' && str_contains($requestedRedirect, '/productos/maestro')) {
+            return $requestedRedirect;
+        }
+
+        return url('/productos/maestro?id_variante=' . $fallbackVarianteId);
     }
 
     private function normalizeCantidad(float $cantidad): float

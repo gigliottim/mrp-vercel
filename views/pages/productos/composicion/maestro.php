@@ -496,7 +496,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
             treeData: <?= json_encode($treeData ?: []) ?>,
             variantes: <?= json_encode($variantes ?: []) ?>,
             apiSearchUrl: '<?= url('api/v1/search/variantes') ?>',
-            baseActionUrl: '<?= url('productos/maestro/materiales') ?>'
+            baseActionUrl: '<?= url('productos/maestro/materiales') ?>',
+            selectedVarianteId: <?= (int) ($selectedVarianteId ?? 0) ?>
         }));
     });
 

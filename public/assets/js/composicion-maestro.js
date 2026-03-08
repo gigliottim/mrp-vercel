@@ -39,6 +39,7 @@ window.createComposicionMaestroApp = function (config) {
     availableReplacements: [],
     replaceActionUrl: '',
     viewMode: 'list', // 'list' o 'tree'
+    currentRootVarianteId: Number.parseInt(config.selectedVarianteId, 10) || null,
 
     /**
      * Inicialización del componente
@@ -46,10 +47,19 @@ window.createComposicionMaestroApp = function (config) {
     init() {
       this.logInitialization();
       this.normalizeVariantes();
-      this.autoSelectRoot();
+      this.selectInitialNode();
       this.enhanceTreeWithIcons();
       this.setupWatchers();
       this.initializeTooltips();
+    },
+
+    /**
+     * Selecciona el nodo inicial priorizando foco por query string.
+     */
+    selectInitialNode() {
+      if (!this.autoSelectFocusedNode()) {
+        this.autoSelectRoot();
+      }
     },
 
     /**
@@ -81,6 +91,55 @@ window.createComposicionMaestroApp = function (config) {
       if (this.flatTree.length > 0) {
         this.selectNode(this.flatTree[0]);
       }
+    },
+
+    /**
+     * Selecciona nodo en base al parametro focus_variante si existe.
+     */
+    autoSelectFocusedNode() {
+      const focusVariantId = Number.parseInt(new URLSearchParams(window.location.search).get('focus_variante') || '', 10);
+      if (!Number.isInteger(focusVariantId) || focusVariantId <= 0) {
+        return false;
+      }
+
+      const focusedNode = this.flatTree.find(node => Number.parseInt(node.variante_id, 10) === focusVariantId);
+      if (!focusedNode) {
+        return false;
+      }
+
+      this.selectNode(focusedNode);
+      this.$nextTick(() => {
+        const selectedEl = document.querySelector('.tree-node.selected');
+        if (selectedEl) {
+          selectedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+
+      return true;
+    },
+
+    /**
+     * URL de retorno para mantener variante raiz y foco en el arbol.
+     */
+    getReturnUrl(focusVariantId = null) {
+      const currentUrl = new URL(window.location.href);
+      const rootVariantId = Number.parseInt(currentUrl.searchParams.get('id_variante') || '', 10)
+        || this.currentRootVarianteId;
+
+      if (Number.isInteger(rootVariantId) && rootVariantId > 0) {
+        currentUrl.searchParams.set('id_variante', String(rootVariantId));
+      }
+
+      const fallbackFocusId = this.selectedNode ? Number.parseInt(this.selectedNode.variante_id, 10) : null;
+      const resolvedFocusId = Number.parseInt(String(focusVariantId ?? fallbackFocusId ?? ''), 10);
+
+      if (Number.isInteger(resolvedFocusId) && resolvedFocusId > 0) {
+        currentUrl.searchParams.set('focus_variante', String(resolvedFocusId));
+      } else {
+        currentUrl.searchParams.delete('focus_variante');
+      }
+
+      return currentUrl.toString();
     },
 
     /**

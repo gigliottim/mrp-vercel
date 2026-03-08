@@ -10,6 +10,7 @@
                 <div class="modal-body">
                     <input type="hidden" name="_method" value="PUT">
                     <input type="hidden" name="id_variante" :value="getEditParentVariantId() || ''">
+                    <input type="hidden" name="redirect_to" :value="getReturnUrl(getEditParentVariantId())">
 
                     <div class="alert alert-info py-2 mb-3">
                         <div class="small text-uppercase text-muted fw-bold">Componente a editar</div>

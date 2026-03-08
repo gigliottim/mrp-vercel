@@ -8,6 +8,7 @@ use App\Core\View\View;
         <div class="modal-content">
             <form method="post" :action="addActionUrl">
                 <input type="hidden" name="id_variante" :value="addItemParentId">
+                <input type="hidden" name="redirect_to" :value="getReturnUrl(addItemParentId)">
                 <div class="modal-header">
                     <h5 class="modal-title">Agregar Componente</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

@@ -35,13 +35,13 @@
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-2">
-                        <h5 class="mb-0" x-text="tiempoTotal.toFixed(0)"></h5>
+                        <h5 class="mb-0" x-text="window.appFormatNumber(tiempoTotal)"></h5>
                         <small class="text-muted">Minutos totales</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-2">
-                        <h5 class="mb-0" x-text="'$' + costoTotal.toFixed(2)"></h5>
+                        <h5 class="mb-0" x-text="'$' + window.appFormatNumber(costoTotal)"></h5>
                         <small class="text-muted">Costo total</small>
                     </div>
                 </div>
@@ -142,7 +142,7 @@
                                     <!-- Resumen de tiempos -->
                                     <div class="mt-2 pt-2 border-top">
                                         <small class="text-muted">
-                                            Tiempo total: <strong x-text="(op.tiempo_setup + op.tiempo_operacion).toFixed(1)"></strong> min
+                                            Tiempo total: <strong x-text="window.appFormatNumber((op.tiempo_setup || 0) + (op.tiempo_operacion || 0))"></strong> min
                                         </small>
                                     </div>
                                 </div>
@@ -170,7 +170,7 @@
                                     <span x-text="centro.tipo"></span> - $<span x-text="centro.costo_hora"></span>/h
                                 </small>
                             </div>
-                            <span class="badge bg-success" x-text="(centro.eficiencia * 100).toFixed(0) + '%'"></span>
+                            <span class="badge bg-success" x-text="window.appFormatNumber((centro.eficiencia || 0) * 100) + '%'"></span>
                         </div>
                     </template>
                 </div>

@@ -78,7 +78,7 @@ $mrpResumen = (int)($dashboard['mrp_resumen_items'] ?? 0);
 
     <article class="dashboard-kpi dashboard-span-3 p-3 p-lg-4">
         <p class="text-uppercase small text-muted mb-1">Gasto del mes</p>
-        <div class="dashboard-kpi__value mb-1 text-success">$<?= number_format($gastoMes, 2, ',', '.') ?></div>
+        <div class="dashboard-kpi__value mb-1 text-success">$<?= View::escape(app_format_number($gastoMes)) ?></div>
         <small class="text-muted">Estimado segun compras registradas</small>
     </article>
 </section>

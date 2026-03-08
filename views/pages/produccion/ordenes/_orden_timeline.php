@@ -38,7 +38,7 @@
                     <div class="timeline-content">
                         <h6 class="mb-1"><?= ucfirst(str_replace('_', ' ', $h['estado'])) ?></h6>
                         <small class="text-muted">
-                            <?= date('d/m/Y H:i', strtotime($h['fecha'])) ?> - <?= esc($h['usuario']) ?>
+                            <?= esc(app_format_datetime($h['fecha'], true)) ?> - <?= esc($h['usuario']) ?>
                         </small>
                     </div>
                 </div>

@@ -144,16 +144,16 @@
                                         <br><small class="text-muted"><?= esc($orden['variante_codigo'] ?? '') ?></small>
                                     </td>
                                     <td>
-                                        <?= number_format($orden['cantidad_planificada'], 2) ?>
+                                        <?= esc(app_format_number($orden['cantidad_planificada'])) ?>
                                         <?php if ($orden['cantidad_producida'] > 0): ?>
-                                            <br><small class="text-success"><?= number_format($orden['cantidad_producida'], 2) ?> prod.</small>
+                                            <br><small class="text-success"><?= esc(app_format_number($orden['cantidad_producida'])) ?> prod.</small>
                                         <?php endif; ?>
                                     </td>
                                     <td>
                                         <small>
-                                            <?= date('d/m/Y', strtotime($orden['fecha_inicio_programada'])) ?>
+                                            <?= esc(app_format_datetime($orden['fecha_inicio_programada'], false)) ?>
                                             <br>
-                                            <?= date('d/m/Y', strtotime($orden['fecha_fin_programada'])) ?>
+                                            <?= esc(app_format_datetime($orden['fecha_fin_programada'], false)) ?>
                                         </small>
                                     </td>
                                     <td>
@@ -190,7 +190,7 @@
                                             <div class="progress-bar" role="progressbar"
                                                 style="width: <?= min($avance, 100) ?>%"
                                                 aria-valuenow="<?= $avance ?>" aria-valuemin="0" aria-valuemax="100">
-                                                <?= number_format($avance, 0) ?>%
+                                                <?= esc(app_format_number($avance)) ?>%
                                             </div>
                                         </div>
                                     </td>

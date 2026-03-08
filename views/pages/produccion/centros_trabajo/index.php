@@ -20,7 +20,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h6 class="card-title">Capacidad Total</h6>
-                    <h2 class="mb-0"><?= number_format($dashboard['capacidad_total'] ?? 0, 1) ?>h</h2>
+                    <h2 class="mb-0"><?= esc(app_format_number($dashboard['capacidad_total'] ?? 0)) ?>h</h2>
                 </div>
             </div>
         </div>
@@ -36,7 +36,7 @@
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h6 class="card-title">Eficiencia Promedio</h6>
-                    <h2 class="mb-0"><?= number_format(($dashboard['eficiencia_promedio'] ?? 0) * 100, 1) ?>%</h2>
+                    <h2 class="mb-0"><?= esc(app_format_number(($dashboard['eficiencia_promedio'] ?? 0) * 100)) ?>%</h2>
                 </div>
             </div>
         </div>
@@ -125,13 +125,13 @@
                                     <td>
                                         <span class="badge bg-secondary"><?= esc(ucfirst($centro['tipo'])) ?></span>
                                     </td>
-                                    <td><?= number_format($centro['capacidad_horas_dia'], 1) ?>h/día</td>
+                                    <td><?= esc(app_format_number($centro['capacidad_horas_dia'])) ?>h/día</td>
                                     <td>
                                         <span class="badge <?= $centro['eficiencia'] >= 0.9 ? 'bg-success' : ($centro['eficiencia'] >= 0.7 ? 'bg-warning' : 'bg-danger') ?>">
-                                            <?= number_format($centro['eficiencia'] * 100, 0) ?>%
+                                            <?= esc(app_format_number($centro['eficiencia'] * 100)) ?>%
                                         </span>
                                     </td>
-                                    <td>$<?= number_format($centro['costo_hora'], 2) ?></td>
+                                    <td>$<?= esc(app_format_number($centro['costo_hora'])) ?></td>
                                     <td>
                                         <?php if ($centro['activo']): ?>
                                             <span class="badge bg-success">Activo</span>

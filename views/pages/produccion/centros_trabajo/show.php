@@ -31,18 +31,18 @@
                                 </dd>
 
                                 <dt class="col-sm-5">Capacidad:</dt>
-                                <dd class="col-sm-7"><?= number_format($centro['capacidad_horas_dia'], 1) ?> horas/día</dd>
+                                <dd class="col-sm-7"><?= esc(app_format_number($centro['capacidad_horas_dia'])) ?> horas/día</dd>
 
                                 <dt class="col-sm-5">Eficiencia:</dt>
                                 <dd class="col-sm-7">
-                                    <span class="badge bg-success"><?= number_format($centro['eficiencia'] * 100, 0) ?>%</span>
+                                    <span class="badge bg-success"><?= esc(app_format_number($centro['eficiencia'] * 100)) ?>%</span>
                                 </dd>
                             </dl>
                         </div>
                         <div class="col-md-6">
                             <dl class="row">
                                 <dt class="col-sm-5">Costo/Hora:</dt>
-                                <dd class="col-sm-7">$<?= number_format($centro['costo_hora'], 2) ?></dd>
+                                <dd class="col-sm-7">$<?= esc(app_format_number($centro['costo_hora'])) ?></dd>
 
                                 <dt class="col-sm-5">Estado:</dt>
                                 <dd class="col-sm-7">
@@ -54,7 +54,7 @@
                                 </dd>
 
                                 <dt class="col-sm-5">Creado:</dt>
-                                <dd class="col-sm-7"><?= date('d/m/Y', strtotime($centro['created_at'])) ?></dd>
+                                <dd class="col-sm-7"><?= esc(app_format_datetime($centro['created_at'], false)) ?></dd>
                             </dl>
                         </div>
                     </div>
@@ -115,7 +115,7 @@
                                             <td><?= esc($op['producto_nombre']) ?></td>
                                             <td><?= esc($op['nombre_operacion']) ?></td>
                                             <td><?= $op['secuencia'] ?></td>
-                                            <td><?= number_format($op['tiempo_setup'] + $op['tiempo_operacion'], 1) ?> min</td>
+                                            <td><?= esc(app_format_number($op['tiempo_setup'] + $op['tiempo_operacion'])) ?> min</td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -138,7 +138,7 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <small class="text-muted">Capacidad efectiva:</small>
-                        <h4><?= number_format($centro['capacidad_horas_dia'] * $centro['eficiencia'], 1) ?>h/día</h4>
+                        <h4><?= esc(app_format_number($centro['capacidad_horas_dia'] * $centro['eficiencia'])) ?>h/día</h4>
                     </div>
                     <div class="progress mb-2" style="height: 25px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: 60%">

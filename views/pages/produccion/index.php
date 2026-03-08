@@ -47,7 +47,7 @@
             <div class="card">
                 <div class="card-body text-center">
                     <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
-                    <h3 class="mb-1"><?= number_format($metricas['capacidad_utilizada'] ?? 0, 0) ?>%</h3>
+                    <h3 class="mb-1"><?= esc(app_format_number($metricas['capacidad_utilizada'] ?? 0)) ?>%</h3>
                     <p class="text-muted mb-0">Capacidad Utilizada</p>
                 </div>
             </div>
@@ -226,7 +226,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td><?= date('d/m/Y', strtotime($orden['fecha_fin_programada'])) ?></td>
+                                    <td><?= esc(app_format_datetime($orden['fecha_fin_programada'], false)) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

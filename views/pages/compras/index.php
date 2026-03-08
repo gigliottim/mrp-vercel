@@ -49,7 +49,7 @@
                         <?php else: ?>
                             <?php foreach ($compras as $compra): ?>
                                 <tr>
-                                    <td class="ps-3 text-nowrap text-secondary small"><?= date('d/m/Y', strtotime($compra['fecha'])) ?></td>
+                                    <td class="ps-3 text-nowrap text-secondary small"><?= htmlspecialchars(app_format_datetime($compra['fecha'], false)) ?></td>
                                     <td>
                                         <div class="d-flex flex-column">
                                             <span class="fw-bold text-dark text-decoration-none">
@@ -64,14 +64,14 @@
                                         </div>
                                     </td>
                                     <td class="text-end font-monospace align-middle">
-                                        <span class="fw-bold"><?= number_format((float)$compra['cantidad'], 2) ?></span>
+                                        <span class="fw-bold"><?= htmlspecialchars(app_format_number((float)$compra['cantidad'])) ?></span>
                                         <small class="text-muted ms-1">u.</small>
                                     </td>
                                     <td class="text-end font-monospace align-middle text-secondary">
-                                        $<?= number_format((float)$compra['precio_unitario'], 2) ?>
+                                        $<?= htmlspecialchars(app_format_number((float)$compra['precio_unitario'])) ?>
                                     </td>
                                     <td class="text-end fw-bold font-monospace align-middle text-success bg-light">
-                                        $<?= number_format((float)$compra['cantidad'] * (float)$compra['precio_unitario'], 2) ?>
+                                        $<?= htmlspecialchars(app_format_number((float)$compra['cantidad'] * (float)$compra['precio_unitario'])) ?>
                                     </td>
                                     <td class="small align-middle">
                                         <?php if ($compra['proveedor']): ?>

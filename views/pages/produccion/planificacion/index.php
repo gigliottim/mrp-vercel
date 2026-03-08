@@ -55,7 +55,7 @@
                 <?php foreach ($conflictos as $conflicto): ?>
                     <li>
                         Centro: <strong><?= esc($conflicto['centro_nombre']) ?></strong> -
-                        <?= date('d/m/Y H:i', strtotime($conflicto['fecha_inicio'])) ?>
+                        <?= esc(app_format_datetime($conflicto['fecha_inicio'], true)) ?>
                         (<?= $conflicto['ordenes_afectadas'] ?> órdenes)
                     </li>
                 <?php endforeach; ?>
@@ -100,8 +100,8 @@
                                         <strong><?= esc($plan['centro_nombre']) ?></strong>
                                         <br><small class="text-muted"><?= esc($plan['centro_tipo']) ?></small>
                                     </td>
-                                    <td><?= date('d/m/Y H:i', strtotime($plan['fecha_inicio'])) ?></td>
-                                    <td><?= date('d/m/Y H:i', strtotime($plan['fecha_fin'])) ?></td>
+                                    <td><?= esc(app_format_datetime($plan['fecha_inicio'], true)) ?></td>
+                                    <td><?= esc(app_format_datetime($plan['fecha_fin'], true)) ?></td>
                                     <td>
                                         <?php
                                         $estadoClass = [
@@ -145,7 +145,7 @@
                         <div class="progress mb-2" style="height: 25px;">
                             <div class="progress-bar" :class="centro.porcentaje_uso > 90 ? 'bg-danger' : (centro.porcentaje_uso > 70 ? 'bg-warning' : 'bg-success')"
                                 :style="'width: ' + Math.min(centro.porcentaje_uso, 100) + '%'">
-                                <span x-text="centro.porcentaje_uso.toFixed(0) + '%'"></span>
+                                <span x-text="window.appFormatNumber(centro.porcentaje_uso || 0) + '%'"></span>
                             </div>
                         </div>
                         <small class="text-muted">

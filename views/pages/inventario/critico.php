@@ -203,26 +203,26 @@ $filtroEstado = $filtroEstado ?? 'todos';
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <span class="fw-semibold"><?= number_format((float) $item['stock_actual'], 2) ?></span>
+                                    <span class="fw-semibold"><?= View::escape(app_format_number((float) $item['stock_actual'])) ?></span>
                                     <?php if ($item['unidad_medida']) : ?>
                                         <small class="text-muted"><?= View::escape($item['unidad_medida']) ?></small>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <span><?= number_format((float) $item['punto_pedido'], 2) ?></span>
+                                    <span><?= View::escape(app_format_number((float) $item['punto_pedido'])) ?></span>
                                     <?php if ($item['unidad_medida']) : ?>
                                         <small class="text-muted"><?= View::escape($item['unidad_medida']) ?></small>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
                                     <?php if ((float) $item['faltante'] > 0) : ?>
-                                        <span class="text-danger fw-semibold"><?= number_format((float) $item['faltante'], 2) ?></span>
+                                        <span class="text-danger fw-semibold"><?= View::escape(app_format_number((float) $item['faltante'])) ?></span>
                                     <?php else : ?>
                                         <span class="text-success">--</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <span class="text-muted"><?= number_format((float) $item['lote_minimo'], 2) ?></span>
+                                    <span class="text-muted"><?= View::escape(app_format_number((float) $item['lote_minimo'])) ?></span>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

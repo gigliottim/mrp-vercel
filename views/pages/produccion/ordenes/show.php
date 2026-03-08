@@ -124,13 +124,13 @@
                         <div class="col-md-6">
                             <dl class="row">
                                 <dt class="col-sm-5">Cantidad Plan.:</dt>
-                                <dd class="col-sm-7"><strong><?= number_format($orden['cantidad_planificada'], 2) ?></strong> unidades</dd>
+                                <dd class="col-sm-7"><strong><?= esc(app_format_number($orden['cantidad_planificada'])) ?></strong> unidades</dd>
 
                                 <dt class="col-sm-5">Producida:</dt>
-                                <dd class="col-sm-7 text-success"><strong><?= number_format($orden['cantidad_producida'], 2) ?></strong></dd>
+                                <dd class="col-sm-7 text-success"><strong><?= esc(app_format_number($orden['cantidad_producida'])) ?></strong></dd>
 
                                 <dt class="col-sm-5">Desechada:</dt>
-                                <dd class="col-sm-7 text-danger"><?= number_format($orden['cantidad_desechada'], 2) ?></dd>
+                                <dd class="col-sm-7 text-danger"><?= esc(app_format_number($orden['cantidad_desechada'])) ?></dd>
 
                                 <dt class="col-sm-5">Avance:</dt>
                                 <dd class="col-sm-7">
@@ -138,7 +138,7 @@
                                         <?php $avancePct = ($avance['porcentaje_avance'] ?? 0); ?>
                                         <div class="progress-bar <?= $avancePct >= 100 ? 'bg-success' : 'bg-primary' ?>"
                                             style="width: <?= min($avancePct, 100) ?>%">
-                                            <?= number_format($avancePct, 1) ?>%
+                                            <?= esc(app_format_number($avancePct)) ?>%
                                         </div>
                                     </div>
                                 </dd>
@@ -152,19 +152,19 @@
                         <div class="col-md-6">
                             <dl class="row">
                                 <dt class="col-sm-5">Inicio Program.:</dt>
-                                <dd class="col-sm-7"><?= date('d/m/Y H:i', strtotime($orden['fecha_inicio_programada'])) ?></dd>
+                                <dd class="col-sm-7"><?= esc(app_format_datetime($orden['fecha_inicio_programada'], true)) ?></dd>
 
                                 <dt class="col-sm-5">Inicio Real:</dt>
-                                <dd class="col-sm-7"><?= $orden['fecha_inicio_real'] ? date('d/m/Y H:i', strtotime($orden['fecha_inicio_real'])) : '-' ?></dd>
+                                <dd class="col-sm-7"><?= $orden['fecha_inicio_real'] ? esc(app_format_datetime($orden['fecha_inicio_real'], true)) : '-' ?></dd>
                             </dl>
                         </div>
                         <div class="col-md-6">
                             <dl class="row">
                                 <dt class="col-sm-5">Fin Program.:</dt>
-                                <dd class="col-sm-7"><?= date('d/m/Y H:i', strtotime($orden['fecha_fin_programada'])) ?></dd>
+                                <dd class="col-sm-7"><?= esc(app_format_datetime($orden['fecha_fin_programada'], true)) ?></dd>
 
                                 <dt class="col-sm-5">Fin Real:</dt>
-                                <dd class="col-sm-7"><?= $orden['fecha_fin_real'] ? date('d/m/Y H:i', strtotime($orden['fecha_fin_real'])) : '-' ?></dd>
+                                <dd class="col-sm-7"><?= $orden['fecha_fin_real'] ? esc(app_format_datetime($orden['fecha_fin_real'], true)) : '-' ?></dd>
                             </dl>
                         </div>
                     </div>
@@ -195,8 +195,8 @@
                                 <strong><?= esc($plan['centro_nombre']) ?></strong>
                                 <br>
                                 <small class="text-muted">
-                                    <?= date('d/m H:i', strtotime($plan['fecha_inicio'])) ?> -
-                                    <?= date('d/m H:i', strtotime($plan['fecha_fin'])) ?>
+                                    <?= esc(app_format_datetime($plan['fecha_inicio'], true)) ?> -
+                                    <?= esc(app_format_datetime($plan['fecha_fin'], true)) ?>
                                 </small>
                             </div>
                         <?php endforeach; ?>
@@ -221,7 +221,7 @@
                                 <?php foreach ($orden['materiales'] as $mat): ?>
                                     <tr>
                                         <td><?= esc($mat['parte_codigo']) ?></td>
-                                        <td class="text-end"><?= number_format($mat['cantidad'], 2) ?></td>
+                                        <td class="text-end"><?= esc(app_format_number($mat['cantidad'])) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

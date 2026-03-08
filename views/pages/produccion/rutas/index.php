@@ -81,13 +81,13 @@
                                 </div>
                                 <div class="col-4">
                                     <div class="border rounded p-2">
-                                        <h5 class="mb-0"><?= number_format($ruta['tiempo_total'] ?? 0, 0) ?></h5>
+                                        <h5 class="mb-0"><?= esc(app_format_number($ruta['tiempo_total'] ?? 0)) ?></h5>
                                         <small class="text-muted">min</small>
                                     </div>
                                 </div>
                                 <div class="col-4">
                                     <div class="border rounded p-2">
-                                        <h5 class="mb-0">$<?= number_format($ruta['costo_total'] ?? 0, 2) ?></h5>
+                                        <h5 class="mb-0">$<?= esc(app_format_number($ruta['costo_total'] ?? 0)) ?></h5>
                                         <small class="text-muted">Costo</small>
                                     </div>
                                 </div>

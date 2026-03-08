@@ -115,6 +115,8 @@ final class SearchService
                     'parte_detalle' => $variante['parte_detalle'] ?? '',
                     'id_um_compra' => isset($variante['id_um_compra']) ? (int) $variante['id_um_compra'] : null,
                     'id_um_uso' => isset($variante['id_um_uso']) ? (int) $variante['id_um_uso'] : null,
+                    'um_uso_codigo' => $variante['um_uso_codigo'] ?? '',
+                    'um_uso_tipo' => $variante['um_uso_tipo'] ?? '',
                     'descripcion_completa' => $this->buildDescripcionCompleta($variante),
                     'variante_detalle' => $variante['detalle'] ?? '' // Alias para compatibilidad
                 ]);

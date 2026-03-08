@@ -86,7 +86,8 @@ final class SearchRepository
                     tp.codigo AS tipo_codigo,
                     tp.nombre AS tipo_nombre,
                     um1.simbolo AS um_compra_codigo,
-                    um2.simbolo AS um_uso_codigo
+                    um2.simbolo AS um_uso_codigo,
+                    um2.tipo AS um_uso_tipo
                 FROM variantes v
                 INNER JOIN partes p ON v.id_parte = p.id
                 LEFT JOIN tipos_partes tp ON p.id_tipo = tp.id
@@ -131,7 +132,8 @@ final class SearchRepository
                     tp.codigo AS tipo_codigo,
                     tp.nombre AS tipo_nombre,
                     um1.simbolo AS um_compra_codigo,
-                    um2.simbolo AS um_uso_codigo
+                    um2.simbolo AS um_uso_codigo,
+                    um2.tipo AS um_uso_tipo
                 FROM variantes v
                 INNER JOIN partes p ON v.id_parte = p.id
                 LEFT JOIN tipos_partes tp ON p.id_tipo = tp.id

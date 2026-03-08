@@ -434,6 +434,14 @@ window.createComposicionMaestroApp = function (config) {
       console.groupEnd();
 
       const modalEl = document.getElementById('modalAgregar');
+      if (modalEl) {
+        const parentVariant = this.variantes?.[this.selectedNode.variante_id] || null;
+        const parentSurface = Number.parseFloat(parentVariant?.superficie);
+
+        modalEl.dataset.parentVarianteId = String(this.selectedNode.variante_id || '');
+        modalEl.dataset.parentSuperficie = Number.isFinite(parentSurface) ? String(parentSurface) : '';
+      }
+
       const modal = new bootstrap.Modal(modalEl);
       modal.show();
     }

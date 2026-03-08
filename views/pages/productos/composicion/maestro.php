@@ -592,13 +592,33 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                             minChars: 2,
                             debounceDelay: 300,
                             maxResults: 10,
-                            format: 'standard',
+                            format: 'detailed',
                             filters: {
                                 exclude_ids: currentVarianteId > 0 ? [currentVarianteId] : []
                             },
                             onSelect: (item) => {
                                 // Actualizar campo oculto
                                 modalHiddenInput.value = item.id;
+
+                                const modalForm = modalElement.querySelector('form');
+                                const unidadSelect = modalForm?.querySelector('select[name="id_unidad"]');
+                                const cantidadInput = modalForm?.querySelector('input[name="cantidad"]');
+
+                                const selectedUmUsoId = Number.parseInt(item.id_um_uso, 10);
+                                if (unidadSelect && Number.isInteger(selectedUmUsoId) && selectedUmUsoId > 0) {
+                                    unidadSelect.value = String(selectedUmUsoId);
+                                }
+
+                                const umUsoTipo = String(item.um_uso_tipo || '').toLowerCase();
+                                const umUsoCodigo = String(item.um_uso_codigo || '').toLowerCase().replace(/\s+/g, '');
+                                const usoEsSuperficie = umUsoTipo === 'superficie' || ['m2', 'm²'].includes(umUsoCodigo);
+
+                                if (cantidadInput) {
+                                    const parentSuperficie = Number.parseFloat(modalElement.dataset.parentSuperficie || '');
+                                    if (usoEsSuperficie && Number.isFinite(parentSuperficie) && parentSuperficie > 0) {
+                                        cantidadInput.value = String(parentSuperficie);
+                                    }
+                                }
 
                                 // Mostrar selección
                                 document.getElementById('modal-selected-codigo').textContent = item.codigo_variante;

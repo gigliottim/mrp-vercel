@@ -161,15 +161,21 @@ final class Variante extends BaseTenantModel
                 v.id_parte AS parte_id,
                 p.codigo AS parte_codigo,
                 p.detalle AS parte_detalle,
+                p.id_um_uso,
+                p.superficie,
+                p.id_um_superficie,
                 COALESCE(p.factor_conversion, 1) as factor_conversion,
                 tp.codigo AS tipo_codigo,
                 um_compra.simbolo AS um_compra,
-                um_uso.simbolo AS um_uso
+                um_uso.simbolo AS um_uso,
+                um_uso.tipo AS um_uso_tipo,
+                um_superficie.simbolo AS um_superficie
             FROM variantes v
             INNER JOIN partes p ON v.id_parte = p.id
             LEFT JOIN tipos_partes tp ON p.id_tipo = tp.id
             LEFT JOIN unidades_medida um_compra ON p.id_um_compra = um_compra.id
             LEFT JOIN unidades_medida um_uso ON p.id_um_uso = um_uso.id
+            LEFT JOIN unidades_medida um_superficie ON p.id_um_superficie = um_superficie.id
             ORDER BY p.codigo, v.codigo_variante
         ';
         $stmt = $this->connection->prepare($sql);

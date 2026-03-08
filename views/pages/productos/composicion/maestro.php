@@ -328,10 +328,10 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
 
                     <ul class="list-unstyled">
                         <!-- Using a different strategy: Render flat list with indentation based on 'nivel' -->
-                        <template x-for="(item, index) in flatTree" :key="index">
+                        <template x-for="(item, index) in flatTree" :key="getNodeInstanceKey(item) + '-' + index">
                             <div class="tree-node"
                                 :style="`margin-left: ${item.nivel * 20}px`"
-                                :class="{'selected': selectedNode && selectedNode.variante_id === item.variante_id}"
+                                :class="{'selected': isSelectedNode(item)}"
                                 @click="selectNode(item)">
                                 <i class="fa-solid" :class="item.icon_class"></i>
                                 <span class="fw-bold" x-text="(item.parte_codigo || 'N/A') + '-' + (item.codigo_variante || 'N/A')"></span>
@@ -399,7 +399,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <template x-for="child in getChildren(selectedNode)" :key="child.bom_detalle_id || child.variante_id">
+                                            <template x-for="(child, childIndex) in getChildren(selectedNode)" :key="getNodeInstanceKey(child) + '-' + (child.bom_detalle_id || child.variante_id || childIndex)">
                                                 <tr>
                                                     <td x-text="getItemCode(child)"></td>
                                                     <td>
@@ -453,7 +453,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
 
                                     <template x-if="getNodeTree(selectedNode).length > 0">
                                         <div class="p-3">
-                                            <template x-for="(item, index) in getNodeTree(selectedNode)" :key="index">
+                                            <template x-for="(item, index) in getNodeTree(selectedNode)" :key="getNodeInstanceKey(item) + '-' + index">
                                                 <div class="tree-item mb-2"
                                                     :style="`margin-left: ${item.level * 24}px`">
                                                     <div class="d-flex align-items-center gap-2 p-2 border rounded bg-light">

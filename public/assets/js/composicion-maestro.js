@@ -97,7 +97,23 @@ window.createComposicionMaestroApp = function (config) {
      * Selecciona nodo en base al parametro focus_variante si existe.
      */
     autoSelectFocusedNode() {
-      const focusVariantId = Number.parseInt(new URLSearchParams(window.location.search).get('focus_variante') || '', 10);
+      const searchParams = new URLSearchParams(window.location.search);
+      const focusPath = String(searchParams.get('focus_path') || '').trim();
+      if (focusPath !== '') {
+        const focusedByPath = this.flatTree.find(node => this.getNodeInstanceKey(node) === focusPath);
+        if (focusedByPath) {
+          this.selectNode(focusedByPath);
+          this.$nextTick(() => {
+            const selectedEl = document.querySelector('.tree-node.selected');
+            if (selectedEl) {
+              selectedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          });
+          return true;
+        }
+      }
+
+      const focusVariantId = Number.parseInt(searchParams.get('focus_variante') || '', 10);
       if (!Number.isInteger(focusVariantId) || focusVariantId <= 0) {
         return false;
       }
@@ -139,7 +155,78 @@ window.createComposicionMaestroApp = function (config) {
         currentUrl.searchParams.delete('focus_variante');
       }
 
+      const focusPath = this.selectedNode ? this.getNodeInstanceKey(this.selectedNode) : '';
+      if (focusPath) {
+        currentUrl.searchParams.set('focus_path', focusPath);
+      } else {
+        currentUrl.searchParams.delete('focus_path');
+      }
+
       return currentUrl.toString();
+    },
+
+    /**
+     * Normaliza el path PostgreSQL del arbol a array de IDs.
+     */
+    parseNodePathIds(node) {
+      if (!node) return [];
+
+      const rawPath = node.path;
+      if (Array.isArray(rawPath)) {
+        return rawPath
+          .map(value => Number.parseInt(value, 10))
+          .filter(value => Number.isInteger(value) && value > 0);
+      }
+
+      const pathText = String(rawPath || '').trim();
+      if (pathText === '') {
+        const fallbackVariantId = Number.parseInt(node.variante_id, 10);
+        return Number.isInteger(fallbackVariantId) && fallbackVariantId > 0 ? [fallbackVariantId] : [];
+      }
+
+      const normalized = pathText.replace(/^\{/, '').replace(/\}$/, '');
+      if (normalized === '') {
+        return [];
+      }
+
+      return normalized
+        .split(',')
+        .map(value => Number.parseInt(value, 10))
+        .filter(value => Number.isInteger(value) && value > 0);
+    },
+
+    /**
+     * Clave unica de instancia del nodo (path completo en el arbol).
+     */
+    getNodeInstanceKey(node) {
+      const ids = this.parseNodePathIds(node);
+      if (ids.length > 0) {
+        return ids.join('>');
+      }
+
+      const variantId = Number.parseInt(node?.variante_id, 10);
+      return Number.isInteger(variantId) && variantId > 0 ? String(variantId) : '';
+    },
+
+    /**
+     * Clave de instancia del padre del nodo actual.
+     */
+    getParentInstanceKey(node) {
+      const ids = this.parseNodePathIds(node);
+      if (ids.length <= 1) {
+        return '';
+      }
+
+      return ids.slice(0, -1).join('>');
+    },
+
+    /**
+     * Determina seleccion por instancia (evita colision cuando la variante se repite en ramas distintas).
+     */
+    isSelectedNode(node) {
+      if (!this.selectedNode || !node) return false;
+
+      return this.getNodeInstanceKey(this.selectedNode) === this.getNodeInstanceKey(node);
     },
 
     /**
@@ -278,15 +365,24 @@ window.createComposicionMaestroApp = function (config) {
     getChildren(parentNode) {
       if (!parentNode) return [];
 
-      const parentId = parentNode.variante_id;
-      return this.flatTree.filter(n => n.parent_id === parentId);
+      const parentId = Number.parseInt(parentNode.variante_id, 10);
+      const parentInstanceKey = this.getNodeInstanceKey(parentNode);
+
+      return this.flatTree.filter(node => {
+        const nodeParentId = Number.parseInt(node.parent_id, 10);
+        if (!Number.isInteger(nodeParentId) || nodeParentId !== parentId) {
+          return false;
+        }
+
+        return this.getParentInstanceKey(node) === parentInstanceKey;
+      });
     },
 
     /**
      * Verifica si un nodo tiene hijos
      */
     hasChildrenInTree(node) {
-      return this.flatTree.some(n => n.parent_id === node.variante_id);
+      return this.getChildren(node).length > 0;
     },
 
     /**

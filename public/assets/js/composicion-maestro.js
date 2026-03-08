@@ -602,6 +602,42 @@ window.createComposicionMaestroApp = function (config) {
     },
 
     /**
+     * Determina si la variante se usa por superficie.
+     */
+    isSurfaceUsageVariant(item) {
+      const umUsoTipo = String(item?.um_uso_tipo || '').toLowerCase().trim();
+      const umUsoCodigo = String(item?.um_uso || item?.um_uso_codigo || '')
+        .toLowerCase()
+        .replace(/\s+/g, '');
+
+      return umUsoTipo === 'superficie' || ['m2', 'm²'].includes(umUsoCodigo);
+    },
+
+    /**
+     * Resuelve cantidad y unidad de alta en funcion de la variante seleccionada.
+     */
+    resolveAddValuesForItem(item) {
+      const parentVariant = this.variantes?.[this.addItemParentId] || null;
+      const parentSurface = Number.parseFloat(parentVariant?.superficie);
+      const itemUmUsoId = Number.parseInt(item?.id_um_uso, 10);
+      const fallbackUnitId = Number.parseInt(this.addUnitId || config.defaultUnidadId, 10);
+      const isSurfaceItem = this.isSurfaceUsageVariant(item);
+
+      const resolvedUnitId = Number.isInteger(itemUmUsoId) && itemUmUsoId > 0
+        ? itemUmUsoId
+        : (Number.isInteger(fallbackUnitId) && fallbackUnitId > 0 ? fallbackUnitId : 0);
+
+      const resolvedQuantity = isSurfaceItem && Number.isFinite(parentSurface) && parentSurface > 0
+        ? parentSurface
+        : 1;
+
+      return {
+        unitId: resolvedUnitId,
+        quantity: resolvedQuantity
+      };
+    },
+
+    /**
      * Valida candidatos del modal contra backend para excluir conflictos.
      */
     async validateAddCandidates() {
@@ -741,8 +777,13 @@ window.createComposicionMaestroApp = function (config) {
     async addComponentFromList(item) {
       const materialId = Number.parseInt(item?.id, 10);
       const parentId = Number.parseInt(this.addItemParentId, 10);
-      const quantity = Number.parseFloat(this.addQuantity);
-      const unitId = Number.parseInt(this.addUnitId, 10);
+      const resolvedValues = this.resolveAddValuesForItem(item);
+      const quantity = Number.parseFloat(resolvedValues.quantity);
+      const unitId = Number.parseInt(resolvedValues.unitId, 10);
+
+      this.addQuantity = Number.isFinite(quantity) ? String(quantity) : this.addQuantity;
+      this.addUnitId = Number.isInteger(unitId) && unitId > 0 ? String(unitId) : this.addUnitId;
+
       const payload = {
         id_variante: String(parentId),
         id_material: String(materialId),

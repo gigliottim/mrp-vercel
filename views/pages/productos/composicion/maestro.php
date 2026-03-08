@@ -168,6 +168,21 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         border-color: #0d6efd;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
+
+    .tree-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .tree-panel-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .tree-panel-list {
+        margin-bottom: 0;
+    }
 </style>
 
 <div x-data="maestroApp()" class="h-100 d-flex flex-column">
@@ -276,11 +291,11 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
     <div class="row g-4 flex-grow-1">
         <!-- Izquierda: Árbol -->
         <div class="col-12 col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 tree-panel">
                 <div class="card-header bg-light">
                     <h5 class="card-title mb-0">Estructura</h5>
                 </div>
-                <div class="card-body overflow-auto" style="max-height: 600px;">
+                <div class="card-body tree-panel-body">
                     <!-- Tree Container -->
                     <template x-if="flatTree.length === 0">
                         <div class="text-center text-muted py-5">
@@ -289,7 +304,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                         </div>
                     </template>
 
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled tree-panel-list">
                         <!-- Using a different strategy: Render flat list with indentation based on 'nivel' -->
                         <template x-for="(item, index) in flatTree" :key="getNodeInstanceKey(item) + '-' + index">
                             <div class="tree-node"

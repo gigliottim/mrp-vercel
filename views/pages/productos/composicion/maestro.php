@@ -620,9 +620,19 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                     }
                                 }
 
-                                // Mostrar selección
-                                document.getElementById('modal-selected-codigo').textContent = item.codigo_variante;
-                                document.getElementById('modal-selected-detalle').textContent = item.detalle || item.parte_detalle || 'Sin detalle';
+                                // Mostrar selección con variante completa (codigo + detalle)
+                                const codigoCompleto = [item.parte_codigo, item.codigo_variante]
+                                    .map(value => String(value || '').trim())
+                                    .filter(Boolean)
+                                    .join('-') || String(item.codigo_variante || 'Sin codigo');
+
+                                const detalleCompleto = [item.parte_detalle, item.detalle]
+                                    .map(value => String(value || '').trim())
+                                    .filter(Boolean)
+                                    .join(' - ') || 'Sin detalle';
+
+                                document.getElementById('modal-selected-codigo').textContent = codigoCompleto;
+                                document.getElementById('modal-selected-detalle').textContent = detalleCompleto;
                                 document.getElementById('modal-selected-display').style.display = 'block';
 
                                 // Limpiar input y ocultar resultados

@@ -106,7 +106,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
 
     /* Estilos para vista de árbol jerárquico */
     .tree-view-container {
-        max-height: 600px;
+        height: 100%;
         overflow-y: auto;
     }
 
@@ -172,6 +172,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
     .tree-panel {
         display: flex;
         flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
     }
 
     .tree-panel-body {
@@ -183,9 +185,46 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
     .tree-panel-list {
         margin-bottom: 0;
     }
+
+    .maestro-main-row {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .maestro-panel-col {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .details-panel {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .details-panel-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .details-selected-content {
+        height: 100%;
+    }
+
+    .details-list-view {
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .details-list-view .table {
+        margin-bottom: 0;
+    }
 </style>
 
-<div x-data="maestroApp()" class="h-100 d-flex flex-column">
+<div x-data="maestroApp()" class="min-vh-100 d-flex flex-column">
     <section class="mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
@@ -288,9 +327,9 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         </div>
     </div>
 
-    <div class="row g-4 flex-grow-1">
+    <div class="row g-4 maestro-main-row">
         <!-- Izquierda: Árbol -->
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-4 maestro-panel-col">
             <div class="card h-100 tree-panel">
                 <div class="card-header bg-light">
                     <h5 class="card-title mb-0">Estructura</h5>
@@ -322,8 +361,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         </div>
 
         <!-- Derecha: Detalles del nodo seleccionado -->
-        <div class="col-12 col-md-8">
-            <div class="card h-100">
+        <div class="col-12 col-md-8 maestro-panel-col">
+            <div class="card h-100 details-panel">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0" x-text="selectedNode ? getItemCode(selectedNode) + ' - ' + getItemDetail(selectedNode) : 'Seleccione un nodo'"></h5>
 
@@ -353,7 +392,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                         </button>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body details-panel-body">
                     <template x-if="!selectedNode">
                         <div class="text-center text-muted p-5">
                             <i class="fa-solid fa-sitemap fa-3x mb-3"></i>
@@ -362,9 +401,9 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                     </template>
 
                     <template x-if="selectedNode">
-                        <div>
+                        <div class="details-selected-content">
                             <!-- Vista de Lista -->
-                            <div x-show="viewMode === 'list'">
+                            <div x-show="viewMode === 'list'" class="details-list-view">
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle">
                                         <thead>

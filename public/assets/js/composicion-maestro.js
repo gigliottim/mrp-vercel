@@ -89,10 +89,24 @@ window.createComposicionMaestroApp = function (config) {
     enhanceTreeWithIcons() {
       this.flatTree = this.flatTree.map(node => ({
         ...node,
+        full_variant_label: this.buildFullVariantLabel(node),
         icon_class: this.hasChildrenInTree(node)
           ? 'fa-folder text-warning me-2'
           : 'fa-cube text-info me-2'
       }));
+    },
+
+    /**
+     * Construye etiqueta completa de la variante para mostrar contexto
+     */
+    buildFullVariantLabel(node) {
+      const variantSource = this.variantes?.[node.variante_id] || {};
+      const parteCodigo = variantSource.parte_codigo || 'N/A';
+      const parteDetalle = variantSource.parte_detalle || '';
+      const varianteCodigo = node.codigo_variante || variantSource.codigo_variante || 'N/A';
+      const varianteDetalle = node.variante_detalle || variantSource.detalle || '';
+
+      return `Parte: ${parteCodigo} - ${parteDetalle} | Variante: ${varianteCodigo} - ${varianteDetalle}`;
     },
 
     /**

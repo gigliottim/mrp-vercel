@@ -150,17 +150,20 @@ final class Bom extends BaseTenantModel
         return (int) $stmt->fetchColumn();
     }
 
-    public function addDetail(int $bomId, int $componentId, float $qty, int $unitId): bool
+    public function addDetail(int $bomId, int $componentId, float $qty, int $unitId): int
     {
         $sql = "INSERT INTO bom_detalle (bom_id, variante_componente_id, cantidad_necesaria, unidad_medida_id, secuencia)
-                VALUES (:bom, :comp, :qty, :unit, 0)";
+                VALUES (:bom, :comp, :qty, :unit, 0)
+                RETURNING id";
         $stmt = $this->connection->prepare($sql);
-        return $stmt->execute([
+        $stmt->execute([
             'bom' => $bomId,
             'comp' => $componentId,
             'qty' => $qty,
             'unit' => $unitId
         ]);
+
+        return (int) $stmt->fetchColumn();
     }
 
     public function updateDetail(int $id, float $qty, int $unitId): bool

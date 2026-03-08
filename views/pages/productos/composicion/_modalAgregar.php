@@ -70,6 +70,13 @@ use App\Core\View\View;
                         x-text="addModalStatus.message"></div>
                 </template>
 
+                <template x-if="isValidatingCandidates">
+                    <div class="alert alert-info py-2 mb-2">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Validando componentes permitidos para este nivel...
+                    </div>
+                </template>
+
                 <div class="table-responsive border rounded">
                     <table class="table table-sm table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -89,7 +96,7 @@ use App\Core\View\View;
                                     <td class="text-end">
                                         <button type="button"
                                             class="btn btn-sm btn-success"
-                                            :disabled="isAddingComponent(item.id)"
+                                            :disabled="isAddingComponent(item.id) || isValidatingCandidates"
                                             @click="addComponentFromList(item)">
                                             <span x-show="!isAddingComponent(item.id)">
                                                 <i class="fa-solid fa-plus"></i> Agregar

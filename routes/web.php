@@ -195,6 +195,7 @@ $router->delete('/configuracion/unidades/{id}', [UnidadesMedidaController::class
 $router->get('/productos/bom', [BomController::class, 'index']);
 $router->get('/productos/maestro', [ComposicionController::class, 'maestro']);
 $router->post('/productos/maestro/materiales', [ComposicionController::class, 'addItem']);
+$router->post('/productos/maestro/materiales/validar-candidatos', [ComposicionController::class, 'validateCandidates']);
 $router->get('/productos/maestro/materiales/{id}/editar', [ComposicionController::class, 'editItem']);
 $router->put('/productos/maestro/materiales/{id}', [ComposicionController::class, 'updateItem']);
 $router->delete('/productos/maestro/materiales/{id}', [ComposicionController::class, 'deleteItem']);

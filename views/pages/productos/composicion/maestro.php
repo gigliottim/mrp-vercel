@@ -460,6 +460,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
             variantes: <?= json_encode($variantes ?: []) ?>,
             apiSearchUrl: '<?= url('api/v1/search/variantes') ?>',
             baseActionUrl: '<?= url('productos/maestro/materiales') ?>',
+            validateCandidatesUrl: '<?= url('productos/maestro/materiales/validar-candidatos') ?>',
             selectedVarianteId: <?= (int) ($selectedVarianteId ?? 0) ?>,
             defaultUnidadId: <?= (int) ($unidades[0]['id'] ?? 0) ?>
         }));

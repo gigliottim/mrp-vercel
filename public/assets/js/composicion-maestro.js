@@ -46,6 +46,10 @@ window.createComposicionMaestroApp = function (config) {
       message: ''
     },
     addingComponentIds: [],
+    validatedCandidateIds: null,
+    invalidCandidateReasons: {},
+    hiddenModalVariantIds: [],
+    isValidatingCandidates: false,
     viewMode: 'list', // 'list' o 'tree'
     currentRootVarianteId: Number.parseInt(config.selectedVarianteId, 10) || null,
 
@@ -509,6 +513,156 @@ window.createComposicionMaestroApp = function (config) {
     },
 
     /**
+     * IDs de componentes ya existentes al mismo nivel del nodo seleccionado.
+     */
+    getCurrentLevelComponentIds() {
+      if (!this.selectedNode) return [];
+
+      return this.getChildren(this.selectedNode)
+        .map(child => Number.parseInt(child.variante_id, 10))
+        .filter(id => Number.isInteger(id) && id > 0);
+    },
+
+    /**
+     * Devuelve texto de unidad para reflejo inmediato en la grilla.
+     */
+    getUnitLabelById(unitId) {
+      const target = Number.parseInt(unitId, 10);
+      if (!Number.isInteger(target) || target <= 0) {
+        return '';
+      }
+
+      const select = document.querySelector('#modalAgregar select[x-model="addUnitId"]');
+      if (!select) {
+        return '';
+      }
+
+      const option = Array.from(select.options).find(item => Number.parseInt(item.value, 10) === target);
+      if (!option) {
+        return '';
+      }
+
+      const label = String(option.textContent || '').trim();
+      const match = label.match(/\(([^)]+)\)\s*$/);
+      return match ? String(match[1] || '').trim() : label;
+    },
+
+    /**
+     * Construye path jerarquico para nuevo hijo usando el path del padre.
+     */
+    buildChildPath(parentNode, childVariantId) {
+      const parentIds = this.parseNodePathIds(parentNode);
+      const normalizedChildId = Number.parseInt(childVariantId, 10);
+
+      if (!Number.isInteger(normalizedChildId) || normalizedChildId <= 0) {
+        return '';
+      }
+
+      const fullPath = parentIds.length > 0
+        ? [...parentIds, normalizedChildId]
+        : [Number.parseInt(parentNode?.variante_id, 10), normalizedChildId].filter(id => Number.isInteger(id) && id > 0);
+
+      if (fullPath.length === 0) {
+        return '';
+      }
+
+      return `{${fullPath.join(',')}}`;
+    },
+
+    /**
+     * Inserta en memoria el componente agregado para actualizar vista sin recargar.
+     */
+    appendAddedComponentToTree(item, payload, detailId) {
+      if (!this.selectedNode) return;
+
+      const parentVariantId = Number.parseInt(this.selectedNode.variante_id, 10);
+      const componentVariantId = Number.parseInt(item?.id, 10);
+      if (!Number.isInteger(parentVariantId) || parentVariantId <= 0) return;
+      if (!Number.isInteger(componentVariantId) || componentVariantId <= 0) return;
+
+      const parentLevel = Number.parseInt(this.selectedNode.nivel, 10);
+      const childNode = {
+        bom_detalle_id: Number.isInteger(Number.parseInt(detailId, 10)) ? Number.parseInt(detailId, 10) : null,
+        parent_id: parentVariantId,
+        variante_id: componentVariantId,
+        parte_codigo: item.parte_codigo || '',
+        parte_detalle: item.parte_detalle || '',
+        codigo_variante: item.codigo_variante || '',
+        variante_detalle: item.detalle || item.variante_detalle || '',
+        detalle: item.detalle || item.variante_detalle || '',
+        tipo_codigo: item.tipo_codigo || '',
+        cantidad: Number.parseFloat(payload.cantidad),
+        unidad: this.getUnitLabelById(payload.id_unidad),
+        nivel: Number.isInteger(parentLevel) ? parentLevel + 1 : 1,
+        path: this.buildChildPath(this.selectedNode, componentVariantId)
+      };
+
+      this.flatTree.push(childNode);
+      this.enhanceTreeWithIcons();
+    },
+
+    /**
+     * Valida candidatos del modal contra backend para excluir conflictos.
+     */
+    async validateAddCandidates() {
+      this.isValidatingCandidates = true;
+      this.validatedCandidateIds = null;
+      this.invalidCandidateReasons = {};
+
+      const candidateIds = this.filteredVariants
+        .map(item => Number.parseInt(item?.id, 10))
+        .filter(id => Number.isInteger(id) && id > 0);
+
+      if (!Number.isInteger(Number.parseInt(this.addItemParentId, 10)) || candidateIds.length === 0) {
+        this.isValidatingCandidates = false;
+        this.validatedCandidateIds = [];
+        return;
+      }
+
+      try {
+        const response = await fetch(config.validateCandidatesUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            id_variante: Number.parseInt(this.addItemParentId, 10),
+            candidate_ids: candidateIds
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) {
+          this.addModalStatus = {
+            type: 'error',
+            message: String(data.message || 'No se pudo validar la lista de componentes.')
+          };
+          this.validatedCandidateIds = [];
+          return;
+        }
+
+        const validIds = Array.isArray(data?.data?.valid_ids) ? data.data.valid_ids : [];
+        const invalid = (data?.data?.invalid && typeof data.data.invalid === 'object') ? data.data.invalid : {};
+
+        this.validatedCandidateIds = validIds
+          .map(id => Number.parseInt(id, 10))
+          .filter(id => Number.isInteger(id) && id > 0);
+        this.invalidCandidateReasons = invalid;
+      } catch (error) {
+        console.error('Error validando candidatos de modal:', error);
+        this.addModalStatus = {
+          type: 'error',
+          message: 'No se pudo validar la lista de componentes. Intenta nuevamente.'
+        };
+        this.validatedCandidateIds = [];
+      } finally {
+        this.isValidatingCandidates = false;
+      }
+    },
+
+    /**
      * Configura el filtro del modal de agregado.
      */
     setAddModalFilter(type) {
@@ -521,11 +675,38 @@ window.createComposicionMaestroApp = function (config) {
      */
     getAddModalVariants() {
       const normalizedQuery = String(this.addListQuery || '').trim().toLowerCase();
+      const hiddenIds = new Set(this.hiddenModalVariantIds.map(id => String(id)));
+      const currentLevelIds = new Set(this.getCurrentLevelComponentIds().map(id => String(id)));
+      const validatedSet = Array.isArray(this.validatedCandidateIds)
+        ? new Set(this.validatedCandidateIds.map(id => String(id)))
+        : null;
+
+      const visible = this.filteredVariants.filter(item => {
+        const itemId = Number.parseInt(item?.id, 10);
+        if (!Number.isInteger(itemId) || itemId <= 0) {
+          return false;
+        }
+
+        if (hiddenIds.has(String(itemId))) {
+          return false;
+        }
+
+        if (currentLevelIds.has(String(itemId))) {
+          return false;
+        }
+
+        if (validatedSet && !validatedSet.has(String(itemId))) {
+          return false;
+        }
+
+        return true;
+      });
+
       if (normalizedQuery === '') {
-        return this.filteredVariants;
+        return visible;
       }
 
-      return this.filteredVariants.filter(item => {
+      return visible.filter(item => {
         const searchable = [
           item.parte_codigo,
           item.codigo_variante,
@@ -562,6 +743,13 @@ window.createComposicionMaestroApp = function (config) {
       const parentId = Number.parseInt(this.addItemParentId, 10);
       const quantity = Number.parseFloat(this.addQuantity);
       const unitId = Number.parseInt(this.addUnitId, 10);
+      const payload = {
+        id_variante: String(parentId),
+        id_material: String(materialId),
+        cantidad: String(quantity),
+        id_unidad: String(unitId),
+        redirect_to: this.getReturnUrl(parentId)
+      };
 
       if (!Number.isInteger(parentId) || parentId <= 0) {
         this.addModalStatus = {
@@ -603,13 +791,7 @@ window.createComposicionMaestroApp = function (config) {
       this.addModalStatus = { type: '', message: '' };
 
       try {
-        const body = new URLSearchParams({
-          id_variante: String(parentId),
-          id_material: String(materialId),
-          cantidad: String(quantity),
-          id_unidad: String(unitId),
-          redirect_to: this.getReturnUrl(parentId)
-        });
+        const body = new URLSearchParams(payload);
 
         const response = await fetch(this.addActionUrl, {
           method: 'POST',
@@ -632,6 +814,13 @@ window.createComposicionMaestroApp = function (config) {
           type: 'success',
           message: 'Componente agregado. Puedes seguir agregando mas desde este listado.'
         };
+
+        this.hiddenModalVariantIds.push(materialId);
+        this.validatedCandidateIds = Array.isArray(this.validatedCandidateIds)
+          ? this.validatedCandidateIds.filter(id => id !== materialId)
+          : this.validatedCandidateIds;
+
+        this.appendAddedComponentToTree(item, payload, responseData?.data?.bom_detalle_id);
       } catch (error) {
         console.error('Error al agregar componente:', error);
         this.addModalStatus = {
@@ -871,6 +1060,9 @@ window.createComposicionMaestroApp = function (config) {
       this.addListQuery = '';
       this.addModalStatus = { type: '', message: '' };
       this.addingComponentIds = [];
+      this.hiddenModalVariantIds = [];
+      this.validatedCandidateIds = null;
+      this.invalidCandidateReasons = {};
 
       // Configurar acción
       this.addItemParentId = this.selectedNode.variante_id;
@@ -895,6 +1087,7 @@ window.createComposicionMaestroApp = function (config) {
       console.log('Forbidden IDs calculated:', this.forbiddenIds);
       this.updateFilteredVariants();
       console.log('Filtered Variants result:', this.filteredVariants.length);
+      this.validateAddCandidates();
       console.groupEnd();
 
       const modalEl = document.getElementById('modalAgregar');

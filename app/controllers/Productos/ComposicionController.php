@@ -153,13 +153,14 @@ final class ComposicionController extends Controller
         $bom = $this->bomModel->getActiveByVariante($varianteId);
         $bomId = $bom ? (int)$bom['id'] : $this->bomModel->createHeader($varianteId);
 
-        $this->bomModel->addDetail($bomId, $materialId, $cantidad, $unidadId);
+        $detailId = $this->bomModel->addDetail($bomId, $materialId, $cantidad, $unidadId);
 
         if ($expectsJson) {
             return Response::json([
                 'success' => true,
                 'message' => 'Componente agregado exitosamente',
                 'data' => [
+                    'bom_detalle_id' => $detailId,
                     'variante_id' => $varianteId,
                     'material_id' => $materialId,
                     'cantidad' => $cantidad,
@@ -170,6 +171,52 @@ final class ComposicionController extends Controller
 
         $_SESSION['bom_success'] = 'Componente agregado exitosamente';
         return Response::redirect($redirectUrl);
+    }
+
+    public function validateCandidates(Request $request): Response
+    {
+        $varianteId = (int) $request->input('id_variante');
+        $candidateIds = $request->input('candidate_ids', []);
+
+        if (!is_array($candidateIds)) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Formato de candidatos invalido.'
+            ], 422);
+        }
+
+        $candidateIds = array_values(array_unique(array_filter(array_map(
+            static fn($id) => (int) $id,
+            $candidateIds
+        ), static fn($id) => $id > 0)));
+
+        if ($varianteId <= 0) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Variante padre invalida.'
+            ], 422);
+        }
+
+        $validIds = [];
+        $invalid = [];
+
+        foreach ($candidateIds as $componentId) {
+            $validation = $this->bomModel->validateAddComponent($varianteId, (int) $componentId);
+            if ($validation['valid']) {
+                $validIds[] = (int) $componentId;
+                continue;
+            }
+
+            $invalid[(string) $componentId] = (string) ($validation['error'] ?? 'Componente no permitido.');
+        }
+
+        return Response::json([
+            'success' => true,
+            'data' => [
+                'valid_ids' => $validIds,
+                'invalid' => $invalid
+            ]
+        ]);
     }
 
     public function editItem(Request $request, $id): Response

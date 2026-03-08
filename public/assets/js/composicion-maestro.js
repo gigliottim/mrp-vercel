@@ -38,6 +38,14 @@ window.createComposicionMaestroApp = function (config) {
     replacementItem: {},
     availableReplacements: [],
     replaceActionUrl: '',
+    addListQuery: '',
+    addQuantity: '',
+    addUnitId: '',
+    addModalStatus: {
+      type: '',
+      message: ''
+    },
+    addingComponentIds: [],
     viewMode: 'list', // 'list' o 'tree'
     currentRootVarianteId: Number.parseInt(config.selectedVarianteId, 10) || null,
 
@@ -501,6 +509,141 @@ window.createComposicionMaestroApp = function (config) {
     },
 
     /**
+     * Configura el filtro del modal de agregado.
+     */
+    setAddModalFilter(type) {
+      this.activeFilter = String(type || '');
+      this.updateFilteredVariants();
+    },
+
+    /**
+     * Devuelve variantes visibles segun filtros y busqueda local.
+     */
+    getAddModalVariants() {
+      const normalizedQuery = String(this.addListQuery || '').trim().toLowerCase();
+      if (normalizedQuery === '') {
+        return this.filteredVariants;
+      }
+
+      return this.filteredVariants.filter(item => {
+        const searchable = [
+          item.parte_codigo,
+          item.codigo_variante,
+          item.parte_detalle,
+          item.detalle,
+          item.tipo_codigo
+        ]
+          .map(value => String(value || '').toLowerCase())
+          .join(' ');
+
+        return searchable.includes(normalizedQuery);
+      });
+    },
+
+    /**
+     * Indica si una fila se esta agregando en este momento.
+     */
+    isAddingComponent(variantId) {
+      return this.addingComponentIds.includes(Number.parseInt(variantId, 10));
+    },
+
+    /**
+     * Recarga la pagina manteniendo foco/contexto del nodo actual.
+     */
+    reloadMaestroWithFocus() {
+      window.location.href = this.getReturnUrl(this.selectedNode?.variante_id || null);
+    },
+
+    /**
+     * Agrega un componente desde el listado del modal sin cerrarlo.
+     */
+    async addComponentFromList(item) {
+      const materialId = Number.parseInt(item?.id, 10);
+      const parentId = Number.parseInt(this.addItemParentId, 10);
+      const quantity = Number.parseFloat(this.addQuantity);
+      const unitId = Number.parseInt(this.addUnitId, 10);
+
+      if (!Number.isInteger(parentId) || parentId <= 0) {
+        this.addModalStatus = {
+          type: 'error',
+          message: 'No se pudo identificar la variante padre seleccionada.'
+        };
+        return;
+      }
+
+      if (!Number.isInteger(materialId) || materialId <= 0) {
+        this.addModalStatus = {
+          type: 'error',
+          message: 'Componente invalido.'
+        };
+        return;
+      }
+
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        this.addModalStatus = {
+          type: 'error',
+          message: 'Ingresa una cantidad valida mayor a cero.'
+        };
+        return;
+      }
+
+      if (!Number.isInteger(unitId) || unitId <= 0) {
+        this.addModalStatus = {
+          type: 'error',
+          message: 'Selecciona una unidad valida.'
+        };
+        return;
+      }
+
+      if (this.isAddingComponent(materialId)) {
+        return;
+      }
+
+      this.addingComponentIds.push(materialId);
+      this.addModalStatus = { type: '', message: '' };
+
+      try {
+        const body = new URLSearchParams({
+          id_variante: String(parentId),
+          id_material: String(materialId),
+          cantidad: String(quantity),
+          id_unidad: String(unitId),
+          redirect_to: this.getReturnUrl(parentId)
+        });
+
+        const response = await fetch(this.addActionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: body.toString()
+        });
+
+        const responseData = await response.json().catch(() => ({}));
+        if (!response.ok || !responseData.success) {
+          const message = String(responseData.message || 'No se pudo agregar el componente.');
+          this.addModalStatus = { type: 'error', message };
+          return;
+        }
+
+        this.addModalStatus = {
+          type: 'success',
+          message: 'Componente agregado. Puedes seguir agregando mas desde este listado.'
+        };
+      } catch (error) {
+        console.error('Error al agregar componente:', error);
+        this.addModalStatus = {
+          type: 'error',
+          message: 'Error de red al intentar agregar el componente.'
+        };
+      } finally {
+        this.addingComponentIds = this.addingComponentIds.filter(id => id !== materialId);
+      }
+    },
+
+    /**
      * Actualiza resultados de búsqueda
      */
     updateSearchResults() {
@@ -725,6 +868,9 @@ window.createComposicionMaestroApp = function (config) {
       this.showSearchResults = false;
       this.searchResults = [];
       this.activeFilter = '';
+      this.addListQuery = '';
+      this.addModalStatus = { type: '', message: '' };
+      this.addingComponentIds = [];
 
       // Configurar acción
       this.addItemParentId = this.selectedNode.variante_id;
@@ -755,6 +901,12 @@ window.createComposicionMaestroApp = function (config) {
       if (modalEl) {
         const parentVariant = this.variantes?.[this.selectedNode.variante_id] || null;
         const parentSurface = Number.parseFloat(parentVariant?.superficie);
+        const defaultUnitId = Number.parseInt(config.defaultUnidadId, 10);
+
+        this.addUnitId = Number.isInteger(defaultUnitId) && defaultUnitId > 0 ? String(defaultUnitId) : '';
+        this.addQuantity = Number.isFinite(parentSurface) && parentSurface > 0
+          ? String(parentSurface)
+          : '1';
 
         modalEl.dataset.parentVarianteId = String(this.selectedNode.variante_id || '');
         modalEl.dataset.parentSuperficie = Number.isFinite(parentSurface) ? String(parentSurface) : '';

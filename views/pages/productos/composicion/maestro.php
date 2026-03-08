@@ -168,43 +168,6 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         border-color: #0d6efd;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
-
-    /* Estilos para el buscador del modal */
-    #modal-search-results {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        z-index: 1060;
-        max-height: 300px;
-        overflow-y: auto;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        margin-top: 0.25rem;
-    }
-
-    #modal-search-results .search-result-item {
-        padding: 0.5rem;
-        cursor: pointer;
-        border-bottom: 1px solid #f0f0f0;
-        transition: background-color 0.2s;
-    }
-
-    #modal-search-results .search-result-item:hover,
-    #modal-search-results .search-result-item.active {
-        background-color: #f8f9fa;
-    }
-
-    #modal-search-results .search-result-item:last-child {
-        border-bottom: none;
-    }
-
-    #modal-search-input:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
 </style>
 
 <div x-data="maestroApp()" class="h-100 d-flex flex-column">
@@ -497,7 +460,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
             variantes: <?= json_encode($variantes ?: []) ?>,
             apiSearchUrl: '<?= url('api/v1/search/variantes') ?>',
             baseActionUrl: '<?= url('productos/maestro/materiales') ?>',
-            selectedVarianteId: <?= (int) ($selectedVarianteId ?? 0) ?>
+            selectedVarianteId: <?= (int) ($selectedVarianteId ?? 0) ?>,
+            defaultUnidadId: <?= (int) ($unidades[0]['id'] ?? 0) ?>
         }));
     });
 
@@ -557,132 +521,5 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                 searchInput.dispatchEvent(new Event('input'));
             }
         }
-    }
-
-    // SearchClient para Modal Agregar Componente
-    let modalSearchInstance = null;
-    let currentModalFilters = {};
-
-    // Inicializar cuando se abre el modal
-    document.addEventListener('DOMContentLoaded', () => {
-        const modalElement = document.getElementById('modalAgregar');
-        if (modalElement) {
-            modalElement.addEventListener('shown.bs.modal', function() {
-                // Inicializar SearchClient del modal
-                if (!modalSearchInstance) {
-                    const modalInput = document.getElementById('modal-search-input');
-                    const modalResults = document.getElementById('modal-search-results');
-                    const modalHiddenInput = document.getElementById('modal-id-material');
-
-                    if (modalInput && modalResults && modalHiddenInput) {
-                        // Obtener ID de variante actual para excluirla
-                        const currentVarianteId = <?= $selectedVarianteId ?? 0 ?>;
-
-                        modalSearchInstance = new SearchClient({
-                            endpoint: '<?= url('api/v1/search/variantes') ?>',
-                            inputElement: modalInput,
-                            resultsContainer: modalResults,
-                            hiddenInput: modalHiddenInput,
-                            minChars: 2,
-                            debounceDelay: 300,
-                            maxResults: 10,
-                            format: 'detailed',
-                            filters: {
-                                exclude_ids: currentVarianteId > 0 ? [currentVarianteId] : []
-                            },
-                            onSelect: (item) => {
-                                // Actualizar campo oculto
-                                modalHiddenInput.value = item.id;
-
-                                const modalForm = modalElement.querySelector('form');
-                                const unidadSelect = modalForm?.querySelector('select[name="id_unidad"]');
-                                const cantidadInput = modalForm?.querySelector('input[name="cantidad"]');
-
-                                const selectedUmUsoId = Number.parseInt(item.id_um_uso, 10);
-                                if (unidadSelect && Number.isInteger(selectedUmUsoId) && selectedUmUsoId > 0) {
-                                    unidadSelect.value = String(selectedUmUsoId);
-                                }
-
-                                const umUsoTipo = String(item.um_uso_tipo || '').toLowerCase();
-                                const umUsoCodigo = String(item.um_uso_codigo || '').toLowerCase().replace(/\s+/g, '');
-                                const usoEsSuperficie = umUsoTipo === 'superficie' || ['m2', 'm²'].includes(umUsoCodigo);
-
-                                if (cantidadInput) {
-                                    const parentSuperficie = Number.parseFloat(modalElement.dataset.parentSuperficie || '');
-                                    if (usoEsSuperficie && Number.isFinite(parentSuperficie) && parentSuperficie > 0) {
-                                        cantidadInput.value = String(parentSuperficie);
-                                    }
-                                }
-
-                                // Mostrar selección con variante completa (codigo + detalle)
-                                const codigoCompleto = [item.parte_codigo, item.codigo_variante]
-                                    .map(value => String(value || '').trim())
-                                    .filter(Boolean)
-                                    .join('-') || String(item.codigo_variante || 'Sin codigo');
-
-                                const detalleCompleto = [item.parte_detalle, item.detalle]
-                                    .map(value => String(value || '').trim())
-                                    .filter(Boolean)
-                                    .join(' - ') || 'Sin detalle';
-
-                                document.getElementById('modal-selected-codigo').textContent = codigoCompleto;
-                                document.getElementById('modal-selected-detalle').textContent = detalleCompleto;
-                                document.getElementById('modal-selected-display').style.display = 'block';
-
-                                // Limpiar input y ocultar resultados
-                                modalInput.value = '';
-                                modalResults.style.display = 'none';
-                            }
-                        });
-                    }
-                }
-
-                // Focus en el input
-                setTimeout(() => {
-                    document.getElementById('modal-search-input')?.focus();
-                }, 150);
-            });
-
-            // Limpiar cuando se cierra el modal
-            modalElement.addEventListener('hidden.bs.modal', function() {
-                clearModalSelection();
-            });
-        }
-    });
-
-    // Función para actualizar filtro de tipo en modal
-    function updateModalSearchFilter(tipoFilter) {
-        // Actualizar botones activos
-        document.querySelectorAll('#modal-tipo-filters .btn-tipo-filter').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        event.target.closest('.btn-tipo-filter').classList.add('active');
-
-        // Actualizar filtros
-        const currentVarianteId = <?= $selectedVarianteId ?? 0 ?>;
-        currentModalFilters = tipoFilter ? {
-            tipo_codigo: tipoFilter,
-            exclude_ids: currentVarianteId > 0 ? [currentVarianteId] : []
-        } : {
-            exclude_ids: currentVarianteId > 0 ? [currentVarianteId] : []
-        };
-
-        // Actualizar filtros en SearchClient
-        if (modalSearchInstance) {
-            modalSearchInstance.filters = currentModalFilters;
-            // Si hay texto, reejecutar búsqueda
-            const modalInput = document.getElementById('modal-search-input');
-            if (modalInput && modalInput.value.trim().length >= 2) {
-                modalInput.dispatchEvent(new Event('input'));
-            }
-        }
-    }
-
-    // Función para limpiar selección del modal
-    function clearModalSelection() {
-        document.getElementById('modal-search-input').value = '';
-        document.getElementById('modal-id-material').value = '';
-        document.getElementById('modal-selected-display').style.display = 'none';
-        document.getElementById('modal-search-results').style.display = 'none';
     }
 </script>

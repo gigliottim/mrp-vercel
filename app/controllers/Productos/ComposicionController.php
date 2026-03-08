@@ -120,18 +120,31 @@ final class ComposicionController extends Controller
         $materialId = (int) $request->input('id_material');
         $cantidad = $this->normalizeCantidad((float) $request->input('cantidad'));
         $unidadId = (int) $request->input('id_unidad');
+        $expectsJson = $this->expectsJson($request);
 
         $redirectUrl = $this->resolveMaestroRedirectUrl($request, $varianteId);
 
         if (!$varianteId || !$materialId || !$cantidad || !$unidadId) {
-            // TODO: Handle validation errors properly
+            if ($expectsJson) {
+                return Response::json([
+                    'success' => false,
+                    'message' => 'Datos incompletos para agregar el componente.'
+                ], 422);
+            }
+
             return Response::redirect($redirectUrl);
         }
 
         // VALIDAR antes de agregar
         $validation = $this->bomModel->validateAddComponent($varianteId, $materialId);
         if (!$validation['valid']) {
-            // Redirigir con error en sesión
+            if ($expectsJson) {
+                return Response::json([
+                    'success' => false,
+                    'message' => (string) ($validation['error'] ?? 'No se pudo agregar el componente.')
+                ], 422);
+            }
+
             $_SESSION['bom_error'] = $validation['error'];
             return Response::redirect($redirectUrl);
         }
@@ -141,6 +154,19 @@ final class ComposicionController extends Controller
         $bomId = $bom ? (int)$bom['id'] : $this->bomModel->createHeader($varianteId);
 
         $this->bomModel->addDetail($bomId, $materialId, $cantidad, $unidadId);
+
+        if ($expectsJson) {
+            return Response::json([
+                'success' => true,
+                'message' => 'Componente agregado exitosamente',
+                'data' => [
+                    'variante_id' => $varianteId,
+                    'material_id' => $materialId,
+                    'cantidad' => $cantidad,
+                    'unidad_id' => $unidadId
+                ]
+            ]);
+        }
 
         $_SESSION['bom_success'] = 'Componente agregado exitosamente';
         return Response::redirect($redirectUrl);
@@ -249,6 +275,26 @@ final class ComposicionController extends Controller
         $mode = (string) ($settings['rounding_mode'] ?? 'half_up');
 
         return app_round_decimal($cantidad, $decimals, $mode);
+    }
+
+    private function expectsJson(Request $request): bool
+    {
+        $headers = $request->headers ?? [];
+
+        $requestedWith = strtolower((string) ($headers['X-Requested-With']
+            ?? $headers['x-requested-with']
+            ?? $request->server['HTTP_X_REQUESTED_WITH']
+            ?? ''));
+        if ($requestedWith === 'xmlhttprequest') {
+            return true;
+        }
+
+        $accept = strtolower((string) ($headers['Accept']
+            ?? $headers['accept']
+            ?? $request->server['HTTP_ACCEPT']
+            ?? ''));
+
+        return str_contains($accept, 'application/json');
     }
 
     public function deleteItem(Request $request, $id): Response

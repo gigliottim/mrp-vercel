@@ -201,6 +201,11 @@ final class ComposicionController extends Controller
     {
         $id = (int) $id;
         $varianteId = (int) $request->input('id_variante'); // Contexto del padre
+        $existingItem = $this->bomModel->getDetalleById($id);
+
+        if ($varianteId <= 0 && $existingItem) {
+            $varianteId = (int) ($existingItem['variante_padre_id'] ?? 0);
+        }
 
         // Logic for replacement
         if ($request->input('action') === 'replace_variant') {
@@ -212,6 +217,10 @@ final class ComposicionController extends Controller
             // Logic for standard update
             $cantidad = $this->normalizeCantidad((float) $request->input('cantidad'));
             $unidadId = (int) $request->input('id_unidad');
+            if ($unidadId <= 0 && $existingItem) {
+                $unidadId = (int) ($existingItem['unidad_medida_id'] ?? 0);
+            }
+
             if ($cantidad) { // Only update if provided
                 $this->bomModel->updateDetail($id, $cantidad, $unidadId);
             }

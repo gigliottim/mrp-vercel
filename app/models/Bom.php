@@ -165,7 +165,7 @@ final class Bom extends BaseTenantModel
     public function updateDetail(int $id, float $qty, int $unitId): bool
     {
         $sql = "UPDATE bom_detalle
-                SET cantidad_necesaria = :qty, unidad_medida_id = :unit, updated_at = NOW()
+                SET cantidad_necesaria = :qty, unidad_medida_id = :unit
                 WHERE id = :id";
         $stmt = $this->connection->prepare($sql);
         return $stmt->execute([
@@ -185,7 +185,7 @@ final class Bom extends BaseTenantModel
     public function replaceComponent(int $detailId, int $newComponentId): bool
     {
         $sql = "UPDATE bom_detalle
-                SET variante_componente_id = :comp, updated_at = NOW()
+                SET variante_componente_id = :comp
                 WHERE id = :id";
         $stmt = $this->connection->prepare($sql);
         return $stmt->execute([

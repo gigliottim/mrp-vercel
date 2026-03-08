@@ -186,6 +186,17 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         margin-bottom: 0;
     }
 
+    .app-shell__content-inner {
+        height: 100%;
+    }
+
+    .maestro-page {
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
     .maestro-main-row {
         flex: 1 1 auto;
         min-height: 0;
@@ -224,7 +235,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
     }
 </style>
 
-<div x-data="maestroApp()" class="min-vh-100 d-flex flex-column">
+<div x-data="maestroApp()" class="maestro-page">
     <section class="mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>

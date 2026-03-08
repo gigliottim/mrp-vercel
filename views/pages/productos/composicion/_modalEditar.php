@@ -12,8 +12,21 @@
                     <input type="hidden" name="id_variante" value="<?= $selectedVarianteId ?>">
 
                     <div class="mb-3">
-                        <label class="form-label">Cantidad</label>
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <label class="form-label mb-0">Cantidad</label>
+                            <button
+                                type="button"
+                                class="btn btn-outline-info btn-sm"
+                                x-show="canAutoCalculateEditQuantity()"
+                                @click="applyAutoCalculatedEditQuantity()">
+                                <i class="fa-solid fa-calculator me-1"></i> Calcular por superficie
+                            </button>
+                        </div>
                         <input type="number" step="<?= esc(app_decimal_step()) ?>" class="form-control" name="cantidad" x-model="editingItem.cantidad" required>
+                        <small class="text-muted d-block mt-1" x-show="canAutoCalculateEditQuantity()">
+                            Sugerencia automatica: superficie del nodo padre
+                            (<span x-text="formatQuantity(getParentSurfaceForEdit())"></span>). Igual puedes cargar cualquier cantidad manualmente.
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer">

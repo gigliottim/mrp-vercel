@@ -146,6 +146,44 @@ window.createComposicionMaestroApp = function (config) {
     },
 
     /**
+     * Resuelve datos de variante desde el mapa para completar campos faltantes.
+     */
+    resolveVariantSource(item) {
+      if (!item) return {};
+      return this.variantes?.[item.variante_id] || {};
+    },
+
+    /**
+     * Obtiene código compuesto parte-variante para cualquier item.
+     */
+    getItemCode(item) {
+      if (!item) return 'N/A';
+
+      const source = this.resolveVariantSource(item);
+      const parteCodigo = String(item.parte_codigo || source.parte_codigo || '').trim();
+      const varianteCodigo = String(item.codigo_variante || source.codigo_variante || '').trim();
+      const codigoCompuesto = [parteCodigo, varianteCodigo].filter(Boolean).join('-');
+
+      return codigoCompuesto || 'N/A';
+    },
+
+    /**
+     * Obtiene detalle compuesto parte-variante para cualquier item.
+     */
+    getItemDetail(item) {
+      if (!item) return 'Sin detalle';
+
+      const source = this.resolveVariantSource(item);
+      const parteDetalle = String(item.parte_detalle || source.parte_detalle || '').trim();
+      const varianteDetalle = String(
+        item.variante_detalle || item.detalle || source.variante_detalle || source.detalle || ''
+      ).trim();
+      const detalleCompuesto = [parteDetalle, varianteDetalle].filter(Boolean).join(' - ');
+
+      return detalleCompuesto || 'Sin detalle';
+    },
+
+    /**
      * Cambia el modo de visualización
      */
     setViewMode(mode) {
@@ -392,6 +430,66 @@ window.createComposicionMaestroApp = function (config) {
       const modalEl = document.getElementById('modalEditar');
       const modal = new bootstrap.Modal(modalEl);
       modal.show();
+    },
+
+    /**
+     * Determina si el componente usa unidad de superficie.
+     */
+    isSurfaceUsageItem(item = this.editingItem) {
+      if (!item) return false;
+
+      const source = this.resolveVariantSource(item);
+      const umUsoTipo = String(source.um_uso_tipo || '').toLowerCase().trim();
+      const umUsoCodigo = String(source.um_uso || source.um_uso_codigo || '')
+        .toLowerCase()
+        .replace(/\s+/g, '');
+
+      return umUsoTipo === 'superficie' || ['m2', 'm²'].includes(umUsoCodigo);
+    },
+
+    /**
+     * Obtiene el ID de la variante padre para el item que se esta editando.
+     */
+    getEditParentVariantId(item = this.editingItem) {
+      if (item && Number.isFinite(Number.parseInt(item.parent_id, 10)) && Number.parseInt(item.parent_id, 10) > 0) {
+        return Number.parseInt(item.parent_id, 10);
+      }
+
+      if (this.selectedNode && Number.isFinite(Number.parseInt(this.selectedNode.variante_id, 10)) && Number.parseInt(this.selectedNode.variante_id, 10) > 0) {
+        return Number.parseInt(this.selectedNode.variante_id, 10);
+      }
+
+      return null;
+    },
+
+    /**
+     * Superficie del padre para sugerir cantidad automatica.
+     */
+    getParentSurfaceForEdit(item = this.editingItem) {
+      const parentVariantId = this.getEditParentVariantId(item);
+      if (!parentVariantId) return null;
+
+      const parentVariant = this.variantes?.[parentVariantId] || null;
+      const parentSurface = Number.parseFloat(parentVariant?.superficie);
+
+      return Number.isFinite(parentSurface) && parentSurface > 0 ? parentSurface : null;
+    },
+
+    /**
+     * Define si se puede autocalcular cantidad en el modal de edicion.
+     */
+    canAutoCalculateEditQuantity(item = this.editingItem) {
+      return this.isSurfaceUsageItem(item) && this.getParentSurfaceForEdit(item) !== null;
+    },
+
+    /**
+     * Aplica la cantidad calculada automaticamente (superficie del padre).
+     */
+    applyAutoCalculatedEditQuantity() {
+      const surfaceValue = this.getParentSurfaceForEdit(this.editingItem);
+      if (surfaceValue === null) return;
+
+      this.editingItem.cantidad = String(surfaceValue);
     },
 
     /**

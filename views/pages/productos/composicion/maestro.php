@@ -347,7 +347,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         <div class="col-12 col-md-8">
             <div class="card h-100">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0" x-text="selectedNode ? selectedNode.variante_detalle : 'Seleccione un nodo'"></h5>
+                    <h5 class="card-title mb-0" x-text="selectedNode ? getItemCode(selectedNode) + ' - ' + getItemDetail(selectedNode) : 'Seleccione un nodo'"></h5>
 
                     <!-- Botones de vista y acciones -->
                     <div class="d-flex gap-2" x-show="selectedNode">
@@ -385,13 +385,6 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
 
                     <template x-if="selectedNode">
                         <div>
-                            <div class="alert alert-info py-2 mb-3">
-                                <strong>Item:</strong>
-                                <span x-text="(selectedNode.parte_codigo || 'N/A') + '-' + (selectedNode.codigo_variante || 'N/A')"></span>
-                                <span class="text-muted ms-2" x-text="(selectedNode.parte_detalle || '') + ' - ' + (selectedNode.variante_detalle || '')"></span>
-                                <span class="text-muted ms-2">(</span><span x-text="selectedNode.tipo_codigo"></span><span class="text-muted">)</span>
-                            </div>
-
                             <!-- Vista de Lista -->
                             <div x-show="viewMode === 'list'">
                                 <div class="table-responsive">
@@ -408,9 +401,9 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                         <tbody>
                                             <template x-for="child in getChildren(selectedNode)" :key="child.bom_detalle_id || child.variante_id">
                                                 <tr>
-                                                    <td x-text="child.codigo_variante"></td>
+                                                    <td x-text="getItemCode(child)"></td>
                                                     <td>
-                                                        <div x-text="child.variante_detalle"></div>
+                                                        <div x-text="getItemDetail(child)"></div>
                                                         <small class="text-muted" x-text="child.tipo_codigo"></small>
                                                     </td>
                                                     <td x-text="formatQuantity(child.cantidad)"></td>
@@ -466,8 +459,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                                     <div class="d-flex align-items-center gap-2 p-2 border rounded bg-light">
                                                         <i class="fa-solid" :class="hasChildrenInTree(item) ? 'fa-folder text-warning' : 'fa-cube text-info'"></i>
                                                         <div class="flex-grow-1">
-                                                            <strong x-text="item.codigo_variante"></strong>
-                                                            <small class="text-muted ms-2" x-text="item.variante_detalle"></small>
+                                                            <strong x-text="getItemCode(item)"></strong>
+                                                            <small class="text-muted ms-2" x-text="getItemDetail(item)"></small>
                                                         </div>
                                                         <div class="d-flex align-items-center gap-2">
                                                             <span class="badge bg-secondary" x-text="formatQuantity(item.cantidad) + ' ' + item.unidad"></span>

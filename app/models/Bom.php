@@ -50,6 +50,8 @@ final class Bom extends BaseTenantModel
         $sql = "WITH RECURSIVE bom_tree AS (
             SELECT
                 v.id as variante_id,
+                p.codigo as parte_codigo,
+                p.detalle as parte_detalle,
                 v.codigo_variante,
                 v.detalle as variante_detalle,
                 tp.codigo as tipo_codigo,
@@ -69,6 +71,8 @@ final class Bom extends BaseTenantModel
 
             SELECT
                 vc.id as variante_id,
+                pc.codigo as parte_codigo,
+                pc.detalle as parte_detalle,
                 vc.codigo_variante,
                 vc.detalle as variante_detalle,
                 tpc.codigo as tipo_codigo,

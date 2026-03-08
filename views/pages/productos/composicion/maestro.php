@@ -336,8 +336,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                 :class="{'selected': selectedNode && selectedNode.variante_id === item.variante_id}"
                                 @click="selectNode(item)">
                                 <i class="fa-solid" :class="item.icon_class"></i>
-                                <span class="fw-bold" x-text="item.codigo_variante"></span>
-                                <small class="text-muted d-block" x-text="item.full_variant_label || item.variante_detalle"></small>
+                                <small class="text-muted d-block"
+                                    x-text="'Parte: ' + (item.parte_codigo || 'N/A') + ' - ' + (item.parte_detalle || '') + ' | Variante: ' + (item.codigo_variante || 'N/A') + ' - ' + (item.variante_detalle || '')"></small>
                             </div>
                         </template>
                     </ul>

@@ -31,6 +31,7 @@ final class Bom extends BaseTenantModel
     public function getAllActive(): array
     {
         $sql = "SELECT b.*,
+                  p.codigo AS parte_codigo,
                        v.codigo_variante AS variante_codigo,
                        v.detalle AS variante_detalle,
                        p.detalle AS parte_detalle
@@ -38,7 +39,7 @@ final class Bom extends BaseTenantModel
                 INNER JOIN variantes v ON CAST(b.variante_padre_id AS INTEGER) = v.id
                 INNER JOIN partes p ON v.id_parte = p.id
                 WHERE b.activa = TRUE
-                ORDER BY v.codigo_variante";
+              ORDER BY p.codigo, v.codigo_variante";
 
         $stmt = $this->connection->prepare($sql);
         $stmt->execute();

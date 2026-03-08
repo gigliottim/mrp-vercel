@@ -37,9 +37,11 @@ $boms = $boms ?? [];
                         <?php foreach ($boms as $bom) : ?>
                             <tr>
                                 <td>
-                                    <strong><?= View::escape($bom['variante_codigo']) ?></strong>
+                                    <?php $codigoCompuesto = trim((string) ($bom['parte_codigo'] ?? '')) . '-' . trim((string) ($bom['variante_codigo'] ?? '')); ?>
+                                    <?php $detalleCompuesto = trim((string) ($bom['parte_detalle'] ?? '')) . ' - ' . trim((string) ($bom['variante_detalle'] ?? '')); ?>
+                                    <strong><?= View::escape(trim($codigoCompuesto, '-')) ?></strong>
                                     <br>
-                                    <small class="text-muted"><?= View::escape($bom['variante_detalle']) ?></small>
+                                    <small class="text-muted"><?= View::escape(trim($detalleCompuesto, ' -')) ?></small>
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary"><?= View::escape($bom['version']) ?></span>

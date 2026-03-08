@@ -192,7 +192,7 @@ $renderSidebarItems = static function (array $items) use (&$renderSidebarItems, 
                             </li>
                             <li>
                                 <i class="fa-solid fa-clock text-warning me-2"></i>
-                                <span><?= View::escape($argentinaNow->format('d/m H:i')) ?> (AR)</span>
+                                <span><?= View::escape(app_format_datetime($argentinaNow)) ?> (AR)</span>
                             </li>
                         </ul>
                     </div>

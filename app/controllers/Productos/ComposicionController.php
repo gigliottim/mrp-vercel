@@ -118,7 +118,7 @@ final class ComposicionController extends Controller
     {
         $varianteId = (int) $request->input('id_variante');
         $materialId = (int) $request->input('id_material');
-        $cantidad = (float) $request->input('cantidad');
+        $cantidad = $this->normalizeCantidad((float) $request->input('cantidad'));
         $unidadId = (int) $request->input('id_unidad');
 
         $redirectUrl = url('/productos/maestro?id_variante=' . $varianteId);
@@ -210,7 +210,7 @@ final class ComposicionController extends Controller
             }
         } else {
             // Logic for standard update
-            $cantidad = (float) $request->input('cantidad');
+            $cantidad = $this->normalizeCantidad((float) $request->input('cantidad'));
             $unidadId = (int) $request->input('id_unidad');
             if ($cantidad) { // Only update if provided
                 $this->bomModel->updateDetail($id, $cantidad, $unidadId);
@@ -220,6 +220,16 @@ final class ComposicionController extends Controller
         $redirectUrl = url('/productos/maestro?id_variante=' . $varianteId);
 
         return Response::redirect($redirectUrl);
+    }
+
+    private function normalizeCantidad(float $cantidad): float
+    {
+        $settings = app_general_settings();
+        $decimals = (int) ($settings['decimal_places'] ?? 4);
+        $decimals = max(1, min(6, $decimals));
+        $mode = (string) ($settings['rounding_mode'] ?? 'half_up');
+
+        return app_round_decimal($cantidad, $decimals, $mode);
     }
 
     public function deleteItem(Request $request, $id): Response

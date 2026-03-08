@@ -13,7 +13,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Cantidad</label>
-                        <input type="number" step="0.01" class="form-control" name="cantidad" x-model="editingItem.cantidad" required>
+                        <input type="number" step="<?= esc(app_decimal_step()) ?>" class="form-control" name="cantidad" x-model="editingItem.cantidad" required>
                     </div>
                 </div>
                 <div class="modal-footer">

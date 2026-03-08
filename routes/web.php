@@ -148,6 +148,7 @@ $router->delete('/configuracion/depositos-validaciones/{id}', [DepositosValidaci
 
 // Configuracion - General
 $router->get('/configuracion/general', [ConfiguracionController::class, 'index']);
+$router->post('/configuracion/general', [ConfiguracionController::class, 'update']);
 
 // Empresa y Usuarios
 $router->get('/empresa-usuarios/empresa', [EmpresaUsuariosController::class, 'empresa']);

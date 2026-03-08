@@ -193,6 +193,71 @@ window.createComposicionMaestroApp = function (config) {
     },
 
     /**
+     * Formatea cantidades con configuración de empresa, eliminando ceros a la derecha.
+     */
+    formatQuantity(value) {
+      const numericValue = Number.parseFloat(value);
+      if (!Number.isFinite(numericValue)) {
+        return value;
+      }
+
+      const settings = {
+        decimal_places: 4,
+        rounding_mode: 'half_up',
+        thousand_separator: '.',
+        decimal_separator: ',',
+        ...(window.appFormattingSettings || {})
+      };
+
+      const decimals = Math.min(Math.max(Number.parseInt(settings.decimal_places, 10) || 4, 1), 6);
+      const rounded = this.roundQuantityValue(numericValue, decimals, String(settings.rounding_mode || 'half_up'));
+
+      let fixed = rounded.toFixed(decimals);
+      fixed = fixed.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+
+      const [rawInteger, rawDecimal = ''] = fixed.split('.');
+      const sign = rawInteger.startsWith('-') ? '-' : '';
+      const digits = sign ? rawInteger.slice(1) : rawInteger;
+      const thousandSeparator = String(settings.thousand_separator ?? '.');
+      const decimalSeparator = String(settings.decimal_separator ?? ',');
+      const groupedInteger = digits.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
+
+      if (rawDecimal === '') {
+        return sign + groupedInteger;
+      }
+
+      return sign + groupedInteger + decimalSeparator + rawDecimal;
+    },
+
+    roundQuantityValue(value, decimals, mode) {
+      const factor = 10 ** decimals;
+
+      if (mode === 'truncate') {
+        return value >= 0 ? Math.floor(value * factor) / factor : Math.ceil(value * factor) / factor;
+      }
+
+      if (mode === 'half_down') {
+        const sign = value >= 0 ? 1 : -1;
+        const abs = Math.abs(value * factor);
+        const integer = Math.floor(abs);
+        const fraction = abs - integer;
+        const adjusted = fraction > 0.5 ? integer + 1 : integer;
+        return sign * adjusted / factor;
+      }
+
+      if (mode === 'half_even') {
+        const rounded = Math.round(value * factor);
+        const diff = Math.abs(value * factor - rounded);
+        if (Math.abs(diff - 0.5) < Number.EPSILON && rounded % 2 !== 0) {
+          return (rounded - Math.sign(value)) / factor;
+        }
+        return rounded / factor;
+      }
+
+      return Math.round(value * factor) / factor;
+    },
+
+    /**
      * Actualiza variantes filtradas
      */
     updateFilteredVariants() {

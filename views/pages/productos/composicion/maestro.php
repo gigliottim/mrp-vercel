@@ -413,7 +413,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                                         <div x-text="child.variante_detalle"></div>
                                                         <small class="text-muted" x-text="child.tipo_codigo"></small>
                                                     </td>
-                                                    <td x-text="child.cantidad"></td>
+                                                    <td x-text="formatQuantity(child.cantidad)"></td>
                                                     <td x-text="child.unidad"></td>
                                                     <td class="text-end">
                                                         <?php
@@ -470,7 +470,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                                             <small class="text-muted ms-2" x-text="item.variante_detalle"></small>
                                                         </div>
                                                         <div class="d-flex align-items-center gap-2">
-                                                            <span class="badge bg-secondary" x-text="item.cantidad + ' ' + item.unidad"></span>
+                                                            <span class="badge bg-secondary" x-text="formatQuantity(item.cantidad) + ' ' + item.unidad"></span>
                                                             <span class="badge bg-info" x-text="item.tipo_codigo"></span>
                                                         </div>
                                                     </div>

@@ -3,6 +3,8 @@
 use App\Core\Support\AssetHelper;
 use App\Core\View\View;
 
+$appFormattingSettings = app_general_settings();
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -34,6 +36,9 @@ use App\Core\View\View;
     <?php include base_path('views/partials/footer.php'); ?>
     <script src="<?= AssetHelper::getBootstrap('js') ?>" defer></script>
     <script src="<?= AssetHelper::getAlpineJS() ?>" defer></script>
+    <script>
+        window.appFormattingSettings = <?= json_encode($appFormattingSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    </script>
     <script src="<?= AssetHelper::js('main.js') ?>" type="module"></script>
     <script src="<?= AssetHelper::js('sidebar-scroll.js') ?>" defer></script>
 </body>

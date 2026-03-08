@@ -5,6 +5,7 @@ use App\Core\View\View;
 $settings = $settings ?? [];
 $errors = $errors ?? [];
 $saved = $saved ?? false;
+$recalculationResult = $recalculationResult ?? null;
 $oldValue = $oldValue ?? static fn(string $key, $default = '') => $default;
 $dateFormatOptions = $dateFormatOptions ?? ['d/m/Y', 'm/d/Y', 'Y-m-d'];
 $timeFormatOptions = $timeFormatOptions ?? ['H:i', 'H:i:s', 'h:i A'];
@@ -31,6 +32,21 @@ $formatExampleDateTime = static fn(string $format) => $dateTimeExample->format($
 <?php if ($saved): ?>
     <div class="alert alert-success" role="alert">
         Configuración guardada correctamente.
+    </div>
+<?php endif; ?>
+
+<?php if (is_array($recalculationResult)): ?>
+    <div class="alert alert-success" role="alert">
+        Recalculo de partes completado
+        <?php if (!empty($recalculationResult['only_complete_dimensions'])): ?>
+            (solo dimensiones completas)
+        <?php else: ?>
+            (todas las partes)
+            <?php endif; ?>.
+            Total: <strong><?= (int) ($recalculationResult['total'] ?? 0) ?></strong>,
+            actualizadas: <strong><?= (int) ($recalculationResult['updated'] ?? 0) ?></strong>,
+            sin cambios: <strong><?= (int) ($recalculationResult['unchanged'] ?? 0) ?></strong>,
+            omitidas por filtro: <strong><?= (int) ($recalculationResult['skipped'] ?? 0) ?></strong>.
     </div>
 <?php endif; ?>
 
@@ -147,6 +163,27 @@ $formatExampleDateTime = static fn(string $format) => $dateTimeExample->format($
             <div class="d-flex justify-content-end mt-4">
                 <button type="submit" class="btn btn-primary">Guardar configuración</button>
             </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h2 class="h6 mb-1">Recalculo masivo de dimensiones de partes</h2>
+            <p class="text-muted mb-0">Ejecuta la misma lógica del botón "Recalcular" del formulario de partes para toda la base de datos de la empresa activa.</p>
+        </div>
+        <form method="post" action="<?= url('/configuracion/general/recalcular-dimensiones-partes') ?>" onsubmit="return confirm('Se recalcularan superficie y volumen en las partes segun el filtro elegido. ¿Continuar?');">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="1" id="only_complete_dimensions" name="only_complete_dimensions">
+                <label class="form-check-label small text-muted" for="only_complete_dimensions">
+                    Solo partes con largo, ancho y espesor cargados
+                </label>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fa-solid fa-calculator me-1"></i>
+                Recalcular superficie y volumen
+            </button>
         </form>
     </div>
 </div>

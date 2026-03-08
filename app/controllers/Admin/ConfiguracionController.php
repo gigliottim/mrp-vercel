@@ -9,6 +9,7 @@ use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Models\ConfiguracionGeneral;
 use App\Services\EmpresaUsuariosService;
+use App\Services\Partes\PartesGeometryRecalculationService;
 
 class ConfiguracionController extends Controller
 {
@@ -19,11 +20,16 @@ class ConfiguracionController extends Controller
 
     private EmpresaUsuariosService $empresaUsuariosService;
     private ConfiguracionGeneral $configuracionGeneral;
+    private PartesGeometryRecalculationService $partesGeometryRecalculationService;
 
-    public function __construct(?EmpresaUsuariosService $empresaUsuariosService = null, ?ConfiguracionGeneral $configuracionGeneral = null)
-    {
+    public function __construct(
+        ?EmpresaUsuariosService $empresaUsuariosService = null,
+        ?ConfiguracionGeneral $configuracionGeneral = null,
+        ?PartesGeometryRecalculationService $partesGeometryRecalculationService = null
+    ) {
         $this->empresaUsuariosService = $empresaUsuariosService ?? new EmpresaUsuariosService();
         $this->configuracionGeneral = $configuracionGeneral ?? new ConfiguracionGeneral();
+        $this->partesGeometryRecalculationService = $partesGeometryRecalculationService ?? new PartesGeometryRecalculationService();
     }
 
     public function index(Request $request): Response
@@ -32,7 +38,18 @@ class ConfiguracionController extends Controller
             return Response::redirect(url('/dashboard'));
         }
 
-        return $this->renderGeneral([], [], (bool) ($request->query['saved'] ?? false));
+        $recalculationResult = null;
+        if ((string) ($request->query['recalculated'] ?? '') === '1') {
+            $recalculationResult = [
+                'total' => (int) ($request->query['recalc_total'] ?? 0),
+                'updated' => (int) ($request->query['recalc_updated'] ?? 0),
+                'unchanged' => (int) ($request->query['recalc_unchanged'] ?? 0),
+                'skipped' => (int) ($request->query['recalc_skipped'] ?? 0),
+                'only_complete_dimensions' => (string) ($request->query['recalc_only_complete'] ?? '0') === '1',
+            ];
+        }
+
+        return $this->renderGeneral([], [], (bool) ($request->query['saved'] ?? false), $recalculationResult);
     }
 
     public function update(Request $request): Response
@@ -50,7 +67,33 @@ class ConfiguracionController extends Controller
         return Response::redirect(url('/configuracion/general?saved=1'));
     }
 
-    private function renderGeneral(array $old, array $errors, bool $saved): Response
+    public function recalculatePartesGeometry(Request $request): Response
+    {
+        if (!$this->empresaUsuariosService->isCurrentUserCompanyAdmin()) {
+            return Response::redirect(url('/dashboard'));
+        }
+
+        $onlyCompleteDimensions = (string) $request->input('only_complete_dimensions', '0') === '1';
+
+        try {
+            $result = $this->partesGeometryRecalculationService->recalculateAll($onlyCompleteDimensions);
+        } catch (\Throwable $exception) {
+            return $this->renderGeneral([], ['general' => 'Error al recalcular superficies/volumenes: ' . $exception->getMessage()], false, null);
+        }
+
+        $query = http_build_query([
+            'recalculated' => 1,
+            'recalc_total' => (int) ($result['total'] ?? 0),
+            'recalc_updated' => (int) ($result['updated'] ?? 0),
+            'recalc_unchanged' => (int) ($result['unchanged'] ?? 0),
+            'recalc_skipped' => (int) ($result['skipped'] ?? 0),
+            'recalc_only_complete' => !empty($result['only_complete_dimensions']) ? 1 : 0,
+        ]);
+
+        return Response::redirect(url('/configuracion/general?' . $query));
+    }
+
+    private function renderGeneral(array $old, array $errors, bool $saved, ?array $recalculationResult = null): Response
     {
         $settings = $this->configuracionGeneral->getSettings();
         $oldValue = static fn(string $key, $default = '') => array_key_exists($key, $old) ? $old[$key] : $default;
@@ -60,6 +103,7 @@ class ConfiguracionController extends Controller
             'settings' => $settings,
             'errors' => $errors,
             'saved' => $saved,
+            'recalculationResult' => $recalculationResult,
             'oldValue' => $oldValue,
             'dateFormatOptions' => self::DATE_FORMAT_OPTIONS,
             'timeFormatOptions' => self::TIME_FORMAT_OPTIONS,

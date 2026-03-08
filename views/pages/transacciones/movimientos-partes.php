@@ -493,7 +493,7 @@ use App\Core\Support\AssetHelper;
             // Aquí asumimos que Precio * Cantidad * Cotización = Total
             const total = cantidad * precio * cotizacion;
             if (precio > 0) {
-                inputImporteTotal.value = total.toFixed(2);
+                inputImporteTotal.value = window.appFormatNumber(total);
             }
 
             // Actualizar panel informativo

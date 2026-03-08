@@ -145,8 +145,8 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                                     <td class="fw-semibold"><?= View::escape($centro['codigo']) ?></td>
                                     <td><?= View::escape($centro['nombre']) ?></td>
                                     <td class="text-capitalize"><?= str_replace('_', ' ', View::escape($centro['tipo'])) ?></td>
-                                    <td><?= View::escape(number_format((float) $centro['capacidad_horas_dia'], 2)) ?> h</td>
-                                    <td>$<?= View::escape(number_format((float) $centro['costo_hora'], 2)) ?></td>
+                                    <td><?= View::escape(app_format_number((float) $centro['capacidad_horas_dia'])) ?> h</td>
+                                    <td>$<?= View::escape(app_format_number((float) $centro['costo_hora'])) ?></td>
                                     <td class="text-center">
                                         <span class="badge <?= (int) $centro['activo'] === 1 ? 'text-bg-success' : 'text-bg-secondary' ?>">
                                             <?= (int) $centro['activo'] === 1 ? 'Activo' : 'Inactivo' ?>

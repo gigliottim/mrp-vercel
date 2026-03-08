@@ -15,7 +15,8 @@ final class Parte extends BaseTenantModel
 
     public function paginated(int $page = 1, int $perPage = 25, string $search = ''): array
     {
-        $offset = ($page - 1) * $perPage;
+        $fetchAll = $perPage <= 0;
+        $offset = $fetchAll ? 0 : ($page - 1) * $perPage;
 
         if ($search !== '') {
             // 1. Obtener items
@@ -32,18 +33,27 @@ final class Parte extends BaseTenantModel
                         AND (v.codigo_variante ILIKE ? OR v.detalle ILIKE ?)
                     )
                 )
-                ORDER BY p.id DESC
-                LIMIT ? OFFSET ?';
+                ORDER BY p.id DESC';
+
+            if (!$fetchAll) {
+                $sql .= ' LIMIT ? OFFSET ?';
+            }
+
             $stmt = $this->connection->prepare($sql);
             $searchParam = '%' . $search . '%';
-            $stmt->execute([
+            $params = [
                 $searchParam,
                 $searchParam,
                 $searchParam,
                 $searchParam,
-                $perPage,
-                $offset
-            ]);
+            ];
+
+            if (!$fetchAll) {
+                $params[] = $perPage;
+                $params[] = $offset;
+            }
+
+            $stmt->execute($params);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // 2. Obtener total
@@ -72,10 +82,19 @@ final class Parte extends BaseTenantModel
                 FROM partes p
                 LEFT JOIN tipos_partes tp ON tp.id = p.id_tipo
                 LEFT JOIN grupos_partes gp ON gp.id = p.id_grupo
-                ORDER BY p.id DESC
-                LIMIT ? OFFSET ?';
+                ORDER BY p.id DESC';
+
+            if (!$fetchAll) {
+                $sql .= ' LIMIT ? OFFSET ?';
+            }
+
             $stmt = $this->connection->prepare($sql);
-            $stmt->execute([$perPage, $offset]);
+            $params = [];
+            if (!$fetchAll) {
+                $params[] = $perPage;
+                $params[] = $offset;
+            }
+            $stmt->execute($params);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // 2. Obtener total

@@ -39,11 +39,15 @@ final class PartesVariantesController extends Controller
     public function index(Request $request): Response
     {
         $page = max(1, (int) ($request->query['page'] ?? 1));
+        $perPageParam = strtolower(trim((string) ($request->query['per_page'] ?? '15')));
+        $perPage = $perPageParam === 'all' ? 0 : (int) $perPageParam;
+        $perPage = in_array($perPage, [0, 15, 30, 50], true) ? $perPage : 15;
         $tab = $request->query['tab'] ?? 'partes';
         $idParte = isset($request->query['id_parte']) ? (int) $request->query['id_parte'] : null;
         $search = trim((string) ($request->query['q'] ?? ''));
         return $this->renderIndex([
             'page' => $page,
+            'perPage' => $perPage,
             'tab' => $tab,
             'filteredParteId' => $idParte,
             'search' => $search,
@@ -481,22 +485,24 @@ final class PartesVariantesController extends Controller
     private function renderIndex(array $overrides = []): Response
     {
         $page = max(1, (int) ($overrides['page'] ?? 1));
+        $perPage = (int) ($overrides['perPage'] ?? 15);
+        $perPage = in_array($perPage, [0, 15, 30, 50], true) ? $perPage : 15;
         $search = $overrides['search'] ?? '';
-        $listing = $this->partes->paginated($page, 15, $search);
-        $partIds = array_column($listing['items'], 'id');
+        $listing = $this->partes->paginated($page, $perPage, $search);
 
-        // Si hay un filtro de parte específica, solo obtener variantes de esa parte
         $filteredParteId = $overrides['filteredParteId'] ?? null;
-        if ($filteredParteId !== null && $filteredParteId > 0) {
-            $variants = $this->variantes->byParteIdsWithSearch([$filteredParteId], $search);
-        } else {
-            $variants = $this->variantes->byParteIdsWithSearch($partIds, $search);
-        }
+        $variantsListing = $this->variantes->paginatedWithSearch(
+            $filteredParteId !== null && $filteredParteId > 0 ? (int) $filteredParteId : null,
+            $page,
+            $perPage,
+            $search
+        );
 
         $defaults = [
             'title' => 'Partes y variantes',
             'parts' => $listing,
-            'variants' => $variants,
+            'variants' => $variantsListing['items'],
+            'variantsMeta' => $variantsListing,
             'partOptions' => $this->partes->options(),
             'tipos' => $this->tipos->activos(),
             'grupos' => $this->grupos->activos(),
@@ -509,6 +515,7 @@ final class PartesVariantesController extends Controller
             'oldPart' => [],
             'oldVariant' => [],
             'page' => $page,
+            'perPage' => $perPage,
             'tab' => 'partes',
             'editingPartId' => null,
             'editingVariantId' => null,

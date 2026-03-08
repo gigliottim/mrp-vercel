@@ -8,6 +8,7 @@ use App\Core\Support\AssetHelper;
 // ========================================
 $parts = $parts ?? ['items' => [], 'total' => 0, 'page' => 1, 'per_page' => 15];
 $variants = $variants ?? [];
+$variantsMeta = $variantsMeta ?? ['items' => $variants, 'total' => 0, 'page' => 1, 'per_page' => 15];
 $partOptions = $partOptions ?? [];
 $tipos = $tipos ?? [];
 $grupos = $grupos ?? [];
@@ -25,6 +26,7 @@ $editingVariantId = $editingVariantId ?? null;
 $filteredParteId = $filteredParteId ?? null;
 $search = $search ?? '';
 $preselectedPartId = isset($_GET['id_parte']) ? (int) $_GET['id_parte'] : ($filteredParteId ?? 0);
+$currentPerPage = (int) ($parts['per_page'] ?? 15);
 
 // ========================================
 // FUNCIONES DE DATOS
@@ -57,6 +59,10 @@ foreach ($partOptions as $option) {
 $totalVariants = 0;
 foreach ($variants as $chunk) {
     $totalVariants += count($chunk);
+}
+
+if (isset($variantsMeta['total'])) {
+    $totalVariants = (int) $variantsMeta['total'];
 }
 
 $masaLookup = [];
@@ -106,8 +112,12 @@ $variantStates = [
     'descontinuada' => 'Descontinuada',
 ];
 
-$clearUrlPartes = url('productos/partes?tab=partes');
-$clearUrlVariantes = url('productos/partes?tab=variantes' . ($filteredParteId ? '&id_parte=' . $filteredParteId : ''));
+$clearUrlPartes = url('productos/partes?tab=partes' . ($currentPerPage > 0 ? '&per_page=' . $currentPerPage : '&per_page=all'));
+$clearUrlVariantes = url(
+    'productos/partes?tab=variantes'
+        . ($filteredParteId ? '&id_parte=' . $filteredParteId : '')
+        . ($currentPerPage > 0 ? '&per_page=' . $currentPerPage : '&per_page=all')
+);
 
 ?>
 <section class="mb-4">

@@ -88,6 +88,68 @@ final class Variante extends BaseTenantModel
         return $grouped;
     }
 
+    public function paginatedWithSearch(?int $parteId, int $page = 1, int $perPage = 25, string $search = ''): array
+    {
+        $fetchAll = $perPage <= 0;
+        $page = max(1, $page);
+        $offset = $fetchAll ? 0 : ($page - 1) * $perPage;
+
+        $where = [];
+        $params = [];
+
+        if ($parteId !== null && $parteId > 0) {
+            $where[] = 'v.id_parte = ?';
+            $params[] = $parteId;
+        }
+
+        if ($search !== '') {
+            $where[] = '(p.codigo ILIKE ? OR p.detalle ILIKE ? OR v.codigo_variante ILIKE ? OR v.detalle ILIKE ?)';
+            $searchParam = '%' . $search . '%';
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+        }
+
+        $whereSql = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
+
+        $countSql = 'SELECT COUNT(*)
+            FROM variantes v
+            LEFT JOIN partes p ON p.id = v.id_parte' . $whereSql;
+
+        $countStmt = $this->connection->prepare($countSql);
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetchColumn();
+
+        $dataSql = 'SELECT v.*, p.codigo AS parte_codigo, p.detalle AS parte_detalle
+            FROM variantes v
+            LEFT JOIN partes p ON p.id = v.id_parte' . $whereSql . '
+            ORDER BY v.id_parte, v.codigo_variante';
+
+        $dataParams = $params;
+        if (!$fetchAll) {
+            $dataSql .= ' LIMIT ? OFFSET ?';
+            $dataParams[] = $perPage;
+            $dataParams[] = $offset;
+        }
+
+        $stmt = $this->connection->prepare($dataSql);
+        $stmt->execute($dataParams);
+        $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $grouped = [];
+        foreach ($records as $record) {
+            $grouped[$record['id_parte']][] = $record;
+        }
+
+        return [
+            'items' => $grouped,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+    }
+
     /**
      * Obtiene todas las variantes con información de sus partes, tipos y unidades
      */

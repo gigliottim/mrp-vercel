@@ -38,6 +38,53 @@ $appFormattingSettings = app_general_settings();
     <script src="<?= AssetHelper::getAlpineJS() ?>" defer></script>
     <script>
         window.appFormattingSettings = <?= json_encode($appFormattingSettings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+        window.appFormatNumber = function(value, decimals) {
+            const numericValue = Number.parseFloat(value);
+            if (!Number.isFinite(numericValue)) {
+                return String(value ?? '');
+            }
+
+            const settings = {
+                decimal_places: 4,
+                rounding_mode: 'half_up',
+                thousand_separator: '.',
+                decimal_separator: ',',
+                ...(window.appFormattingSettings || {})
+            };
+
+            const usedDecimals = Number.isInteger(decimals) ?
+                Math.max(0, Math.min(6, decimals)) :
+                Math.max(1, Math.min(6, Number.parseInt(settings.decimal_places, 10) || 4));
+
+            const factor = 10 ** usedDecimals;
+            const mode = String(settings.rounding_mode || 'half_up');
+
+            let rounded;
+            if (mode === 'truncate') {
+                rounded = numericValue >= 0 ?
+                    Math.floor(numericValue * factor) / factor :
+                    Math.ceil(numericValue * factor) / factor;
+            } else {
+                rounded = Math.round(numericValue * factor) / factor;
+            }
+
+            let fixed = rounded.toFixed(usedDecimals);
+            fixed = fixed.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+
+            const [integerPartRaw, decimalPartRaw = ''] = fixed.split('.');
+            const sign = integerPartRaw.startsWith('-') ? '-' : '';
+            const integerDigits = sign ? integerPartRaw.slice(1) : integerPartRaw;
+            const thousandSeparator = String(settings.thousand_separator ?? '.');
+            const decimalSeparator = String(settings.decimal_separator ?? ',');
+            const groupedInteger = integerDigits.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
+
+            if (decimalPartRaw === '') {
+                return sign + groupedInteger;
+            }
+
+            return sign + groupedInteger + decimalSeparator + decimalPartRaw;
+        };
     </script>
     <script src="<?= AssetHelper::js('main.js') ?>" type="module"></script>
     <script src="<?= AssetHelper::js('sidebar-scroll.js') ?>" defer></script>

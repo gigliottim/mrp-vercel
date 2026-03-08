@@ -228,20 +228,20 @@ $countSinGrupo = $countSinGrupo ?? 0;
                                                                 </td>
                                                                 <td class="text-end">
                                                                     <span class="fw-semibold">
-                                                                        <?= number_format((float) $variante['stock_actual'], 2) ?>
+                                                                        <?= View::escape(app_format_number((float) $variante['stock_actual'])) ?>
                                                                     </span>
                                                                     <?php if ($variante['unidad_medida']) : ?>
                                                                         <small class="text-muted"><?= View::escape($variante['unidad_medida']) ?></small>
                                                                     <?php endif; ?>
                                                                 </td>
                                                                 <td class="text-end">
-                                                                    <?= number_format((float) $variante['punto_pedido'], 2) ?>
+                                                                    <?= View::escape(app_format_number((float) $variante['punto_pedido'])) ?>
                                                                     <?php if ($variante['unidad_medida']) : ?>
                                                                         <small class="text-muted"><?= View::escape($variante['unidad_medida']) ?></small>
                                                                     <?php endif; ?>
                                                                 </td>
                                                                 <td class="text-end text-muted">
-                                                                    <?= number_format((float) $variante['lote_minimo'], 2) ?>
+                                                                    <?= View::escape(app_format_number((float) $variante['lote_minimo'])) ?>
                                                                 </td>
                                                                 <td class="text-center">
                                                                     <span class="badge <?= $badgeStock ?>">

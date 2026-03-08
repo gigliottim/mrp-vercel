@@ -159,7 +159,7 @@ $requerimientos = $requerimientos ?? [];
                                         <small class="text-muted"><?= View::escape($variante['parte_detalle'] ?? '') ?></small>
                                     </td>
                                     <td class="text-end">
-                                        <span class="badge bg-primary"><?= number_format($cantidad, 2) ?></span>
+                                        <span class="badge bg-primary"><?= View::escape(app_format_number((float) $cantidad)) ?></span>
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm" role="group">
@@ -242,7 +242,7 @@ $requerimientos = $requerimientos ?? [];
                                         <?php if ($item['lote_minimo'] > 1): ?>
                                             <br>
                                             <span class="badge badge-lote-minimo bg-secondary">
-                                                Lote: <?= number_format($item['lote_minimo'], 0) ?>
+                                                Lote: <?= View::escape(app_format_number((float) $item['lote_minimo'], 0)) ?>
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -253,12 +253,12 @@ $requerimientos = $requerimientos ?? [];
                                             <span class="badge bg-info"><?= View::escape($item['tipo']) ?></span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="text-end"><?= number_format($item['programado'], 2) ?></td>
-                                    <td class="text-end"><?= number_format($item['stock'], 2) ?></td>
+                                    <td class="text-end"><?= View::escape(app_format_number((float) $item['programado'])) ?></td>
+                                    <td class="text-end"><?= View::escape(app_format_number((float) $item['stock'])) ?></td>
                                     <td class="text-end">
                                         <?php if ($item['faltante'] > 0): ?>
                                             <span class="text-danger fw-bold">
-                                                <?= number_format($item['faltante'], 2) ?>
+                                                <?= View::escape(app_format_number((float) $item['faltante'])) ?>
                                             </span>
                                         <?php else: ?>
                                             <span class="text-success">0.00</span>
@@ -267,7 +267,7 @@ $requerimientos = $requerimientos ?? [];
                                     <td class="text-end">
                                         <?php if ($item['a_comprar'] > 0): ?>
                                             <span class="badge bg-warning text-dark">
-                                                <?= number_format($item['a_comprar'], 2) ?> <?= View::escape($item['a_comprar_um'] ?? '') ?>
+                                                <?= View::escape(app_format_number((float) $item['a_comprar'])) ?> <?= View::escape($item['a_comprar_um'] ?? '') ?>
                                             </span>
                                         <?php else: ?>
                                             <span class="text-muted">--</span>
@@ -275,12 +275,12 @@ $requerimientos = $requerimientos ?? [];
                                     </td>
                                     <td class="text-end">
                                         <span class="<?= $item['stock_final'] < 0 ? 'text-danger' : 'text-success' ?>">
-                                            <?= number_format($item['stock_final'], 2) ?>
+                                            <?= View::escape(app_format_number((float) $item['stock_final'])) ?>
                                         </span>
                                     </td>
                                     <td class="text-end">
                                         <?php if ($item['a_comprar'] > 0): ?>
-                                            $<?= number_format($item['a_comprar_precio'], 2) ?>
+                                            $<?= View::escape(app_format_number((float) $item['a_comprar_precio'])) ?>
                                         <?php else: ?>
                                             <span class="text-muted">--</span>
                                         <?php endif; ?>
@@ -306,7 +306,7 @@ $requerimientos = $requerimientos ?? [];
                         <tfoot class="table-secondary">
                             <tr class="fw-bold">
                                 <td colspan="10" class="text-end">TOTAL A INVERTIR:</td>
-                                <td class="text-end">$<?= number_format($totalAComprar, 2) ?></td>
+                                <td class="text-end">$<?= View::escape(app_format_number((float) $totalAComprar)) ?></td>
                             </tr>
                         </tfoot>
                     </table>

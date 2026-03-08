@@ -181,7 +181,7 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                                         <?= View::escape($item['componente_detalle'] ?? '') ?>
                                                     </td>
                                                     <td class="text-end">
-                                                        <?= number_format((float)($item['cantidad_necesaria'] ?? 0), 4) ?>
+                                                        <?= View::escape(app_format_number((float) ($item['cantidad_necesaria'] ?? 0))) ?>
                                                     </td>
                                                     <td>
                                                         <?= View::escape($item['unidad_simbolo'] ?? 'UN') ?>
@@ -227,7 +227,7 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                                         <?= View::escape($item['componente_detalle'] ?? '') ?>
                                                     </td>
                                                     <td class="text-end">
-                                                        <?= number_format((float)($item['cantidad_necesaria'] ?? 0), 4) ?>
+                                                        <?= View::escape(app_format_number((float) ($item['cantidad_necesaria'] ?? 0))) ?>
                                                     </td>
                                                     <td>
                                                         <?= View::escape($item['unidad_simbolo'] ?? 'UN') ?>
@@ -285,7 +285,7 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                                             <strong><?= View::escape($item['codigo_variante'] ?? 'N/A') ?></strong>
                                                             <?php if (isset($item['cantidad']) && $item['cantidad'] > 0) : ?>
                                                                 <span class="badge bg-secondary ms-2">
-                                                                    <?= number_format((float)$item['cantidad'], 2) ?>
+                                                                    <?= View::escape(app_format_number((float) $item['cantidad'])) ?>
                                                                     <?= View::escape($item['unidad'] ?? 'UN') ?>
                                                                 </span>
                                                             <?php endif; ?>
@@ -352,7 +352,7 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                             <?= View::escape($uso['padre_detalle'] ?? '') ?>
                                         </td>
                                         <td class="text-end">
-                                            <?= number_format((float)($uso['cantidad_necesaria'] ?? 0), 4) ?>
+                                            <?= View::escape(app_format_number((float) ($uso['cantidad_necesaria'] ?? 0))) ?>
                                         </td>
                                         <td>
                                             <?= View::escape($uso['unidad_codigo'] ?? 'UN') ?>

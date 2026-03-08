@@ -271,7 +271,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 <?php foreach ($movimientos as $mov): ?>
                                     <tr data-origen-id="<?= View::escape($mov['id_tipo_deposito_origen']) ?>"
                                         data-destino-id="<?= View::escape($mov['id_tipo_deposito_destino']) ?>">
-                                        <td><?= date('d/m/Y H:i', strtotime($mov['fecha'])) ?></td>
+                                        <td><?= View::escape(app_format_datetime($mov['fecha'])) ?></td>
                                         <td>
                                             <div class="fw-bold"><?= View::escape($mov['parte_codigo']) ?></div>
                                             <small class="text-muted"><?= View::escape($mov['codigo_variante']) ?></small>
@@ -285,7 +285,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                                             <span class="badge bg-primary"><?= View::escape($mov['destino_codigo']) ?></span>
                                         </td>
                                         <td class="text-end fw-bold">
-                                            <?= number_format((float)$mov['cantidad'], 2) ?>
+                                            <?= View::escape(app_format_number((float) $mov['cantidad'])) ?>
                                         </td>
                                         <td>-</td> <!-- UM -->
                                         <td class="text-end">-</td> <!-- Importe -->
@@ -497,7 +497,7 @@ use App\Core\Support\AssetHelper;
             }
 
             // Actualizar panel informativo
-            document.getElementById('calc-qty-compra').textContent = cantidad + ' ' + (selectUM.options[selectUM.selectedIndex]?.text || '');
+            document.getElementById('calc-qty-compra').textContent = window.appFormatNumber(cantidad) + ' ' + (selectUM.options[selectUM.selectedIndex]?.text || '');
 
             // Factor de conversión (simulado o real si viniera de API)
             // NOTA: Si la API 'SearchClient' devuelve factor_conversion, usarlo.
@@ -506,10 +506,10 @@ use App\Core\Support\AssetHelper;
             document.getElementById('calc-factor').textContent = factor;
 
             const qtyUso = cantidad * factor;
-            document.getElementById('calc-qty-uso').textContent = qtyUso + ' (Estimado)';
+            document.getElementById('calc-qty-uso').textContent = window.appFormatNumber(qtyUso) + ' (Estimado)';
 
             const costoBase = (precio * cotizacion) / factor;
-            document.getElementById('calc-costo-base').textContent = '$ ' + costoBase.toFixed(2);
+            document.getElementById('calc-costo-base').textContent = '$ ' + window.appFormatNumber(costoBase);
         }
 
         // Listeners para cálculos

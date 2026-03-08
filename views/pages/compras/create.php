@@ -194,7 +194,7 @@ foreach ($tiposDeposito as $tipo) {
                                 class="form-control form-control-lg"
                                 id="cantidad"
                                 name="cantidad"
-                                step="0.01"
+                                step="<?= esc(app_decimal_step()) ?>"
                                 placeholder="0.00"
                                 required>
                         </div>
@@ -212,7 +212,7 @@ foreach ($tiposDeposito as $tipo) {
                                 class="form-control form-control-lg"
                                 id="importe_total"
                                 name="importe_total"
-                                step="0.01"
+                                step="<?= esc(app_decimal_step()) ?>"
                                 placeholder="0.00"
                                 required>
                         </div>
@@ -269,12 +269,12 @@ foreach ($tiposDeposito as $tipo) {
                             <?php if (!empty($movimientos)): ?>
                                 <?php foreach ($movimientos as $mov): ?>
                                     <tr>
-                                        <td><?= date('d/m/Y H:i', strtotime($mov['fecha'])) ?></td>
+                                        <td><?= View::escape(app_format_datetime($mov['fecha'])) ?></td>
                                         <td><?= View::escape($mov['codigo_variante']) ?></td>
                                         <td><?= View::escape($mov['referencia_id']) ?></td>
                                         <td><?= View::escape($mov['origen_codigo']) ?></td>
                                         <td><?= View::escape($mov['destino_codigo']) ?></td>
-                                        <td class="text-end"><?= number_format((float)$mov['cantidad'], 2) ?></td>
+                                        <td class="text-end"><?= View::escape(app_format_number((float) $mov['cantidad'])) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -417,10 +417,7 @@ foreach ($tiposDeposito as $tipo) {
         });
 
         function formatMoney(amount) {
-            return new Intl.NumberFormat('es-AR', {
-                style: 'currency',
-                currency: 'ARS'
-            }).format(amount);
+            return '$ ' + window.appFormatNumber(amount);
         }
 
         function actualizarUI() {
@@ -445,7 +442,7 @@ foreach ($tiposDeposito as $tipo) {
             }
 
             // Stock Actual (Uso)
-            elements.calcStockActual.value = parteSeleccionada.stock_actual.toFixed(2) + ' ' + parteSeleccionada.um_uso_codigo;
+            elements.calcStockActual.value = window.appFormatNumber(parteSeleccionada.stock_actual) + ' ' + parteSeleccionada.um_uso_codigo;
 
             // Factor
             elements.calcFactor.value = parteSeleccionada.factor_conversion;
@@ -473,7 +470,7 @@ foreach ($tiposDeposito as $tipo) {
 
             // Costo Lote Minimo (en unidades de uso)
             const loteMin = parteSeleccionada.lote_minimo;
-            elements.loteMinLabel.textContent = loteMin + ' ' + parteSeleccionada.um_uso_codigo;
+            elements.loteMinLabel.textContent = window.appFormatNumber(loteMin) + ' ' + parteSeleccionada.um_uso_codigo;
 
             const costLoteMin = unitPriceUso * loteMin;
             elements.calcCostoLote.value = formatMoney(costLoteMin);

@@ -293,7 +293,7 @@ $datosReporte = $datosReporte ?? [];
                         <i class="fa-solid fa-calculator fs-3 text-success me-3"></i>
                         <div>
                             <div class="text-muted small">Cantidad</div>
-                            <div class="fw-bold"><?= number_format($cantidad, 2) ?></div>
+                            <div class="fw-bold"><?= View::escape(app_format_number((float) $cantidad)) ?></div>
                         </div>
                     </div>
                 </div>
@@ -410,21 +410,21 @@ $datosReporte = $datosReporte ?? [];
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end">
-                                        <?= number_format((float)($item['cantidad_ajustada'] ?? 0), 4) ?>
+                                        <?= View::escape(app_format_number((float) ($item['cantidad_ajustada'] ?? 0))) ?>
                                     </td>
                                     <td>
                                         <?= View::escape($item['unidad'] ?? $item['unidad_simbolo'] ?? 'UN') ?>
                                     </td>
                                     <?php if ($conPrecios) : ?>
-                                        <td class="text-end">$<?= number_format($precioUnitario, 2) ?></td>
-                                        <td class="text-end">$<?= number_format($subtotal, 2) ?></td>
+                                        <td class="text-end">$<?= View::escape(app_format_number((float) $precioUnitario)) ?></td>
+                                        <td class="text-end">$<?= View::escape(app_format_number((float) $subtotal)) ?></td>
                                     <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                             <?php if ($conPrecios) : ?>
                                 <tr class="table-secondary fw-bold">
                                     <td colspan="<?= $conPrecios ? ($tipoSalida === 'arbol' ? 7 : 6) : ($tipoSalida === 'arbol' ? 5 : 4) ?>" class="text-end">TOTAL:</td>
-                                    <td class="text-end">$<?= number_format($totalGeneral, 2) ?></td>
+                                    <td class="text-end">$<?= View::escape(app_format_number((float) $totalGeneral)) ?></td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

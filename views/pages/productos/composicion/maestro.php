@@ -250,10 +250,15 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                                 <div class="alert alert-info mb-0 py-2 px-3 d-flex align-items-center">
                                     <i class="fa-solid fa-sitemap me-2"></i>
                                     <div>
-                                        <strong><?= View::escape($selectedVariante['codigo_variante']) ?></strong>
-                                        <span class="text-muted mx-2">•</span>
-                                        <span><?= View::escape($selectedVariante['detalle']) ?></span>
-                                        <span class="badge bg-secondary ms-2"><?= View::escape($selectedVariante['tipo_codigo']) ?></span>
+                                        <span class="fw-semibold">Parte:</span>
+                                        <strong><?= View::escape((string) ($selectedVariante['parte_codigo'] ?? 'N/A')) ?></strong>
+                                        <span class="text-muted mx-1">-</span>
+                                        <span><?= View::escape((string) ($selectedVariante['parte_detalle'] ?? '')) ?></span>
+                                        <span class="text-muted mx-2">|</span>
+                                        <span class="fw-semibold">Variante:</span>
+                                        <strong><?= View::escape((string) ($selectedVariante['codigo_variante'] ?? 'N/A')) ?></strong>
+                                        <span class="text-muted mx-1">-</span>
+                                        <span><?= View::escape((string) ($selectedVariante['detalle'] ?? '')) ?></span>
                                     </div>
                                 </div>
                             </div>

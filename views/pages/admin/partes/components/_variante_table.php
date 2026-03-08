@@ -88,6 +88,8 @@ $nextPage = min($totalPages, $currentPage + 1);
                         <th>Detalle</th>
                         <th>Estado</th>
                         <th>Stock</th>
+                        <th>Lote mínimo</th>
+                        <th>Punto de pedido</th>
                         <th>Peso</th>
                         <th></th>
                     </tr>
@@ -114,7 +116,12 @@ $nextPage = min($totalPages, $currentPage + 1);
                                 </td>
                                 <td>
                                     <?= View::escape((string) $variant['stock_actual']) ?>
-                                    <small class="text-muted">min <?= View::escape((string) $variant['lote_minimo']) ?> / pedido <?= View::escape((string) $variant['punto_pedido']) ?></small>
+                                </td>
+                                <td>
+                                    <?= View::escape((string) $variant['lote_minimo']) ?>
+                                </td>
+                                <td>
+                                    <?= View::escape((string) $variant['punto_pedido']) ?>
                                 </td>
                                 <td>
                                     <?php if ($variant['peso'] !== null) : ?>
@@ -144,7 +151,7 @@ $nextPage = min($totalPages, $currentPage + 1);
                     <?php endforeach; ?>
                     <?php if ($totalVariants === 0) : ?>
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">Sin variantes registradas.</td>
+                            <td colspan="9" class="text-center text-muted py-4">Sin variantes registradas.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

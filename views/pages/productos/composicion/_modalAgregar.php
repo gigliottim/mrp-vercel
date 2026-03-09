@@ -135,11 +135,6 @@ use App\Core\View\View;
                     <div class="small text-uppercase text-muted fw-bold">Componente a agregar</div>
                     <div class="fw-semibold" x-text="getItemCode(pendingAddItem)"></div>
                     <div class="text-muted" x-text="getItemDetail(pendingAddItem)"></div>
-                    <div class="mt-1">
-                        <span class="badge bg-light text-dark border">
-                            Tipo UM: <span x-text="pendingAddUnitType || 'sin tipo'"></span>
-                        </span>
-                    </div>
                 </div>
 
                 <div class="row g-3">
@@ -153,15 +148,21 @@ use App\Core\View\View;
                             required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">UM de uso</label>
+                        <label class="form-label mb-0">
+                            UM de uso:
+                            <span class="text-muted fw-normal" x-show="pendingAddUnitType" x-text="pendingAddUnitType"></span>
+                        </label>
                         <select class="form-select" x-model="pendingAddUnitId" required>
                             <template x-for="unit in getPendingAddUnits()" :key="unit.id">
                                 <option :value="String(unit.id)" x-text="formatUnitLabel(unit)"></option>
                             </template>
                         </select>
-                        <small class="text-muted" x-show="pendingAddUnitType">
-                            Se muestran solo unidades del tipo <span x-text="pendingAddUnitType"></span>.
-                        </small>
+                    </div>
+                </div>
+
+                <div class="border-top mt-3 pt-2 small text-muted">
+                    <div x-show="pendingAddUnitType">
+                        Se muestran solo unidades del tipo <span x-text="pendingAddUnitType"></span>.
                     </div>
                 </div>
 

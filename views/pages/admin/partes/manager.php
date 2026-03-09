@@ -10,6 +10,7 @@ $parteVariants = $parteVariants ?? [];
 // Modo de operación: 'create', 'view', 'edit'
 $mode = $mode ?? ($parte ? 'view' : 'create');
 $editingVariantId = $editingVariantId ?? null;
+$selectedVariante = $editingVariant ?? null;
 
 // Listas de datos
 $partesList = $partesList ?? [];
@@ -73,43 +74,67 @@ $dimensionFields = [
                 Buscar parte o variante existente para cargar o editar
             </h6>
 
-            <!-- Filtros por tipo -->
-            <div class="btn-group btn-group-sm mb-3 w-100 flex-wrap" role="group" id="tipo-filters">
-                <button type="button"
-                    class="btn btn-tipo-filter btn-outline-secondary active"
-                    data-tipo=""
-                    onclick="updateParteSearchFilter('', this)">
-                    <i class="fa-solid fa-border-all"></i> Todos
-                </button>
-                <?php
-                $colores = ['info', 'success', 'warning', 'danger', 'primary', 'dark'];
-                foreach ($tipos as $index => $tipo):
-                    $color = $colores[$index % count($colores)];
-                ?>
-                    <button type="button"
-                        class="btn btn-tipo-filter btn-outline-<?= $color ?>"
-                        data-tipo="<?= View::escape($tipo['codigo']) ?>"
-                        onclick="updateParteSearchFilter('<?= View::escape($tipo['codigo']) ?>', this)"
-                        title="<?= View::escape($tipo['nombre']) ?>">
-                        <strong><?= View::escape($tipo['codigo']) ?></strong>
-                    </button>
-                <?php endforeach; ?>
-            </div>
-
-            <!-- Buscador -->
-            <div id="parte-search-container">
-                <div class="input-group pm-search-group">
-                    <span class="input-group-text bg-white">
-                        <i class="fa-solid fa-search text-muted"></i>
-                    </span>
-                    <input type="text"
-                        id="parte-search-input"
-                        class="form-control"
-                        placeholder="Buscar parte o variante por código o descripción..."
-                        autocomplete="off">
+            <?php if ($selectedVariante): ?>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="flex-grow-1">
+                        <div class="alert alert-success mb-0 py-2 px-3">
+                            <i class="fa-solid fa-check-circle me-2"></i>
+                            <span class="fw-semibold">Parte:</span>
+                            <strong><?= View::escape((string) ($parte['codigo'] ?? 'N/A')) ?></strong>
+                            <span class="text-muted mx-1">-</span>
+                            <span><?= View::escape((string) ($parte['detalle'] ?? '')) ?></span>
+                            <span class="text-muted mx-2">|</span>
+                            <span class="fw-semibold">Variante:</span>
+                            <strong><?= View::escape((string) ($selectedVariante['codigo_variante'] ?? 'N/A')) ?></strong>
+                            <span class="text-muted mx-1">-</span>
+                            <span><?= View::escape((string) ($selectedVariante['detalle'] ?? '')) ?></span>
+                        </div>
+                    </div>
+                    <a href="<?= url('productos/partes/manager/' . (int) ($parte['id'] ?? 0)) ?>" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-exchange-alt"></i> Cambiar
+                    </a>
                 </div>
-                <div id="parte-search-results" class="search-results"></div>
-            </div>
+            <?php endif; ?>
+
+            <?php if (!$selectedVariante): ?>
+                <!-- Filtros por tipo -->
+                <div class="btn-group btn-group-sm mb-3 w-100 flex-wrap" role="group" id="tipo-filters">
+                    <button type="button"
+                        class="btn btn-tipo-filter btn-outline-secondary active"
+                        data-tipo=""
+                        onclick="updateParteSearchFilter('', this)">
+                        <i class="fa-solid fa-border-all"></i> Todos
+                    </button>
+                    <?php
+                    $colores = ['info', 'success', 'warning', 'danger', 'primary', 'dark'];
+                    foreach ($tipos as $index => $tipo):
+                        $color = $colores[$index % count($colores)];
+                    ?>
+                        <button type="button"
+                            class="btn btn-tipo-filter btn-outline-<?= $color ?>"
+                            data-tipo="<?= View::escape($tipo['codigo']) ?>"
+                            onclick="updateParteSearchFilter('<?= View::escape($tipo['codigo']) ?>', this)"
+                            title="<?= View::escape($tipo['nombre']) ?>">
+                            <strong><?= View::escape($tipo['codigo']) ?></strong>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Buscador -->
+                <div id="parte-search-container">
+                    <div class="input-group pm-search-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fa-solid fa-search text-muted"></i>
+                        </span>
+                        <input type="text"
+                            id="parte-search-input"
+                            class="form-control"
+                            placeholder="Buscar parte o variante por código o descripción..."
+                            autocomplete="off">
+                    </div>
+                    <div id="parte-search-results" class="search-results"></div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

@@ -10,6 +10,9 @@ function parteManager(initialData) {
   const startsLockedWithoutPart = initialData.mode === 'create' && !initialData.parte;
 
   return {
+    decimalPlaces: 4,
+    numberInputStep: '0.0001',
+
     // Estado
     mode: initialData.mode || 'create',
     isEditing: initialData.mode !== 'create',
@@ -64,6 +67,9 @@ function parteManager(initialData) {
 
     // Inicialización
     init() {
+      this.decimalPlaces = this._getConfiguredDecimalPlaces();
+      this.numberInputStep = this._buildInputStep(this.decimalPlaces);
+
       if (this.parte) {
         this.loadParteData(this.parte);
       }
@@ -96,16 +102,17 @@ function parteManager(initialData) {
         id_grupo: parseInt(parte.id_grupo) || '',
         id_um_compra: parte.id_um_compra || '',
         id_um_uso: parte.id_um_uso || '',
+        factor_conversion: this._toNullableNumber(parte.factor_conversion),
         detalle: parte.detalle || '',
-        largo_alto: parte.largo_alto,
+        largo_alto: this._toNullableNumber(parte.largo_alto),
         id_um_largo_alto: parte.id_um_largo_alto || '',
-        ancho: parte.ancho,
+        ancho: this._toNullableNumber(parte.ancho),
         id_um_ancho: parte.id_um_ancho || '',
-        espesor_profundidad: parte.espesor_profundidad,
+        espesor_profundidad: this._toNullableNumber(parte.espesor_profundidad),
         id_um_espesor: parte.id_um_espesor || '',
-        superficie: parte.superficie,
+        superficie: this._toNullableNumber(parte.superficie),
         id_um_superficie: parte.id_um_superficie || '',
-        volumen: parte.volumen,
+        volumen: this._toNullableNumber(parte.volumen),
         id_um_volumen: parte.id_um_volumen || '',
         activo: parte.activo === true || parte.activo === 1 || parte.activo === '1'
       };
@@ -128,6 +135,7 @@ function parteManager(initialData) {
         id_grupo: '',
         id_um_compra: '',
         id_um_uso: '',
+        factor_conversion: null,
         detalle: '',
         largo_alto: null,
         id_um_largo_alto: '',
@@ -192,6 +200,36 @@ function parteManager(initialData) {
       return Math.round(value * factor) / factor;
     },
 
+    _getConfiguredDecimalPlaces() {
+      const configured = Number.parseInt(window.appFormattingSettings?.decimal_places, 10);
+      if (!Number.isFinite(configured)) {
+        return 4;
+      }
+
+      return Math.max(1, Math.min(10, configured));
+    },
+
+    _buildInputStep(decimals) {
+      if (!Number.isInteger(decimals) || decimals < 1) {
+        return '0.0001';
+      }
+
+      return `0.${'0'.repeat(decimals - 1)}1`;
+    },
+
+    _toNullableNumber(value) {
+      if (value === null || value === '') {
+        return null;
+      }
+
+      const numericValue = Number.parseFloat(value);
+      if (!Number.isFinite(numericValue)) {
+        return null;
+      }
+
+      return this._round(numericValue, this.decimalPlaces);
+    },
+
     // ─── Auto-calcular factor_conversion ─────────────────────────────────
 
     /**
@@ -205,7 +243,6 @@ function parteManager(initialData) {
      * manualmente después.
      */
     autoCalculateFactorConversion() {
-      const allUnits = window.unidadesLongitudData || [];
       const umCompraId = this.form.id_um_compra;
       const umUsoId = this.form.id_um_uso;
 
@@ -241,7 +278,7 @@ function parteManager(initialData) {
       if (!equivAncho) return;  // Sin equivalencia no podemos calcular
 
       const anchoEnMetros = ancho * equivAncho;
-      const factorCalculado = this._round(anchoEnMetros, 6);
+      const factorCalculado = this._round(anchoEnMetros, this.decimalPlaces);
 
       // Solo sobreescribir si está vacío o en 0 (no pisar edición manual)
       const factorActual = parseFloat(this.form.factor_conversion) || 0;
@@ -281,7 +318,7 @@ function parteManager(initialData) {
 
       // ── Superficie en m² ──────────────────────────────────────────────
       if (largoPx > 0 && anchoPx > 0) {
-        this.form.superficie = this._round(largoM * anchoM, 8);
+        this.form.superficie = this._round(largoM * anchoM, this.decimalPlaces);
 
         // Asignar m² automáticamente si no hay unidad elegida
         if (!this.form.id_um_superficie && window.unidadesSuperficieData) {
@@ -296,7 +333,7 @@ function parteManager(initialData) {
       if (largoPx > 0 && anchoPx > 0 && espesorPx > 0) {
         // m³ → cm³: × 1_000_000
         const volumenCm3 = largoM * anchoM * espesorM * 1_000_000;
-        this.form.volumen = this._round(volumenCm3, 8);
+        this.form.volumen = this._round(volumenCm3, this.decimalPlaces);
 
         // Asignar cm³ automáticamente si no hay unidad elegida
         if (!this.form.id_um_volumen && window.unidadesVolumenData) {

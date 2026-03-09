@@ -88,7 +88,7 @@ use App\Core\View\View;
                 </label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-light text-muted">1 UM Compra =</span>
-                    <input type="number" step="0.000001" min="0" class="form-control"
+                    <input type="number" :step="numberInputStep" min="0" class="form-control"
                         x-model.number="form.factor_conversion"
                         placeholder="Ej: 10">
                     <span class="input-group-text bg-light text-muted">UM Uso</span>
@@ -108,7 +108,7 @@ use App\Core\View\View;
                     <button
                         type="button"
                         class="btn btn-sm btn-outline-secondary py-0"
-                        @click="calculateDimensions()"
+                        @click.prevent="calculateDimensions()"
                         style="font-size: 0.8rem;">
                         <i class="fa-solid fa-calculator me-1"></i>
                         Recalcular
@@ -125,7 +125,7 @@ use App\Core\View\View;
                             type="number"
                             class="form-control px-2"
                             x-model.number="form.<?= $field['key'] ?>"
-                            step="0.01"
+                            :step="numberInputStep"
                             placeholder="0.00">
                         <select class="form-select px-1" x-model.number="form.<?= $field['unit'] ?>" style="max-width: 65px;">
                             <option value="">UM</option>
@@ -141,7 +141,7 @@ use App\Core\View\View;
             <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Superficie</label>
                 <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.superficie" step="0.0001">
+                    <input type="number" class="form-control px-2" x-model.number="form.superficie" :step="numberInputStep">
                     <select class="form-select px-1" x-model.number="form.id_um_superficie" style="max-width: 65px;">
                         <option value="">UM</option>
                         <?php foreach ($unidadesSuperficie as $unidad) : ?>
@@ -153,7 +153,7 @@ use App\Core\View\View;
             <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Volumen</label>
                 <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.volumen" step="0.01">
+                    <input type="number" class="form-control px-2" x-model.number="form.volumen" :step="numberInputStep">
                     <select class="form-select px-1" x-model.number="form.id_um_volumen" style="max-width: 65px;">
                         <option value="">UM</option>
                         <?php foreach ($unidadesVolumen as $unidad) : ?>

@@ -263,7 +263,14 @@ $datosReporte = $datosReporte ?? [];
                     </div>
                 </div>
 
-                <!-- Botón removido para auto-update -->
+                <div class="col-md-12 d-flex gap-2 justify-content-end">
+                    <button type="submit" class="btn btn-outline-success" name="export" value="xlsx">
+                        <i class="fa-solid fa-file-excel me-1"></i> Exportar Excel (XLSX)
+                    </button>
+                    <button type="submit" class="btn btn-outline-danger" name="export" value="pdf">
+                        <i class="fa-solid fa-file-pdf me-1"></i> Exportar PDF
+                    </button>
+                </div>
             </form>
         <?php endif; ?>
     </div>
@@ -406,7 +413,7 @@ $datosReporte = $datosReporte ?? [];
                             ?>
                                 <tr>
                                     <?php if ($tipoSalida === 'arbol'): ?>
-                                        <td><code class="text-muted"><?= $codigosJerarquicos[$index] ?? '' ?></code></td>
+                                        <td><code class="text-muted"><?= '_' . ($codigosJerarquicos[$index] ?? '') ?></code></td>
                                     <?php endif; ?>
                                     <td>
                                         <strong><?= View::escape($codigoCompuesto !== '' ? $codigoCompuesto : 'N/A') ?></strong>

@@ -11,6 +11,7 @@ use App\Models\Variante;
 use App\Models\Bom;
 use App\Models\GrupoParte;
 use App\Models\TipoParte;
+use App\Services\Reportes\ListadoIngenieriaExportService;
 use App\Services\UnitConversionService;
 
 final class ReportesController extends Controller
@@ -20,19 +21,22 @@ final class ReportesController extends Controller
     private GrupoParte $grupos;
     private TipoParte $tiposPartes;
     private UnitConversionService $unitConversion;
+    private ListadoIngenieriaExportService $listadoExport;
 
     public function __construct(
         ?Variante $variantes = null,
         ?Bom $bomModel = null,
         ?GrupoParte $grupos = null,
         ?TipoParte $tiposPartes = null,
-        ?UnitConversionService $unitConversion = null
+        ?UnitConversionService $unitConversion = null,
+        ?ListadoIngenieriaExportService $listadoExport = null
     ) {
         $this->variantes = $variantes ?? new Variante();
         $this->bomModel = $bomModel ?? new Bom();
         $this->grupos = $grupos ?? new GrupoParte();
         $this->tiposPartes = $tiposPartes ?? new TipoParte();
         $this->unitConversion = $unitConversion ?? new UnitConversionService();
+        $this->listadoExport = $listadoExport ?? new ListadoIngenieriaExportService();
     }
 
     public function destinoPartes(Request $request): Response
@@ -275,6 +279,32 @@ final class ReportesController extends Controller
                     $datosReporte = $agrupado; // Estructura cambia a [ 'Tipo A' => [...items], ... ]
                 }
             }
+        }
+
+        $exportType = isset($request->query['export']) ? strtolower((string) $request->query['export']) : '';
+        if (($exportType === 'xlsx' || $exportType === 'pdf') && $varianteSeleccionada && !empty($datosReporte)) {
+            $tabular = $this->listadoExport->buildTabularData($datosReporte, $tipoSalida, $conPrecios, $agruparTipo);
+            $baseName = sprintf(
+                'listado-ingenieria-%s-%s',
+                preg_replace('/[^A-Za-z0-9_-]/', '-', (string) ($varianteSeleccionada['parte_codigo'] ?? 'variante')),
+                date('Ymd-His')
+            );
+
+            if ($exportType === 'xlsx') {
+                $xlsx = $this->listadoExport->generateXlsx($tabular['headers'], $tabular['rows']);
+                return new Response($xlsx, 200, [
+                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'Content-Disposition' => 'attachment; filename="' . $baseName . '.xlsx"',
+                    'Content-Length' => (string) strlen($xlsx),
+                ]);
+            }
+
+            $pdf = $this->listadoExport->generatePdf($tabular['headers'], $tabular['rows'], 'Listado de Ingenieria');
+            return new Response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $baseName . '.pdf"',
+                'Content-Length' => (string) strlen($pdf),
+            ]);
         }
 
         return $this->render('pages/reportes/listado-ingenieria', [

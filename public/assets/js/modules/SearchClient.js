@@ -98,6 +98,25 @@ class SearchClient {
       display: 'none',
       width: this.inputElement.offsetWidth + 'px'
     });
+
+    this.syncResultsWidth();
+  }
+
+  /**
+   * Sincroniza el ancho del dropdown con el input visible.
+   * Evita anchos de 0px cuando el input se inicializa oculto.
+   */
+  syncResultsWidth() {
+    const inputRect = this.inputElement.getBoundingClientRect();
+    let width = Math.round(inputRect.width);
+
+    if (width <= 0 && this.inputElement.parentElement) {
+      width = Math.round(this.inputElement.parentElement.getBoundingClientRect().width);
+    }
+
+    if (width > 0) {
+      this.resultsContainer.style.width = `${width}px`;
+    }
   }
 
   /**
@@ -220,6 +239,7 @@ class SearchClient {
    * Renderiza los resultados
    */
   render() {
+    this.syncResultsWidth();
     this.resultsContainer.innerHTML = '';
     this.selectedIndex = -1;
 
@@ -322,6 +342,7 @@ class SearchClient {
    * Muestra el contenedor de resultados
    */
   show() {
+    this.syncResultsWidth();
     this.resultsContainer.style.display = 'block';
     this.isVisible = true;
   }

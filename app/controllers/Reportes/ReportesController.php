@@ -284,14 +284,26 @@ final class ReportesController extends Controller
         $exportType = isset($request->query['export']) ? strtolower((string) $request->query['export']) : '';
         if (($exportType === 'xlsx' || $exportType === 'pdf') && $varianteSeleccionada && !empty($datosReporte)) {
             $tabular = $this->listadoExport->buildTabularData($datosReporte, $tipoSalida, $conPrecios, $agruparTipo);
+
+            $tz = new \DateTimeZone('America/Argentina/Buenos_Aires');
+            $now = new \DateTimeImmutable('now', $tz);
+            $timestamp = $now->format('Ymd-His');
+            $fechaGeneracion = $now->format('d/m/Y H:i:s');
+
+            $codigoVariante = trim((string) (($varianteSeleccionada['parte_codigo'] ?? '') . '-' . ($varianteSeleccionada['codigo_variante'] ?? '')));
+            $descripcionVariante = trim((string) (($varianteSeleccionada['parte_detalle'] ?? '') . ' + ' . ($varianteSeleccionada['detalle'] ?? '')));
+            $subtitle = 'Variante: ' . $codigoVariante
+                . ' | Descripcion: ' . $descripcionVariante
+                . ' | Generado: ' . $fechaGeneracion . ' (GMT-3 America/Argentina/Buenos_Aires)';
+
             $baseName = sprintf(
                 'listado-ingenieria-%s-%s',
                 preg_replace('/[^A-Za-z0-9_-]/', '-', (string) ($varianteSeleccionada['parte_codigo'] ?? 'variante')),
-                date('Ymd-His')
+                $timestamp
             );
 
             if ($exportType === 'xlsx') {
-                $xlsx = $this->listadoExport->generateXlsx($tabular['headers'], $tabular['rows']);
+                $xlsx = $this->listadoExport->generateXlsx($tabular['headers'], $tabular['rows'], 'Listado de Ingenieria', $subtitle);
                 return new Response($xlsx, 200, [
                     'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     'Content-Disposition' => 'attachment; filename="' . $baseName . '.xlsx"',
@@ -299,7 +311,7 @@ final class ReportesController extends Controller
                 ]);
             }
 
-            $pdf = $this->listadoExport->generatePdf($tabular['headers'], $tabular['rows'], 'Listado de Ingenieria');
+            $pdf = $this->listadoExport->generatePdf($tabular['headers'], $tabular['rows'], 'Listado de Ingenieria', $subtitle);
             return new Response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="' . $baseName . '.pdf"',

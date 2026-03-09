@@ -175,9 +175,9 @@ final class ListadoIngenieriaExportService
      * @param array<int, string> $headers
      * @param array<int, array<int, string|float|int|null>> $rows
      */
-    public function generateXlsx(array $headers, array $rows): string
+    public function generateXlsx(array $headers, array $rows, string $titulo = 'Listado de Ingenieria', string $subtitulo = ''): string
     {
-        $spreadsheet = $this->buildSpreadsheet($headers, $rows, 'Listado de Ingenieria');
+        $spreadsheet = $this->buildSpreadsheet($headers, $rows, $titulo, $subtitulo);
         return $this->writeSpreadsheetToString($spreadsheet, 'Xlsx');
     }
 
@@ -185,17 +185,24 @@ final class ListadoIngenieriaExportService
      * @param array<int, string> $headers
      * @param array<int, array<int, string|float|int|null>> $rows
      */
-    public function generatePdf(array $headers, array $rows, string $titulo): string
+    public function generatePdf(array $headers, array $rows, string $titulo, string $subtitulo = ''): string
     {
-        $spreadsheet = $this->buildSpreadsheet($headers, $rows, $titulo);
+        $spreadsheet = $this->buildSpreadsheet($headers, $rows, $titulo, $subtitulo);
 
         // Renderizar PDF con Dompdf (PhpSpreadsheet Writer\Pdf\Dompdf)
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->getPageSetup()
             ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
             ->setPaperSize(PageSetup::PAPERSIZE_A4)
+            ->setFitToPage(true)
             ->setFitToWidth(1)
             ->setFitToHeight(0);
+        $sheet->getPageMargins()
+            ->setTop(0.15)
+            ->setBottom(0.15)
+            ->setLeft(0.1)
+            ->setRight(0.1);
+        $sheet->getPageSetup()->setHorizontalCentered(true);
 
         return $this->writeSpreadsheetToString($spreadsheet, 'Dompdf');
     }
@@ -204,7 +211,7 @@ final class ListadoIngenieriaExportService
      * @param array<int, string> $headers
      * @param array<int, array<int, string|float|int|null>> $rows
      */
-    private function buildSpreadsheet(array $headers, array $rows, string $title): Spreadsheet
+    private function buildSpreadsheet(array $headers, array $rows, string $title, string $subtitle = ''): Spreadsheet
     {
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getDefaultStyle()->getFont()->setName('Calibri')->setSize(9);
@@ -236,8 +243,22 @@ final class ListadoIngenieriaExportService
         ]);
         $sheet->getRowDimension(1)->setRowHeight(36);
 
-        // Header (fila 3)
-        $headerRow = 3;
+        if ($subtitle !== '') {
+            $sheet->mergeCells('A2:' . $lastCol . '2');
+            $sheet->setCellValue('A2', $subtitle);
+            $sheet->getStyle('A2')->applyFromArray([
+                'font' => ['bold' => false, 'size' => 9, 'color' => ['argb' => 'FF3A4A5A']],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_LEFT,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                    'wrapText' => true,
+                ],
+            ]);
+            $sheet->getRowDimension(2)->setRowHeight(20);
+        }
+
+        // Header
+        $headerRow = 4;
         $headerDisplayMap = [
             'Precio Unit.' => "Precio\nUnit.",
             'Subtotal' => "Sub\ntotal",
@@ -293,16 +314,16 @@ final class ListadoIngenieriaExportService
                 continue;
             }
 
-            $detalleTieneDosLineas = false;
+            $detalleLines = 1;
             foreach ($headers as $i => $header) {
                 $colIdx = $i + 1;
                 $col = Coordinate::stringFromColumnIndex($colIdx);
                 $value = $row[$i] ?? '';
 
                 if ($detalleColIndex !== false && $i === $detalleColIndex) {
-                    $detalleFormateado = $this->formatDetalleForCell((string) $value);
-                    $detalleTieneDosLineas = str_contains($detalleFormateado, "\n");
-                    $sheet->setCellValueExplicit($col . $rowNum, $detalleFormateado, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    $detalleTexto = trim((string) $value);
+                    $detalleLines = $this->estimateDetailLines($detalleTexto);
+                    $sheet->setCellValueExplicit($col . $rowNum, $detalleTexto, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                     continue;
                 }
 
@@ -332,7 +353,7 @@ final class ListadoIngenieriaExportService
                 $sheet->getStyle($detalleCol . $rowNum)->getAlignment()->setWrapText(true);
             }
 
-            $sheet->getRowDimension($rowNum)->setRowHeight($detalleTieneDosLineas ? 30 : 18);
+            $sheet->getRowDimension($rowNum)->setRowHeight(max(18, 18 + (($detalleLines - 1) * 12)));
 
             $rowNum++;
         }
@@ -358,8 +379,8 @@ final class ListadoIngenieriaExportService
         // Anchos de columna
         $widthMap = [
             'Nivel' => 14,
-            'Codigo' => 16,
-            'Detalle' => 44,
+            'Codigo' => 17,
+            'Detalle' => 47,
             'Tipo' => 9,
             'Cantidad' => 11,
             'Unidad' => 8,
@@ -373,44 +394,28 @@ final class ListadoIngenieriaExportService
         }
 
         // Fila header y pane fijo
-        $sheet->freezePane('A4');
+        $sheet->freezePane('A5');
 
         // Area de impresion
         $sheet->getPageSetup()->setPrintArea('A1:' . $lastCol . $endDataRow);
         $sheet->getPageMargins()
-            ->setTop(0.3)
-            ->setBottom(0.3)
-            ->setLeft(0.2)
-            ->setRight(0.2);
+            ->setTop(0.15)
+            ->setBottom(0.15)
+            ->setLeft(0.1)
+            ->setRight(0.1);
 
         return $spreadsheet;
     }
 
-    private function formatDetalleForCell(string $value): string
+    private function estimateDetailLines(string $value): int
     {
         $text = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
         if ($text === '') {
-            return '';
+            return 1;
         }
 
-        if (mb_strlen($text, 'UTF-8') <= 58) {
-            return $text;
-        }
-
-        $slice = mb_substr($text, 0, 116, 'UTF-8');
-        $breakPos = mb_strrpos($slice, ' ', 0, 'UTF-8');
-        if ($breakPos === false || $breakPos < 30) {
-            $breakPos = 58;
-        }
-
-        $line1 = trim(mb_substr($slice, 0, $breakPos, 'UTF-8'));
-        $line2 = trim(mb_substr($slice, $breakPos, null, 'UTF-8'));
-
-        if (mb_strlen($text, 'UTF-8') > mb_strlen($slice, 'UTF-8')) {
-            $line2 = rtrim(mb_substr($line2, 0, 55, 'UTF-8')) . '...';
-        }
-
-        return $line1 . "\n" . $line2;
+        $charsPerLine = 66;
+        return max(1, (int) ceil(mb_strlen($text, 'UTF-8') / $charsPerLine));
     }
 
     private function writeSpreadsheetToString(Spreadsheet $spreadsheet, string $writerType): string

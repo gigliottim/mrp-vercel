@@ -412,9 +412,12 @@ use App\Core\Support\AssetHelper;
 
         function setSearchLockedState(isLocked) {
             searchInput.readOnly = isLocked;
+            searchInput.disabled = isLocked;
             searchInput.setAttribute('aria-readonly', isLocked ? 'true' : 'false');
+            searchInput.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
 
             if (isLocked) {
+                searchInput.blur();
                 searchInput.classList.add('parte-seleccionada');
                 searchResults.style.display = 'none';
                 if (btnCambiarParte) btnCambiarParte.classList.remove('d-none');

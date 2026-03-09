@@ -495,8 +495,8 @@ final class ListadoIngenieriaExportService
             return $widths;
         }
 
-        // Superficie util aproximada (en unidades de ancho de columna de PhpSpreadsheet)
-        $targetTotal = $pdfOrientation === PageSetup::ORIENTATION_PORTRAIT ? 92.0 : 130.0;
+        // En PDF apuntamos a un ancho total mayor para que FitToWidth aproveche toda la hoja.
+        $targetTotal = $pdfOrientation === PageSetup::ORIENTATION_PORTRAIT ? 108.0 : 150.0;
 
         $fixedSum = 0.0;
         foreach ($headers as $header) {
@@ -506,7 +506,7 @@ final class ListadoIngenieriaExportService
             $fixedSum += $widths[$header] ?? 10.0;
         }
 
-        $detailWidth = max($min['Detalle'], min($max['Detalle'], $targetTotal - $fixedSum));
+        $detailWidth = max($min['Detalle'], $targetTotal - $fixedSum);
         $widths['Detalle'] = $detailWidth;
 
         return $widths;

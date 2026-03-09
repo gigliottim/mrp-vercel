@@ -173,7 +173,7 @@ $dimensionFields = [
                     </div>
                 </div>
                 <div class="card-body pm-form-card-body">
-                    <div class="pm-variant-form mb-0">
+                    <div>
                         <?php include __DIR__ . '/manager/_variante_form.php'; ?>
                     </div>
                 </div>

@@ -337,6 +337,7 @@ foreach ($tiposDeposito as $tipo) {
 
         const elements = {
             form: document.getElementById('formMovimiento'),
+            fechaHora: document.getElementById('fecha_hora'),
             searchInput: document.getElementById('search-parte-input'),
             searchResults: document.getElementById('search-parte-results'),
             inputParteHidden: document.getElementById('parte'),
@@ -353,7 +354,49 @@ foreach ($tiposDeposito as $tipo) {
             loteMinLabel: document.getElementById('lote_min_display')
         };
 
+        const argentinaTimezone = 'America/Argentina/Buenos_Aires';
+
+        function getBuenosAiresNowDateTimeLocal() {
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: argentinaTimezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hourCycle: 'h23'
+            });
+
+            const parts = formatter.formatToParts(new Date()).reduce((acc, part) => {
+                if (part.type !== 'literal') {
+                    acc[part.type] = part.value;
+                }
+                return acc;
+            }, {});
+
+            return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+        }
+
+        function syncFechaHoraLimits(resetValue = false) {
+            if (!elements.fechaHora) {
+                return;
+            }
+
+            const maxNow = getBuenosAiresNowDateTimeLocal();
+            elements.fechaHora.max = maxNow;
+
+            if (resetValue || !elements.fechaHora.value || elements.fechaHora.value > maxNow) {
+                elements.fechaHora.value = maxNow;
+            }
+        }
+
         let parteSeleccionada = null;
+
+        syncFechaHoraLimits(true);
+        setInterval(() => syncFechaHoraLimits(false), 30000);
+        if (elements.fechaHora) {
+            elements.fechaHora.addEventListener('change', () => syncFechaHoraLimits(false));
+        }
 
         // Inicializar SearchClient
         if (elements.searchInput && elements.searchResults) {
@@ -487,6 +530,14 @@ foreach ($tiposDeposito as $tipo) {
         // Submit Action
         elements.form.addEventListener('submit', function(e) {
             e.preventDefault();
+            syncFechaHoraLimits(false);
+
+            if (elements.fechaHora && elements.fechaHora.value > elements.fechaHora.max) {
+                alert('La Fecha/Hora no puede ser superior al momento actual de Buenos Aires.');
+                elements.fechaHora.value = elements.fechaHora.max;
+                elements.fechaHora.focus();
+                return;
+            }
 
             if (!parteSeleccionada) {
                 alert('Seleccione un ítem');

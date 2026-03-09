@@ -16,11 +16,6 @@
                         <div class="small text-uppercase text-muted fw-bold">Componente a editar</div>
                         <div class="fw-semibold" x-text="getItemCode(editingItem)"></div>
                         <div class="text-muted" x-text="getItemDetail(editingItem)"></div>
-                        <div class="mt-1">
-                            <span class="badge bg-light text-dark border">
-                                Tipo UM: <span x-text="getEditUsageUnitType() || 'sin tipo'"></span>
-                            </span>
-                        </div>
                     </div>
 
                     <div class="row g-3">
@@ -37,7 +32,10 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label mb-0">UM de uso</label>
+                            <label class="form-label mb-0">
+                                UM de uso:
+                                <span class="text-muted fw-normal" x-show="getEditUsageUnitType()" x-text="getEditUsageUnitType()"></span>
+                            </label>
                             <select class="form-select" name="id_unidad" x-model="editingItem.id_unidad" required>
                                 <template x-for="unit in getEditUnits()" :key="unit.id">
                                     <option :value="String(unit.id)" x-text="formatUnitLabel(unit)"></option>

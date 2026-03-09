@@ -159,7 +159,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                         </div>
                         <!-- Campos específicos para Compras (inicialmente ocultos) -->
                         <div class="col-md-4 field-compra d-none">
-                            <label for="precio_unitario" class="form-label">Precio Unitario</label>
+                            <label for="precio_unitario" class="form-label">Precio Unitario (Auto)</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number"
@@ -167,7 +167,8 @@ $unidadesMedida = $unidadesMedida ?? [];
                                     id="precio_unitario"
                                     name="precio_unitario"
                                     step="0.01"
-                                    min="0">
+                                    min="0"
+                                    readonly>
                             </div>
                         </div>
                         <div class="col-md-4 field-compra d-none">
@@ -190,7 +191,8 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 class="form-control"
                                 id="importe_total"
                                 name="importe_total"
-                                step="0.01">
+                                step="0.01"
+                                min="0">
                         </div>
                     </div>
 
@@ -522,11 +524,14 @@ use App\Core\Support\AssetHelper;
             });
 
             if (isPurchase) {
-                inputPrecio.required = true;
+                inputPrecio.required = false;
+                inputPrecio.readOnly = true;
+                inputImporteTotal.required = true;
                 actualizarCalculosCompra();
             } else {
                 inputPrecio.required = false;
                 inputPrecio.value = '';
+                inputImporteTotal.required = false;
                 // Limpiar otros campos compra si se desea
             }
         }
@@ -536,34 +541,27 @@ use App\Core\Support\AssetHelper;
             if (!esCompra() || !parteSeleccionada) return;
 
             const cantidad = parseFloat(inputCantidad.value) || 0;
-            const precio = parseFloat(inputPrecio.value) || 0;
+            const importeTotal = parseFloat(inputImporteTotal.value) || 0;
             const cotizacion = parseFloat(inputCotizacion.value) || 1;
+            const factor = parteSeleccionada.factor_conversion || 1;
 
-            // Calcular importe total si no hay override manual (opcional)
-            // Aquí asumimos que Precio * Cantidad * Cotización = Total
-            const total = cantidad * precio * cotizacion;
-            if (precio > 0) {
-                inputImporteTotal.value = window.appFormatNumber(total);
-            }
+            const precioUnitarioCompra = cantidad > 0 ? (importeTotal / cantidad) : 0;
+            inputPrecio.value = precioUnitarioCompra > 0 ? precioUnitarioCompra.toFixed(6) : '';
 
             // Actualizar panel informativo
             document.getElementById('calc-qty-compra').textContent = window.appFormatNumber(cantidad) + ' ' + (selectUM.options[selectUM.selectedIndex]?.text || '');
 
-            // Factor de conversión (simulado o real si viniera de API)
-            // NOTA: Si la API 'SearchClient' devuelve factor_conversion, usarlo.
-            // Por ahora usaremos 1 si son iguales, o placeholder.
-            const factor = parteSeleccionada.factor_conversion || 1;
             document.getElementById('calc-factor').textContent = factor;
 
             const qtyUso = cantidad * factor;
             document.getElementById('calc-qty-uso').textContent = window.appFormatNumber(qtyUso) + ' (Estimado)';
 
-            const costoBase = (precio * cotizacion) / factor;
+            const costoBase = qtyUso > 0 ? ((importeTotal * cotizacion) / qtyUso) : 0;
             document.getElementById('calc-costo-base').textContent = '$ ' + window.appFormatNumber(costoBase);
         }
 
         // Listeners para cálculos
-        [inputCantidad, inputPrecio, inputCotizacion, inputMoneda].forEach(input => {
+        [inputCantidad, inputImporteTotal, inputCotizacion, inputMoneda].forEach(input => {
             if (input) input.addEventListener('input', actualizarCalculosCompra);
         });
 
@@ -854,6 +852,12 @@ use App\Core\Support\AssetHelper;
             // Validar campos requeridos
             if (!data.deposito_origen || !data.deposito_destino || !data.cantidad || parseFloat(data.cantidad) <= 0) {
                 alert('Por favor complete todos los campos requeridos correctamente.');
+                return;
+            }
+
+            if (esCompra() && (!data.importe_total || parseFloat(data.importe_total) <= 0)) {
+                alert('En compras debe ingresar un Importe Total mayor a 0.');
+                inputImporteTotal.focus();
                 return;
             }
 

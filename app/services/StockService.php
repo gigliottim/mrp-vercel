@@ -131,7 +131,7 @@ final class StockService
             'referencia_tipo' => $data['referencia_tipo'] ?? null,
             'referencia_id' => $data['referencia_id'] ?? null,
             'observaciones' => $data['observaciones'] ?? null,
-            'fecha' => date('Y-m-d H:i:s')
+            'fecha' => $data['fecha'] ?? date('Y-m-d H:i:s')
         ];
 
         $id = $this->movimientos->create($moveData);

@@ -7,6 +7,7 @@ namespace App\Controllers\Reportes;
 use App\Core\Controllers\Controller;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
+use App\Models\Compra;
 use App\Models\Variante;
 use App\Models\Bom;
 use App\Models\GrupoParte;
@@ -20,6 +21,7 @@ final class ReportesController extends Controller
     private Bom $bomModel;
     private GrupoParte $grupos;
     private TipoParte $tiposPartes;
+    private Compra $compras;
     private UnitConversionService $unitConversion;
     private ListadoIngenieriaExportService $listadoExport;
 
@@ -28,6 +30,7 @@ final class ReportesController extends Controller
         ?Bom $bomModel = null,
         ?GrupoParte $grupos = null,
         ?TipoParte $tiposPartes = null,
+        ?Compra $compras = null,
         ?UnitConversionService $unitConversion = null,
         ?ListadoIngenieriaExportService $listadoExport = null
     ) {
@@ -35,6 +38,7 @@ final class ReportesController extends Controller
         $this->bomModel = $bomModel ?? new Bom();
         $this->grupos = $grupos ?? new GrupoParte();
         $this->tiposPartes = $tiposPartes ?? new TipoParte();
+        $this->compras = $compras ?? new Compra();
         $this->unitConversion = $unitConversion ?? new UnitConversionService();
         $this->listadoExport = $listadoExport ?? new ListadoIngenieriaExportService();
     }
@@ -338,6 +342,15 @@ final class ReportesController extends Controller
 
     public function planificacionProduccion(Request $request): Response
     {
+        $fechaCostoInput = trim((string) ($request->query['fecha_costo'] ?? ''));
+        $fechaCosto = date('Y-m-d');
+        if ($fechaCostoInput !== '') {
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $fechaCostoInput);
+            if ($dt instanceof \DateTimeImmutable) {
+                $fechaCosto = $dt->format('Y-m-d');
+            }
+        }
+
         // Obtener todas las variantes disponibles para el selector
         $variantesList = $this->variantes->allWithPartes();
         $variantes = [];
@@ -373,17 +386,18 @@ final class ReportesController extends Controller
         }
 
         // Calcular requerimientos consolidados
-        $requerimientos = $this->calcularRequerimientos($productosProgramados, $controlStockMap);
+        $requerimientos = $this->calcularRequerimientos($productosProgramados, $controlStockMap, $fechaCosto . ' 23:59:59');
 
         return $this->render('pages/reportes/planificacion-produccion', [
             'title' => 'Planificación de la Producción',
             'variantes' => $variantes,
             'productosProgramados' => $productosProgramados,
             'requerimientos' => $requerimientos,
+            'fechaCosto' => $fechaCosto,
         ]);
     }
 
-    private function calcularRequerimientos(array $productosProgramados, array $controlStockMap = []): array
+    private function calcularRequerimientos(array $productosProgramados, array $controlStockMap = [], ?string $fechaCosto = null): array
     {
         if (empty($productosProgramados)) {
             return [];
@@ -431,6 +445,8 @@ final class ReportesController extends Controller
         }
 
         // Calcular faltantes y cantidades a comprar
+        $fechaCosto = $fechaCosto ?: date('Y-m-d H:i:s');
+
         foreach ($consolidado as &$item) {
             $tipoCodigo = strtolower(trim((string) ($item['tipo'] ?? '')));
             // Por defecto, asumimos que requiere stock si no se especifica lo contrario
@@ -466,9 +482,8 @@ final class ReportesController extends Controller
                 $item['stock_final'] = $item['stock'] - $item['programado'];
             }
 
-            // TODO: Obtener precio unitario real del sistema
-            $item['precio_unitario'] = 0;
-            $item['a_comprar_precio'] = $item['a_comprar'] * $item['precio_unitario'];
+            $item['precio_unitario'] = $this->compras->getCostoAtDate((int) $item['variante_id'], $fechaCosto);
+            $item['a_comprar_precio'] = $item['a_comprar_uso'] * $item['precio_unitario'];
         }
 
         // Ordenar por código

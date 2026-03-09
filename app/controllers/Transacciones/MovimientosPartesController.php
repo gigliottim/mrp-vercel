@@ -102,11 +102,16 @@ final class MovimientosPartesController extends Controller
         $entidadId = !empty($data['proveedor_cliente']) ? (int)$data['proveedor_cliente'] : null;
 
         // Datos adicionales
-        $precioUnitario = (float)($data['precio_unitario'] ?? 0);
         $importeTotal = (float)($data['importe_total'] ?? 0);
-        // Si viene importe total y no unitario, calcularlo
-        if ($precioUnitario <= 0 && $importeTotal > 0 && $cantidad > 0) {
-            $precioUnitario = $importeTotal / $cantidad;
+
+        $fechaMovimientoInput = trim((string) ($data['fecha_hora'] ?? ''));
+        $fechaMovimiento = date('Y-m-d H:i:s');
+        if ($fechaMovimientoInput !== '') {
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d\\TH:i', $fechaMovimientoInput);
+            if (!$dt instanceof \DateTimeImmutable) {
+                return $this->jsonResponse(['success' => false, 'message' => 'Fecha/Hora inválida'], 400);
+            }
+            $fechaMovimiento = $dt->format('Y-m-d H:i:s');
         }
 
         if ($idVariante <= 0 || $cantidad <= 0 || $origenId <= 0 || $destinoId <= 0) {
@@ -145,6 +150,13 @@ final class MovimientosPartesController extends Controller
                         'message' => 'Debe seleccionar un Proveedor para movimientos desde PROVEEDOR'
                     ], 400);
                 }
+
+                if ($importeTotal <= 0) {
+                    return $this->jsonResponse([
+                        'success' => false,
+                        'message' => 'En compras debe ingresar el Importe Total de la operación.'
+                    ], 400);
+                }
             }
 
             $factorConversion = 1.0;
@@ -174,16 +186,25 @@ final class MovimientosPartesController extends Controller
                 'referencia_tipo' => $referenciaTipo,
                 'referencia_id' => 0,
                 'observaciones' => trim($data['observaciones'] ?? ''),
+                'fecha' => $fechaMovimiento,
             ]);
 
             // Si es COMPRA, crear registro satélite
             if ($esCompra && $movId) {
-                $precioUnitarioUso = $this->unitConversion->usageUnitPriceFromPurchase($precioUnitario, $factorConversion);
+                $precioUnitarioCompra = $importeTotal / $cantidad;
+                if ($precioUnitarioCompra <= 0) {
+                    return $this->jsonResponse([
+                        'success' => false,
+                        'message' => 'No se pudo calcular el precio unitario de compra.'
+                    ], 400);
+                }
+
+                $precioUnitarioUso = $this->unitConversion->usageUnitPriceFromPurchase($precioUnitarioCompra, $factorConversion);
 
                 $compraId = $this->compras->create([
                     'id_movimiento_stock' => $movId,
                     'id_entidad' => $entidadId,
-                    'fecha' => date('Y-m-d H:i:s'),
+                    'fecha' => $fechaMovimiento,
                     'precio_unitario' => $precioUnitarioUso,
                     'precio_total' => $importeTotal,
                     'nro_comprobante' => $data['cbte'] ?? null,

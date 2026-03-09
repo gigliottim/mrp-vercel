@@ -5,6 +5,7 @@ use App\Core\View\View;
 $variantes = $variantes ?? [];
 $productosProgramados = $productosProgramados ?? [];
 $requerimientos = $requerimientos ?? [];
+$fechaCosto = $fechaCosto ?? date('Y-m-d');
 
 ?>
 
@@ -84,7 +85,7 @@ $requerimientos = $requerimientos ?? [];
             <?php endforeach; ?>
 
             <div class="row g-3 align-items-end">
-                <div class="col-md-7">
+                <div class="col-md-5">
                     <label class="form-label">Buscar variante</label>
                     <div id="search-container" class="position-relative">
                         <input type="text"
@@ -110,8 +111,21 @@ $requerimientos = $requerimientos ?? [];
                 </div>
 
                 <div class="col-md-2">
+                    <label class="form-label">Fecha costo</label>
+                    <input type="date"
+                        class="form-control"
+                        name="fecha_costo"
+                        id="fecha_costo"
+                        value="<?= View::escape((string) $fechaCosto) ?>"
+                        required>
+                </div>
+
+                <div class="col-md-2 d-grid gap-2">
                     <button type="submit" name="add_variante" value="1" class="btn btn-success w-100">
                         <i class="fa-solid fa-plus"></i> Agregar
+                    </button>
+                    <button type="submit" name="recalcular" value="1" class="btn btn-outline-primary w-100">
+                        <i class="fa-solid fa-rotate"></i> Recalcular
                     </button>
                 </div>
             </div>
@@ -353,6 +367,7 @@ use App\Core\Support\AssetHelper;
         const searchResults = document.getElementById('search-results');
         const varianteIdInput = document.getElementById('variante_id');
         const cantidadInput = document.getElementById('cantidad');
+        const fechaCostoInput = document.getElementById('fecha_costo');
 
         if (searchInput && searchResults) {
             const searchInstance = new SearchClient({
@@ -379,17 +394,19 @@ use App\Core\Support\AssetHelper;
 
         // Validar antes de enviar
         document.getElementById('form-agregar').addEventListener('submit', (e) => {
+            const submitter = e.submitter;
+            const isAddAction = !!(submitter && submitter.name === 'add_variante');
             const varianteId = varianteIdInput.value;
             const cantidad = cantidadInput.value;
 
-            if (!varianteId || varianteId === '0') {
+            if (isAddAction && (!varianteId || varianteId === '0')) {
                 e.preventDefault();
                 alert('Por favor seleccione una variante de la lista de búsqueda');
                 searchInput.focus();
                 return false;
             }
 
-            if (!cantidad || parseFloat(cantidad) <= 0) {
+            if (isAddAction && (!cantidad || parseFloat(cantidad) <= 0)) {
                 e.preventDefault();
                 alert('Por favor ingrese una cantidad válida');
                 cantidadInput.focus();
@@ -407,6 +424,12 @@ use App\Core\Support\AssetHelper;
             const form = document.createElement('form');
             form.method = 'GET';
             form.action = '<?= url('reportes/planificacion-produccion') ?>';
+
+            const fechaCostoHidden = document.createElement('input');
+            fechaCostoHidden.type = 'hidden';
+            fechaCostoHidden.name = 'fecha_costo';
+            fechaCostoHidden.value = (fechaCostoInput && fechaCostoInput.value) ? fechaCostoInput.value : '<?= View::escape((string) $fechaCosto) ?>';
+            form.appendChild(fechaCostoHidden);
 
             // Agregar productos actuales excepto el que se elimina
             <?php foreach ($productosProgramados as $vid => $cant): ?>

@@ -8,6 +8,7 @@ use App\Controllers\Admin\TiposPartesController;
 use App\Controllers\Admin\TiposDepositosController;
 use App\Controllers\Admin\DepositosValidacionesController;
 use App\Controllers\Admin\ConfiguracionController;
+use App\Controllers\Admin\EntidadesController;
 use App\Controllers\Admin\UnidadesMedidaController;
 use App\Controllers\Admin\PartesVariantesController;
 use App\Controllers\Admin\PartesImportController;
@@ -150,6 +151,13 @@ $router->delete('/configuracion/depositos-validaciones/{id}', [DepositosValidaci
 $router->get('/configuracion/general', [ConfiguracionController::class, 'index']);
 $router->post('/configuracion/general', [ConfiguracionController::class, 'update']);
 $router->post('/configuracion/general/recalcular-dimensiones-partes', [ConfiguracionController::class, 'recalculatePartesGeometry']);
+
+// Configuracion - Entidades (Clientes/Proveedores)
+$router->get('/configuracion/entidades', [EntidadesController::class, 'index']);
+$router->get('/configuracion/entidades/{id}/editar', [EntidadesController::class, 'edit']);
+$router->post('/configuracion/entidades', [EntidadesController::class, 'store']);
+$router->put('/configuracion/entidades/{id}', [EntidadesController::class, 'update']);
+$router->delete('/configuracion/entidades/{id}', [EntidadesController::class, 'destroy']);
 
 // Empresa y Usuarios
 $router->get('/empresa-usuarios/empresa', [EmpresaUsuariosController::class, 'empresa']);

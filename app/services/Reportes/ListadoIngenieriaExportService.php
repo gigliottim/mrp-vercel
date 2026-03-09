@@ -181,6 +181,10 @@ final class ListadoIngenieriaExportService
             'xl/worksheets/sheet1.xml' => $sheetXml,
         ];
 
+        if (!class_exists('ZipArchive') && class_exists('PharData')) {
+            return $this->buildZipWithPhar($entries);
+        }
+
         if (!class_exists('ZipArchive')) {
             return $this->buildZipArchive($entries);
         }
@@ -209,6 +213,40 @@ final class ListadoIngenieriaExportService
         }
 
         return (string) $content;
+    }
+
+    /**
+     * @param array<string, string> $entries
+     */
+    private function buildZipWithPhar(array $entries): string
+    {
+        $base = tempnam(sys_get_temp_dir(), 'mrp_xlsx_');
+        if ($base === false) {
+            throw new \RuntimeException('No se pudo crear archivo temporal para XLSX.');
+        }
+
+        @unlink($base);
+        $zipPath = $base . '.zip';
+
+        try {
+            $phar = new \PharData($zipPath);
+            foreach ($entries as $path => $content) {
+                $phar->addFromString($path, $content);
+            }
+
+            $content = file_get_contents($zipPath);
+            unset($phar);
+            @unlink($zipPath);
+
+            if ($content === false || $content === '') {
+                throw new \RuntimeException('No se pudo leer el XLSX generado con PharData.');
+            }
+
+            return (string) $content;
+        } catch (\Throwable $e) {
+            @unlink($zipPath);
+            throw new \RuntimeException('Fallo al generar XLSX con PharData: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -463,7 +501,7 @@ final class ListadoIngenieriaExportService
 
         $titleHeight = 26.0;
         $headerRowHeight = 20.0;
-        $rowHeight = 18.0;
+        $baseRowHeight = 18.0;
 
         $columnWidths = $this->scaledColumnWidths($headers, $tableWidth);
         $cellChars = $this->columnCharCapacity($columnWidths);
@@ -501,20 +539,42 @@ final class ListadoIngenieriaExportService
         $drawPageHeader();
 
         foreach ($rows as $row) {
+            $isGroupRow = count($row) === 1;
+            if ($isGroupRow) {
+                $groupLines = $this->wrapText((string) ($row[0] ?? ''), $this->columnCharCapacity([$tableWidth])[0]);
+                $groupRowHeight = max($baseRowHeight, 8.0 + (count($groupLines) * 10.0));
+
+                if ($y - $groupRowHeight < $margin) {
+                    $pages[] = $currentPage;
+                    $currentPage = [];
+                    $drawPageHeader();
+                }
+
+                $this->drawFilledRect($currentPage, $margin, $y - $groupRowHeight, $tableWidth, $groupRowHeight, [0.97, 0.98, 1.00]);
+                $this->drawRect($currentPage, $margin, $y - $groupRowHeight, $tableWidth, $groupRowHeight, [0.82, 0.86, 0.93], 0.6);
+                foreach ($groupLines as $lineIndex => $line) {
+                    $lineY = $y - 12 - ($lineIndex * 9.2);
+                    $this->drawText($currentPage, $margin + 4, $lineY, $line, 9, true, [0.16, 0.26, 0.41]);
+                }
+                $y -= $groupRowHeight;
+                continue;
+            }
+
+            $cellLinesByColumn = [];
+            $maxLines = 1;
+            foreach ($headers as $index => $header) {
+                $raw = $row[$index] ?? '';
+                $cellValue = is_float($raw) ? number_format($raw, 2, ',', '.') : (string) $raw;
+                $lines = $this->wrapText($cellValue, $cellChars[$index] ?? 10);
+                $cellLinesByColumn[$index] = $lines;
+                $maxLines = max($maxLines, count($lines));
+            }
+
+            $rowHeight = max($baseRowHeight, 8.0 + ($maxLines * 9.2));
             if ($y - $rowHeight < $margin) {
                 $pages[] = $currentPage;
                 $currentPage = [];
                 $drawPageHeader();
-            }
-
-            $isGroupRow = count($row) === 1;
-            if ($isGroupRow) {
-                $this->drawFilledRect($currentPage, $margin, $y - $rowHeight, $tableWidth, $rowHeight, [0.97, 0.98, 1.00]);
-                $this->drawRect($currentPage, $margin, $y - $rowHeight, $tableWidth, $rowHeight, [0.82, 0.86, 0.93], 0.6);
-                $text = $this->fitText((string) ($row[0] ?? ''), $this->columnCharCapacity([$tableWidth])[0]);
-                $this->drawText($currentPage, $margin + 4, $y - 12, $text, 9, true, [0.16, 0.26, 0.41]);
-                $y -= $rowHeight;
-                continue;
             }
 
             $this->drawRect($currentPage, $margin, $y - $rowHeight, $tableWidth, $rowHeight, [0.82, 0.82, 0.82], 0.45);
@@ -525,16 +585,16 @@ final class ListadoIngenieriaExportService
                     $this->drawLine($currentPage, $x, $y - $rowHeight, $x, $y, [0.88, 0.88, 0.88], 0.35);
                 }
 
-                $raw = $row[$index] ?? '';
-                $cellValue = is_float($raw) ? number_format($raw, 2, ',', '.') : (string) $raw;
-                $cellText = $this->fitText($cellValue, $cellChars[$index] ?? 10);
-
                 $alignRight = in_array((string) $header, ['Cantidad', 'Precio Unit.', 'Subtotal'], true);
-                if ($alignRight) {
-                    $textWidth = $this->estimatedTextWidth($cellText, 8.2);
-                    $this->drawText($currentPage, max($x + 2, $x + $w - $textWidth - 3), $y - 12, $cellText, 8.2, false, [0.10, 0.10, 0.10]);
-                } else {
-                    $this->drawText($currentPage, $x + 3, $y - 12, $cellText, 8.2, false, [0.10, 0.10, 0.10]);
+                $lines = $cellLinesByColumn[$index] ?? [''];
+                foreach ($lines as $lineIndex => $line) {
+                    $lineY = $y - 12 - ($lineIndex * 9.2);
+                    if ($alignRight) {
+                        $textWidth = $this->estimatedTextWidth($line, 8.2);
+                        $this->drawText($currentPage, max($x + 2, $x + $w - $textWidth - 3), $lineY, $line, 8.2, false, [0.10, 0.10, 0.10]);
+                    } else {
+                        $this->drawText($currentPage, $x + 3, $lineY, $line, 8.2, false, [0.10, 0.10, 0.10]);
+                    }
                 }
 
                 $x += $w;
@@ -611,6 +671,50 @@ final class ListadoIngenieriaExportService
             return $text;
         }
         return rtrim(mb_substr($text, 0, max(1, $maxChars - 1), 'UTF-8')) . '…';
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function wrapText(string $text, int $maxChars): array
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+        if ($clean === '') {
+            return [''];
+        }
+
+        $words = preg_split('/\s+/u', $clean) ?: [$clean];
+        $lines = [];
+        $current = '';
+
+        foreach ($words as $word) {
+            if ($word === '') {
+                continue;
+            }
+
+            $candidate = $current === '' ? $word : ($current . ' ' . $word);
+            if (mb_strlen($candidate, 'UTF-8') <= $maxChars) {
+                $current = $candidate;
+                continue;
+            }
+
+            if ($current !== '') {
+                $lines[] = $current;
+                $current = '';
+            }
+
+            while (mb_strlen($word, 'UTF-8') > $maxChars) {
+                $lines[] = mb_substr($word, 0, $maxChars, 'UTF-8');
+                $word = mb_substr($word, $maxChars, null, 'UTF-8');
+            }
+            $current = $word;
+        }
+
+        if ($current !== '') {
+            $lines[] = $current;
+        }
+
+        return $lines === [] ? [''] : $lines;
     }
 
     private function estimatedTextWidth(string $text, float $fontSize): float

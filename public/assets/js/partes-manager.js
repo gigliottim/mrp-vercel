@@ -93,6 +93,11 @@ function parteManager(initialData) {
       this.$nextTick(() => this.adjustVariantDetalleHeight());
     },
 
+    hasValidParteSelection() {
+      const id = Number.parseInt(this.form?.id, 10);
+      return Number.isInteger(id) && id > 0;
+    },
+
     // Cargar datos de una parte
     loadParteData(parte) {
       this.form = {

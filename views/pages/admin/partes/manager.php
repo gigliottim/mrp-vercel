@@ -180,8 +180,8 @@ $dimensionFields = [
             </div>
         </div>
 
-        <!-- Columna Derecha (1/3): Tabla de Variantes -->
-        <div class="col-12 col-md-4" x-show="isEditing">
+        <!-- Columna Derecha (1/3): Siempre visible, contenido dinámico -->
+        <div class="col-12 col-md-4">
             <div class="card shadow-sm border-0 h-100 pm-scroll-card">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -193,30 +193,22 @@ $dimensionFields = [
                     </div>
                 </div>
                 <div class="card-body">
-
-                    <!-- Tabla de Variantes -->
-                    <div x-show="variantes.length > 0" class="pm-variants-table">
+                    <div x-show="isEditing && variantes.length > 0" class="pm-variants-table">
                         <?php include __DIR__ . '/manager/_variantes_table.php'; ?>
                     </div>
 
-                    <!-- Estado vacío -->
-                    <div x-show="variantes.length === 0" class="text-center py-5 pm-empty-state">
+                    <div x-show="isEditing && variantes.length === 0" class="text-center py-5 pm-empty-state">
                         <i class="fa-solid fa-inbox fa-3x text-muted mb-3"></i>
                         <p class="text-muted">No hay variantes registradas</p>
                         <p class="small text-muted">Completa el formulario para agregar la primera variante</p>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Mensaje cuando no hay parte seleccionada (columna derecha) -->
-        <div class="col-12 col-md-4" x-show="!isEditing">
-            <div class="card shadow-sm border-0 h-100 bg-light d-flex align-items-center justify-content-center">
-                <div class="text-center p-4 p-lg-5 pm-empty-state">
-                    <i class="fa-solid fa-arrow-left fa-3x text-muted mb-3 d-none d-lg-block"></i>
-                    <i class="fa-solid fa-arrow-up fa-3x text-muted mb-3 d-lg-none"></i>
-                    <h5 class="text-muted">Gestión de Variantes</h5>
-                    <p class="text-muted mb-0">Selecciona una parte existente o crea una nueva para gestionar sus variantes.</p>
+                    <div x-show="!isEditing" class="text-center p-4 p-lg-5 pm-empty-state">
+                        <i class="fa-solid fa-arrow-left fa-3x text-muted mb-3 d-none d-lg-block"></i>
+                        <i class="fa-solid fa-arrow-up fa-3x text-muted mb-3 d-lg-none"></i>
+                        <h5 class="text-muted">Gestión de Variantes</h5>
+                        <p class="text-muted mb-0">Selecciona una parte existente o crea una nueva para gestionar sus variantes.</p>
+                    </div>
                 </div>
             </div>
         </div>

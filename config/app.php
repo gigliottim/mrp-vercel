@@ -2,8 +2,8 @@
 
 return [
     'name' => env('APP_NAME', 'MRP'),
-    'version' => '15.10.0',
-    'build' => 3975,
+    'version' => '15.11.0',
+    'build' => 3976,
     'url' => env('APP_URL', 'http://localhost'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
@@ -12,6 +12,7 @@ return [
     'session_name' => env('SESSION_NAME', 'MRPSESSID'),
     'asset_prefix' => parse_url(env('APP_URL', 'http://localhost'), PHP_URL_PATH) ?? '',
 ];
+
 
 
 

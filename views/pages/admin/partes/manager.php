@@ -74,29 +74,31 @@ $dimensionFields = [
                 Buscar parte o variante existente para cargar o editar
             </h6>
 
-            <div class="d-flex align-items-center gap-3 mb-3" x-show="hasValidParteSelection()">
-                <div class="flex-grow-1">
-                    <div class="alert alert-success mb-0 py-2 px-3">
-                        <i class="fa-solid fa-check-circle me-2"></i>
-                        <span class="fw-semibold">Parte:</span>
-                        <strong x-text="form.codigo || 'N/A'"></strong>
-                        <span class="text-muted mx-1">-</span>
-                        <span x-text="form.detalle || ''"></span>
-                        <template x-if="variantForm && variantForm.id">
-                            <span>
-                                <span class="text-muted mx-2">|</span>
-                                <span class="fw-semibold">Variante:</span>
-                                <strong x-text="variantForm.codigo_variante || 'N/A'"></strong>
-                                <span class="text-muted mx-1">-</span>
-                                <span x-text="variantForm.detalle || ''"></span>
-                            </span>
-                        </template>
+            <template x-if="hasValidParteSelection()">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="flex-grow-1">
+                        <div class="alert alert-success mb-0 py-2 px-3">
+                            <i class="fa-solid fa-check-circle me-2"></i>
+                            <span class="fw-semibold">Parte:</span>
+                            <strong x-text="form.codigo || 'N/A'"></strong>
+                            <span class="text-muted mx-1">-</span>
+                            <span x-text="form.detalle || ''"></span>
+                            <template x-if="variantForm && variantForm.id">
+                                <span>
+                                    <span class="text-muted mx-2">|</span>
+                                    <span class="fw-semibold">Variante:</span>
+                                    <strong x-text="variantForm.codigo_variante || 'N/A'"></strong>
+                                    <span class="text-muted mx-1">-</span>
+                                    <span x-text="variantForm.detalle || ''"></span>
+                                </span>
+                            </template>
+                        </div>
                     </div>
+                    <button type="button" class="btn btn-outline-primary" @click="resetForm()">
+                        <i class="fa-solid fa-exchange-alt"></i> Cambiar
+                    </button>
                 </div>
-                <button type="button" class="btn btn-outline-primary" @click="resetForm()">
-                    <i class="fa-solid fa-exchange-alt"></i> Cambiar
-                </button>
-            </div>
+            </template>
 
             <div x-show="!hasValidParteSelection()">
                 <!-- Filtros por tipo -->

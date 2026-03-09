@@ -114,9 +114,6 @@ use App\Core\View\View;
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-outline-primary" @click="reloadMaestroWithFocus()">
-                    <i class="fa-solid fa-arrows-rotate"></i> Refrescar listado
-                </button>
             </div>
         </div>
     </div>

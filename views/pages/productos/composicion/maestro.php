@@ -174,12 +174,14 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
+        overflow: hidden;
     }
 
     .tree-panel-body {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .tree-panel-list {
@@ -195,17 +197,20 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         min-height: 0;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
     }
 
     .maestro-main-row {
         flex: 1 1 auto;
         min-height: 0;
+        overflow: hidden;
     }
 
     .maestro-panel-col {
         display: flex;
         flex-direction: column;
         min-height: 0;
+        overflow: hidden;
     }
 
     .details-panel {
@@ -213,6 +218,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
         flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
+        overflow: hidden;
     }
 
     .details-panel-body {

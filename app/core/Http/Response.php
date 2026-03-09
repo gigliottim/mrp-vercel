@@ -32,6 +32,17 @@ final class Response
 
     public function send(): void
     {
+        // Evitar corrupcion de descargas binarias por output residual (warnings/notices/BOM)
+        $contentType = strtolower((string) ($this->headers['Content-Type'] ?? ''));
+        $isBinaryDownload = str_contains($contentType, 'application/pdf')
+            || str_contains($contentType, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        if ($isBinaryDownload) {
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+        }
+
         http_response_code($this->status);
         foreach ($this->headers as $key => $value) {
             header(sprintf('%s: %s', $key, $value));

@@ -207,6 +207,7 @@ final class ListadoIngenieriaExportService
     private function buildSpreadsheet(array $headers, array $rows, string $title): Spreadsheet
     {
         $spreadsheet = new Spreadsheet();
+        $spreadsheet->getDefaultStyle()->getFont()->setName('Calibri')->setSize(9);
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Listado');
 
@@ -237,9 +238,13 @@ final class ListadoIngenieriaExportService
 
         // Header (fila 3)
         $headerRow = 3;
+        $headerDisplayMap = [
+            'Precio Unit.' => "Precio\nUnit.",
+            'Subtotal' => "Sub\ntotal",
+        ];
         foreach ($headers as $i => $header) {
             $col = Coordinate::stringFromColumnIndex($i + 1);
-            $sheet->setCellValue($col . $headerRow, $header);
+            $sheet->setCellValue($col . $headerRow, $headerDisplayMap[$header] ?? $header);
         }
 
         $sheet->getStyle('A' . $headerRow . ':' . $lastCol . $headerRow)->applyFromArray([
@@ -255,12 +260,16 @@ final class ListadoIngenieriaExportService
                 ],
             ],
             'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
             ],
         ]);
+        $sheet->getRowDimension($headerRow)->setRowHeight(30);
 
         $startDataRow = $headerRow + 1;
         $rowNum = $startDataRow;
+        $detalleColIndex = array_search('Detalle', $headers, true);
 
         foreach ($rows as $row) {
             $isGroup = count($row) === 1;
@@ -284,10 +293,18 @@ final class ListadoIngenieriaExportService
                 continue;
             }
 
+            $detalleTieneDosLineas = false;
             foreach ($headers as $i => $header) {
                 $colIdx = $i + 1;
                 $col = Coordinate::stringFromColumnIndex($colIdx);
                 $value = $row[$i] ?? '';
+
+                if ($detalleColIndex !== false && $i === $detalleColIndex) {
+                    $detalleFormateado = $this->formatDetalleForCell((string) $value);
+                    $detalleTieneDosLineas = str_contains($detalleFormateado, "\n");
+                    $sheet->setCellValueExplicit($col . $rowNum, $detalleFormateado, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    continue;
+                }
 
                 if (in_array($header, ['Cantidad', 'Precio Unit.', 'Subtotal'], true) && is_numeric($value)) {
                     $sheet->setCellValueExplicit($col . $rowNum, (float) $value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
@@ -306,9 +323,16 @@ final class ListadoIngenieriaExportService
                 ],
                 'alignment' => [
                     'vertical' => Alignment::VERTICAL_CENTER,
-                    'wrapText' => true,
+                    'wrapText' => false,
                 ],
             ]);
+
+            if ($detalleColIndex !== false) {
+                $detalleCol = Coordinate::stringFromColumnIndex($detalleColIndex + 1);
+                $sheet->getStyle($detalleCol . $rowNum)->getAlignment()->setWrapText(true);
+            }
+
+            $sheet->getRowDimension($rowNum)->setRowHeight($detalleTieneDosLineas ? 30 : 18);
 
             $rowNum++;
         }
@@ -324,20 +348,23 @@ final class ListadoIngenieriaExportService
                 $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 $sheet->getStyle($range)->getNumberFormat()->setFormatCode('#,##0.00');
             } else {
-                $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_JUSTIFY);
+                if ($header !== 'Detalle') {
+                    $sheet->getStyle($range)->getAlignment()->setShrinkToFit(true);
+                }
             }
         }
 
         // Anchos de columna
         $widthMap = [
-            'Nivel' => 16,
-            'Codigo' => 18,
-            'Detalle' => 52,
-            'Tipo' => 12,
-            'Cantidad' => 14,
-            'Unidad' => 10,
-            'Precio Unit.' => 16,
-            'Subtotal' => 16,
+            'Nivel' => 14,
+            'Codigo' => 16,
+            'Detalle' => 44,
+            'Tipo' => 9,
+            'Cantidad' => 11,
+            'Unidad' => 8,
+            'Precio Unit.' => 12,
+            'Subtotal' => 12,
         ];
 
         foreach ($headers as $i => $header) {
@@ -350,8 +377,40 @@ final class ListadoIngenieriaExportService
 
         // Area de impresion
         $sheet->getPageSetup()->setPrintArea('A1:' . $lastCol . $endDataRow);
+        $sheet->getPageMargins()
+            ->setTop(0.3)
+            ->setBottom(0.3)
+            ->setLeft(0.2)
+            ->setRight(0.2);
 
         return $spreadsheet;
+    }
+
+    private function formatDetalleForCell(string $value): string
+    {
+        $text = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
+        if ($text === '') {
+            return '';
+        }
+
+        if (mb_strlen($text, 'UTF-8') <= 58) {
+            return $text;
+        }
+
+        $slice = mb_substr($text, 0, 116, 'UTF-8');
+        $breakPos = mb_strrpos($slice, ' ', 0, 'UTF-8');
+        if ($breakPos === false || $breakPos < 30) {
+            $breakPos = 58;
+        }
+
+        $line1 = trim(mb_substr($slice, 0, $breakPos, 'UTF-8'));
+        $line2 = trim(mb_substr($slice, $breakPos, null, 'UTF-8'));
+
+        if (mb_strlen($text, 'UTF-8') > mb_strlen($slice, 'UTF-8')) {
+            $line2 = rtrim(mb_substr($line2, 0, 55, 'UTF-8')) . '...';
+        }
+
+        return $line1 . "\n" . $line2;
     }
 
     private function writeSpreadsheetToString(Spreadsheet $spreadsheet, string $writerType): string

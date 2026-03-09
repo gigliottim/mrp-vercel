@@ -105,14 +105,32 @@ final class MovimientosPartesController extends Controller
         $importeTotal = (float)($data['importe_total'] ?? 0);
 
         $fechaMovimientoInput = trim((string) ($data['fecha_hora'] ?? ''));
-        $fechaMovimiento = date('Y-m-d H:i:s');
+        $argentinaTz = new \DateTimeZone('America/Argentina/Buenos_Aires');
+        $ahoraArgentina = new \DateTimeImmutable('now', $argentinaTz);
+        $fechaMovimientoDateTime = $ahoraArgentina;
+
         if ($fechaMovimientoInput !== '') {
-            $dt = \DateTimeImmutable::createFromFormat('Y-m-d\\TH:i', $fechaMovimientoInput);
-            if (!$dt instanceof \DateTimeImmutable) {
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d\\TH:i', $fechaMovimientoInput, $argentinaTz);
+            $errors = \DateTimeImmutable::getLastErrors();
+
+            if (
+                !$dt instanceof \DateTimeImmutable
+                || ($errors !== false && (($errors['warning_count'] ?? 0) > 0 || ($errors['error_count'] ?? 0) > 0))
+            ) {
                 return $this->jsonResponse(['success' => false, 'message' => 'Fecha/Hora inválida'], 400);
             }
-            $fechaMovimiento = $dt->format('Y-m-d H:i:s');
+
+            if ($dt > $ahoraArgentina) {
+                return $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'La Fecha/Hora no puede ser superior al momento actual de Buenos Aires.'
+                ], 400);
+            }
+
+            $fechaMovimientoDateTime = $dt;
         }
+
+        $fechaMovimiento = $fechaMovimientoDateTime->format('Y-m-d H:i:s');
 
         if ($idVariante <= 0 || $cantidad <= 0 || $origenId <= 0 || $destinoId <= 0) {
             return $this->jsonResponse(['success' => false, 'message' => 'Datos incompletos o inválidos'], 400);

@@ -12,6 +12,11 @@ require_once __DIR__ . '/autoload.php';
 Env::load(base_path('.env'));
 Config::load(base_path('config'));
 
+$appTimezone = (string) Config::get('app.timezone', 'America/Argentina/Buenos_Aires');
+if (@date_default_timezone_set($appTimezone) === false) {
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
+}
+
 $router = new Router();
 
 $routesDir = base_path('routes');

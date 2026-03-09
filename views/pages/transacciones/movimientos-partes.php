@@ -174,8 +174,8 @@ $unidadesMedida = $unidadesMedida ?? [];
                         <div class="col-md-4 field-compra d-none">
                             <label for="moneda" class="form-label">Moneda</label>
                             <select class="form-select" id="moneda" name="moneda">
+                                <option value="ARS" selected>ARS - Peso Argentino</option>
                                 <option value="USD">USD - Dólar Estadounidense</option>
-                                <option value="ARS">ARS - Peso Argentino</option>
                                 <option value="EUR">EUR - Euro</option>
                             </select>
                         </div>
@@ -379,6 +379,42 @@ use App\Core\Support\AssetHelper;
         const form = document.getElementById('formMovimiento');
         const inputParteHidden = document.getElementById('parte');
         const btnCambiarParte = document.getElementById('btn-cambiar-parte');
+        const inputFechaHora = document.getElementById('fecha_hora');
+        const argentinaTimezone = 'America/Argentina/Buenos_Aires';
+
+        function getBuenosAiresNowDateTimeLocal() {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: argentinaTimezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hourCycle: 'h23'
+            });
+            const parts = formatter.formatToParts(now).reduce((acc, part) => {
+                if (part.type !== 'literal') {
+                    acc[part.type] = part.value;
+                }
+                return acc;
+            }, {});
+
+            return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+        }
+
+        function syncFechaHoraLimits(resetValue = false) {
+            if (!inputFechaHora) {
+                return;
+            }
+
+            const maxNow = getBuenosAiresNowDateTimeLocal();
+            inputFechaHora.max = maxNow;
+
+            if (resetValue || !inputFechaHora.value || inputFechaHora.value > maxNow) {
+                inputFechaHora.value = maxNow;
+            }
+        }
 
         // Elementos adicionales para Compras
         const fieldsCompra = document.querySelectorAll('.field-compra');
@@ -393,6 +429,12 @@ use App\Core\Support\AssetHelper;
         // Tabla de movimientos
         const movimientosTableBody = document.querySelector('table tbody');
         const movimientosRows = movimientosTableBody ? movimientosTableBody.querySelectorAll('tr') : [];
+
+        syncFechaHoraLimits(true);
+        setInterval(() => syncFechaHoraLimits(false), 30000);
+        if (inputFechaHora) {
+            inputFechaHora.addEventListener('change', () => syncFechaHoraLimits(false));
+        }
 
         // Estado de la parte seleccionada
         let parteSeleccionada = null;
@@ -776,7 +818,7 @@ use App\Core\Support\AssetHelper;
         btnCancelar.addEventListener('click', function() {
             if (confirm('¿Está seguro que desea cancelar? Se perderán los datos ingresados.')) {
                 form.reset();
-                document.getElementById('fecha_hora').value = '<?= date('Y-m-d\TH:i') ?>';
+                syncFechaHoraLimits(true);
                 parteSeleccionada = null;
                 inputParteHidden.value = '';
                 searchInput.value = '';
@@ -840,6 +882,14 @@ use App\Core\Support\AssetHelper;
         // Submit del formulario
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            syncFechaHoraLimits(false);
+
+            if (inputFechaHora && inputFechaHora.value > inputFechaHora.max) {
+                alert('La Fecha/Hora no puede ser superior al momento actual de Buenos Aires.');
+                inputFechaHora.value = inputFechaHora.max;
+                inputFechaHora.focus();
+                return;
+            }
 
             if (!parteSeleccionada) {
                 alert('Debe seleccionar una parte');
@@ -879,7 +929,7 @@ use App\Core\Support\AssetHelper;
                         alert('Movimiento registrado exitosamente');
                         // Resetear formulario
                         form.reset();
-                        document.getElementById('fecha_hora').value = '<?= date('Y-m-d\TH:i') ?>';
+                        syncFechaHoraLimits(true);
                         parteSeleccionada = null;
                         inputParteHidden.value = '';
                         searchInput.value = '';

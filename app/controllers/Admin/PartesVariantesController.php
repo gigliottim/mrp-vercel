@@ -25,6 +25,7 @@ final class PartesVariantesController extends Controller
     private GrupoParte $grupos;
     private UnidadMedida $unidades;
     private ?int $cachedDecimalPlaces = null;
+    private ?bool $partesPrecisionChecked = null;
 
     public function __construct(
         ?Parte $partes = null,
@@ -532,6 +533,8 @@ final class PartesVariantesController extends Controller
 
     private function validatePart(Request $request): array
     {
+        $this->ensurePartesDimensionsPrecision();
+
         $body = $request->body;
         $decimalPlaces = $this->getConfiguredDecimalPlaces();
         $data = [
@@ -712,5 +715,47 @@ final class PartesVariantesController extends Controller
         $factor = 10 ** $safeDecimals;
 
         return round($value * $factor) / $factor;
+    }
+
+    private function ensurePartesDimensionsPrecision(): void
+    {
+        if ($this->partesPrecisionChecked === true) {
+            return;
+        }
+
+        $connection = $this->partes->getConnection();
+        $meta = $connection
+            ->query(
+                "SELECT column_name, data_type, numeric_scale
+                                 FROM information_schema.columns
+                                 WHERE table_schema = current_schema()
+                                     AND table_name = 'partes'
+                                     AND column_name IN ('largo_alto', 'ancho', 'espesor_profundidad', 'superficie', 'volumen')"
+            )
+            ->fetchAll(\PDO::FETCH_ASSOC);
+
+        $needsUpgrade = false;
+        foreach ($meta as $columnMeta) {
+            $dataType = strtolower((string) ($columnMeta['data_type'] ?? ''));
+            $scale = isset($columnMeta['numeric_scale']) ? (int) $columnMeta['numeric_scale'] : null;
+
+            if (($dataType === 'numeric' || $dataType === 'decimal') && $scale !== null && $scale < 10) {
+                $needsUpgrade = true;
+                break;
+            }
+        }
+
+        if ($needsUpgrade) {
+            $connection->exec(
+                'ALTER TABLE partes
+                    ALTER COLUMN largo_alto TYPE numeric(18,10),
+                    ALTER COLUMN ancho TYPE numeric(18,10),
+                    ALTER COLUMN espesor_profundidad TYPE numeric(18,10),
+                    ALTER COLUMN superficie TYPE numeric(18,10),
+                    ALTER COLUMN volumen TYPE numeric(18,10)'
+            );
+        }
+
+        $this->partesPrecisionChecked = true;
     }
 }

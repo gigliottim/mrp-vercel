@@ -21,6 +21,7 @@ final class PartesGeometryRecalculationService
 
     public function recalculateAll(bool $onlyCompleteDimensions = false): array
     {
+        $this->ensurePartesDimensionsPrecision();
         $decimalPlaces = $this->getConfiguredDecimalPlaces();
 
         $units = $this->connection
@@ -187,6 +188,36 @@ final class PartesGeometryRecalculationService
         }
 
         return max(1, min(10, $configured));
+    }
+
+    private function ensurePartesDimensionsPrecision(): void
+    {
+        $meta = $this->connection
+            ->query(
+                "SELECT column_name, data_type, numeric_scale
+                 FROM information_schema.columns
+                 WHERE table_schema = current_schema()
+                   AND table_name = 'partes'
+                   AND column_name IN ('largo_alto', 'ancho', 'espesor_profundidad', 'superficie', 'volumen')"
+            )
+            ->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($meta as $columnMeta) {
+            $dataType = strtolower((string) ($columnMeta['data_type'] ?? ''));
+            $scale = isset($columnMeta['numeric_scale']) ? (int) $columnMeta['numeric_scale'] : null;
+
+            if (($dataType === 'numeric' || $dataType === 'decimal') && $scale !== null && $scale < 10) {
+                $this->connection->exec(
+                    'ALTER TABLE partes
+                        ALTER COLUMN largo_alto TYPE numeric(18,10),
+                        ALTER COLUMN ancho TYPE numeric(18,10),
+                        ALTER COLUMN espesor_profundidad TYPE numeric(18,10),
+                        ALTER COLUMN superficie TYPE numeric(18,10),
+                        ALTER COLUMN volumen TYPE numeric(18,10)'
+                );
+                break;
+            }
+        }
     }
 
     private function toNullableInt(mixed $value): ?int

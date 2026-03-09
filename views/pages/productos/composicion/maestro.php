@@ -536,6 +536,7 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
             baseActionUrl: '<?= url('productos/maestro/materiales') ?>',
             validateCandidatesUrl: '<?= url('productos/maestro/materiales/validar-candidatos') ?>',
             selectedVarianteId: <?= (int) ($selectedVarianteId ?? 0) ?>,
+            unidades: <?= json_encode($unidades ?: []) ?>,
             defaultUnidadId: <?= (int) ($unidades[0]['id'] ?? 0) ?>
         }));
     });

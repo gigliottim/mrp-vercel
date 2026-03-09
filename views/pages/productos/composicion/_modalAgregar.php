@@ -46,21 +46,10 @@ use App\Core\View\View;
                             placeholder="Buscar por código o detalle..."
                             autocomplete="off">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Cantidad</label>
-                        <input type="number"
-                            step="<?= esc(app_decimal_step()) ?>"
-                            min="<?= esc(app_decimal_step()) ?>"
-                            class="form-control"
-                            x-model="addQuantity">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Unidad</label>
-                        <select class="form-select" x-model="addUnitId">
-                            <?php foreach ($unidades as $u): ?>
-                                <option value="<?= (int) $u['id'] ?>"><?= View::escape(($u['unidad'] ?? $u['nombre'] ?? '') . ' (' . $u['simbolo'] . ')') ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="small text-muted">
+                            Al presionar <strong>+Agregar</strong> se abrirá un modal para definir cantidad y UM de uso.
+                        </div>
                     </div>
                 </div>
 
@@ -97,9 +86,9 @@ use App\Core\View\View;
                                         <button type="button"
                                             class="btn btn-sm btn-success"
                                             :disabled="isAddingComponent(item.id) || isValidatingCandidates"
-                                            @click="addComponentFromList(item)">
+                                            @click="openAddQuantityModal(item)">
                                             <span x-show="!isAddingComponent(item.id)">
-                                                <i class="fa-solid fa-plus"></i> Agregar
+                                                <i class="fa-solid fa-plus"></i> +Agregar
                                             </span>
                                             <span x-show="isAddingComponent(item.id)">
                                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -127,6 +116,66 @@ use App\Core\View\View;
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-outline-primary" @click="reloadMaestroWithFocus()">
                     <i class="fa-solid fa-arrows-rotate"></i> Refrescar listado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Asignar Cantidad y UM al agregar -->
+<div class="modal fade" id="modalAgregarCantidad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Asignar cantidad y UM de uso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info py-2 mb-3" x-show="pendingAddItem">
+                    <div class="small text-uppercase text-muted fw-bold">Componente a agregar</div>
+                    <div class="fw-semibold" x-text="getItemCode(pendingAddItem)"></div>
+                    <div class="text-muted" x-text="getItemDetail(pendingAddItem)"></div>
+                    <div class="mt-1">
+                        <span class="badge bg-light text-dark border">
+                            Tipo UM: <span x-text="pendingAddUnitType || 'sin tipo'"></span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number"
+                            step="<?= esc(app_decimal_step()) ?>"
+                            min="<?= esc(app_decimal_step()) ?>"
+                            class="form-control"
+                            x-model="pendingAddQuantity"
+                            required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">UM de uso</label>
+                        <select class="form-select" x-model="pendingAddUnitId" required>
+                            <template x-for="unit in getPendingAddUnits()" :key="unit.id">
+                                <option :value="String(unit.id)" x-text="formatUnitLabel(unit)"></option>
+                            </template>
+                        </select>
+                        <small class="text-muted" x-show="pendingAddUnitType">
+                            Se muestran solo unidades del tipo <span x-text="pendingAddUnitType"></span>.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning py-2 mt-3 mb-0" x-show="getPendingAddUnits().length === 0">
+                    No hay unidades disponibles para el tipo requerido. Revisa el catálogo de unidades.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button"
+                    class="btn btn-success"
+                    :disabled="!pendingAddItem || getPendingAddUnits().length === 0"
+                    @click="confirmAddSelectedComponent()">
+                    <i class="fa-solid fa-check me-1"></i> Confirmar +Agregar
                 </button>
             </div>
         </div>

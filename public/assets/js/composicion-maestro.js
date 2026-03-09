@@ -23,6 +23,7 @@ window.createComposicionMaestroApp = function (config) {
     flatTree: config.treeData || [],
     selectedNode: null,
     variantes: config.variantes || {},
+    unidades: Array.isArray(config.unidades) ? config.unidades : [],
     editingItem: {},
     editActionUrl: '',
     activeFilter: '',
@@ -41,6 +42,10 @@ window.createComposicionMaestroApp = function (config) {
     addListQuery: '',
     addQuantity: '',
     addUnitId: '',
+    pendingAddItem: null,
+    pendingAddQuantity: '',
+    pendingAddUnitId: '',
+    pendingAddUnitType: '',
     addModalStatus: {
       type: '',
       message: ''
@@ -532,19 +537,55 @@ window.createComposicionMaestroApp = function (config) {
         return '';
       }
 
-      const select = document.querySelector('#modalAgregar select[x-model="addUnitId"]');
-      if (!select) {
+      const unit = this.unidades.find(item => Number.parseInt(item?.id, 10) === target);
+      if (!unit) {
         return '';
       }
 
-      const option = Array.from(select.options).find(item => Number.parseInt(item.value, 10) === target);
-      if (!option) {
-        return '';
-      }
-
-      const label = String(option.textContent || '').trim();
+      const label = this.formatUnitLabel(unit);
       const match = label.match(/\(([^)]+)\)\s*$/);
       return match ? String(match[1] || '').trim() : label;
+    },
+
+    /**
+     * Normaliza tipo de unidad para comparaciones y filtros.
+     */
+    normalizeUnitType(value) {
+      return String(value || '').trim().toLowerCase();
+    },
+
+    /**
+     * Devuelve etiqueta consistente para mostrar unidades.
+     */
+    formatUnitLabel(unit) {
+      if (!unit) return '';
+
+      const unitName = String(unit.unidad || unit.nombre || unit.simbolo || '').trim();
+      const symbol = String(unit.simbolo || '').trim();
+      if (unitName && symbol && !unitName.includes(`(${symbol})`)) {
+        return `${unitName} (${symbol})`;
+      }
+
+      return unitName || symbol || 'Unidad';
+    },
+
+    /**
+     * Lista unidades por tipo de UM.
+     */
+    getUnitsForType(unitType) {
+      const normalizedType = this.normalizeUnitType(unitType);
+      if (normalizedType === '') {
+        return this.unidades;
+      }
+
+      return this.unidades.filter(unit => this.normalizeUnitType(unit?.tipo) === normalizedType);
+    },
+
+    /**
+     * Unidades disponibles para el modal de confirmacion de agregado.
+     */
+    getPendingAddUnits() {
+      return this.getUnitsForType(this.pendingAddUnitType);
     },
 
     /**
@@ -635,6 +676,75 @@ window.createComposicionMaestroApp = function (config) {
         unitId: resolvedUnitId,
         quantity: resolvedQuantity
       };
+    },
+
+    /**
+     * Abre modal de cantidad/UM para el item elegido.
+     */
+    openAddQuantityModal(item) {
+      if (!item) {
+        return;
+      }
+
+      const resolvedValues = this.resolveAddValuesForItem(item);
+      const umUsoType = this.normalizeUnitType(item?.um_uso_tipo);
+      const unitsByType = this.getUnitsForType(umUsoType);
+      const resolvedUnitId = Number.parseInt(resolvedValues.unitId, 10);
+
+      this.pendingAddItem = item;
+      this.pendingAddUnitType = umUsoType;
+      this.pendingAddQuantity = Number.isFinite(Number.parseFloat(resolvedValues.quantity))
+        ? String(resolvedValues.quantity)
+        : '1';
+
+      const hasResolvedInType = unitsByType.some(unit => Number.parseInt(unit?.id, 10) === resolvedUnitId);
+      if (hasResolvedInType) {
+        this.pendingAddUnitId = String(resolvedUnitId);
+      } else {
+        this.pendingAddUnitId = unitsByType.length > 0
+          ? String(unitsByType[0].id)
+          : (Number.isInteger(resolvedUnitId) && resolvedUnitId > 0 ? String(resolvedUnitId) : '');
+      }
+
+      const modalEl = document.getElementById('modalAgregarCantidad');
+      if (!modalEl) {
+        this.addModalStatus = {
+          type: 'error',
+          message: 'No se pudo abrir el modal de cantidad para agregar el componente.'
+        };
+        return;
+      }
+
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    },
+
+    /**
+     * Confirma alta desde modal de cantidad/UM.
+     */
+    async confirmAddSelectedComponent() {
+      if (!this.pendingAddItem) {
+        this.addModalStatus = {
+          type: 'error',
+          message: 'No hay un componente seleccionado para agregar.'
+        };
+        return;
+      }
+
+      await this.addComponentFromList(this.pendingAddItem, {
+        quantity: this.pendingAddQuantity,
+        unitId: this.pendingAddUnitId
+      });
+
+      if (this.addModalStatus.type === 'success') {
+        const modalEl = document.getElementById('modalAgregarCantidad');
+        if (modalEl) {
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) {
+            modal.hide();
+          }
+        }
+      }
     },
 
     /**
@@ -774,12 +884,14 @@ window.createComposicionMaestroApp = function (config) {
     /**
      * Agrega un componente desde el listado del modal sin cerrarlo.
      */
-    async addComponentFromList(item) {
+    async addComponentFromList(item, options = {}) {
       const materialId = Number.parseInt(item?.id, 10);
       const parentId = Number.parseInt(this.addItemParentId, 10);
       const resolvedValues = this.resolveAddValuesForItem(item);
-      const quantity = Number.parseFloat(resolvedValues.quantity);
-      const unitId = Number.parseInt(resolvedValues.unitId, 10);
+      const requestedQuantity = options?.quantity ?? resolvedValues.quantity;
+      const requestedUnitId = options?.unitId ?? resolvedValues.unitId;
+      const quantity = Number.parseFloat(requestedQuantity);
+      const unitId = Number.parseInt(requestedUnitId, 10);
 
       this.addQuantity = Number.isFinite(quantity) ? String(quantity) : this.addQuantity;
       this.addUnitId = Number.isInteger(unitId) && unitId > 0 ? String(unitId) : this.addUnitId;
@@ -1099,6 +1211,12 @@ window.createComposicionMaestroApp = function (config) {
       this.searchResults = [];
       this.activeFilter = '';
       this.addListQuery = '';
+      this.addQuantity = '';
+      this.addUnitId = '';
+      this.pendingAddItem = null;
+      this.pendingAddQuantity = '';
+      this.pendingAddUnitId = '';
+      this.pendingAddUnitType = '';
       this.addModalStatus = { type: '', message: '' };
       this.addingComponentIds = [];
       this.hiddenModalVariantIds = [];

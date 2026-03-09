@@ -231,10 +231,13 @@ $dimensionFields = [
                 format: 'detailed',
                 filters: currentParteFilters,
                 onSelect: (item) => {
-                    // item.id_parte viene del endpoint search/variantes (formato detailed)
+                    // item.id es id_variante, item.id_parte es la parte asociada
                     const parteId = item.id_parte || item.id;
+                    const varianteId = item.id;
                     const alpineComponent = Alpine.$data(document.querySelector('[x-data]'));
-                    if (alpineComponent && alpineComponent.loadParte) {
+                    if (alpineComponent && alpineComponent.loadVariante && parteId && varianteId) {
+                        alpineComponent.loadVariante(parteId, varianteId);
+                    } else if (alpineComponent && alpineComponent.loadParte) {
                         alpineComponent.loadParte(parteId);
                     }
                     // Limpiar el input

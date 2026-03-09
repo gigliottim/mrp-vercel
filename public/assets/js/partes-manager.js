@@ -126,6 +126,12 @@ function parteManager(initialData) {
       window.location.href = `/mrp/productos/partes/manager/${id}`;
     },
 
+    // Cargar variante exacta desde selector de búsqueda
+    loadVariante(idParte, idVariante) {
+      if (!idParte || !idVariante) return;
+      window.location.href = `/mrp/productos/partes/manager/${idParte}/variantes/${idVariante}`;
+    },
+
     // Resetear formulario
     resetForm() {
       this.form = {

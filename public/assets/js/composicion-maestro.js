@@ -47,6 +47,7 @@ window.createComposicionMaestroApp = function (config) {
     pendingAddUnitId: '',
     pendingAddUnitType: '',
     assignmentMode: 'edit',
+    returnToAddModalAfterAssignment: false,
     addModalStatus: {
       type: '',
       message: ''
@@ -68,7 +69,35 @@ window.createComposicionMaestroApp = function (config) {
       this.selectInitialNode();
       this.enhanceTreeWithIcons();
       this.setupWatchers();
+      this.setupSharedAssignmentModalFlow();
       this.initializeTooltips();
+    },
+
+    /**
+     * Gestiona el retorno al modal de listado cuando se cierra el modal compartido en modo add.
+     */
+    setupSharedAssignmentModalFlow() {
+      const assignmentModalEl = document.getElementById('modalEditar');
+      if (!assignmentModalEl) {
+        return;
+      }
+
+      assignmentModalEl.addEventListener('hidden.bs.modal', () => {
+        if (!this.returnToAddModalAfterAssignment) {
+          return;
+        }
+
+        this.returnToAddModalAfterAssignment = false;
+        this.assignmentMode = 'edit';
+
+        const addModalEl = document.getElementById('modalAgregar');
+        if (!addModalEl) {
+          return;
+        }
+
+        const addModal = bootstrap.Modal.getOrCreateInstance(addModalEl);
+        addModal.show();
+      });
     },
 
     /**
@@ -752,9 +781,12 @@ window.createComposicionMaestroApp = function (config) {
       }
 
       this.assignmentMode = 'add';
+      const addModalEl = document.getElementById('modalAgregar');
+      const shouldReturnToAddModal = !!(addModalEl && addModalEl.classList.contains('show'));
+      this.returnToAddModalAfterAssignment = shouldReturnToAddModal;
 
-      const modalEl = document.getElementById('modalEditar');
-      if (!modalEl) {
+      const assignmentModalEl = document.getElementById('modalEditar');
+      if (!assignmentModalEl) {
         this.addModalStatus = {
           type: 'error',
           message: 'No se pudo abrir el modal de cantidad para agregar el componente.'
@@ -762,8 +794,19 @@ window.createComposicionMaestroApp = function (config) {
         return;
       }
 
-      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-      modal.show();
+      const openAssignmentModal = () => {
+        const assignmentModal = bootstrap.Modal.getOrCreateInstance(assignmentModalEl);
+        assignmentModal.show();
+      };
+
+      if (shouldReturnToAddModal) {
+        addModalEl.addEventListener('hidden.bs.modal', openAssignmentModal, { once: true });
+        const addModal = bootstrap.Modal.getOrCreateInstance(addModalEl);
+        addModal.hide();
+        return;
+      }
+
+      openAssignmentModal();
     },
 
     /**
@@ -1117,6 +1160,7 @@ window.createComposicionMaestroApp = function (config) {
      * Abre modal de edición
      */
     editItem(item) {
+      this.returnToAddModalAfterAssignment = false;
       this.assignmentMode = 'edit';
       this.pendingAddItem = null;
       this.pendingAddQuantity = '';

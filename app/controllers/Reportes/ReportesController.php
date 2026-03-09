@@ -193,6 +193,8 @@ final class ReportesController extends Controller
                                 // Primera aparición del componente
                                 $consolidado[$varianteId] = [
                                     'variante_id' => $varianteId,
+                                    'parte_codigo' => $item['parte_codigo'] ?? '',
+                                    'parte_detalle' => $item['parte_detalle'] ?? '',
                                     'codigo_variante' => $item['codigo_variante'] ?? 'N/A',
                                     'variante_detalle' => $item['variante_detalle'] ?? '',
                                     'tipo_codigo' => $item['tipo_codigo'] ?? '',

@@ -109,6 +109,7 @@ final class Bom extends BaseTenantModel
     public function getDetalles(int $bomId): array
     {
         $sql = "SELECT d.*,
+                       p.codigo AS parte_codigo,
                        v.codigo_variante AS componente_codigo,
                        v.detalle AS componente_detalle,
                        p.detalle AS parte_detalle,

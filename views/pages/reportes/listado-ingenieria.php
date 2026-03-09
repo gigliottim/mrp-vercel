@@ -390,6 +390,16 @@ $datosReporte = $datosReporte ?? [];
                         </thead>
                         <tbody>
                             <?php foreach ($items as $index => $item) :
+                                $parteCodigo = trim((string) ($item['parte_codigo'] ?? ''));
+                                $varianteCodigo = trim((string) ($item['codigo_variante'] ?? $item['componente_codigo'] ?? ''));
+                                $codigoCompuesto = ($parteCodigo !== '' && $varianteCodigo !== '')
+                                    ? ($parteCodigo . '-' . $varianteCodigo)
+                                    : ($parteCodigo !== '' ? $parteCodigo : $varianteCodigo);
+
+                                $parteDetalle = trim((string) ($item['parte_detalle'] ?? ''));
+                                $varianteDetalle = trim((string) ($item['variante_detalle'] ?? $item['componente_detalle'] ?? ''));
+                                $detalleCompuesto = trim($parteDetalle . ' + ' . $varianteDetalle, ' +');
+
                                 $precioUnitario = 0;
                                 $subtotal = $precioUnitario * ($item['cantidad_ajustada'] ?? 0);
                                 $totalGeneral += $subtotal;
@@ -399,10 +409,10 @@ $datosReporte = $datosReporte ?? [];
                                         <td><code class="text-muted"><?= $codigosJerarquicos[$index] ?? '' ?></code></td>
                                     <?php endif; ?>
                                     <td>
-                                        <strong><?= View::escape($item['codigo_variante'] ?? $item['componente_codigo'] ?? 'N/A') ?></strong>
+                                        <strong><?= View::escape($codigoCompuesto !== '' ? $codigoCompuesto : 'N/A') ?></strong>
                                     </td>
                                     <td class="text-muted small">
-                                        <?= View::escape($item['variante_detalle'] ?? $item['componente_detalle'] ?? '') ?>
+                                        <?= View::escape($detalleCompuesto) ?>
                                     </td>
                                     <td>
                                         <?php if (!empty($item['tipo_codigo'])): ?>

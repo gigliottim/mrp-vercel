@@ -291,7 +291,7 @@ final class ReportesController extends Controller
             $fechaGeneracion = $now->format('d/m/Y H:i:s');
 
             $codigoVariante = trim((string) (($varianteSeleccionada['parte_codigo'] ?? '') . '-' . ($varianteSeleccionada['codigo_variante'] ?? '')));
-            $descripcionVariante = trim((string) (($varianteSeleccionada['parte_detalle'] ?? '') . ' + ' . ($varianteSeleccionada['detalle'] ?? '')));
+            $descripcionVariante = trim((string) (($varianteSeleccionada['parte_detalle'] ?? '') . ' - ' . ($varianteSeleccionada['detalle'] ?? '')));
             $subtitle = 'Variante: ' . $codigoVariante
                 . ' | Descripcion: ' . $descripcionVariante
                 . ' | Generado: ' . $fechaGeneracion;

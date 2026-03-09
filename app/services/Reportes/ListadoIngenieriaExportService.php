@@ -168,7 +168,7 @@ final class ListadoIngenieriaExportService
     {
         $parteDetalle = trim((string) ($item['parte_detalle'] ?? ''));
         $varianteDetalle = trim((string) ($item['variante_detalle'] ?? $item['componente_detalle'] ?? ''));
-        return trim($parteDetalle . ' + ' . $varianteDetalle, ' +');
+        return trim($parteDetalle . ' - ' . $varianteDetalle, ' -');
     }
 
     /**

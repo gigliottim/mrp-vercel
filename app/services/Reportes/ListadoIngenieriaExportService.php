@@ -298,7 +298,7 @@ final class ListadoIngenieriaExportService
         $startDataRow = $headerRow + 1;
         $rowNum = $startDataRow;
         $detalleColIndex = array_search('Detalle', $headers, true);
-        $columnWidths = $this->calculateColumnWidths($headers, $forPdf, $pdfOrientation);
+        $columnWidths = $this->calculateColumnWidths($headers, $rows, $forPdf, $pdfOrientation);
         $detalleWidth = $columnWidths['Detalle'] ?? 47.0;
 
         foreach ($rows as $row) {
@@ -430,21 +430,69 @@ final class ListadoIngenieriaExportService
      * @param array<int, string> $headers
      * @return array<string, float>
      */
-    private function calculateColumnWidths(array $headers, bool $forPdf, string $pdfOrientation): array
+    private function calculateColumnWidths(array $headers, array $rows, bool $forPdf, string $pdfOrientation): array
     {
-        $base = [
-            'Nivel' => 14.0,
-            'Codigo' => 17.0,
-            'Detalle' => 47.0,
-            'Tipo' => 9.0,
-            'Cantidad' => 11.0,
-            'Unidad' => 8.0,
-            'Precio Unit.' => 12.0,
-            'Subtotal' => 12.0,
+        $min = [
+            'Nivel' => 10.0,
+            'Codigo' => 12.0,
+            'Detalle' => 24.0,
+            'Tipo' => 7.0,
+            'Cantidad' => 8.0,
+            'Unidad' => 6.0,
+            'Precio Unit.' => 10.0,
+            'Subtotal' => 10.0,
+        ];
+        $max = [
+            'Nivel' => 20.0,
+            'Codigo' => 22.0,
+            'Detalle' => 80.0,
+            'Tipo' => 12.0,
+            'Cantidad' => 14.0,
+            'Unidad' => 10.0,
+            'Precio Unit.' => 18.0,
+            'Subtotal' => 18.0,
         ];
 
+        $headerDisplayMap = [
+            'Precio Unit.' => "Precio\nUnit.",
+            'Subtotal' => "Sub\ntotal",
+        ];
+
+        $widths = [];
+        foreach ($headers as $colIndex => $header) {
+            $displayHeader = $headerDisplayMap[$header] ?? $header;
+            $headerLen = 0;
+            foreach (preg_split('/\n/', (string) $displayHeader) ?: [$displayHeader] as $part) {
+                $headerLen = max($headerLen, mb_strlen(trim((string) $part), 'UTF-8'));
+            }
+
+            $maxLen = $headerLen;
+            foreach ($rows as $row) {
+                if (!is_array($row) || count($row) === 1) {
+                    continue;
+                }
+                $cell = isset($row[$colIndex]) ? (string) $row[$colIndex] : '';
+                $len = mb_strlen(trim(preg_replace('/\s+/u', ' ', $cell) ?? ''), 'UTF-8');
+                $maxLen = max($maxLen, $len);
+            }
+
+            // Conversión aproximada caracteres -> ancho de columna Excel
+            $autoWidth = round(($maxLen * 1.05) + 2, 1);
+            $widths[$header] = max($min[$header] ?? 8.0, min($max[$header] ?? 20.0, $autoWidth));
+        }
+
         if (!$forPdf) {
-            return $base;
+            // En XLSX también aplicamos lógica: detalle ocupa el remanente de hoja visible.
+            $targetTotal = 125.0;
+            $fixedSum = 0.0;
+            foreach ($headers as $header) {
+                if ($header === 'Detalle') {
+                    continue;
+                }
+                $fixedSum += $widths[$header] ?? 10.0;
+            }
+            $widths['Detalle'] = max($min['Detalle'], min($max['Detalle'], $targetTotal - $fixedSum));
+            return $widths;
         }
 
         // Superficie util aproximada (en unidades de ancho de columna de PhpSpreadsheet)
@@ -455,13 +503,13 @@ final class ListadoIngenieriaExportService
             if ($header === 'Detalle') {
                 continue;
             }
-            $fixedSum += $base[$header] ?? 12.0;
+            $fixedSum += $widths[$header] ?? 10.0;
         }
 
-        $detailWidth = max(24.0, $targetTotal - $fixedSum);
-        $base['Detalle'] = $detailWidth;
+        $detailWidth = max($min['Detalle'], min($max['Detalle'], $targetTotal - $fixedSum));
+        $widths['Detalle'] = $detailWidth;
 
-        return $base;
+        return $widths;
     }
 
     private function writeSpreadsheetToString(Spreadsheet $spreadsheet, string $writerType): string

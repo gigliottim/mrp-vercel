@@ -294,7 +294,7 @@ final class ReportesController extends Controller
             $descripcionVariante = trim((string) (($varianteSeleccionada['parte_detalle'] ?? '') . ' + ' . ($varianteSeleccionada['detalle'] ?? '')));
             $subtitle = 'Variante: ' . $codigoVariante
                 . ' | Descripcion: ' . $descripcionVariante
-                . ' | Generado: ' . $fechaGeneracion . ' (GMT-3 America/Argentina/Buenos_Aires)';
+                . ' | Generado: ' . $fechaGeneracion;
 
             $baseName = sprintf(
                 'listado-ingenieria-%s-%s',

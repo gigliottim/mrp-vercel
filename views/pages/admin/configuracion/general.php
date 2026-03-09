@@ -171,7 +171,7 @@ $formatExampleDateTime = static fn(string $format) => $dateTimeExample->format($
     <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
             <h2 class="h6 mb-1">Recalculo masivo de dimensiones de partes</h2>
-            <p class="text-muted mb-0">Ejecuta la misma lógica del botón "Recalcular" del formulario de partes para toda la base de datos de la empresa activa.</p>
+            <p class="text-muted mb-0">Ejecuta la misma lógica del botón "Recalcular" del manager de partes para toda la base de datos de la empresa activa, respetando la cantidad de decimales configurada.</p>
         </div>
         <form method="post" action="<?= url('/configuracion/general/recalcular-dimensiones-partes') ?>" onsubmit="return confirm('Se recalcularan superficie y volumen en las partes segun el filtro elegido. ¿Continuar?');">
             <div class="form-check mb-2">
@@ -182,7 +182,7 @@ $formatExampleDateTime = static fn(string $format) => $dateTimeExample->format($
             </div>
             <button type="submit" class="btn btn-outline-primary">
                 <i class="fa-solid fa-calculator me-1"></i>
-                Recalcular superficie y volumen
+                Recalcular superficie y volumen (decimales configurados)
             </button>
         </form>
     </div>

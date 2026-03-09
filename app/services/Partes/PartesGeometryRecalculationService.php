@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Partes;
 
+use App\Models\ConfiguracionGeneral;
 use App\Models\Parte;
 use PDO;
 
 final class PartesGeometryRecalculationService
 {
+    private const DEFAULT_DECIMAL_PLACES = 4;
+
     private PDO $connection;
 
     public function __construct(?PDO $connection = null)
@@ -18,6 +21,8 @@ final class PartesGeometryRecalculationService
 
     public function recalculateAll(bool $onlyCompleteDimensions = false): array
     {
+        $decimalPlaces = $this->getConfiguredDecimalPlaces();
+
         $units = $this->connection
             ->query("SELECT id, tipo, simbolo, equivalencia_base FROM unidades_medida WHERE tipo IN ('longitud','superficie','volumen')")
             ->fetchAll(PDO::FETCH_ASSOC);
@@ -109,14 +114,14 @@ final class PartesGeometryRecalculationService
                 $newIdUmVolumen = $this->toNullableInt($part['id_um_volumen'] ?? null);
 
                 if ($largo > 0 && $ancho > 0) {
-                    $newSuperficie = $this->roundLikeUi($largoM * $anchoM, 8);
+                    $newSuperficie = $this->roundLikeUi($largoM * $anchoM, $decimalPlaces);
                     if ($newIdUmSuperficie === null && $defaultSuperficieId !== null) {
                         $newIdUmSuperficie = $defaultSuperficieId;
                     }
                 }
 
                 if ($largo > 0 && $ancho > 0 && $espesor > 0) {
-                    $newVolumen = $this->roundLikeUi($largoM * $anchoM * $espesorM * 1000000, 8);
+                    $newVolumen = $this->roundLikeUi($largoM * $anchoM * $espesorM * 1000000, $decimalPlaces);
                     if ($newIdUmVolumen === null && $defaultVolumenId !== null) {
                         $newIdUmVolumen = $defaultVolumenId;
                     }
@@ -170,6 +175,18 @@ final class PartesGeometryRecalculationService
     {
         $factor = 10 ** $decimals;
         return round($value * $factor) / $factor;
+    }
+
+    private function getConfiguredDecimalPlaces(): int
+    {
+        try {
+            $settings = (new ConfiguracionGeneral($this->connection))->getSettings();
+            $configured = isset($settings['decimal_places']) ? (int) $settings['decimal_places'] : self::DEFAULT_DECIMAL_PLACES;
+        } catch (\Throwable $exception) {
+            $configured = self::DEFAULT_DECIMAL_PLACES;
+        }
+
+        return max(1, min(10, $configured));
     }
 
     private function toNullableInt(mixed $value): ?int

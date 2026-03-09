@@ -8,6 +8,7 @@ use App\Core\Controllers\Controller;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Models\GrupoParte;
+use App\Models\ConfiguracionGeneral;
 use App\Models\Parte;
 use App\Models\TipoParte;
 use App\Models\UnidadMedida;
@@ -16,11 +17,14 @@ use Throwable;
 
 final class PartesVariantesController extends Controller
 {
+    private const DEFAULT_DECIMAL_PLACES = 4;
+
     private Parte $partes;
     private Variante $variantes;
     private TipoParte $tipos;
     private GrupoParte $grupos;
     private UnidadMedida $unidades;
+    private ?int $cachedDecimalPlaces = null;
 
     public function __construct(
         ?Parte $partes = null,
@@ -529,6 +533,7 @@ final class PartesVariantesController extends Controller
     private function validatePart(Request $request): array
     {
         $body = $request->body;
+        $decimalPlaces = $this->getConfiguredDecimalPlaces();
         $data = [
             'codigo' => strtoupper(trim((string) ($body['codigo'] ?? ''))),
             'id_tipo' => (int) ($body['id_tipo'] ?? 0),
@@ -537,7 +542,9 @@ final class PartesVariantesController extends Controller
             'activo' => (int) ($body['activo'] ?? 0),
             'id_um_compra' => $body['id_um_compra'] === '' || $body['id_um_compra'] === null ? null : (int) $body['id_um_compra'],
             'id_um_uso' => $body['id_um_uso'] === '' || $body['id_um_uso'] === null ? null : (int) $body['id_um_uso'],
-            'factor_conversion' => isset($body['factor_conversion']) && $body['factor_conversion'] !== '' ? (float) $body['factor_conversion'] : null,
+            'factor_conversion' => isset($body['factor_conversion']) && $body['factor_conversion'] !== ''
+                ? $this->roundConfiguredDecimal((float) $body['factor_conversion'], $decimalPlaces)
+                : null,
         ];
 
         $optionalNumeric = [
@@ -552,7 +559,9 @@ final class PartesVariantesController extends Controller
             $value = $body[$field] ?? null;
             $unitKey = 'id_um_' . ($field === 'espesor_profundidad' ? 'espesor' : $field);
             $unitValue = $body[$unitKey] ?? null;
-            $data[$field] = $value === '' || $value === null ? null : (float) $value;
+            $data[$field] = $value === '' || $value === null
+                ? null
+                : $this->roundConfiguredDecimal((float) $value, $decimalPlaces);
             $data[$unitKey] = $unitValue === '' || $unitValue === null ? null : (int) $unitValue;
         }
 
@@ -564,7 +573,7 @@ final class PartesVariantesController extends Controller
         ) {
             $anchoMetros = $this->toMeters((float) ($data['ancho'] ?? 0), $data['id_um_ancho'] ?? null);
             if ($anchoMetros !== null && $anchoMetros > 0) {
-                $data['factor_conversion'] = $anchoMetros;
+                $data['factor_conversion'] = $this->roundConfiguredDecimal($anchoMetros, $decimalPlaces);
             }
         }
 
@@ -639,15 +648,18 @@ final class PartesVariantesController extends Controller
     private function validateVariant(Request $request, ?int $idParte = null): array
     {
         $body = $request->body;
+        $decimalPlaces = $this->getConfiguredDecimalPlaces();
         $data = [
             'id_parte' => $idParte ?? (int) ($body['id_parte'] ?? 0),
             'codigo_variante' => strtoupper(trim((string) ($body['codigo_variante'] ?? ''))),
             'detalle' => trim((string) ($body['detalle'] ?? '')),
             'estado' => trim((string) ($body['estado'] ?? 'activa')),
-            'lote_minimo' => (float) ($body['lote_minimo'] ?? 1),
-            'punto_pedido' => (float) ($body['punto_pedido'] ?? 0),
+            'lote_minimo' => $this->roundConfiguredDecimal((float) ($body['lote_minimo'] ?? 1), $decimalPlaces),
+            'punto_pedido' => $this->roundConfiguredDecimal((float) ($body['punto_pedido'] ?? 0), $decimalPlaces),
             // 'stock_actual' => (float) ($body['stock_actual'] ?? 0), // Stock es calculado o solo lectura
-            'peso' => ($body['peso'] ?? '') === '' ? null : (float) $body['peso'],
+            'peso' => ($body['peso'] ?? '') === ''
+                ? null
+                : $this->roundConfiguredDecimal((float) $body['peso'], $decimalPlaces),
             'id_um_peso' => ($body['id_um_peso'] ?? '') === '' || (int) ($body['id_um_peso'] ?? 0) <= 0
                 ? null
                 : (int) $body['id_um_peso'],
@@ -674,5 +686,31 @@ final class PartesVariantesController extends Controller
         }
 
         return [$data, $errors];
+    }
+
+    private function getConfiguredDecimalPlaces(): int
+    {
+        if ($this->cachedDecimalPlaces !== null) {
+            return $this->cachedDecimalPlaces;
+        }
+
+        try {
+            $settings = (new ConfiguracionGeneral($this->partes->getConnection()))->getSettings();
+            $configured = isset($settings['decimal_places']) ? (int) $settings['decimal_places'] : self::DEFAULT_DECIMAL_PLACES;
+        } catch (\Throwable $exception) {
+            $configured = self::DEFAULT_DECIMAL_PLACES;
+        }
+
+        $this->cachedDecimalPlaces = max(1, min(10, $configured));
+
+        return $this->cachedDecimalPlaces;
+    }
+
+    private function roundConfiguredDecimal(float $value, int $decimals): float
+    {
+        $safeDecimals = max(0, min(10, $decimals));
+        $factor = 10 ** $safeDecimals;
+
+        return round($value * $factor) / $factor;
     }
 }

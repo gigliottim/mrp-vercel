@@ -111,7 +111,7 @@ if (function_exists('app_format_number') === false) {
 
         $settings = app_general_settings();
         $usedDecimals = $decimals ?? (int) ($settings['decimal_places'] ?? 4);
-        $usedDecimals = max(0, min(6, $usedDecimals));
+        $usedDecimals = max(0, min(10, $usedDecimals));
         $roundingMode = (string) ($settings['rounding_mode'] ?? 'half_up');
 
         $rounded = app_round_decimal((float) $value, $usedDecimals, $roundingMode);
@@ -131,7 +131,7 @@ if (function_exists('app_decimal_step') === false) {
     {
         $settings = app_general_settings();
         $decimals = (int) ($settings['decimal_places'] ?? 4);
-        $decimals = max(1, min(6, $decimals));
+        $decimals = max(1, min(10, $decimals));
 
         return number_format(1 / (10 ** $decimals), $decimals, '.', '');
     }

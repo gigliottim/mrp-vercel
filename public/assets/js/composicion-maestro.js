@@ -46,6 +46,7 @@ window.createComposicionMaestroApp = function (config) {
     pendingAddQuantity: '',
     pendingAddUnitId: '',
     pendingAddUnitType: '',
+    assignmentMode: 'edit',
     addModalStatus: {
       type: '',
       message: ''
@@ -589,6 +590,50 @@ window.createComposicionMaestroApp = function (config) {
     },
 
     /**
+     * Indica si el modal compartido esta en modo agregar.
+     */
+    isAddAssignmentMode() {
+      return this.assignmentMode === 'add';
+    },
+
+    /**
+     * Item actual mostrado en modal compartido.
+     */
+    getAssignmentItem() {
+      return this.isAddAssignmentMode() ? this.pendingAddItem : this.editingItem;
+    },
+
+    /**
+     * Tipo de UM para el modal compartido.
+     */
+    getAssignmentUsageUnitType() {
+      return this.isAddAssignmentMode()
+        ? this.pendingAddUnitType
+        : this.getEditUsageUnitType();
+    },
+
+    /**
+     * Unidades disponibles para el modal compartido.
+     */
+    getAssignmentUnits() {
+      return this.isAddAssignmentMode()
+        ? this.getPendingAddUnits()
+        : this.getEditUnits();
+    },
+
+    /**
+     * Envia el formulario del modal compartido segun modo.
+     */
+    submitAssignmentForm(event) {
+      if (this.isAddAssignmentMode()) {
+        this.confirmAddSelectedComponent();
+        return;
+      }
+
+      event.target.submit();
+    },
+
+    /**
      * Construye path jerarquico para nuevo hijo usando el path del padre.
      */
     buildChildPath(parentNode, childVariantId) {
@@ -706,7 +751,9 @@ window.createComposicionMaestroApp = function (config) {
           : (Number.isInteger(resolvedUnitId) && resolvedUnitId > 0 ? String(resolvedUnitId) : '');
       }
 
-      const modalEl = document.getElementById('modalAgregarCantidad');
+      this.assignmentMode = 'add';
+
+      const modalEl = document.getElementById('modalEditar');
       if (!modalEl) {
         this.addModalStatus = {
           type: 'error',
@@ -737,13 +784,19 @@ window.createComposicionMaestroApp = function (config) {
       });
 
       if (this.addModalStatus.type === 'success') {
-        const modalEl = document.getElementById('modalAgregarCantidad');
+        const modalEl = document.getElementById('modalEditar');
         if (modalEl) {
           const modal = bootstrap.Modal.getInstance(modalEl);
           if (modal) {
             modal.hide();
           }
         }
+
+        this.pendingAddItem = null;
+        this.pendingAddQuantity = '';
+        this.pendingAddUnitId = '';
+        this.pendingAddUnitType = '';
+        this.assignmentMode = 'edit';
       }
     },
 
@@ -1064,6 +1117,12 @@ window.createComposicionMaestroApp = function (config) {
      * Abre modal de edición
      */
     editItem(item) {
+      this.assignmentMode = 'edit';
+      this.pendingAddItem = null;
+      this.pendingAddQuantity = '';
+      this.pendingAddUnitId = '';
+      this.pendingAddUnitType = '';
+
       this.editingItem = { ...item };
       this.editActionUrl = `${config.baseActionUrl}/${item.bom_detalle_id}`;
 
@@ -1255,6 +1314,7 @@ window.createComposicionMaestroApp = function (config) {
       this.pendingAddQuantity = '';
       this.pendingAddUnitId = '';
       this.pendingAddUnitType = '';
+      this.assignmentMode = 'edit';
       this.addModalStatus = { type: '', message: '' };
       this.addingComponentIds = [];
       this.hiddenModalVariantIds = [];

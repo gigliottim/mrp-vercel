@@ -139,9 +139,9 @@ $dimensionFields = [
     </div>
 
     <div class="row g-3 pm-main-grid">
-        <!-- Columna Izquierda: Formulario de Parte -->
-        <div class="col-12 col-md-4">
-            <div class="card shadow-sm border-0 h-100 pm-part-card">
+        <!-- Columna Izquierda (2/3): Formulario de Parte + Formulario de Variante -->
+        <div class="col-12 col-md-8">
+            <div class="card shadow-sm border-0 pm-part-card mb-3">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <h5 class="mb-0">
                         <i class="fa-solid fa-box text-primary me-2"></i>
@@ -153,15 +153,13 @@ $dimensionFields = [
                         <span x-show="mode === 'create' && !isPartFormReadOnly && !form.id" class="badge bg-info ms-2">Nueva</span>
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body pm-form-card-body">
                     <?php include __DIR__ . '/manager/_parte_form.php'; ?>
                 </div>
             </div>
-        </div>
 
-        <!-- Columna Centro: Formulario de Variante -->
-        <div class="col-12 col-md-4" x-show="isEditing">
-            <div class="card shadow-sm border-0 h-100 pm-scroll-card">
+            <!-- Formulario Variante (debajo de Formulario de Parte) -->
+            <div class="card shadow-sm border-0 pm-scroll-card" x-show="isEditing">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <h5 class="mb-0">
@@ -174,7 +172,7 @@ $dimensionFields = [
                         <span x-show="isVariantFormEnabled" class="badge bg-success">Editando</span>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body pm-form-card-body">
                     <div class="pm-variant-form mb-0">
                         <?php include __DIR__ . '/manager/_variante_form.php'; ?>
                     </div>
@@ -182,7 +180,7 @@ $dimensionFields = [
             </div>
         </div>
 
-        <!-- Columna Derecha: Tabla de Variantes -->
+        <!-- Columna Derecha (1/3): Tabla de Variantes -->
         <div class="col-12 col-md-4" x-show="isEditing">
             <div class="card shadow-sm border-0 h-100 pm-scroll-card">
                 <div class="card-header bg-white border-bottom pm-card-header">
@@ -211,8 +209,8 @@ $dimensionFields = [
             </div>
         </div>
 
-        <!-- Mensaje cuando no hay parte seleccionada (ocupa columnas centro+derecha) -->
-        <div class="col-12 col-md-8" x-show="!isEditing">
+        <!-- Mensaje cuando no hay parte seleccionada (columna derecha) -->
+        <div class="col-12 col-md-4" x-show="!isEditing">
             <div class="card shadow-sm border-0 h-100 bg-light d-flex align-items-center justify-content-center">
                 <div class="text-center p-4 p-lg-5 pm-empty-state">
                     <i class="fa-solid fa-arrow-left fa-3x text-muted mb-3 d-none d-lg-block"></i>

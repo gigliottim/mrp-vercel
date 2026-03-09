@@ -22,6 +22,10 @@
   width: 100%;
 }
 
+.partes-manager-page .pm-form-card-body {
+  min-height: 0;
+}
+
 .partes-manager-page .pm-main-grid {
   min-height: var(--pm-shell-height-desktop);
 }
@@ -257,6 +261,13 @@
   }
 }
 
+@media (min-width: 768px) {
+  .partes-manager-page .pm-form-card-body {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+}
+
 /* Tablet angosta y móvil: mayor legibilidad de acciones */
 @media (max-width: 991.98px) {
   .partes-manager-page .pm-main-grid {
@@ -300,5 +311,12 @@
 
   .partes-manager-page .pm-dimension-input-group {
     max-width: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .partes-manager-page .pm-form-card-body {
+    max-height: none;
+    overflow-y: visible;
   }
 }

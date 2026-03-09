@@ -230,6 +230,36 @@ function parteManager(initialData) {
       return this._round(numericValue, this.decimalPlaces);
     },
 
+    _toNumberWithDefault(value, fallback = 0) {
+      const normalized = this._toNullableNumber(value);
+      return normalized === null ? fallback : normalized;
+    },
+
+    formatNumberForInput(value) {
+      const normalized = this._toNullableNumber(value);
+      return normalized === null ? '' : String(normalized);
+    },
+
+    normalizeNumberInputValue(event, modelPath) {
+      const rawValue = event?.target?.value ?? '';
+      const normalized = this._toNullableNumber(rawValue);
+      const displayValue = normalized === null ? '' : String(normalized);
+
+      if (event?.target) {
+        event.target.value = displayValue;
+      }
+
+      if (modelPath && modelPath.startsWith('form.')) {
+        const key = modelPath.slice(5);
+        this.form[key] = normalized;
+      }
+
+      if (modelPath && modelPath.startsWith('variantForm.')) {
+        const key = modelPath.slice(12);
+        this.variantForm[key] = normalized;
+      }
+    },
+
     // ─── Auto-calcular factor_conversion ─────────────────────────────────
 
     /**
@@ -610,10 +640,10 @@ function parteManager(initialData) {
         codigo_variante: variante.codigo_variante || '',
         detalle: variante.detalle || '',
         estado: variante.estado || 'activa',
-        lote_minimo: parseFloat(variante.lote_minimo) || 1,
-        punto_pedido: parseFloat(variante.punto_pedido) || 0,
-        stock_actual: parseFloat(variante.stock_actual) || 0,
-        peso: variante.peso ? parseFloat(variante.peso) : null,
+        lote_minimo: this._toNumberWithDefault(variante.lote_minimo, 1),
+        punto_pedido: this._toNumberWithDefault(variante.punto_pedido, 0),
+        stock_actual: this._toNumberWithDefault(variante.stock_actual, 0),
+        peso: this._toNullableNumber(variante.peso),
         id_um_peso: variante.id_um_peso || '',
         ubicacion_cuerpo: variante.ubicacion_cuerpo || '',
         ubicacion_pasillo: variante.ubicacion_pasillo || '',

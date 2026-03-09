@@ -90,6 +90,7 @@ use App\Core\View\View;
                     <span class="input-group-text bg-light text-muted">1 UM Compra =</span>
                     <input type="number" :step="numberInputStep" min="0" class="form-control"
                         x-model.number="form.factor_conversion"
+                        @blur="normalizeNumberInputValue($event, 'form.factor_conversion')"
                         placeholder="Ej: 10">
                     <span class="input-group-text bg-light text-muted">UM Uso</span>
                 </div>
@@ -125,6 +126,7 @@ use App\Core\View\View;
                             type="number"
                             class="form-control px-2"
                             x-model.number="form.<?= $field['key'] ?>"
+                            @blur="normalizeNumberInputValue($event, 'form.<?= $field['key'] ?>')"
                             :step="numberInputStep"
                             placeholder="0.00">
                         <select class="form-select px-1" x-model.number="form.<?= $field['unit'] ?>" style="max-width: 65px;">
@@ -141,7 +143,7 @@ use App\Core\View\View;
             <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Superficie</label>
                 <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.superficie" step="any">
+                    <input type="number" class="form-control px-2" x-model.number="form.superficie" @blur="normalizeNumberInputValue($event, 'form.superficie')" step="any">
                     <select class="form-select px-1" x-model.number="form.id_um_superficie" style="max-width: 65px;">
                         <option value="">UM</option>
                         <?php foreach ($unidadesSuperficie as $unidad) : ?>
@@ -153,7 +155,7 @@ use App\Core\View\View;
             <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Volumen</label>
                 <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.volumen" :step="numberInputStep">
+                    <input type="number" class="form-control px-2" x-model.number="form.volumen" @blur="normalizeNumberInputValue($event, 'form.volumen')" :step="numberInputStep">
                     <select class="form-select px-1" x-model.number="form.id_um_volumen" style="max-width: 65px;">
                         <option value="">UM</option>
                         <?php foreach ($unidadesVolumen as $unidad) : ?>

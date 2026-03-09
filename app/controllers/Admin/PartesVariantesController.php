@@ -13,6 +13,7 @@ use App\Models\Parte;
 use App\Models\TipoParte;
 use App\Models\UnidadMedida;
 use App\Models\Variante;
+use App\Services\StockService;
 use Throwable;
 
 final class PartesVariantesController extends Controller
@@ -24,6 +25,7 @@ final class PartesVariantesController extends Controller
     private TipoParte $tipos;
     private GrupoParte $grupos;
     private UnidadMedida $unidades;
+    private StockService $stockService;
     private ?int $cachedDecimalPlaces = null;
     private ?bool $partesPrecisionChecked = null;
 
@@ -32,13 +34,15 @@ final class PartesVariantesController extends Controller
         ?Variante $variantes = null,
         ?TipoParte $tipos = null,
         ?GrupoParte $grupos = null,
-        ?UnidadMedida $unidades = null
+        ?UnidadMedida $unidades = null,
+        ?StockService $stockService = null
     ) {
         $this->partes = $partes ?? new Parte();
         $this->variantes = $variantes ?? new Variante();
         $this->tipos = $tipos ?? new TipoParte();
         $this->grupos = $grupos ?? new GrupoParte();
         $this->unidades = $unidades ?? new UnidadMedida();
+        $this->stockService = $stockService ?? new StockService();
     }
 
     public function index(Request $request): Response
@@ -251,10 +255,11 @@ final class PartesVariantesController extends Controller
         }
 
         $variants = $this->variantes->byParteIds([$id]);
+        $syncedVariants = $this->syncVariantStocks($variants[$id] ?? []);
 
         return $this->renderManager([
             'parte' => $record,
-            'parteVariants' => $variants[$id] ?? [],
+            'parteVariants' => $syncedVariants,
             'mode' => 'view',
         ]);
     }
@@ -268,10 +273,11 @@ final class PartesVariantesController extends Controller
         }
 
         $variants = $this->variantes->byParteIds([$id]);
+        $syncedVariants = $this->syncVariantStocks($variants[$id] ?? []);
 
         return $this->renderManager([
             'parte' => $record,
-            'parteVariants' => $variants[$id] ?? [],
+            'parteVariants' => $syncedVariants,
             'mode' => 'edit',
         ]);
     }
@@ -292,13 +298,15 @@ final class PartesVariantesController extends Controller
         }
 
         $variants = $this->variantes->byParteIds([$idParte]);
+        $syncedVariants = $this->syncVariantStocks($variants[$idParte] ?? []);
+        $syncedEditingVariant = $this->findVariantInList($syncedVariants, $idVariante) ?? $variantRecord;
 
         return $this->renderManager([
             'parte' => $record,
-            'parteVariants' => $variants[$idParte] ?? [],
+            'parteVariants' => $syncedVariants,
             'mode' => 'view',
             'editingVariantId' => $idVariante,
-            'editingVariant' => $variantRecord,
+            'editingVariant' => $syncedEditingVariant,
         ]);
     }
 
@@ -318,14 +326,56 @@ final class PartesVariantesController extends Controller
         }
 
         $variants = $this->variantes->byParteIds([$idParte]);
+        $syncedVariants = $this->syncVariantStocks($variants[$idParte] ?? []);
+        $syncedEditingVariant = $this->findVariantInList($syncedVariants, $idVariante) ?? $variantRecord;
 
         return $this->renderManager([
             'parte' => $record,
-            'parteVariants' => $variants[$idParte] ?? [],
+            'parteVariants' => $syncedVariants,
             'mode' => 'edit',
             'editingVariantId' => $idVariante,
-            'editingVariant' => $variantRecord,
+            'editingVariant' => $syncedEditingVariant,
         ]);
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $variants
+     * @return array<int,array<string,mixed>>
+     */
+    private function syncVariantStocks(array $variants): array
+    {
+        foreach ($variants as &$variant) {
+            $variantId = (int) ($variant['id'] ?? 0);
+            if ($variantId <= 0) {
+                continue;
+            }
+
+            $stockCalculado = $this->stockService->calculateStock($variantId);
+            $stockCacheado = isset($variant['stock_actual']) ? (float) $variant['stock_actual'] : 0.0;
+
+            $variant['stock_actual'] = $stockCalculado;
+
+            if (abs($stockCacheado - $stockCalculado) > 0.000001) {
+                $this->variantes->update($variantId, ['stock_actual' => $stockCalculado]);
+            }
+        }
+        unset($variant);
+
+        return $variants;
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $variants
+     */
+    private function findVariantInList(array $variants, int $variantId): ?array
+    {
+        foreach ($variants as $variant) {
+            if ((int) ($variant['id'] ?? 0) === $variantId) {
+                return $variant;
+            }
+        }
+
+        return null;
     }
 
     public function managerStorePart(Request $request): Response

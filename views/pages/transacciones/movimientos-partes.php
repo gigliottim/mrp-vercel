@@ -394,6 +394,8 @@ use App\Core\Support\AssetHelper;
 
         // Estado de la parte seleccionada
         let parteSeleccionada = null;
+        const searchPlaceholderDefault = 'Escriba al menos 2 caracteres para buscar parte o variante...';
+        const searchPlaceholderWaitDestino = 'Seleccione un Depósito Destino para habilitar la búsqueda...';
 
         function buildSearchSelectionLabel(item) {
             const parteCodigo = item.parte_codigo || 'N/A';
@@ -411,6 +413,25 @@ use App\Core\Support\AssetHelper;
         }
 
         function setSearchLockedState(isLocked) {
+            const hasDestinoSelected = !!selectDestino.value;
+
+            if (!hasDestinoSelected) {
+                parteSeleccionada = null;
+                inputParteHidden.value = '';
+                searchInput.value = '';
+                searchInput.readOnly = false;
+                searchInput.disabled = true;
+                searchInput.setAttribute('aria-readonly', 'false');
+                searchInput.setAttribute('aria-disabled', 'true');
+                searchInput.classList.remove('parte-seleccionada');
+                searchInput.placeholder = searchPlaceholderWaitDestino;
+                searchResults.style.display = 'none';
+                if (btnCambiarParte) btnCambiarParte.classList.add('d-none');
+                actualizarUM();
+                return;
+            }
+
+            searchInput.placeholder = searchPlaceholderDefault;
             searchInput.readOnly = isLocked;
             searchInput.disabled = isLocked;
             searchInput.setAttribute('aria-readonly', isLocked ? 'true' : 'false');
@@ -551,6 +572,8 @@ use App\Core\Support\AssetHelper;
         const searchResults = document.getElementById('search-parte-results');
 
         if (searchInput && searchResults) {
+            setSearchLockedState(false);
+
             const searchClientInstance = new SearchClient({
                 endpoint: '<?= url('api/v1/search/variantes') ?>',
                 inputElement: searchInput,
@@ -684,6 +707,7 @@ use App\Core\Support\AssetHelper;
 
         // Evento: cambio en depósito destino
         selectDestino.addEventListener('change', function() {
+            setSearchLockedState(!!parteSeleccionada);
             actualizarUM();
             // Filtrar tabla
             filtrarTabla();

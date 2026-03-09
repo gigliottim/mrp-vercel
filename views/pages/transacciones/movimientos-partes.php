@@ -76,11 +76,16 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 Buscar Parte
                             </label>
                             <div class="position-relative">
-                                <input type="text"
-                                    class="form-control form-control-lg"
-                                    id="search-parte-input"
-                                    placeholder="Escriba al menos 2 caracteres para buscar parte o variante..."
-                                    autocomplete="off">
+                                <div class="input-group">
+                                    <input type="text"
+                                        class="form-control form-control-lg"
+                                        id="search-parte-input"
+                                        placeholder="Escriba al menos 2 caracteres para buscar parte o variante..."
+                                        autocomplete="off">
+                                    <button type="button" class="btn btn-outline-primary d-none" id="btn-cambiar-parte">
+                                        <i class="fa-solid fa-rotate me-1"></i> Cambiar
+                                    </button>
+                                </div>
                                 <div id="search-parte-results" class="search-results list-group mt-2"></div>
                             </div>
                             <small class="text-muted d-block mt-1">
@@ -371,6 +376,7 @@ use App\Core\Support\AssetHelper;
         const btnCancelar = document.getElementById('btnCancelar');
         const form = document.getElementById('formMovimiento');
         const inputParteHidden = document.getElementById('parte');
+        const btnCambiarParte = document.getElementById('btn-cambiar-parte');
 
         // Elementos adicionales para Compras
         const fieldsCompra = document.querySelectorAll('.field-compra');
@@ -402,6 +408,20 @@ use App\Core\Support\AssetHelper;
             const div = document.createElement('div');
             div.textContent = text || '';
             return div.innerHTML;
+        }
+
+        function setSearchLockedState(isLocked) {
+            searchInput.readOnly = isLocked;
+            searchInput.setAttribute('aria-readonly', isLocked ? 'true' : 'false');
+
+            if (isLocked) {
+                searchInput.classList.add('parte-seleccionada');
+                searchResults.style.display = 'none';
+                if (btnCambiarParte) btnCambiarParte.classList.remove('d-none');
+            } else {
+                searchInput.classList.remove('parte-seleccionada');
+                if (btnCambiarParte) btnCambiarParte.classList.add('d-none');
+            }
         }
 
         // Mapa de tipos de depósito para determinar si es compra o uso
@@ -554,7 +574,7 @@ use App\Core\Support\AssetHelper;
 
                     // Actualizar el input visible con el texto de la parte
                     searchInput.value = selectedLabel;
-                    searchInput.classList.add('parte-seleccionada');
+                    setSearchLockedState(true);
 
                     // Actualizar el campo oculto para validación
                     inputParteHidden.value = parteSeleccionada.id;
@@ -597,9 +617,20 @@ use App\Core\Support\AssetHelper;
                 if (parteSeleccionada && this.value !== parteSeleccionada.selectedLabel) {
                     parteSeleccionada = null;
                     inputParteHidden.value = '';
-                    this.classList.remove('parte-seleccionada');
+                    setSearchLockedState(false);
                     actualizarUM();
                 }
+            });
+        }
+
+        if (btnCambiarParte) {
+            btnCambiarParte.addEventListener('click', function() {
+                parteSeleccionada = null;
+                inputParteHidden.value = '';
+                searchInput.value = '';
+                setSearchLockedState(false);
+                actualizarUM();
+                searchInput.focus();
             });
         }
 
@@ -724,7 +755,7 @@ use App\Core\Support\AssetHelper;
                 parteSeleccionada = null;
                 inputParteHidden.value = '';
                 searchInput.value = '';
-                searchInput.classList.remove('parte-seleccionada');
+                setSearchLockedState(false);
                 selectDestino.disabled = true;
                 selectDestino.innerHTML = '<option value="">Primero seleccione origen</option>';
                 selectUM.disabled = true;
@@ -821,7 +852,7 @@ use App\Core\Support\AssetHelper;
                         parteSeleccionada = null;
                         inputParteHidden.value = '';
                         searchInput.value = '';
-                        searchInput.classList.remove('parte-seleccionada');
+                        setSearchLockedState(false);
                         selectDestino.disabled = true;
                         selectDestino.innerHTML = '<option value="">Primero seleccione origen</option>';
                         selectUM.disabled = true;

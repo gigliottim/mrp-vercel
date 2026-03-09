@@ -180,7 +180,8 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
     .tree-panel-body {
         flex: 1 1 auto;
         min-height: 0;
-        overflow-y: auto;
+        height: 0;
+        overflow-y: scroll;
         overflow-x: hidden;
     }
 

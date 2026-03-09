@@ -53,14 +53,43 @@ body {
     transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
 }
 
-body.sidebar-desktop-hidden .app-sidebar {
-    width: 0;
-    min-width: 0;
-    padding-left: 0;
-    padding-right: 0;
-    opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
+body.sidebar-desktop-hidden .app-sidebar,
+html.sidebar-desktop-hidden .app-sidebar {
+    width: 72px;
+    min-width: 72px;
+    padding: 1.25rem 0.5rem;
+    opacity: 1;
+    overflow-y: auto;
+    pointer-events: auto;
+}
+
+body.sidebar-desktop-hidden .app-sidebar__section-title,
+html.sidebar-desktop-hidden .app-sidebar__section-title,
+body.sidebar-desktop-hidden .app-sidebar__card,
+html.sidebar-desktop-hidden .app-sidebar__card {
+    display: none;
+}
+
+body.sidebar-desktop-hidden .app-sidebar__link,
+html.sidebar-desktop-hidden .app-sidebar__link {
+    justify-content: center;
+    padding: 0.6rem 0.5rem;
+    gap: 0;
+}
+
+body.sidebar-desktop-hidden .app-sidebar__link:hover,
+html.sidebar-desktop-hidden .app-sidebar__link:hover {
+    transform: none;
+}
+
+body.sidebar-desktop-hidden .app-sidebar__link span,
+html.sidebar-desktop-hidden .app-sidebar__link span {
+    display: none;
+}
+
+body.sidebar-desktop-hidden .app-sidebar__nav .app-sidebar__nav,
+html.sidebar-desktop-hidden .app-sidebar__nav .app-sidebar__nav {
+    padding-left: 0 !important;
 }
 
 .app-sidebar__inner {

@@ -21,6 +21,24 @@ $appFormattingSettings = app_general_settings();
     <link rel="stylesheet" href="<?= AssetHelper::css('global/main.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('components/cards.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('modules/public-site.css') ?>">
+    <script>
+        (function applyDesktopSidebarPreferenceEarly() {
+            try {
+                const storageKey = 'mrp.sidebar.desktop.visible';
+                const isDesktop = window.matchMedia('(min-width: 992px)').matches;
+
+                if (!isDesktop) {
+                    return;
+                }
+
+                if (window.localStorage.getItem(storageKey) === '0') {
+                    document.documentElement.classList.add('sidebar-desktop-hidden');
+                }
+            } catch (error) {
+                // Si localStorage no esta disponible, se mantiene el estado por defecto.
+            }
+        })();
+    </script>
 </head>
 
 <body class="app-body">

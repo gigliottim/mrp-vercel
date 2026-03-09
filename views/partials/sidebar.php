@@ -133,7 +133,11 @@ $renderSidebarItems = static function (array $items) use (&$renderSidebarItems, 
         $label = (string) ($item['label'] ?? 'Sin titulo');
 ?>
         <li>
-            <a class="app-sidebar__link<?= $isActive ? ' is-active' : '' ?>" href="<?= View::escape($href) ?>">
+            <a
+                class="app-sidebar__link<?= $isActive ? ' is-active' : '' ?>"
+                href="<?= View::escape($href) ?>"
+                title="<?= View::escape($label) ?>"
+                aria-label="<?= View::escape($label) ?>">
                 <i class="<?= View::escape($icon) ?>"></i>
                 <span><?= View::escape($label) ?></span>
             </a>

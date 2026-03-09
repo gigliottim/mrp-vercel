@@ -35,7 +35,7 @@ export class AppShell {
 
         this.sidebarPinToggles.forEach((toggle) => {
             toggle.addEventListener('click', () => {
-                const isVisible = !document.body.classList.contains('sidebar-desktop-hidden');
+                const isVisible = this.isDesktopSidebarVisible();
                 this.setDesktopSidebarVisibility(!isVisible);
             });
         });
@@ -59,6 +59,7 @@ export class AppShell {
 
     setDesktopSidebarVisibility(isVisible, persist = true) {
         document.body.classList.toggle('sidebar-desktop-hidden', !isVisible);
+        document.documentElement.classList.toggle('sidebar-desktop-hidden', !isVisible);
 
         if (persist) {
             window.localStorage.setItem(this.storageKey, isVisible ? '1' : '0');
@@ -72,7 +73,7 @@ export class AppShell {
             return;
         }
 
-        const isVisible = !document.body.classList.contains('sidebar-desktop-hidden');
+        const isVisible = this.isDesktopSidebarVisible();
 
         this.sidebarPinToggles.forEach((toggle) => {
             toggle.setAttribute('aria-pressed', String(isVisible));
@@ -81,6 +82,10 @@ export class AppShell {
                 ? '<i class="fa-solid fa-thumbtack"></i>'
                 : '<i class="fa-solid fa-bars"></i>';
         });
+    }
+
+    isDesktopSidebarVisible() {
+        return !document.documentElement.classList.contains('sidebar-desktop-hidden');
     }
 
     bindSidebarAutoClose() {

@@ -1067,9 +1067,47 @@ window.createComposicionMaestroApp = function (config) {
       this.editingItem = { ...item };
       this.editActionUrl = `${config.baseActionUrl}/${item.bom_detalle_id}`;
 
+      const source = this.resolveVariantSource(item);
+      const umUsoType = this.normalizeUnitType(source?.um_uso_tipo);
+      const unitsByType = this.getUnitsForType(umUsoType);
+      const currentUnitId = Number.parseInt(item?.unidad_medida_id ?? item?.id_unidad, 10);
+      const usageUnitId = Number.parseInt(source?.id_um_uso, 10);
+
+      if (Number.isInteger(currentUnitId) && currentUnitId > 0) {
+        this.editingItem.id_unidad = String(currentUnitId);
+      } else if (Number.isInteger(usageUnitId) && usageUnitId > 0) {
+        this.editingItem.id_unidad = String(usageUnitId);
+      } else if (unitsByType.length > 0) {
+        this.editingItem.id_unidad = String(unitsByType[0].id);
+      } else {
+        this.editingItem.id_unidad = '';
+      }
+
       const modalEl = document.getElementById('modalEditar');
       const modal = new bootstrap.Modal(modalEl);
       modal.show();
+    },
+
+    /**
+     * Tipo de UM de uso de la variante editada.
+     */
+    getEditUsageUnitType(item = this.editingItem) {
+      const source = this.resolveVariantSource(item);
+      return this.normalizeUnitType(source?.um_uso_tipo);
+    },
+
+    /**
+     * Unidades disponibles para el modal de edicion segun tipo UM de uso.
+     */
+    getEditUnits(item = this.editingItem) {
+      const unitType = this.getEditUsageUnitType(item);
+      const units = this.getUnitsForType(unitType);
+
+      if (units.length > 0) {
+        return units;
+      }
+
+      return this.unidades;
     },
 
     /**

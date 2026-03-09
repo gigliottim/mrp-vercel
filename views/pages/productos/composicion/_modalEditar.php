@@ -1,10 +1,10 @@
-<!-- Modal Editar Cantidad -->
+<!-- Modal Asignar Cantidad y UM de uso -->
 <div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true" x-ref="modalEditar">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" :action="editActionUrl">
                 <div class="modal-header">
-                    <h5 class="modal-title">Editar Cantidad</h5>
+                    <h5 class="modal-title">Asignar cantidad y UM de uso</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -18,32 +18,47 @@
                         <div class="text-muted" x-text="getItemDetail(editingItem)"></div>
                         <div class="mt-1">
                             <span class="badge bg-light text-dark border">
-                                UM: <span x-text="editingItem.unidad || 'N/A'"></span>
+                                Tipo UM: <span x-text="getEditUsageUnitType() || 'sin tipo'"></span>
                             </span>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center gap-2">
+                    <div class="row g-3">
+                        <div class="col-md-6">
                             <label class="form-label mb-0">Cantidad</label>
+                            <input type="number" step="<?= esc(app_decimal_step()) ?>" class="form-control" name="cantidad" x-model="editingItem.cantidad" required>
                             <button
                                 type="button"
-                                class="btn btn-outline-info btn-sm"
+                                class="btn btn-outline-info btn-sm w-100 mt-2"
                                 x-show="canAutoCalculateEditQuantity()"
                                 @click="applyAutoCalculatedEditQuantity()">
                                 <i class="fa-solid fa-calculator me-1"></i> Calcular por superficie
                             </button>
                         </div>
-                        <input type="number" step="<?= esc(app_decimal_step()) ?>" class="form-control" name="cantidad" x-model="editingItem.cantidad" required>
-                        <small class="text-muted d-block mt-1" x-show="canAutoCalculateEditQuantity()">
+
+                        <div class="col-md-6">
+                            <label class="form-label mb-0">UM de uso</label>
+                            <select class="form-select" name="id_unidad" x-model="editingItem.id_unidad" required>
+                                <template x-for="unit in getEditUnits()" :key="unit.id">
+                                    <option :value="String(unit.id)" x-text="formatUnitLabel(unit)"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="border-top mt-3 pt-2 small text-muted">
+                        <div x-show="canAutoCalculateEditQuantity()">
                             Sugerencia automatica: superficie del nodo padre
                             (<span x-text="formatQuantity(getParentSurfaceForEdit())"></span>). Igual puedes cargar cualquier cantidad manualmente.
-                        </small>
+                        </div>
+                        <div x-show="getEditUsageUnitType()" class="mt-1">
+                            Se muestran solo unidades del tipo <span x-text="getEditUsageUnitType()"></span>.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" class="btn btn-primary">Guardar asignacion</button>
                 </div>
             </form>
         </div>

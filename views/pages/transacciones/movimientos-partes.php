@@ -87,6 +87,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 <i class="fa-solid fa-info-circle me-1"></i>
                                 Los resultados incluyen partes y variantes. Seleccione una para continuar.
                             </small>
+                            <div id="search-parte-selected-preview" class="alert alert-success mt-2 mb-0 py-2 px-3 d-none" role="status" aria-live="polite"></div>
                             <!-- Campo oculto para validación -->
                             <input type="hidden" id="parte" name="parte" required>
                         </div>
@@ -349,6 +350,10 @@ $unidadesMedida = $unidadesMedida ?? [];
         background-color: #d1e7dd;
         border-color: #198754;
     }
+
+    #search-parte-selected-preview strong {
+        font-weight: 700;
+    }
 </style>
 
 <?php
@@ -371,6 +376,7 @@ use App\Core\Support\AssetHelper;
         const btnCancelar = document.getElementById('btnCancelar');
         const form = document.getElementById('formMovimiento');
         const inputParteHidden = document.getElementById('parte');
+        const selectedPreview = document.getElementById('search-parte-selected-preview');
 
         // Elementos adicionales para Compras
         const fieldsCompra = document.querySelectorAll('.field-compra');
@@ -396,6 +402,40 @@ use App\Core\Support\AssetHelper;
             const varianteDetalle = item.detalle || item.variante_detalle || 'Sin detalle';
 
             return `Parte: ${parteCodigo} - ${parteDetalle} | Variante: ${varianteCodigo} - ${varianteDetalle}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function updateSelectedPreview(item) {
+            if (!selectedPreview) return;
+
+            const parteCodigo = escapeHtml(item.parte_codigo || 'N/A');
+            const parteDetalle = escapeHtml(item.parte_detalle || 'Sin detalle');
+            const varianteCodigo = escapeHtml(item.codigo_variante || 'N/A');
+            const varianteDetalle = escapeHtml(item.detalle || item.variante_detalle || 'Sin detalle');
+
+            selectedPreview.innerHTML = `
+                <span class="fw-semibold">Parte:</span>
+                <strong>${parteCodigo}</strong>
+                <span class="text-muted mx-1">-</span>
+                <span>${parteDetalle}</span>
+                <span class="text-muted mx-2">|</span>
+                <span class="fw-semibold">Variante:</span>
+                <strong>${varianteCodigo}</strong>
+                <span class="text-muted mx-1">-</span>
+                <span>${varianteDetalle}</span>
+            `;
+            selectedPreview.classList.remove('d-none');
+        }
+
+        function clearSelectedPreview() {
+            if (!selectedPreview) return;
+            selectedPreview.classList.add('d-none');
+            selectedPreview.innerHTML = '';
         }
 
         // Mapa de tipos de depósito para determinar si es compra o uso
@@ -549,6 +589,7 @@ use App\Core\Support\AssetHelper;
                     // Actualizar el input visible con el texto de la parte
                     searchInput.value = selectedLabel;
                     searchInput.classList.add('parte-seleccionada');
+                    updateSelectedPreview(item);
 
                     // Actualizar el campo oculto para validación
                     inputParteHidden.value = parteSeleccionada.id;
@@ -562,17 +603,23 @@ use App\Core\Support\AssetHelper;
                     }
                 },
                 customItemRender: (item) => {
-                    const codigo = item.codigo_variante || item.parte_codigo || 'N/A';
-                    const detalle = item.detalle || item.variante_detalle || 'Sin descripción';
-                    const tipoCodigo = item.tipo_codigo || 'N/A';
-                    const parteBase = item.parte_codigo ? `<small class="text-muted d-block">Parte: ${item.parte_codigo}</small>` : '';
+                    const parteCodigo = escapeHtml(item.parte_codigo || 'N/A');
+                    const parteDetalle = escapeHtml(item.parte_detalle || 'Sin detalle');
+                    const varianteCodigo = escapeHtml(item.codigo_variante || 'N/A');
+                    const varianteDetalle = escapeHtml(item.detalle || item.variante_detalle || 'Sin descripción');
+                    const tipoCodigo = escapeHtml(item.tipo_codigo || 'N/A');
 
                     return `
                         <div class="d-flex justify-content-between align-items-start w-100 p-2">
                             <div class="flex-grow-1">
-                                <div class="fw-bold text-primary">${codigo}</div>
-                                ${parteBase}
-                                <small class="text-secondary">${detalle}</small>
+                                <div class="small text-secondary">
+                                    <span class="fw-semibold">Parte:</span>
+                                    <strong class="text-primary">${parteCodigo}</strong>
+                                    <span class="text-muted mx-1">|</span>
+                                    <span class="fw-semibold">Variante:</span>
+                                    <strong class="text-primary">${varianteCodigo}</strong>
+                                </div>
+                                <small class="text-secondary d-block">${parteDetalle} | ${varianteDetalle}</small>
                             </div>
                             <span class="badge bg-secondary ms-2 align-self-start">${tipoCodigo}</span>
                         </div>
@@ -586,6 +633,7 @@ use App\Core\Support\AssetHelper;
                     parteSeleccionada = null;
                     inputParteHidden.value = '';
                     this.classList.remove('parte-seleccionada');
+                    clearSelectedPreview();
                     actualizarUM();
                 }
             });
@@ -713,6 +761,7 @@ use App\Core\Support\AssetHelper;
                 inputParteHidden.value = '';
                 searchInput.value = '';
                 searchInput.classList.remove('parte-seleccionada');
+                clearSelectedPreview();
                 selectDestino.disabled = true;
                 selectDestino.innerHTML = '<option value="">Primero seleccione origen</option>';
                 selectUM.disabled = true;
@@ -810,6 +859,7 @@ use App\Core\Support\AssetHelper;
                         inputParteHidden.value = '';
                         searchInput.value = '';
                         searchInput.classList.remove('parte-seleccionada');
+                        clearSelectedPreview();
                         selectDestino.disabled = true;
                         selectDestino.innerHTML = '<option value="">Primero seleccione origen</option>';
                         selectUM.disabled = true;

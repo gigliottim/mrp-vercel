@@ -32,12 +32,12 @@
                     </td>
                     <td>
                         <div class="text-nowrap">
-                            <span x-text="variante.stock_actual || 0"></span>
+                            <span x-text="formatNumberDisplay(variante.stock_actual, '0')"></span>
                         </div>
                     </td>
                     <td>
-                        <span class="text-nowrap" x-text="variante.peso ? variante.peso : '--'"></span>
-                        <small class="text-muted" x-show="variante.peso" x-text="getPesoUM(variante.id_um_peso)"></small>
+                        <span class="text-nowrap" x-text="formatNumberDisplay(variante.peso, '--')"></span>
+                        <small class="text-muted" x-show="variante.peso !== null && variante.peso !== ''" x-text="getPesoUM(variante.id_um_peso)"></small>
                     </td>
                     <td class="text-end">
                         <div class="btn-group btn-group-sm flex-nowrap" role="group">

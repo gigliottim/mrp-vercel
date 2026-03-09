@@ -52,7 +52,7 @@ $variantStates = [
                         class="form-control"
                         x-model.number="variantForm.lote_minimo"
                         @blur="normalizeNumberInputValue($event, 'variantForm.lote_minimo')"
-                        step="0.01"
+                        :step="numberInputStep"
                         min="0">
                     <span class="input-group-text px-2" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
                 </div>
@@ -65,7 +65,7 @@ $variantStates = [
                         class="form-control"
                         x-model.number="variantForm.punto_pedido"
                         @blur="normalizeNumberInputValue($event, 'variantForm.punto_pedido')"
-                        step="0.01"
+                        :step="numberInputStep"
                         min="0">
                     <span class="input-group-text px-2" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
                 </div>
@@ -92,7 +92,7 @@ $variantStates = [
                         class="form-control px-2"
                         x-model.number="variantForm.peso"
                         @blur="normalizeNumberInputValue($event, 'variantForm.peso')"
-                        step="0.001"
+                        :step="numberInputStep"
                         placeholder="0.000">
                     <select class="form-select px-1" x-model="variantForm.id_um_peso" style="max-width: 65px;">
                         <option value="">UM</option>

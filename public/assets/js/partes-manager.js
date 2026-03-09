@@ -240,6 +240,19 @@ function parteManager(initialData) {
       return normalized === null ? '' : String(normalized);
     },
 
+    formatNumberDisplay(value, fallback = '') {
+      const normalized = this._toNullableNumber(value);
+      if (normalized === null) {
+        return fallback;
+      }
+
+      if (typeof window.appFormatNumber === 'function') {
+        return window.appFormatNumber(normalized, this.decimalPlaces);
+      }
+
+      return String(normalized);
+    },
+
     normalizeNumberInputValue(event, modelPath) {
       const rawValue = event?.target?.value ?? '';
       const normalized = this._toNullableNumber(rawValue);

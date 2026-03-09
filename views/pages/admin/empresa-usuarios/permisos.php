@@ -72,7 +72,7 @@ foreach ($childrenByParent as &$children) {
         if ($orderDiff !== 0) {
             return $orderDiff;
         }
-        return strcmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
+        return ((int) ($a['id'] ?? 0)) <=> ((int) ($b['id'] ?? 0));
     });
 }
 unset($children);

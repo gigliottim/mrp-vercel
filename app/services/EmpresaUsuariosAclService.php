@@ -21,10 +21,24 @@ final class EmpresaUsuariosAclService
     public function listMenuTree(): array
     {
         $stmt = $this->connection->query(
-            'SELECT id, code, label, route, icon, section_key, section_label, parent_id, sort_order
+            "SELECT id, code, label, route, icon, section_key, section_label, parent_id, sort_order
              FROM menu_items
              WHERE is_active = TRUE
-             ORDER BY section_key ASC, sort_order ASC, id ASC'
+             ORDER BY
+                CASE section_key
+                    WHEN 'panel' THEN 10
+                    WHEN 'productos_bom' THEN 20
+                    WHEN 'planeamiento_mrp' THEN 30
+                    WHEN 'produccion' THEN 40
+                    WHEN 'transacciones' THEN 50
+                    WHEN 'inventario_stock' THEN 60
+                    WHEN 'reportes' THEN 70
+                    WHEN 'parametros_catalogos' THEN 80
+                    WHEN 'empresa_usuarios' THEN 90
+                    ELSE 999
+                END ASC,
+                sort_order ASC,
+                id ASC"
         );
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

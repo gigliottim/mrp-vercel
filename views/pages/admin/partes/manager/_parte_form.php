@@ -141,7 +141,7 @@ use App\Core\View\View;
             <div class="col-sm-6 col-xl-6 pm-dimension-col">
                 <label class="form-label small mb-0">Superficie</label>
                 <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.superficie" :step="numberInputStep">
+                    <input type="number" class="form-control px-2" x-model.number="form.superficie" step="any">
                     <select class="form-select px-1" x-model.number="form.id_um_superficie" style="max-width: 65px;">
                         <option value="">UM</option>
                         <?php foreach ($unidadesSuperficie as $unidad) : ?>

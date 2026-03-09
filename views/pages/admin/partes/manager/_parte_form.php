@@ -6,7 +6,7 @@ use App\Core\View\View;
     <fieldset :disabled="isPartFormReadOnly">
         <div class="row g-3 pm-part-form-split">
             <div class="col-12 col-lg-7">
-                <div class="row g-2 g-xl-3">
+                <div class="row gx-2 gx-xl-3 gy-1">
                     <!-- Fila 1: Datos Generales (Compacto) -->
                     <div class="col-sm-6 col-xl-4">
                         <label class="form-label fw-semibold mb-1">Código <span class="text-danger">*</span></label>
@@ -124,7 +124,7 @@ use App\Core\View\View;
                     </button>
                 </div>
 
-                <div class="row g-2 g-xl-3">
+                <div class="row gx-2 gx-xl-3 gy-1">
                     <?php foreach ($dimensionFields as $field) : ?>
                         <div class="col-sm-6 pm-dimension-col">
                             <label class="form-label small mb-0 text-truncate"><?= View::escape($field['label']) ?></label>

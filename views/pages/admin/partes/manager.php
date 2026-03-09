@@ -74,29 +74,31 @@ $dimensionFields = [
                 Buscar parte o variante existente para cargar o editar
             </h6>
 
-            <?php if ($selectedVariante): ?>
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="flex-grow-1">
-                        <div class="alert alert-success mb-0 py-2 px-3">
-                            <i class="fa-solid fa-check-circle me-2"></i>
-                            <span class="fw-semibold">Parte:</span>
-                            <strong><?= View::escape((string) ($parte['codigo'] ?? 'N/A')) ?></strong>
-                            <span class="text-muted mx-1">-</span>
-                            <span><?= View::escape((string) ($parte['detalle'] ?? '')) ?></span>
-                            <span class="text-muted mx-2">|</span>
-                            <span class="fw-semibold">Variante:</span>
-                            <strong><?= View::escape((string) ($selectedVariante['codigo_variante'] ?? 'N/A')) ?></strong>
-                            <span class="text-muted mx-1">-</span>
-                            <span><?= View::escape((string) ($selectedVariante['detalle'] ?? '')) ?></span>
-                        </div>
+            <div class="d-flex align-items-center gap-3 mb-3" x-show="form.id">
+                <div class="flex-grow-1">
+                    <div class="alert alert-success mb-0 py-2 px-3">
+                        <i class="fa-solid fa-check-circle me-2"></i>
+                        <span class="fw-semibold">Parte:</span>
+                        <strong x-text="form.codigo || 'N/A'"></strong>
+                        <span class="text-muted mx-1">-</span>
+                        <span x-text="form.detalle || ''"></span>
+                        <template x-if="variantForm && variantForm.id">
+                            <span>
+                                <span class="text-muted mx-2">|</span>
+                                <span class="fw-semibold">Variante:</span>
+                                <strong x-text="variantForm.codigo_variante || 'N/A'"></strong>
+                                <span class="text-muted mx-1">-</span>
+                                <span x-text="variantForm.detalle || ''"></span>
+                            </span>
+                        </template>
                     </div>
-                    <a href="<?= url('productos/partes/manager/' . (int) ($parte['id'] ?? 0)) ?>" class="btn btn-outline-primary">
-                        <i class="fa-solid fa-exchange-alt"></i> Cambiar
-                    </a>
                 </div>
-            <?php endif; ?>
+                <button type="button" class="btn btn-outline-primary" @click="resetForm()">
+                    <i class="fa-solid fa-exchange-alt"></i> Cambiar
+                </button>
+            </div>
 
-            <?php if (!$selectedVariante): ?>
+            <div x-show="!form.id">
                 <!-- Filtros por tipo -->
                 <div class="btn-group btn-group-sm mb-3 w-100 flex-wrap" role="group" id="tipo-filters">
                     <button type="button"
@@ -134,7 +136,7 @@ $dimensionFields = [
                     </div>
                     <div id="parte-search-results" class="search-results"></div>
                 </div>
-            <?php endif; ?>
+            </div>
         </div>
     </div>
 

@@ -74,7 +74,7 @@ $dimensionFields = [
                 Buscar parte o variante existente para cargar o editar
             </h6>
 
-            <div class="d-flex align-items-center gap-3 mb-3" x-show="form.id">
+            <div class="d-flex align-items-center gap-3 mb-3" x-show="mode !== 'create' && form.id">
                 <div class="flex-grow-1">
                     <div class="alert alert-success mb-0 py-2 px-3">
                         <i class="fa-solid fa-check-circle me-2"></i>
@@ -98,7 +98,7 @@ $dimensionFields = [
                 </button>
             </div>
 
-            <div x-show="!form.id">
+            <div x-show="mode === 'create' || !form.id">
                 <!-- Filtros por tipo -->
                 <div class="btn-group btn-group-sm mb-3 w-100 flex-wrap" role="group" id="tipo-filters">
                     <button type="button"

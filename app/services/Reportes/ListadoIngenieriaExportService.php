@@ -187,12 +187,13 @@ final class ListadoIngenieriaExportService
      */
     public function generatePdf(array $headers, array $rows, string $titulo, string $subtitulo = ''): string
     {
-        $spreadsheet = $this->buildSpreadsheet($headers, $rows, $titulo, $subtitulo);
+        $pdfOrientation = $this->resolvePdfOrientation($headers);
+        $spreadsheet = $this->buildSpreadsheet($headers, $rows, $titulo, $subtitulo, true, $pdfOrientation);
 
         // Renderizar PDF con Dompdf (PhpSpreadsheet Writer\Pdf\Dompdf)
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->getPageSetup()
-            ->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)
+            ->setOrientation($pdfOrientation)
             ->setPaperSize(PageSetup::PAPERSIZE_A4)
             ->setFitToPage(true)
             ->setFitToWidth(1)
@@ -211,8 +212,14 @@ final class ListadoIngenieriaExportService
      * @param array<int, string> $headers
      * @param array<int, array<int, string|float|int|null>> $rows
      */
-    private function buildSpreadsheet(array $headers, array $rows, string $title, string $subtitle = ''): Spreadsheet
-    {
+    private function buildSpreadsheet(
+        array $headers,
+        array $rows,
+        string $title,
+        string $subtitle = '',
+        bool $forPdf = false,
+        string $pdfOrientation = PageSetup::ORIENTATION_LANDSCAPE
+    ): Spreadsheet {
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getDefaultStyle()->getFont()->setName('Calibri')->setSize(9);
         $sheet = $spreadsheet->getActiveSheet();
@@ -291,6 +298,8 @@ final class ListadoIngenieriaExportService
         $startDataRow = $headerRow + 1;
         $rowNum = $startDataRow;
         $detalleColIndex = array_search('Detalle', $headers, true);
+        $columnWidths = $this->calculateColumnWidths($headers, $forPdf, $pdfOrientation);
+        $detalleWidth = $columnWidths['Detalle'] ?? 47.0;
 
         foreach ($rows as $row) {
             $isGroup = count($row) === 1;
@@ -322,7 +331,7 @@ final class ListadoIngenieriaExportService
 
                 if ($detalleColIndex !== false && $i === $detalleColIndex) {
                     $detalleTexto = trim((string) $value);
-                    $detalleLines = $this->estimateDetailLines($detalleTexto);
+                    $detalleLines = $this->estimateDetailLines($detalleTexto, $detalleWidth);
                     $sheet->setCellValueExplicit($col . $rowNum, $detalleTexto, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                     continue;
                 }
@@ -376,21 +385,9 @@ final class ListadoIngenieriaExportService
             }
         }
 
-        // Anchos de columna
-        $widthMap = [
-            'Nivel' => 14,
-            'Codigo' => 17,
-            'Detalle' => 47,
-            'Tipo' => 9,
-            'Cantidad' => 11,
-            'Unidad' => 8,
-            'Precio Unit.' => 12,
-            'Subtotal' => 12,
-        ];
-
         foreach ($headers as $i => $header) {
             $col = Coordinate::stringFromColumnIndex($i + 1);
-            $sheet->getColumnDimension($col)->setWidth($widthMap[$header] ?? 14);
+            $sheet->getColumnDimension($col)->setWidth((float) ($columnWidths[$header] ?? 14));
         }
 
         // Fila header y pane fijo
@@ -407,15 +404,64 @@ final class ListadoIngenieriaExportService
         return $spreadsheet;
     }
 
-    private function estimateDetailLines(string $value): int
+    private function estimateDetailLines(string $value, float $detailWidth): int
     {
         $text = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
         if ($text === '') {
             return 1;
         }
 
-        $charsPerLine = 66;
+        $charsPerLine = max(24, (int) floor($detailWidth * 1.40));
         return max(1, (int) ceil(mb_strlen($text, 'UTF-8') / $charsPerLine));
+    }
+
+    /**
+     * @param array<int, string> $headers
+     */
+    private function resolvePdfOrientation(array $headers): string
+    {
+        // Hasta 6 columnas en vertical; 7+ en horizontal
+        return count($headers) > 6
+            ? PageSetup::ORIENTATION_LANDSCAPE
+            : PageSetup::ORIENTATION_PORTRAIT;
+    }
+
+    /**
+     * @param array<int, string> $headers
+     * @return array<string, float>
+     */
+    private function calculateColumnWidths(array $headers, bool $forPdf, string $pdfOrientation): array
+    {
+        $base = [
+            'Nivel' => 14.0,
+            'Codigo' => 17.0,
+            'Detalle' => 47.0,
+            'Tipo' => 9.0,
+            'Cantidad' => 11.0,
+            'Unidad' => 8.0,
+            'Precio Unit.' => 12.0,
+            'Subtotal' => 12.0,
+        ];
+
+        if (!$forPdf) {
+            return $base;
+        }
+
+        // Superficie util aproximada (en unidades de ancho de columna de PhpSpreadsheet)
+        $targetTotal = $pdfOrientation === PageSetup::ORIENTATION_PORTRAIT ? 92.0 : 130.0;
+
+        $fixedSum = 0.0;
+        foreach ($headers as $header) {
+            if ($header === 'Detalle') {
+                continue;
+            }
+            $fixedSum += $base[$header] ?? 12.0;
+        }
+
+        $detailWidth = max(24.0, $targetTotal - $fixedSum);
+        $base['Detalle'] = $detailWidth;
+
+        return $base;
     }
 
     private function writeSpreadsheetToString(Spreadsheet $spreadsheet, string $writerType): string

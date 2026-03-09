@@ -140,7 +140,7 @@ $dimensionFields = [
 
     <div class="row g-3 pm-main-grid">
         <!-- Columna Izquierda (2/3): Formulario de Parte + Formulario de Variante -->
-        <div class="col-12 col-md-8">
+        <div class="col-12 col-md-8 pm-forms-column">
             <div class="card shadow-sm border-0 pm-part-card mb-3">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <h5 class="mb-0">
@@ -159,7 +159,7 @@ $dimensionFields = [
             </div>
 
             <!-- Formulario Variante (debajo de Formulario de Parte) -->
-            <div class="card shadow-sm border-0 pm-scroll-card" x-show="isEditing">
+            <div class="card shadow-sm border-0 pm-scroll-card">
                 <div class="card-header bg-white border-bottom pm-card-header">
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <h5 class="mb-0">

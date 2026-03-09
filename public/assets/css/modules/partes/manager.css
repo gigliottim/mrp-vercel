@@ -18,6 +18,10 @@
   display: flex;
 }
 
+.partes-manager-page .pm-forms-column {
+  flex-direction: column;
+}
+
 .partes-manager-page .pm-main-grid .card {
   width: 100%;
 }

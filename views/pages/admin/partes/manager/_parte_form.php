@@ -4,104 +4,112 @@ use App\Core\View\View;
 ?>
 <form @submit.prevent="saveParte()">
     <fieldset :disabled="isPartFormReadOnly">
-        <div class="row g-2 g-xl-3">
-            <!-- Fila 1: Datos Generales (Compacto) -->
-            <div class="col-sm-6 col-xl-4">
-                <label class="form-label fw-semibold mb-1">Código <span class="text-danger">*</span></label>
-                <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    x-model="form.codigo"
-                    placeholder=""
-                    required
-                    style="text-transform: uppercase">
-            </div>
-            <div class="col-sm-6 col-xl-4">
-                <label class="form-label fw-semibold mb-1">Tipo <span class="text-danger">*</span></label>
-                <select class="form-select form-select-sm" x-model.number="form.id_tipo" required>
-                    <option value="">-- Seleccionar --</option>
-                    <?php foreach ($tipos as $tipo) : ?>
-                        <option value="<?= (int) $tipo['id'] ?>"><?= View::escape($tipo['nombre']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-sm-6 col-xl-4">
-                <label class="form-label fw-semibold mb-1">Grupo <span class="text-danger">*</span></label>
-                <select class="form-select form-select-sm" x-model.number="form.id_grupo" required>
-                    <option value="">-- Seleccionar --</option>
-                    <?php foreach ($grupos as $grupo) : ?>
-                        <option value="<?= (int) $grupo['id'] ?>"><?= View::escape($grupo['nombre']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+        <div class="row g-3 pm-part-form-split">
+            <div class="col-12 col-lg-7">
+                <div class="row g-2 g-xl-3">
+                    <!-- Fila 1: Datos Generales (Compacto) -->
+                    <div class="col-sm-6 col-xl-4">
+                        <label class="form-label fw-semibold mb-1">Código <span class="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            class="form-control form-control-sm"
+                            x-model="form.codigo"
+                            placeholder=""
+                            required
+                            style="text-transform: uppercase">
+                    </div>
+                    <div class="col-sm-6 col-xl-4">
+                        <label class="form-label fw-semibold mb-1">Tipo <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-sm" x-model.number="form.id_tipo" required>
+                            <option value="">-- Seleccionar --</option>
+                            <?php foreach ($tipos as $tipo) : ?>
+                                <option value="<?= (int) $tipo['id'] ?>"><?= View::escape($tipo['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-xl-4">
+                        <label class="form-label fw-semibold mb-1">Grupo <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-sm" x-model.number="form.id_grupo" required>
+                            <option value="">-- Seleccionar --</option>
+                            <?php foreach ($grupos as $grupo) : ?>
+                                <option value="<?= (int) $grupo['id'] ?>"><?= View::escape($grupo['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-            <!-- Fila 2: Detalle -->
-            <div class="col-12">
-                <label class="form-label fw-semibold mb-1">Detalle <span class="text-danger">*</span></label>
-                <textarea
-                    class="form-control form-control-sm"
-                    x-model="form.detalle"
-                    rows="2"
-                    placeholder="Descripción de la parte"
-                    required></textarea>
-            </div>
+                    <!-- Fila 2: Detalle -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold mb-1">Detalle <span class="text-danger">*</span></label>
+                        <textarea
+                            class="form-control form-control-sm"
+                            x-model="form.detalle"
+                            rows="2"
+                            placeholder="Descripción de la parte"
+                            required></textarea>
+                    </div>
 
-            <!-- Fila 3: Unidades de Medida -->
-            <div class="col-sm-6 col-xl-3">
-                <label class="form-label fw-semibold mb-1">
-                    UM Compra
-                    <i class="fa-solid fa-circle-info text-muted"
-                        data-bs-toggle="tooltip"
-                        title="Unidad en la que se compra el ítem"></i>
-                </label>
-                <select class="form-select form-select-sm" x-model.number="form.id_um_compra">
-                    <option value="">-- Seleccionar --</option>
-                    <?php foreach ($unidadesTodas as $unidad) : ?>
-                        <option value="<?= (int) $unidad['id'] ?>">
-                            <?= View::escape($unidad['unidad']) ?> (<?= View::escape($unidad['simbolo']) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <label class="form-label fw-semibold mb-1">
-                    UM Uso
-                    <i class="fa-solid fa-circle-info text-muted"
-                        data-bs-toggle="tooltip"
-                        title="Unidad en la que se usa el ítem en producción"></i>
-                </label>
-                <select class="form-select form-select-sm" x-model.number="form.id_um_uso">
-                    <option value="">-- Seleccionar --</option>
-                    <?php foreach ($unidadesTodas as $unidad) : ?>
-                        <option value="<?= (int) $unidad['id'] ?>">
-                            <?= View::escape($unidad['unidad']) ?> (<?= View::escape($unidad['simbolo']) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                    <!-- Fila 3: Unidades de Medida -->
+                    <div class="col-sm-6 col-xl-3">
+                        <label class="form-label fw-semibold mb-1">
+                            UM Compra
+                            <i class="fa-solid fa-circle-info text-muted"
+                                data-bs-toggle="tooltip"
+                                title="Unidad en la que se compra el ítem"></i>
+                        </label>
+                        <select class="form-select form-select-sm" x-model.number="form.id_um_compra">
+                            <option value="">-- Seleccionar --</option>
+                            <?php foreach ($unidadesTodas as $unidad) : ?>
+                                <option value="<?= (int) $unidad['id'] ?>">
+                                    <?= View::escape($unidad['unidad']) ?> (<?= View::escape($unidad['simbolo']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <label class="form-label fw-semibold mb-1">
+                            UM Uso
+                            <i class="fa-solid fa-circle-info text-muted"
+                                data-bs-toggle="tooltip"
+                                title="Unidad en la que se usa el ítem en producción"></i>
+                        </label>
+                        <select class="form-select form-select-sm" x-model.number="form.id_um_uso">
+                            <option value="">-- Seleccionar --</option>
+                            <?php foreach ($unidadesTodas as $unidad) : ?>
+                                <option value="<?= (int) $unidad['id'] ?>">
+                                    <?= View::escape($unidad['unidad']) ?> (<?= View::escape($unidad['simbolo']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-            <!-- Factor de conversión (visible si UM Compra != UM Uso) -->
-            <div class="col-12 col-xl-6" x-show="form.id_um_compra && form.id_um_uso && form.id_um_compra != form.id_um_uso" x-transition>
-                <label class="form-label fw-semibold mb-1 text-primary">
-                    Factor de Conversión
-                    <i class="fa-solid fa-circle-question" title="Cuántas unidades de USO equivale 1 unidad de COMPRA"></i>
-                </label>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-light text-muted">1 UM Compra =</span>
-                    <input type="number" :step="numberInputStep" min="0" class="form-control"
-                        x-model.number="form.factor_conversion"
-                        @blur="normalizeNumberInputValue($event, 'form.factor_conversion')"
-                        placeholder="Ej: 10">
-                    <span class="input-group-text bg-light text-muted">UM Uso</span>
-                </div>
-                <div class="form-text text-muted my-0" style="font-size: 0.7em;">
-                    Ejemplo: Si compra Cajas de 10 Unidades, ingrese 10.
+                    <!-- Factor de conversión (visible si UM Compra != UM Uso) -->
+                    <div class="col-12 col-xl-6" x-show="form.id_um_compra && form.id_um_uso && form.id_um_compra != form.id_um_uso" x-transition>
+                        <label class="form-label fw-semibold mb-1 text-primary">
+                            Factor de Conversión
+                            <i class="fa-solid fa-circle-question" title="Cuántas unidades de USO equivale 1 unidad de COMPRA"></i>
+                        </label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light text-muted">1 UM Compra =</span>
+                            <input type="number" :step="numberInputStep" min="0" class="form-control"
+                                x-model.number="form.factor_conversion"
+                                @blur="normalizeNumberInputValue($event, 'form.factor_conversion')"
+                                placeholder="Ej: 10">
+                            <span class="input-group-text bg-light text-muted">UM Uso</span>
+                        </div>
+                        <div class="form-text text-muted my-0" style="font-size: 0.7em;">
+                            Ejemplo: Si compra Cajas de 10 Unidades, ingrese 10.
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Separator -->
-            <div class="col-12">
-                <hr class="my-2">
+            <div class="col-lg-auto d-none d-lg-flex justify-content-center">
+                <div class="pm-part-form-separator-vertical" aria-hidden="true"></div>
+            </div>
+
+            <div class="col-12 col-lg">
+                <hr class="my-2 d-lg-none">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="text-muted text-uppercase small mb-0">
                         <i class="fa-solid fa-ruler-combined me-2"></i>Dimensiones físicas
@@ -115,53 +123,53 @@ use App\Core\View\View;
                         Recalcular
                     </button>
                 </div>
-            </div>
 
-            <!-- Fila 4: Dimensiones (3 por fila en escritorio) -->
-            <?php foreach ($dimensionFields as $field) : ?>
-                <div class="col-sm-6 col-xl-4 pm-dimension-col">
-                    <label class="form-label small mb-0 text-truncate"><?= View::escape($field['label']) ?></label>
-                    <div class="input-group input-group-sm pm-dimension-input-group">
-                        <input
-                            type="number"
-                            class="form-control px-2"
-                            x-model.number="form.<?= $field['key'] ?>"
-                            @blur="normalizeNumberInputValue($event, 'form.<?= $field['key'] ?>')"
-                            :step="numberInputStep"
-                            placeholder="0.00">
-                        <select class="form-select px-1" x-model.number="form.<?= $field['unit'] ?>" style="max-width: 65px;">
-                            <option value="">UM</option>
-                            <?php foreach ($field['units'] as $unidad) : ?>
-                                <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                <div class="row g-2 g-xl-3">
+                    <?php foreach ($dimensionFields as $field) : ?>
+                        <div class="col-sm-6 pm-dimension-col">
+                            <label class="form-label small mb-0 text-truncate"><?= View::escape($field['label']) ?></label>
+                            <div class="input-group input-group-sm pm-dimension-input-group">
+                                <input
+                                    type="number"
+                                    class="form-control px-2"
+                                    x-model.number="form.<?= $field['key'] ?>"
+                                    @blur="normalizeNumberInputValue($event, 'form.<?= $field['key'] ?>')"
+                                    :step="numberInputStep"
+                                    placeholder="0.00">
+                                <select class="form-select px-1" x-model.number="form.<?= $field['unit'] ?>" style="max-width: 65px;">
+                                    <option value="">UM</option>
+                                    <?php foreach ($field['units'] as $unidad) : ?>
+                                        <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+
+                    <div class="col-sm-6 pm-dimension-col">
+                        <label class="form-label small mb-0">Superficie</label>
+                        <div class="input-group input-group-sm pm-dimension-input-group">
+                            <input type="number" class="form-control px-2" x-model.number="form.superficie" @blur="normalizeNumberInputValue($event, 'form.superficie')" :step="numberInputStep">
+                            <select class="form-select px-1" x-model.number="form.id_um_superficie" style="max-width: 65px;">
+                                <option value="">UM</option>
+                                <?php foreach ($unidadesSuperficie as $unidad) : ?>
+                                    <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
-
-            <!-- Fila 5: Superficie y Volumen -->
-            <div class="col-sm-6 col-xl-6 pm-dimension-col">
-                <label class="form-label small mb-0">Superficie</label>
-                <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.superficie" @blur="normalizeNumberInputValue($event, 'form.superficie')" :step="numberInputStep">
-                    <select class="form-select px-1" x-model.number="form.id_um_superficie" style="max-width: 65px;">
-                        <option value="">UM</option>
-                        <?php foreach ($unidadesSuperficie as $unidad) : ?>
-                            <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-6 pm-dimension-col">
-                <label class="form-label small mb-0">Volumen</label>
-                <div class="input-group input-group-sm pm-dimension-input-group">
-                    <input type="number" class="form-control px-2" x-model.number="form.volumen" @blur="normalizeNumberInputValue($event, 'form.volumen')" :step="numberInputStep">
-                    <select class="form-select px-1" x-model.number="form.id_um_volumen" style="max-width: 65px;">
-                        <option value="">UM</option>
-                        <?php foreach ($unidadesVolumen as $unidad) : ?>
-                            <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="col-sm-6 pm-dimension-col">
+                        <label class="form-label small mb-0">Volumen</label>
+                        <div class="input-group input-group-sm pm-dimension-input-group">
+                            <input type="number" class="form-control px-2" x-model.number="form.volumen" @blur="normalizeNumberInputValue($event, 'form.volumen')" :step="numberInputStep">
+                            <select class="form-select px-1" x-model.number="form.id_um_volumen" style="max-width: 65px;">
+                                <option value="">UM</option>
+                                <?php foreach ($unidadesVolumen as $unidad) : ?>
+                                    <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

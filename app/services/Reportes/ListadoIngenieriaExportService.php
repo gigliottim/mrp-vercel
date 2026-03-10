@@ -68,8 +68,8 @@ final class ListadoIngenieriaExportService
             $codigoCompuesto = $this->composeCodigo($item);
             $detalleCompuesto = $this->composeDetalle($item);
             $cantidadAjustada = (float) ($item['cantidad_ajustada'] ?? 0);
-            $precioUnitario = 0.0;
-            $subtotal = $precioUnitario * $cantidadAjustada;
+            $precioUnitario = (float) ($item['precio_unitario'] ?? 0);
+            $subtotal = (float) ($item['subtotal'] ?? ($precioUnitario * $cantidadAjustada));
 
             $row = [];
             if ($tipoSalida === 'arbol') {

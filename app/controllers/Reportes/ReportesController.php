@@ -268,6 +268,22 @@ final class ReportesController extends Controller
                     });
                 }
 
+                if ($conPrecios) {
+                    $tz = new \DateTimeZone('America/Argentina/Buenos_Aires');
+                    $fechaCosto = (new \DateTimeImmutable('now', $tz))->format('Y-m-d H:i:s');
+
+                    foreach ($datosReporte as &$item) {
+                        $varianteId = (int) ($item['variante_id'] ?? $item['variante_componente_id'] ?? 0);
+                        $cantidadAjustada = (float) ($item['cantidad_ajustada'] ?? $item['cantidad'] ?? $item['cantidad_necesaria'] ?? $item['cantidad_total'] ?? 0);
+
+                        $item['precio_unitario'] = $varianteId > 0
+                            ? $this->compras->getCostoAtDate($varianteId, $fechaCosto)
+                            : 0.0;
+                        $item['subtotal'] = $item['precio_unitario'] * $cantidadAjustada;
+                    }
+                    unset($item);
+                }
+
                 // Aplicar Agrupamiento (Solo lógica de datos? O estructura?)
                 // Si agrupamos, cambiamos la estructura de los datos. La vista debe soportarlo.
                 // Si $agruparTipo es true, retornaremos un array estructurado por grupos.

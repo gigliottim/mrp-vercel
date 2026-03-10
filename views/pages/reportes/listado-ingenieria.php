@@ -407,8 +407,8 @@ $datosReporte = $datosReporte ?? [];
                                 $varianteDetalle = trim((string) ($item['variante_detalle'] ?? $item['componente_detalle'] ?? ''));
                                 $detalleCompuesto = trim($parteDetalle . ' + ' . $varianteDetalle, ' +');
 
-                                $precioUnitario = 0;
-                                $subtotal = $precioUnitario * ($item['cantidad_ajustada'] ?? 0);
+                                $precioUnitario = (float) ($item['precio_unitario'] ?? 0);
+                                $subtotal = (float) ($item['subtotal'] ?? ($precioUnitario * (float) ($item['cantidad_ajustada'] ?? 0)));
                                 $totalGeneral += $subtotal;
                             ?>
                                 <tr>

@@ -43,7 +43,7 @@ if (-not (Get-Module -ListAvailable -Name Posh-SSH)) {
 
 Import-Module Posh-SSH -ErrorAction Stop
 
-Write-Step "Creando sesion SSH a $UserName@$HostName:$Port ..."
+Write-Step "Creando sesion SSH a $UserName@${HostName}:$Port ..."
 $securePassword = ConvertTo-SecureString $Password -AsPlainText -Force
 $credential = New-Object System.Management.Automation.PSCredential ($UserName, $securePassword)
 $session = New-SSHSession -ComputerName $HostName -Port $Port -Credential $credential -AcceptKey
@@ -59,20 +59,21 @@ mkdir -p $RemotePath/docker/logs/nginx
 mkdir -p $RemotePath/docker/logs/php-fpm
 mkdir -p $RemotePath/docker/logs/postgresql
 mkdir -p $RemotePath/docker/logs/pgadmin
+chmod -R 0777 $RemotePath/docker/logs
 "@
     Invoke-SSHCommand -SessionId $sessionId -Command $prepareCmd | Out-Null
 
     Write-Step "Subiendo docker-compose.yml ..."
-    Set-SCPItem -SessionId $sessionId -Path $composeFile -Destination "$RemotePath/docker-compose.yml"
+    Set-SCPItem -ComputerName $HostName -Port $Port -Credential $credential -AcceptKey -Path $composeFile -Destination "$RemotePath" -NewName "docker-compose.yml"
 
     Write-Step "Subiendo .env.docker ..."
-    Set-SCPItem -SessionId $sessionId -Path $envDockerFile -Destination "$RemotePath/.env.docker"
+    Set-SCPItem -ComputerName $HostName -Port $Port -Credential $credential -AcceptKey -Path $envDockerFile -Destination "$RemotePath" -NewName ".env.docker"
 
     Write-Step "Subiendo configuracion Nginx ..."
-    Set-SCPItem -SessionId $sessionId -Path $nginxConfFile -Destination "$RemotePath/docker/nginx/mrp.conf"
+    Set-SCPItem -ComputerName $HostName -Port $Port -Credential $credential -AcceptKey -Path $nginxConfFile -Destination "$RemotePath/docker/nginx" -NewName "mrp.conf"
 
     Write-Step "Verificando Docker y plugin Compose en VPS..."
-    $remoteDeployCmd = @"
+    $remoteDeployCmdTemplate = @'
 set -e
 
 echo "==> Verificando Docker"
@@ -82,6 +83,12 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 docker --version
+
+if command -v systemctl >/dev/null 2>&1; then
+  echo "==> Habilitando Docker al arranque"
+  systemctl enable docker >/dev/null 2>&1 || true
+  systemctl is-enabled docker || true
+fi
 
 echo "==> Verificando Docker Compose plugin"
 if ! docker compose version >/dev/null 2>&1; then
@@ -104,12 +111,29 @@ fi
 
 docker compose version
 
+# Leer credenciales Docker Hub desde .env.docker (sin source)
+DOCKERHUB_USERNAME=""
+DOCKERHUB_PASSWORD=""
+if [ -f "__REMOTE_PATH__/.env.docker" ]; then
+  DOCKERHUB_USERNAME=$(grep -E '^DOCKERHUB_USERNAME=' "__REMOTE_PATH__/.env.docker" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d '\r')
+  DOCKERHUB_PASSWORD=$(grep -E '^DOCKERHUB_PASSWORD=' "__REMOTE_PATH__/.env.docker" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d '\r')
+fi
+
+if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_PASSWORD" ]; then
+  echo "==> Login en Docker Hub (usuario configurado)"
+  echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+else
+  echo "==> Sin credenciales Docker Hub en .env.docker (modo anonimo)"
+fi
+
 echo "==> Desplegando stack LEPP"
-cd $RemotePath
+cd __REMOTE_PATH__
+chmod -R 0777 __REMOTE_PATH__/docker/logs || true
 docker compose pull
 docker compose up -d
 docker compose ps
-"@
+'@
+    $remoteDeployCmd = $remoteDeployCmdTemplate.Replace("__REMOTE_PATH__", $RemotePath)
 
     $deployResult = Invoke-SSHCommand -SessionId $sessionId -Command $remoteDeployCmd
     $deployOutput = ($deployResult.Output -join [Environment]::NewLine)

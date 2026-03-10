@@ -2,7 +2,7 @@ services:
   nginx:
     image: bitnami/nginx:latest
     container_name: lepp-nginx
-    restart: unless-stopped
+    restart: always
     depends_on:
       - php-fpm
     ports:
@@ -17,7 +17,7 @@ services:
   php-fpm:
     image: bitnami/php-fpm:latest
     container_name: lepp-php-fpm
-    restart: unless-stopped
+    restart: always
     working_dir: /app
     volumes:
       - ./:/app
@@ -28,7 +28,7 @@ services:
   postgresql:
     image: bitnami/postgresql:latest
     container_name: lepp-postgresql
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env.docker
     ports:
@@ -42,7 +42,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: lepp-pgadmin
-    restart: unless-stopped
+    restart: always
     depends_on:
       - postgresql
     env_file:

@@ -244,7 +244,6 @@ final class MovimientosPartesController extends Controller
                     'precio_unitario' => $precioUnitarioUso,
                     'nro_comprobante' => $data['cbte'] ?? null,
                     'observaciones' => trim((string) ($data['observaciones'] ?? ''))
-                        . sprintf(' [Auto] Cant. Compra: %.6f | Factor: %.6f | Cant. Uso: %.6f', $cantidad, $factorConversion, $cantidadUso)
                 ]);
             }
 
@@ -302,8 +301,7 @@ final class MovimientosPartesController extends Controller
                 $precioUnitarioCompra = $importeTotal / max($cantidadCompra, 0.000001);
                 $precioUnitarioUso = $this->unitConversion->usageUnitPriceFromPurchase($precioUnitarioCompra, $factorConversion);
 
-                $obs = trim((string) ($data['observaciones'] ?? ''))
-                    . sprintf(' [Auto] Cant. Compra: %.6f | Factor: %.6f | Cant. Uso: %.6f', $cantidadCompra, $factorConversion, $cantidadUso);
+                $obs = trim((string) ($data['observaciones'] ?? ''));
 
                 $compraStmt = $conn->prepare('SELECT id FROM compras WHERE id_movimiento_stock = :id_mov LIMIT 1');
                 $compraStmt->execute(['id_mov' => $movimientoId]);

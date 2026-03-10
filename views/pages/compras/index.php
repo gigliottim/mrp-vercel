@@ -71,19 +71,20 @@
                                 $cantidadCompra = $cantidadUso / $factorConversion;
                                 $umUso = (string) ($compra['um_uso_simbolo'] ?? 'u.');
                                 $umCompra = (string) ($compra['um_compra_simbolo'] ?? 'u.');
+                                $proveedorTexto = trim((string) ($compra['proveedor_nombre'] ?? $compra['proveedor'] ?? ''));
+                                $observacionesRaw = (string) ($compra['observaciones'] ?? '');
+                                $observacionesSinAuto = preg_replace('/\s*\[Auto\].*$/s', '', $observacionesRaw);
+                                $observacionesUsuario = trim((string) ($observacionesSinAuto ?? $observacionesRaw));
                                 ?>
                                 <tr>
                                     <td class="ps-3 text-nowrap text-secondary small"><?= htmlspecialchars(app_format_datetime($compra['fecha'], false)) ?></td>
                                     <td>
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold text-dark text-decoration-none">
-                                                <?= htmlspecialchars($compra['codigo_variante']) ?>
+                                            <span class="fw-bold text-dark text-truncate" style="max-width: 300px;">
+                                                <?= htmlspecialchars((string) ($compra['parte_codigo'] ?? '')) ?>: <?= htmlspecialchars((string) ($compra['parte_detalle'] ?? '')) ?>
                                             </span>
-                                            <small class="text-muted text-truncate" style="max-width: 250px;">
-                                                <?= htmlspecialchars($compra['variante_detalle']) ?>
-                                            </small>
-                                            <small class="text-xs text-primary bg-light px-1 rounded d-inline-block mt-1" style="width: fit-content;">
-                                                <?= htmlspecialchars($compra['parte_codigo']) ?>
+                                            <small class="text-muted text-truncate" style="max-width: 300px;">
+                                                <?= htmlspecialchars((string) ($compra['codigo_variante'] ?? '')) ?>: <?= htmlspecialchars((string) ($compra['variante_detalle'] ?? '')) ?>
                                             </small>
                                         </div>
                                     </td>
@@ -100,13 +101,13 @@
                                         $<?= htmlspecialchars($formatCompactQty((float)$compra['cantidad'] * (float)$compra['precio_unitario'])) ?>
                                     </td>
                                     <td class="small align-middle">
-                                        <?php if ($compra['proveedor']): ?>
-                                            <div class="mb-1"><i class="fas fa-truck text-muted me-1"></i><?= htmlspecialchars($compra['proveedor']) ?></div>
+                                        <?php if ($proveedorTexto !== ''): ?>
+                                            <div class="mb-1"><i class="fas fa-truck text-muted me-1"></i><?= htmlspecialchars($proveedorTexto) ?></div>
                                         <?php endif; ?>
 
-                                        <?php if (!empty($compra['observaciones'])): ?>
+                                        <?php if ($observacionesUsuario !== ''): ?>
                                             <div class="text-muted fst-italic border-start border-3 border-info ps-2 mt-1" style="font-size: 0.85em;">
-                                                <?= nl2br(htmlspecialchars($compra['observaciones'])) ?>
+                                                <?= nl2br(htmlspecialchars($observacionesUsuario)) ?>
                                             </div>
                                         <?php endif; ?>
                                     </td>

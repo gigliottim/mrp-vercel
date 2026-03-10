@@ -94,10 +94,10 @@
                                         <?= htmlspecialchars($formatCompactQty($cantidadCompra) . ' ' . $umCompra) ?>
                                     </td>
                                     <td class="text-end font-monospace align-middle text-secondary">
-                                        $<?= htmlspecialchars(app_format_number((float)$compra['precio_unitario'])) ?>
+                                        $<?= htmlspecialchars($formatCompactQty((float)$compra['precio_unitario'])) ?>
                                     </td>
                                     <td class="text-end fw-bold font-monospace align-middle text-success bg-light">
-                                        $<?= htmlspecialchars(app_format_number((float)$compra['cantidad'] * (float)$compra['precio_unitario'])) ?>
+                                        $<?= htmlspecialchars($formatCompactQty((float)$compra['cantidad'] * (float)$compra['precio_unitario'])) ?>
                                     </td>
                                     <td class="small align-middle">
                                         <?php if ($compra['proveedor']): ?>

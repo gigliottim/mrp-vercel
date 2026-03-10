@@ -319,7 +319,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                                         </td>
                                         <td class="text-end fw-bold"><?= View::escape($formatCompactQty($cantidadUso) . ' ' . $umUso) ?></td>
                                         <td class="text-end"><?= View::escape($formatCompactQty($cantidadCompra) . ' ' . $umCompra) ?></td>
-                                        <td class="text-end"><?= $importeMovimiento !== null ? View::escape('$ ' . app_format_number($importeMovimiento)) : '-' ?></td>
+                                        <td class="text-end"><?= $importeMovimiento !== null ? View::escape('$ ' . $formatCompactQty($importeMovimiento)) : '-' ?></td>
                                         <td>
                                             <button type="button"
                                                 class="btn btn-sm btn-outline-primary btn-editar-movimiento"

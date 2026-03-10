@@ -94,6 +94,7 @@ final class MovimientosPartesController extends Controller
     {
         // Validar datos básicos
         $data = $request->body;
+        $movimientoId = (int) ($data['movimiento_id'] ?? 0);
 
         $idVariante = (int)($data['parte'] ?? 0);
         $cantidad = (float)($data['cantidad'] ?? 0);
@@ -193,6 +194,23 @@ final class MovimientosPartesController extends Controller
                 $cantidadUso = $this->unitConversion->toUsageFromPurchase($cantidad, $factorConversion);
             }
 
+            if ($movimientoId > 0) {
+                return $this->updateExistingMovimiento(
+                    $movimientoId,
+                    $data,
+                    $idVariante,
+                    $cantidad,
+                    $cantidadUso,
+                    $origenId,
+                    $destinoId,
+                    $entidadId,
+                    $fechaMovimiento,
+                    $esCompra,
+                    $importeTotal,
+                    $factorConversion
+                );
+            }
+
             // Registrar movimiento usando el servicio unificado (stock siempre en UM de uso)
             $referenciaTipo = $esCompra ? 'compra_satelite' : 'interno';
 
@@ -224,7 +242,6 @@ final class MovimientosPartesController extends Controller
                     'id_entidad' => $entidadId,
                     'fecha' => $fechaMovimiento,
                     'precio_unitario' => $precioUnitarioUso,
-                    'precio_total' => $importeTotal,
                     'nro_comprobante' => $data['cbte'] ?? null,
                     'observaciones' => trim((string) ($data['observaciones'] ?? ''))
                         . sprintf(' [Auto] Cant. Compra: %.6f | Factor: %.6f | Cant. Uso: %.6f', $cantidad, $factorConversion, $cantidadUso)
@@ -239,6 +256,103 @@ final class MovimientosPartesController extends Controller
         } catch (\Throwable $e) {
             error_log('Error en MovimientosPartesController::store: ' . $e->getMessage());
             return $this->jsonResponse(['success' => false, 'message' => 'Error al guardar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function updateExistingMovimiento(
+        int $movimientoId,
+        array $data,
+        int $idVariante,
+        float $cantidadCompra,
+        float $cantidadUso,
+        int $origenId,
+        int $destinoId,
+        ?int $entidadId,
+        string $fechaMovimiento,
+        bool $esCompra,
+        float $importeTotal,
+        float $factorConversion
+    ): Response {
+        $existing = $this->movimientosInfo->find($movimientoId);
+        if ($existing === null) {
+            return $this->jsonResponse(['success' => false, 'message' => 'Movimiento a editar no encontrado.'], 404);
+        }
+
+        $conn = $this->movimientosInfo->getConnection();
+        $variantesARecalcular = [
+            (int) ($existing['id_variante'] ?? 0),
+            $idVariante,
+        ];
+
+        try {
+            $conn->beginTransaction();
+
+            $this->movimientosInfo->update($movimientoId, [
+                'id_variante' => $idVariante,
+                'cantidad' => $cantidadUso,
+                'id_tipo_deposito_origen' => $origenId,
+                'id_tipo_deposito_destino' => $destinoId,
+                'referencia_tipo' => $esCompra ? 'compra_satelite' : 'interno',
+                'referencia_id' => 0,
+                'observaciones' => trim((string) ($data['observaciones'] ?? '')),
+                'fecha' => $fechaMovimiento,
+            ]);
+
+            if ($esCompra) {
+                $precioUnitarioCompra = $importeTotal / max($cantidadCompra, 0.000001);
+                $precioUnitarioUso = $this->unitConversion->usageUnitPriceFromPurchase($precioUnitarioCompra, $factorConversion);
+
+                $obs = trim((string) ($data['observaciones'] ?? ''))
+                    . sprintf(' [Auto] Cant. Compra: %.6f | Factor: %.6f | Cant. Uso: %.6f', $cantidadCompra, $factorConversion, $cantidadUso);
+
+                $compraStmt = $conn->prepare('SELECT id FROM compras WHERE id_movimiento_stock = :id_mov LIMIT 1');
+                $compraStmt->execute(['id_mov' => $movimientoId]);
+                $compraId = $compraStmt->fetchColumn();
+
+                $compraData = [
+                    'id_movimiento_stock' => $movimientoId,
+                    'id_entidad' => $entidadId,
+                    'fecha' => $fechaMovimiento,
+                    'precio_unitario' => $precioUnitarioUso,
+                    'nro_comprobante' => $data['cbte'] ?? null,
+                    'observaciones' => $obs,
+                ];
+
+                if ($compraId !== false) {
+                    $this->compras->update((int) $compraId, [
+                        'id_entidad' => $compraData['id_entidad'],
+                        'fecha' => $compraData['fecha'],
+                        'precio_unitario' => $compraData['precio_unitario'],
+                        'nro_comprobante' => $compraData['nro_comprobante'],
+                        'observaciones' => $compraData['observaciones'],
+                    ]);
+                } else {
+                    $this->compras->create($compraData);
+                }
+            } else {
+                $deleteCompra = $conn->prepare('DELETE FROM compras WHERE id_movimiento_stock = :id_mov');
+                $deleteCompra->execute(['id_mov' => $movimientoId]);
+            }
+
+            $variantesARecalcular = array_values(array_unique(array_filter($variantesARecalcular, static fn($id) => $id > 0)));
+            foreach ($variantesARecalcular as $varianteId) {
+                $stockActualizado = $this->stockService->calculateStock((int) $varianteId);
+                $this->variantes->update((int) $varianteId, ['stock_actual' => $stockActualizado]);
+            }
+
+            $conn->commit();
+
+            return $this->jsonResponse([
+                'success' => true,
+                'message' => 'Movimiento actualizado correctamente',
+                'id' => $movimientoId,
+            ]);
+        } catch (\Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            return $this->jsonResponse(['success' => false, 'message' => 'Error al actualizar: ' . $e->getMessage()], 500);
         }
     }
 

@@ -25,6 +25,7 @@ $unidadesMedida = $unidadesMedida ?? [];
             </div>
             <div class="card-body">
                 <form id="formMovimiento" method="POST" action="<?= url('transacciones/movimientos-partes') ?>">
+                    <input type="hidden" id="movimiento_id" name="movimiento_id" value="">
                     <!-- Fila 1: Fecha/Hora y Depósitos -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
@@ -297,7 +298,27 @@ $unidadesMedida = $unidadesMedida ?? [];
                                         <td>-</td> <!-- UM -->
                                         <td class="text-end">-</td> <!-- Importe -->
                                         <td>
-                                            <!-- Acciones -->
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-primary btn-editar-movimiento"
+                                                data-id="<?= View::escape($mov['id']) ?>"
+                                                data-fecha="<?= View::escape((string) $mov['fecha']) ?>"
+                                                data-variante-id="<?= View::escape($mov['id_variante']) ?>"
+                                                data-parte-codigo="<?= View::escape((string) ($mov['parte_codigo'] ?? '')) ?>"
+                                                data-parte-detalle="<?= View::escape((string) ($mov['parte_detalle'] ?? '')) ?>"
+                                                data-variante-codigo="<?= View::escape((string) ($mov['codigo_variante'] ?? '')) ?>"
+                                                data-variante-detalle="<?= View::escape((string) ($mov['variante_detalle'] ?? '')) ?>"
+                                                data-cantidad="<?= View::escape((string) $mov['cantidad']) ?>"
+                                                data-origen-id="<?= View::escape($mov['id_tipo_deposito_origen']) ?>"
+                                                data-destino-id="<?= View::escape($mov['id_tipo_deposito_destino']) ?>"
+                                                data-id-um-compra="<?= View::escape((string) ($mov['id_um_compra'] ?? '')) ?>"
+                                                data-id-um-uso="<?= View::escape((string) ($mov['id_um_uso'] ?? '')) ?>"
+                                                data-factor-conversion="<?= View::escape((string) ($mov['factor_conversion'] ?? '1')) ?>"
+                                                data-id-entidad="<?= View::escape((string) ($mov['id_entidad'] ?? '')) ?>"
+                                                data-cbte="<?= View::escape((string) ($mov['nro_comprobante'] ?? '')) ?>"
+                                                data-compra-precio-unitario="<?= View::escape((string) ($mov['compra_precio_unitario'] ?? '')) ?>"
+                                                data-observaciones="<?= View::escape((string) ($mov['observaciones'] ?? '')) ?>">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i>Editar
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -380,7 +401,11 @@ use App\Core\Support\AssetHelper;
         const inputParteHidden = document.getElementById('parte');
         const btnCambiarParte = document.getElementById('btn-cambiar-parte');
         const inputFechaHora = document.getElementById('fecha_hora');
+        const inputMovimientoId = document.getElementById('movimiento_id');
         const argentinaTimezone = 'America/Argentina/Buenos_Aires';
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const submitTextCreate = '<i class="fa-solid fa-check me-1"></i> Guardar';
+        const submitTextEdit = '<i class="fa-solid fa-floppy-disk me-1"></i> Actualizar';
 
         function getBuenosAiresNowDateTimeLocal() {
             const now = new Date();
@@ -490,6 +515,103 @@ use App\Core\Support\AssetHelper;
                 searchInput.classList.remove('parte-seleccionada');
                 if (btnCambiarParte) btnCambiarParte.classList.add('d-none');
             }
+        }
+
+        function setFormModeEditing(isEditing) {
+            if (!submitBtn) {
+                return;
+            }
+
+            submitBtn.innerHTML = isEditing ? submitTextEdit : submitTextCreate;
+        }
+
+        function toDateTimeLocalValue(value) {
+            if (!value) {
+                return getBuenosAiresNowDateTimeLocal();
+            }
+
+            return String(value).replace(' ', 'T').slice(0, 16);
+        }
+
+        function parseNumber(value, fallback = 0) {
+            const n = parseFloat(value);
+            return Number.isFinite(n) ? n : fallback;
+        }
+
+        function cargarMovimientoParaEdicion(button) {
+            const movimientoId = button.dataset.id;
+            if (!movimientoId) {
+                return;
+            }
+
+            const origenId = button.dataset.origenId || '';
+            const destinoId = button.dataset.destinoId || '';
+            const varianteId = button.dataset.varianteId || '';
+            const factorConversion = parseNumber(button.dataset.factorConversion, 1);
+            const cantidadUso = parseNumber(button.dataset.cantidad, 0);
+            const precioUnitarioCompraUso = parseNumber(button.dataset.compraPrecioUnitario, 0);
+            const importeTotalEstimado = precioUnitarioCompraUso > 0 ? (precioUnitarioCompraUso * cantidadUso) : 0;
+
+            inputMovimientoId.value = movimientoId;
+            inputFechaHora.value = toDateTimeLocalValue(button.dataset.fecha);
+            selectOrigen.value = origenId;
+            selectOrigen.dispatchEvent(new Event('change'));
+
+            setTimeout(() => {
+                selectDestino.value = destinoId;
+                selectDestino.dispatchEvent(new Event('change'));
+
+                const isPurchaseFlow = esCompra();
+                const cantidadForInput = isPurchaseFlow ?
+                    (factorConversion > 0 ? (cantidadUso / factorConversion) : cantidadUso) :
+                    cantidadUso;
+
+                parteSeleccionada = {
+                    id: varianteId,
+                    id_parte: null,
+                    codigo: button.dataset.varianteCodigo || '',
+                    detalle: button.dataset.varianteDetalle || '',
+                    selectedLabel: `Parte: ${button.dataset.parteCodigo || ''} - ${button.dataset.parteDetalle || ''} | Variante: ${button.dataset.varianteCodigo || ''} - ${button.dataset.varianteDetalle || ''}`,
+                    id_um_compra: button.dataset.idUmCompra || '',
+                    id_um_uso: button.dataset.idUmUso || '',
+                    factor_conversion: factorConversion
+                };
+
+                inputParteHidden.value = varianteId;
+                searchInput.value = parteSeleccionada.selectedLabel;
+                setSearchLockedState(true);
+
+                inputCantidad.value = cantidadForInput > 0 ? cantidadForInput.toFixed(6) : '';
+                inputImporteTotal.value = importeTotalEstimado > 0 ? importeTotalEstimado.toFixed(2) : '';
+
+                const entidadId = button.dataset.idEntidad || '';
+                if (entidadId) {
+                    const entidadSelect = document.getElementById('proveedor_cliente');
+                    if (entidadSelect) {
+                        entidadSelect.value = entidadId;
+                    }
+                }
+
+                const cbteInput = document.getElementById('cbte');
+                if (cbteInput) {
+                    cbteInput.value = button.dataset.cbte || '';
+                }
+
+                const observacionesInput = document.getElementById('observaciones');
+                if (observacionesInput) {
+                    observacionesInput.value = button.dataset.observaciones || '';
+                }
+
+                actualizarUM();
+                toggleCamposCompra();
+                actualizarCalculosCompra();
+                setFormModeEditing(true);
+
+                form.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 120);
         }
 
         // Mapa de tipos de depósito para determinar si es compra o uso
@@ -818,6 +940,8 @@ use App\Core\Support\AssetHelper;
         btnCancelar.addEventListener('click', function() {
             if (confirm('¿Está seguro que desea cancelar? Se perderán los datos ingresados.')) {
                 form.reset();
+                inputMovimientoId.value = '';
+                setFormModeEditing(false);
                 syncFechaHoraLimits(true);
                 parteSeleccionada = null;
                 inputParteHidden.value = '';
@@ -911,7 +1035,6 @@ use App\Core\Support\AssetHelper;
                 return;
             }
 
-            const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
@@ -926,9 +1049,11 @@ use App\Core\Support\AssetHelper;
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
-                        alert('Movimiento registrado exitosamente');
+                        alert(result.message || 'Movimiento guardado exitosamente');
                         // Resetear formulario
                         form.reset();
+                        inputMovimientoId.value = '';
+                        setFormModeEditing(false);
                         syncFechaHoraLimits(true);
                         parteSeleccionada = null;
                         inputParteHidden.value = '';
@@ -951,8 +1076,14 @@ use App\Core\Support\AssetHelper;
                 })
                 .finally(() => {
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                    submitBtn.innerHTML = inputMovimientoId.value ? submitTextEdit : originalText;
                 });
+        });
+
+        document.querySelectorAll('.btn-editar-movimiento').forEach(btn => {
+            btn.addEventListener('click', function() {
+                cargarMovimientoParaEdicion(this);
+            });
         });
     });
 </script>

@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: bitnami/nginx:latest
+    container_name: lepp-nginx
+    restart: unless-stopped
+    depends_on:
+      - php-fpm
+    ports:
+      - "80:8080"
+    volumes:
+      - ./:/app
+      - ./docker/nginx/mrp.conf:/opt/bitnami/nginx/conf/server_blocks/mrp.conf:ro
+    networks:
+      - lepp-net
+
+  php-fpm:
+    image: bitnami/php-fpm:latest
+    container_name: lepp-php-fpm
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./:/app
+    networks:
+      - lepp-net
+
+  postgresql:
+    image: bitnami/postgresql:latest
+    container_name: lepp-postgresql
+    restart: unless-stopped
+    environment:
+      - POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME:-mrp}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD:-change_this_password}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE:-mrp_auth}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/bitnami/postgresql
+    networks:
+      - lepp-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: lepp-pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgresql
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@mrp.local}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-change_this_password}
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - lepp-net
+
+networks:
+  lepp-net:
+    driver: bridge
+
+volumes:
+  postgresql_data:
+  pgadmin_data:

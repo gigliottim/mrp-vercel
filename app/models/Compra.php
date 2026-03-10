@@ -25,12 +25,14 @@ final class Compra extends BaseTenantModel
                 v.codigo_variante,
                 v.detalle AS variante_detalle,
                 p.codigo AS parte_codigo,
-                p.detalle AS parte_detalle
+                p.detalle AS parte_detalle,
+                um_uso.simbolo AS um_uso_simbolo
             FROM compras c
             JOIN movimientos_stock m ON c.id_movimiento_stock = m.id
             LEFT JOIN entidades ent ON c.id_entidad = ent.id
             JOIN variantes v ON m.id_variante = v.id
             JOIN partes p ON v.id_parte = p.id
+            LEFT JOIN unidades_medida um_uso ON p.id_um_uso = um_uso.id
             ORDER BY m.fecha DESC, c.id DESC
             LIMIT :limit OFFSET :offset
         ';

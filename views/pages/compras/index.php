@@ -65,7 +65,7 @@
                                     </td>
                                     <td class="text-end font-monospace align-middle">
                                         <span class="fw-bold"><?= htmlspecialchars(app_format_number((float)$compra['cantidad'])) ?></span>
-                                        <small class="text-muted ms-1">u.</small>
+                                        <small class="text-muted ms-1"><?= htmlspecialchars((string) ($compra['um_uso_simbolo'] ?? 'u.')) ?></small>
                                     </td>
                                     <td class="text-end font-monospace align-middle text-secondary">
                                         $<?= htmlspecialchars(app_format_number((float)$compra['precio_unitario'])) ?>

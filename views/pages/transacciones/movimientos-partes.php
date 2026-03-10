@@ -277,6 +277,10 @@ $unidadesMedida = $unidadesMedida ?? [];
                         <tbody>
                             <?php if (!empty($movimientos)): ?>
                                 <?php foreach ($movimientos as $mov): ?>
+                                    <?php
+                                    $precioUnitarioCompra = isset($mov['compra_precio_unitario']) ? (float) $mov['compra_precio_unitario'] : 0.0;
+                                    $importeMovimiento = $precioUnitarioCompra > 0 ? ((float) $mov['cantidad'] * $precioUnitarioCompra) : null;
+                                    ?>
                                     <tr data-origen-id="<?= View::escape($mov['id_tipo_deposito_origen']) ?>"
                                         data-destino-id="<?= View::escape($mov['id_tipo_deposito_destino']) ?>">
                                         <td><?= View::escape(app_format_datetime($mov['fecha'])) ?></td>
@@ -295,8 +299,8 @@ $unidadesMedida = $unidadesMedida ?? [];
                                         <td class="text-end fw-bold">
                                             <?= View::escape(app_format_number((float) $mov['cantidad'])) ?>
                                         </td>
-                                        <td>-</td> <!-- UM -->
-                                        <td class="text-end">-</td> <!-- Importe -->
+                                        <td><?= View::escape((string) ($mov['um_uso_simbolo'] ?? '-')) ?></td>
+                                        <td class="text-end"><?= $importeMovimiento !== null ? View::escape('$ ' . app_format_number($importeMovimiento)) : '-' ?></td>
                                         <td>
                                             <button type="button"
                                                 class="btn btn-sm btn-outline-primary btn-editar-movimiento"

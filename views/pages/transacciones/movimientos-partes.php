@@ -268,18 +268,39 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 <th>Venta No.</th>
                                 <th>De</th>
                                 <th>A</th>
-                                <th class="text-end">Cantidad</th>
-                                <th>UM</th>
+                                <th class="text-end">Cant. Uso</th>
+                                <th class="text-end">Cant. Compra</th>
                                 <th class="text-end">Importe</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (!empty($movimientos)): ?>
+                                <?php
+                                $formatCompactQty = static function (float $value): string {
+                                    $formatted = app_format_number($value);
+                                    if (strpos($formatted, ',') === false) {
+                                        return $formatted;
+                                    }
+
+                                    [$integerPart, $decimalPart] = explode(',', $formatted, 2);
+                                    $decimalPart = rtrim($decimalPart, '0');
+
+                                    return $decimalPart === '' ? $integerPart : $integerPart . ',' . $decimalPart;
+                                };
+                                ?>
                                 <?php foreach ($movimientos as $mov): ?>
                                     <?php
                                     $precioUnitarioCompra = isset($mov['compra_precio_unitario']) ? (float) $mov['compra_precio_unitario'] : 0.0;
                                     $importeMovimiento = $precioUnitarioCompra > 0 ? ((float) $mov['cantidad'] * $precioUnitarioCompra) : null;
+                                    $factorConversion = isset($mov['factor_conversion']) ? (float) $mov['factor_conversion'] : 1.0;
+                                    if ($factorConversion <= 0) {
+                                        $factorConversion = 1.0;
+                                    }
+                                    $cantidadUso = (float) $mov['cantidad'];
+                                    $cantidadCompra = $cantidadUso / $factorConversion;
+                                    $umUso = (string) ($mov['um_uso_simbolo'] ?? '-');
+                                    $umCompra = (string) ($mov['um_compra_simbolo'] ?? '-');
                                     ?>
                                     <tr data-origen-id="<?= View::escape($mov['id_tipo_deposito_origen']) ?>"
                                         data-destino-id="<?= View::escape($mov['id_tipo_deposito_destino']) ?>">
@@ -296,10 +317,8 @@ $unidadesMedida = $unidadesMedida ?? [];
                                         <td>
                                             <span class="badge bg-primary"><?= View::escape($mov['destino_codigo']) ?></span>
                                         </td>
-                                        <td class="text-end fw-bold">
-                                            <?= View::escape(app_format_number((float) $mov['cantidad'])) ?>
-                                        </td>
-                                        <td><?= View::escape((string) ($mov['um_uso_simbolo'] ?? '-')) ?></td>
+                                        <td class="text-end fw-bold"><?= View::escape($formatCompactQty($cantidadUso) . ' ' . $umUso) ?></td>
+                                        <td class="text-end"><?= View::escape($formatCompactQty($cantidadCompra) . ' ' . $umCompra) ?></td>
                                         <td class="text-end"><?= $importeMovimiento !== null ? View::escape('$ ' . app_format_number($importeMovimiento)) : '-' ?></td>
                                         <td>
                                             <button type="button"

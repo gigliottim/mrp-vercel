@@ -27,6 +27,7 @@ final class MovimientoStock extends BaseTenantModel
                 p.id_um_compra,
                 p.id_um_uso,
                 COALESCE(p.factor_conversion, 1) as factor_conversion,
+                um_compra.simbolo as um_compra_simbolo,
                 um_uso.simbolo as um_uso_simbolo,
                 c.id as compra_id,
                 c.id_entidad,
@@ -38,6 +39,7 @@ final class MovimientoStock extends BaseTenantModel
             JOIN partes p ON v.id_parte = p.id
             JOIN tipos_depositos td_origen ON m.id_tipo_deposito_origen = td_origen.id
             JOIN tipos_depositos td_destino ON m.id_tipo_deposito_destino = td_destino.id
+            LEFT JOIN unidades_medida um_compra ON um_compra.id = p.id_um_compra
             LEFT JOIN unidades_medida um_uso ON um_uso.id = p.id_um_uso
             LEFT JOIN compras c ON c.id_movimiento_stock = m.id
             ORDER BY m.fecha DESC, m.id DESC

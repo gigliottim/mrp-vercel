@@ -30,7 +30,8 @@
                         <tr>
                             <th class="ps-3 py-3">Fecha</th>
                             <th class="py-3">Ítem / Variante</th>
-                            <th class="text-end py-3">Cant. (Uso)</th>
+                            <th class="text-end py-3">Cant. Uso</th>
+                            <th class="text-end py-3">Cant. Compra</th>
                             <th class="text-end py-3">Costo Unit.</th>
                             <th class="text-end py-3">Total</th>
                             <th class="py-3">Proveedor / Detalle</th>
@@ -39,7 +40,7 @@
                     <tbody class="border-top-0">
                         <?php if (empty($compras)): ?>
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     <div class="py-4">
                                         <i class="fas fa-shopping-basket fa-3x mb-3 text-light"></i>
                                         <p class="mb-0">No hay compras registradas aún.</p>
@@ -47,7 +48,30 @@
                                 </td>
                             </tr>
                         <?php else: ?>
+                            <?php
+                            $formatCompactQty = static function (float $value): string {
+                                $formatted = app_format_number($value);
+                                if (strpos($formatted, ',') === false) {
+                                    return $formatted;
+                                }
+
+                                [$integerPart, $decimalPart] = explode(',', $formatted, 2);
+                                $decimalPart = rtrim($decimalPart, '0');
+
+                                return $decimalPart === '' ? $integerPart : $integerPart . ',' . $decimalPart;
+                            };
+                            ?>
                             <?php foreach ($compras as $compra): ?>
+                                <?php
+                                $factorConversion = isset($compra['factor_conversion']) ? (float) $compra['factor_conversion'] : 1.0;
+                                if ($factorConversion <= 0) {
+                                    $factorConversion = 1.0;
+                                }
+                                $cantidadUso = (float) ($compra['cantidad'] ?? 0);
+                                $cantidadCompra = $cantidadUso / $factorConversion;
+                                $umUso = (string) ($compra['um_uso_simbolo'] ?? 'u.');
+                                $umCompra = (string) ($compra['um_compra_simbolo'] ?? 'u.');
+                                ?>
                                 <tr>
                                     <td class="ps-3 text-nowrap text-secondary small"><?= htmlspecialchars(app_format_datetime($compra['fecha'], false)) ?></td>
                                     <td>
@@ -63,9 +87,11 @@
                                             </small>
                                         </div>
                                     </td>
+                                    <td class="text-end font-monospace align-middle fw-bold">
+                                        <?= htmlspecialchars($formatCompactQty($cantidadUso) . ' ' . $umUso) ?>
+                                    </td>
                                     <td class="text-end font-monospace align-middle">
-                                        <span class="fw-bold"><?= htmlspecialchars(app_format_number((float)$compra['cantidad'])) ?></span>
-                                        <small class="text-muted ms-1"><?= htmlspecialchars((string) ($compra['um_uso_simbolo'] ?? 'u.')) ?></small>
+                                        <?= htmlspecialchars($formatCompactQty($cantidadCompra) . ' ' . $umCompra) ?>
                                     </td>
                                     <td class="text-end font-monospace align-middle text-secondary">
                                         $<?= htmlspecialchars(app_format_number((float)$compra['precio_unitario'])) ?>

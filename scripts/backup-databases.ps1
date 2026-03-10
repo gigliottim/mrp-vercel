@@ -34,64 +34,39 @@ Write-Info "[INFO] Creando directorio de backup: $backupDir"
 New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
 
 # Configuracion de conexion
-$mariadbHost = "localhost"
-$mariadbPort = "3306"
-$mariadbUser = "unik"
-$mariadbPass = "ojp9Q6aYT3KHDE8sMS2u"
-
 $pgsqlHost = "localhost"
 $pgsqlPort = "5432"
 $pgsqlUser = "mrp"
 $pgsqlPass = "ojp9Q6aYT3KHDE8sMS2u"
+$pgsqlPrefix = "mrp_"
+$dockerContainer = "lemp-postgresql"
 
-# Bases de datos a respaldar
-$mariadbDatabases = @()
-$pgsqlDatabases = @("mrp", "mrp_auth")
+# Resolver origen de conexion PostgreSQL
+$containerExists = docker ps -a --format "{{.Names}}" 2>$null | Select-String -Pattern "^$dockerContainer$"
+
+# Detectar automaticamente todas las bases con prefijo mrp_
+if ($containerExists) {
+    Write-Info "[INFO] Usando contenedor Docker PostgreSQL: $dockerContainer"
+    $dbListRaw = docker exec -e PGPASSWORD=$pgsqlPass $dockerContainer psql -U $pgsqlUser -d postgres -t -c "SELECT datname FROM pg_database WHERE datistemplate = false AND datname LIKE '$($pgsqlPrefix)%' ORDER BY datname;"
+}
+else {
+    Write-Warning "[INFO] Contenedor PostgreSQL no encontrado, usando conexion local"
+    $env:PGPASSWORD = $pgsqlPass
+    $dbListRaw = psql -h $pgsqlHost -p $pgsqlPort -U $pgsqlUser -d postgres -t -c "SELECT datname FROM pg_database WHERE datistemplate = false AND datname LIKE '$($pgsqlPrefix)%' ORDER BY datname;"
+}
+
+$pgsqlDatabases = @($dbListRaw | ForEach-Object { $_.ToString().Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+
+if ($pgsqlDatabases.Count -eq 0) {
+    Write-Error "[ERROR] No se detectaron bases de datos con prefijo '$pgsqlPrefix'"
+    exit 1
+}
+
+Write-Info "[INFO] Bases detectadas para backup: $($pgsqlDatabases -join ', ')"
 
 # Contador de exitos
 $successCount = 0
-$totalDatabases = $mariadbDatabases.Count + $pgsqlDatabases.Count
-
-# ================================================================
-# BACKUP DE MARIADB/MYSQL
-# ================================================================
-Write-Host ""
-Write-Info "========================================================"
-Write-Info "  BACKUP DE BASES DE DATOS MARIADB"
-Write-Info "========================================================"
-Write-Host ""
-
-foreach ($db in $mariadbDatabases) {
-    try {
-        $outputFile = Join-Path $backupDir "$db.sql"
-        Write-Info "[BACKUP] Respaldando: $db"
-
-        # Usar docker exec si esta en contenedor
-        $dockerContainer = "mrp-mariadb-1"
-
-        # Verificar si el contenedor existe
-        $containerExists = docker ps -a --format "{{.Names}}" 2>$null | Select-String -Pattern $dockerContainer
-
-        if ($containerExists) {
-            Write-Info "         Usando contenedor Docker: $dockerContainer"
-            $cmd = "docker exec $dockerContainer mysqldump -u$mariadbUser -p$mariadbPass --single-transaction --quick --lock-tables=false --skip-column-statistics $db"
-            Invoke-Expression $cmd | Out-File -FilePath $outputFile -Encoding UTF8
-        }
-        else {
-            Write-Warning "         Contenedor no encontrado, intentando conexion local"
-            $cmd = "mysqldump -h $mariadbHost -P $mariadbPort -u$mariadbUser -p$mariadbPass --single-transaction --quick --lock-tables=false --skip-column-statistics $db"
-            Invoke-Expression $cmd | Out-File -FilePath $outputFile -Encoding UTF8
-        }
-
-        $fileSizeKB = [math]::Round((Get-Item $outputFile).Length / 1KB, 2)
-        Write-Success "         [OK] Completado: $outputFile (${fileSizeKB} KB)"
-        $successCount++
-
-    }
-    catch {
-        Write-Error "         [ERROR] Error al respaldar ${db}: $_"
-    }
-}
+$totalDatabases = $pgsqlDatabases.Count
 
 # ================================================================
 # BACKUP DE POSTGRESQL
@@ -106,12 +81,6 @@ foreach ($db in $pgsqlDatabases) {
     try {
         $outputFile = Join-Path $backupDir "$db.sql"
         Write-Info "[BACKUP] Respaldando: $db"
-
-        # Usar docker exec si esta en contenedor
-        $dockerContainer = "lemp-postgresql"
-
-        # Verificar si el contenedor existe
-        $containerExists = docker ps -a --format "{{.Names}}" 2>$null | Select-String -Pattern $dockerContainer
 
         if ($containerExists) {
             Write-Info "         Usando contenedor Docker: $dockerContainer"

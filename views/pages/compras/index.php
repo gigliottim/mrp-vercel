@@ -75,9 +75,15 @@
                                 $observacionesRaw = (string) ($compra['observaciones'] ?? '');
                                 $observacionesSinAuto = preg_replace('/\s*\[Auto\].*$/s', '', $observacionesRaw);
                                 $observacionesUsuario = trim((string) ($observacionesSinAuto ?? $observacionesRaw));
+                                try {
+                                    $fechaCompra = new DateTimeImmutable((string) ($compra['fecha'] ?? ''));
+                                    $fechaFormateada = $fechaCompra->format('d/m/Y H:i:s');
+                                } catch (Throwable $exception) {
+                                    $fechaFormateada = (string) ($compra['fecha'] ?? '');
+                                }
                                 ?>
                                 <tr>
-                                    <td class="ps-3 text-nowrap text-secondary small"><?= htmlspecialchars(app_format_datetime($compra['fecha'], false)) ?></td>
+                                    <td class="ps-3 text-nowrap text-secondary small\"><?= htmlspecialchars($fechaFormateada) ?></td>
                                     <td>
                                         <div class="d-flex flex-column">
                                             <span class="fw-bold text-dark text-truncate" style="max-width: 300px;">

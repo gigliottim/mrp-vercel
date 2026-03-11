@@ -86,7 +86,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                     <div class="row g-3">
                         <div class="col-6">
                             <label class="form-label">Equivalencia base</label>
-                            <input class="form-control<?= isset($errors['equivalencia_base']) ? ' is-invalid' : '' ?>" type="number" step="0.0001" name="equivalencia_base" value="<?= View::escape($oldValue('equivalencia_base', 1)) ?>">
+                            <input class="form-control<?= isset($errors['equivalencia_base']) ? ' is-invalid' : '' ?>" type="number" step="0.0001" name="equivalencia_base" value="<?= View::escape((string) (float) $oldValue('equivalencia_base', 1)) ?>">
                             <?php if (isset($errors['equivalencia_base'])) : ?>
                                 <div class="invalid-feedback"><?= View::escape($errors['equivalencia_base']) ?></div>
                             <?php endif; ?>
@@ -147,7 +147,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                                     <td class="text-capitalize"><?= View::escape(str_replace('_', ' ', $unidad['tipo'])) ?></td>
                                     <td><?= View::escape($unidad['unidad']) ?></td>
                                     <td><?= View::escape($unidad['simbolo']) ?></td>
-                                    <td><?= View::escape((string) $unidad['equivalencia_base']) ?></td>
+                                    <td><?= View::escape(app_format_number($unidad['equivalencia_base'], 8)) ?></td>
                                     <td>
                                         <span class="badge <?= (int) $unidad['es_base'] === 1 ? 'text-bg-info' : 'text-bg-light' ?>">
                                             <?= (int) $unidad['es_base'] === 1 ? 'Sí' : 'No' ?>

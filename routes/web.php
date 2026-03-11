@@ -30,9 +30,7 @@ use App\Controllers\Reportes\ReportesController;
 use App\Core\Http\Response;
 
 /** @var \App\Core\Routing\Router $router */
-$router->get('/', static function ($request) {
-    return Response::redirect(url('login'));
-});
+$router->get('/', [HomeController::class, 'index']);
 $router->get('/dashboard', [HomeController::class, 'dashboard']);
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->get('/register', [AuthController::class, 'showRegister']);

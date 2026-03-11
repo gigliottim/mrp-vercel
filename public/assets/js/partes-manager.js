@@ -4,6 +4,7 @@
  */
 
 function parteManager(initialData) {
+  const BASE = (window.MRP_BASE_PATH || '');
   const isEditingVariantContext = Boolean(
     (initialData.editingVariant && initialData.editingVariant.id) || initialData.editingVariantId
   );
@@ -128,13 +129,13 @@ function parteManager(initialData) {
     // Cargar parte desde selector
     loadParte(id) {
       if (!id) return;
-      window.location.href = `/mrp/productos/partes/manager/${id}`;
+      window.location.href = `${BASE}/productos/partes/manager/${id}`;
     },
 
     // Cargar variante exacta desde selector de búsqueda
     loadVariante(idParte, idVariante) {
       if (!idParte || !idVariante) return;
-      window.location.href = `/mrp/productos/partes/manager/${idParte}/variantes/${idVariante}`;
+      window.location.href = `${BASE}/productos/partes/manager/${idParte}/variantes/${idVariante}`;
     },
 
     // Resetear formulario
@@ -185,8 +186,8 @@ function parteManager(initialData) {
 
       // No redirigir, mantener la página actual
       // Para evitar recargas innecesarias, simplemente actualizar el estado
-      if (window.location.pathname !== '/mrp/productos/partes/manager') {
-        window.history.pushState({}, '', '/mrp/productos/partes/manager');
+      if (window.location.pathname !== BASE + '/productos/partes/manager') {
+        window.history.pushState({}, '', BASE + '/productos/partes/manager');
       }
     },
 
@@ -440,8 +441,8 @@ function parteManager(initialData) {
 
       try {
         const url = this.form.id
-          ? `/mrp/productos/partes/manager/${this.form.id}`
-          : '/mrp/productos/partes/manager';
+          ? `${BASE}/productos/partes/manager/${this.form.id}`
+          : BASE + '/productos/partes/manager';
 
         const method = this.form.id ? 'PUT' : 'POST';
         const formData = new URLSearchParams();
@@ -514,13 +515,13 @@ function parteManager(initialData) {
 
     enableEdit() {
       if (this.form.id) {
-        window.location.href = `/mrp/productos/partes/manager/${this.form.id}/editar`;
+        window.location.href = `${BASE}/productos/partes/manager/${this.form.id}/editar`;
       }
     },
 
     disableEdit() {
       if (this.form.id) {
-        window.location.href = `/mrp/productos/partes/manager/${this.form.id}`;
+        window.location.href = `${BASE}/productos/partes/manager/${this.form.id}`;
       }
     },
 
@@ -598,8 +599,8 @@ function parteManager(initialData) {
 
       try {
         const url = this.variantForm.id
-          ? `/mrp/productos/partes/${this.form.id}/variantes/${this.variantForm.id}?context=manager`
-          : `/mrp/productos/partes/${this.form.id}/variantes?context=manager`;
+          ? `${BASE}/productos/partes/${this.form.id}/variantes/${this.variantForm.id}?context=manager`
+          : `${BASE}/productos/partes/${this.form.id}/variantes?context=manager`;
 
         const method = this.variantForm.id ? 'PUT' : 'POST';
         const formData = new URLSearchParams();
@@ -630,8 +631,9 @@ function parteManager(initialData) {
           body: formData
         });
 
-        const managerViewUrl = `/mrp/productos/partes/manager/${this.form.id}`;
-        const managerVariantViewUrl = `/mrp/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;
+        const managerViewUrl = `${BASE}/productos/partes/manager/${this.form.id}`;
+        const managerVariantViewUrl = `${BASE}/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;
+
 
         if (response.redirected) {
           window.location.href = isUpdatingVariant ? managerVariantViewUrl : response.url;
@@ -654,7 +656,7 @@ function parteManager(initialData) {
 
     editVariante(variante) {
       if (this.form.id) {
-        window.location.href = `/mrp/productos/partes/manager/${this.form.id}/variantes/${variante.id}/editar`;
+        window.location.href = `${BASE}/productos/partes/manager/${this.form.id}/variantes/${variante.id}/editar`;
       }
     },
 
@@ -686,7 +688,7 @@ function parteManager(initialData) {
     cancelEditVariante() {
       // Si estamos editando una variante existente, volver al estado de vista de la parte.
       if (this.variantForm.id && this.form.id) {
-        window.location.href = `/mrp/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;
+        window.location.href = `${BASE}/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;
         return;
       }
 
@@ -707,7 +709,7 @@ function parteManager(initialData) {
       this.loading = true;
 
       try {
-        const url = `/mrp/productos/partes/${this.form.id}/variantes/${varianteId}?context=manager`;
+        const url = `${BASE}/productos/partes/${this.form.id}/variantes/${varianteId}?context=manager`;
         const formData = new URLSearchParams();
         formData.append('_method', 'DELETE');
         formData.append('context', 'manager');

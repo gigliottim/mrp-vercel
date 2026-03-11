@@ -238,7 +238,8 @@ function fixEncoding(string $text): string
 
     // Patrón 1: CP437 (caso del usuario: ├æ→Ñ, ┬▓→²)
     if (hasCp437Mojibake($text)) {
-        $candidate = mb_convert_encoding($text, 'CP437', 'UTF-8');
+        // mb_convert_encoding no soporta CP437; iconv sí lo hace (glibc/Linux)
+        $candidate = function_exists('iconv') ? @iconv('UTF-8', 'CP437//IGNORE', $text) : false;
         if (
             $candidate !== false
             && $candidate !== ''

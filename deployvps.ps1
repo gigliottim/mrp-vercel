@@ -68,6 +68,36 @@ function Assert-NoLegacyCredentials {
   }
 }
 
+function Get-LatestCommitChangedFiles {
+  param([string]$RepoRoot)
+
+  if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    return @()
+  }
+
+  $insideGit = git -C $RepoRoot rev-parse --is-inside-work-tree 2>$null
+  if ($insideGit -ne 'true') {
+    return @()
+  }
+
+  $hasParent = $true
+  git -C $RepoRoot rev-parse --verify HEAD~1 *> $null
+  if ($LASTEXITCODE -ne 0) {
+    $hasParent = $false
+  }
+
+  if (-not $hasParent) {
+    return @('ALL')
+  }
+
+  $changed = git -C $RepoRoot diff-tree --no-commit-id --name-only -r HEAD
+  if ($null -eq $changed) {
+    return @()
+  }
+
+  return @($changed | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $composeFile = Join-Path $projectRoot "docker-compose.yml"
 $envDockerFile = Join-Path $projectRoot ".env.docker"
@@ -93,6 +123,24 @@ Assert-FileExists -Path $envDockerFile
 Assert-FileExists -Path $nginxConfFile
 
 Assert-NoLegacyCredentials -RepoRoot $projectRoot
+
+$latestChangedFiles = Get-LatestCommitChangedFiles -RepoRoot $projectRoot
+$syncVendor = $true
+if ($latestChangedFiles.Count -gt 0 -and -not ($latestChangedFiles -contains 'ALL')) {
+  $syncVendor = ($latestChangedFiles -match '^composer\.json$|^composer\.lock$|^vendor/') -ne $null
+}
+
+if (-not $syncVendor) {
+  $releaseItems = $releaseItems | Where-Object { $_ -ne 'vendor' }
+  Write-Step "Optimizacion: se omite sincronizacion de vendor (composer no cambio en el ultimo commit)."
+}
+
+$migrationsDir = Join-Path $projectRoot 'database/migrations'
+$hasLocalSqlMigrations = $false
+if (Test-Path -LiteralPath $migrationsDir) {
+  $sqlFiles = Get-ChildItem -Path $migrationsDir -Filter '*.sql' -File -ErrorAction SilentlyContinue
+  $hasLocalSqlMigrations = $sqlFiles.Count -gt 0
+}
 
 foreach ($item in $releaseItems) {
   $itemPath = Join-Path $projectRoot $item
@@ -224,7 +272,10 @@ if ! command -v unzip >/dev/null 2>&1; then
 fi
 
 if [ -f app-release.zip ]; then
-  rm -rf app bootstrap config database public routes views vendor composer.json composer.lock .env migrate_database.php
+  rm -rf app bootstrap config database public routes views composer.json composer.lock .env migrate_database.php
+  if [ "__SYNC_VENDOR__" = "1" ]; then
+    rm -rf vendor
+  fi
   unzip -o app-release.zip >/dev/null || true
   rm -f app-release.zip
 fi
@@ -237,8 +288,10 @@ fi
 mkdir -p database/migrations
 
 chmod -R 0777 __REMOTE_PATH__/docker/logs || true
-find __REMOTE_PATH__/vendor -type d -exec chmod 755 {} +
-find __REMOTE_PATH__/vendor -type f -exec chmod 644 {} +
+if [ "__SYNC_VENDOR__" = "1" ]; then
+  find __REMOTE_PATH__/vendor -type d -exec chmod 755 {} +
+  find __REMOTE_PATH__/vendor -type f -exec chmod 644 {} +
+fi
 find __REMOTE_PATH__/app -type d -exec chmod 755 {} +
 find __REMOTE_PATH__/app -type f -exec chmod 644 {} +
 find __REMOTE_PATH__/bootstrap -type d -exec chmod 755 {} +
@@ -267,28 +320,37 @@ if ! docker compose ps --services --filter status=running | grep -q '^postgresql
 fi
 
 echo "==> Ejecutando migraciones SQL"
-MIGRATIONS_PATH="/app/database/migrations"
-if docker compose exec -T php-fpm sh -lc "test -d /app/database/migrations"; then
-  MIGRATIONS_PATH="/app/database/migrations"
-elif docker compose exec -T php-fpm sh -lc "test -d /app/migrations"; then
-  MIGRATIONS_PATH="/app/migrations"
-fi
-
-if docker compose exec -T php-fpm php /app/migrate_database.php --path="$MIGRATIONS_PATH" --skip-existing; then
-  echo "[OK] Migraciones completadas"
+if [ "__HAS_MIGRATIONS__" != "1" ]; then
+  echo "[WARN] Sin archivos .sql locales. Se omite migracion."
 else
-  MIGRATION_FILES_COUNT=$(docker compose exec -T php-fpm sh -lc "ls -1 $MIGRATIONS_PATH/*.sql 2>/dev/null | wc -l" | tr -d '\r')
-  if [ "${MIGRATION_FILES_COUNT:-0}" = "0" ]; then
-    echo "[WARN] Sin archivos .sql en $MIGRATIONS_PATH. Se omite migracion."
+  MIGRATIONS_PATH="/app/database/migrations"
+  if docker compose exec -T php-fpm sh -lc "test -d /app/database/migrations"; then
+    MIGRATIONS_PATH="/app/database/migrations"
+  elif docker compose exec -T php-fpm sh -lc "test -d /app/migrations"; then
+    MIGRATIONS_PATH="/app/migrations"
+  fi
+
+  if docker compose exec -T php-fpm php /app/migrate_database.php --path="$MIGRATIONS_PATH" --skip-existing; then
+    echo "[OK] Migraciones completadas"
   else
-    echo "[ERROR] Fallaron las migraciones"
-    exit 1
+    MIGRATION_FILES_COUNT=$(docker compose exec -T php-fpm sh -lc "ls -1 $MIGRATIONS_PATH/*.sql 2>/dev/null | wc -l" | tr -d '\r')
+    if [ "${MIGRATION_FILES_COUNT:-0}" = "0" ]; then
+      echo "[WARN] Sin archivos .sql en $MIGRATIONS_PATH. Se omite migracion."
+    else
+      echo "[ERROR] Fallaron las migraciones"
+      exit 1
+    fi
   fi
 fi
 
 docker compose ps
 '@
+  $syncVendorFlag = if ($syncVendor) { '1' } else { '0' }
+  $hasMigrationsFlag = if ($hasLocalSqlMigrations) { '1' } else { '0' }
+
   $remoteDeployCmd = $remoteDeployCmdTemplate.Replace("__REMOTE_PATH__", $RemotePath)
+  $remoteDeployCmd = $remoteDeployCmd.Replace("__SYNC_VENDOR__", $syncVendorFlag)
+  $remoteDeployCmd = $remoteDeployCmd.Replace("__HAS_MIGRATIONS__", $hasMigrationsFlag)
 
   $deployResult = Invoke-SSHCommand -SessionId $sessionId -Command $remoteDeployCmd
   $deployOutput = ($deployResult.Output -join [Environment]::NewLine)

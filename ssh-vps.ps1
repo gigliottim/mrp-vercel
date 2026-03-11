@@ -84,6 +84,7 @@ function Invoke-InteractiveShell {
     }
 }
 
+
 Ensure-PoshSsh
 $credential = Resolve-Credential -UserName $UserName -Password $Password
 

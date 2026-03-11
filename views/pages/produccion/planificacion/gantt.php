@@ -135,7 +135,7 @@
 
             async cargarCentros() {
                 try {
-                    const response = await fetch('/produccion/centros-trabajo/json');
+                    const response = await fetch('<?= url('produccion/centros-trabajo/json') ?>');
                     this.centros = await response.json();
                 } catch (error) {
                     console.error('Error:', error);

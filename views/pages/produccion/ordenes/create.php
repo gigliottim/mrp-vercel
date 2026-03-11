@@ -134,7 +134,7 @@
     // Cargar productos/variantes
     document.addEventListener('DOMContentLoaded', async function() {
         try {
-            const response = await fetch('/api/variantes?activo=1');
+            const response = await fetch('<?= url('api/variantes') ?>?activo=1');
             const variantes = await response.json();
 
             const select = document.getElementById('variante_id');

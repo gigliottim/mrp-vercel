@@ -319,6 +319,47 @@ if ! docker compose ps --services --filter status=running | grep -q '^postgresql
   exit 1
 fi
 
+echo "==> Verificando driver PDO PostgreSQL en php-fpm"
+if ! docker compose exec -T php-fpm php -m | grep -q '^pdo_pgsql$'; then
+  echo "[WARN] pdo_pgsql no habilitado. Activando extensiones pgsql/pdo_pgsql..."
+  docker compose exec -T php-fpm sh -lc "cat > /opt/bitnami/php/etc/conf.d/zz-pgsql.ini <<'EOF'
+extension=pgsql
+extension=pdo_pgsql
+EOF"
+  docker compose restart php-fpm
+  sleep 3
+
+  if ! docker compose exec -T php-fpm php -m | grep -q '^pdo_pgsql$'; then
+    echo "[ERROR] No se pudo habilitar pdo_pgsql en php-fpm"
+    exit 1
+  fi
+
+  echo "[OK] pdo_pgsql habilitado en php-fpm"
+else
+  echo "[OK] pdo_pgsql ya estaba habilitado"
+fi
+
+echo "==> Validando extensiones PHP requeridas (PDF/XLSX/ZIP)"
+MISSING_EXTENSIONS=""
+for EXT in zip gd mbstring dom xml xmlwriter xmlreader fileinfo intl zlib; do
+  if ! docker compose exec -T php-fpm php -m | grep -qi "^${EXT}$"; then
+    MISSING_EXTENSIONS="$MISSING_EXTENSIONS $EXT"
+  fi
+done
+
+if [ -n "$MISSING_EXTENSIONS" ]; then
+  echo "[ERROR] Faltan extensiones PHP requeridas:$MISSING_EXTENSIONS"
+  exit 1
+fi
+
+echo "[OK] Extensiones PHP requeridas presentes"
+
+echo "==> Validando requisitos de plataforma Composer"
+if ! docker compose exec -T php-fpm sh -lc "cd /app && php /opt/bitnami/php/bin/composer check-platform-reqs --no-dev"; then
+  echo "[ERROR] Composer detecto requisitos de plataforma faltantes"
+  exit 1
+fi
+
 echo "==> Ejecutando migraciones SQL"
 if [ "__HAS_MIGRATIONS__" != "1" ]; then
   echo "[WARN] Sin archivos .sql locales. Se omite migracion."

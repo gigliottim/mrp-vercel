@@ -16,7 +16,7 @@ $old = $old ?? [];
                             Acceso MRP
                         </span>
                         <h1 class="auth-panel__headline mb-3">Ingreso centralizado por empresa</h1>
-                        <p class="auth-panel__lede mb-0">El ingreso a una empresa se realiza exclusivamente desde <code>http://localhost/mrp/login</code> usando mail y clave.</p>
+                        <p class="auth-panel__lede mb-0">El ingreso a una empresa se realiza usando tu correo y contraseña.</p>
                     </div>
 
                     <ul class="auth-rules">
@@ -105,7 +105,7 @@ $old = $old ?? [];
                         <?php endif; ?>
 
                         <div class="auth-footer-note">
-                            Si necesitas cambiar de empresa durante el día, primero cierra sesión y luego vuelve a ingresar desde <code>/mrp/login</code>.
+                            Si necesitas cambiar de empresa durante el día, primero cierra sesión y luego vuelve a ingresar.
                         </div>
                     </form>
                 </div>

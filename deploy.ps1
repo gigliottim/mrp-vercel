@@ -118,9 +118,9 @@ function Update-ProjectRevision {
     Set-Content -Path $ConfigPath -Value $newContent -Encoding UTF8
 
     return @{
-        Level = $Level
+        Level   = $Level
         Version = $newVersion
-        Build = $build
+        Build   = $build
     }
 }
 

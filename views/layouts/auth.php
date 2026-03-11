@@ -26,7 +26,7 @@ $appBuild = (int) config('app.build', 0);
     <link rel="stylesheet" href="<?= AssetHelper::css('modules/auth/login.css') ?>">
 </head>
 
-<body class="public-body">
+<body class="public-body auth-body-fixed">
     <header class="public-header border-bottom">
         <div class="container-fluid py-3 d-flex align-items-center justify-content-between gap-3">
             <a class="public-brand text-decoration-none" href="<?= url('/') ?>">

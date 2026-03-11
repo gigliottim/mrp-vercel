@@ -232,7 +232,11 @@ final class TenantProvisioningService
     private function createDatabase(string $databaseName): void
     {
         $identifier = $this->quoteIdentifier($databaseName);
-        $sql = 'CREATE DATABASE ' . $identifier . " ENCODING 'UTF8'";
+        $sql = 'CREATE DATABASE ' . $identifier
+            . " ENCODING 'UTF8'"
+            . " LOCALE_PROVIDER 'icu'"
+            . " ICU_LOCALE 'es-ES'"
+            . ' TEMPLATE template0';
         $this->authConnection->exec($sql);
     }
 
@@ -423,7 +427,7 @@ final class TenantProvisioningService
     {
         $baseConfig = config('database.connections.tenant', []);
         $dsn = sprintf(
-            'pgsql:host=%s;port=%s;dbname=%s',
+            "pgsql:host=%s;port=%s;dbname=%s;options='--client_encoding=UTF8'",
             $baseConfig['host'] ?? '127.0.0.1',
             $baseConfig['port'] ?? '5432',
             $databaseName

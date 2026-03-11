@@ -29,11 +29,13 @@ final class DatabaseManager
         $driver = $config['driver'] ?? 'mysql';
 
         if ($driver === 'pgsql') {
+            $charset = strtoupper(str_replace(['-', '_'], '', $config['charset'] ?? 'utf8'));
             $dsn = sprintf(
-                'pgsql:host=%s;port=%s;dbname=%s',
+                "pgsql:host=%s;port=%s;dbname=%s;options='--client_encoding=%s'",
                 $config['host'] ?? '127.0.0.1',
                 $config['port'] ?? '5432',
-                $config['database'] ?? ''
+                $config['database'] ?? '',
+                $charset
             );
         } else {
             $dsn = sprintf(

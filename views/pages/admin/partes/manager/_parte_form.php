@@ -191,7 +191,7 @@ use App\Core\View\View;
             <a
                 class="btn btn-sm btn-warning"
                 x-show="isPartFormReadOnly && form.id"
-                :href="'/mrp/productos/partes/manager/' + form.id + '/editar'">
+                :href="'<?= url('productos/partes/manager') ?>/' + form.id + '/editar'">
                 <i class="fa-solid fa-pen me-2"></i>
                 Habilitar Edicion
             </a>

@@ -143,7 +143,7 @@ $variantStates = [
         <a
             class="btn btn-sm btn-warning"
             x-show="mode === 'view' && form.id && variantForm && variantForm.id && !isVariantFormEnabled"
-            :href="'/mrp/productos/partes/manager/' + form.id + '/variantes/' + variantForm.id + '/editar'">
+            :href="'<?= url('productos/partes/manager') ?>/' + form.id + '/variantes/' + variantForm.id + '/editar'">
             <i class="fa-solid fa-pen me-2"></i>
             Habilitar edicion
         </a>

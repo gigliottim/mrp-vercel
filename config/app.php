@@ -1,9 +1,9 @@
-﻿<?php
+<?php
 
 return [
     'name' => env('APP_NAME', 'MRP'),
-    'version' => '27.0.6',
-    'build' => 4031,
+    'version' => '28.0.0',
+    'build' => 4032,
     'url' => env('APP_URL', 'http://localhost'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),

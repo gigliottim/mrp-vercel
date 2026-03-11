@@ -49,12 +49,47 @@ final class Kernel
             ]);
 
             $isDebug = (bool) config('app.debug', false);
-            $payload = [
-                'status' => 'error',
-                'message' => $isDebug ? $throwable->getMessage() : 'Internal Server Error',
-            ];
+            if ($this->expectsJson($request)) {
+                $payload = [
+                    'status' => 'error',
+                    'message' => $isDebug ? $throwable->getMessage() : 'Internal Server Error',
+                ];
 
-            return Response::json($payload, 500);
+                return Response::json($payload, 500);
+            }
+
+            return $this->renderWebError($throwable, $isDebug);
         }
+    }
+
+    private function expectsJson(Request $request): bool
+    {
+        if (str_starts_with($request->uri, '/api')) {
+            return true;
+        }
+
+        $headers = array_change_key_case($request->headers, CASE_LOWER);
+        $accept = (string) ($headers['accept'] ?? '');
+        $requestedWith = (string) ($headers['x-requested-with'] ?? '');
+
+        return str_contains($accept, 'application/json')
+            || strcasecmp($requestedWith, 'XMLHttpRequest') === 0;
+    }
+
+    private function renderWebError(Throwable $throwable, bool $isDebug): Response
+    {
+        $message = $isDebug
+            ? htmlspecialchars($throwable->getMessage(), ENT_QUOTES, 'UTF-8')
+            : 'Ocurrio un error inesperado. Intenta nuevamente en unos minutos.';
+
+        $html = '<!doctype html>'
+            . '<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            . '<title>Error interno</title>'
+            . '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f7fb;color:#0f172a;margin:0;padding:32px}.card{max-width:780px;margin:60px auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 8px 30px rgba(2,6,23,.06)}h1{margin:0 0 10px;font-size:24px}.muted{color:#475569}code{display:block;margin-top:12px;padding:12px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;white-space:pre-wrap;word-break:break-word}</style>'
+            . '</head><body><div class="card"><h1>Error interno</h1><p class="muted">No se pudo completar la solicitud.</p><code>'
+            . $message
+            . '</code></div></body></html>';
+
+        return Response::html($html, 500);
     }
 }

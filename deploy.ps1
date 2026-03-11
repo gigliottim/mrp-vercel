@@ -115,7 +115,8 @@ function Update-ProjectRevision {
 
     $newContent = [regex]::Replace($content, $versionRegex, "'version' => '$newVersion'", 1)
     $newContent = [regex]::Replace($newContent, $buildRegex, "'build' => $build", 1)
-    Set-Content -Path $ConfigPath -Value $newContent -Encoding UTF8
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($ConfigPath, $newContent, $utf8NoBom)
 
     return @{
         Level   = $Level

@@ -163,6 +163,168 @@
         </div>
     </section>
 
+    <!-- Menú Completo / Módulos -->
+    <section class="py-5 bg-light mb-5 rounded-4 shadow-sm" id="modulos">
+        <div class="container px-5 my-5">
+            <div class="text-center mb-5">
+                <h2 class="fw-bolder">Explora todos nuestros Módulos</h2>
+                <p class="lead text-muted mb-0">Una estructura completa y organizada para cada área de tu empresa.</p>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+                <!-- Panel -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-primary text-white fw-bold">
+                            <i class="fa-solid fa-gauge me-2"></i>Panel
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Panel inicial:</strong> Resumen general, alertas y métricas principales del sistema.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos y BOM -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-success text-white fw-bold">
+                            <i class="fa-solid fa-box-open me-2"></i>Productos y BOM
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Listado de Partes:</strong> Catálogo completo de materias primas, insumos y productos terminados.</li>
+                                <li class="mb-2"><strong>Gestor de partes:</strong> Interfaz avanzada para la creación y edición masiva de artículos.</li>
+                                <li class="mb-2"><strong>BOM activas:</strong> Listas de materiales (recetas) vigentes para la producción.</li>
+                                <li class="mb-2"><strong>Composicion de variantes:</strong> Gestión de configuraciones y características adicionales de los productos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Planeamiento MRP -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-info text-white fw-bold">
+                            <i class="fa-solid fa-brain me-2"></i>Planeamiento MRP
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Sugerencias MRP:</strong> Recomendaciones automáticas sobre qué comprar o fabricar basadas en el stock y la demanda.</li>
+                                <li class="mb-2"><strong>Ordenes planificadas:</strong> Proyecciones y planificación a futuro de las órdenes a ejecutar.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Produccion -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-warning text-dark fw-bold">
+                            <i class="fa-solid fa-industry me-2"></i>Producción
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Dashboard de Operaciones:</strong> Vista gerencial del estado de la fábrica en tiempo real.</li>
+                                <li class="mb-2"><strong>Centros de Trabajo:</strong> Definición de máquinas, líneas o áreas operativas.</li>
+                                <li class="mb-2"><strong>Rutas de Produccion:</strong> Secuencia de operaciones y tiempos estándar requeridos.</li>
+                                <li class="mb-2"><strong>Ordenes de Produccion:</strong> Órdenes de trabajo activas en planta con seguimiento de avance.</li>
+                                <li class="mb-2"><strong>Planificacion de Recursos:</strong> Asignación de capacidad y cargas de trabajo.</li>
+                                <li class="mb-2"><strong>Vista Gantt:</strong> Cronograma interactivo y visual de ejecución de órdenes.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transacciones -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-danger text-white fw-bold">
+                            <i class="fa-solid fa-exchange-alt me-2"></i>Transacciones
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Movimientos de Partes:</strong> Registro histórico de entradas, salidas, ajustes y transferencias.</li>
+                                <li class="mb-2"><strong>Gestion de Compras:</strong> Administración del flujo de abastecimiento y órdenes a proveedores.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventario y stock -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-secondary text-white fw-bold">
+                            <i class="fa-solid fa-cubes me-2"></i>Inventario y stock
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Stock critico:</strong> Monitoreo de seguridad y artículos con necesidad de reabastecimiento urgente.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reportes -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header" style="background-color: #6c757d; color: white; font-weight: bold;">
+                            <i class="fa-solid fa-chart-bar me-2"></i>Reportes
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Destino de Partes:</strong> Análisis del uso y consumo de componentes.</li>
+                                <li class="mb-2"><strong>Listado de Ingenieria:</strong> Documentación y reportes técnicos de productos.</li>
+                                <li class="mb-2"><strong>Planificacion de Produccion:</strong> Resúmenes consolidados de la actividad de la planta.</li>
+                                <li class="mb-2"><strong>Resumen por grupos:</strong> Análisis de movimientos agrupados por familias de artículos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parámetros y catálogos -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header" style="background-color: #343a40; color: white; font-weight: bold;">
+                            <i class="fa-solid fa-cogs me-2"></i>Parámetros y catálogos
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Configuracion:</strong> Ajustes generales y preferencias del entorno.</li>
+                                <li class="mb-2"><strong>Unidades de medida:</strong> Definición de magnitudes (kg, un, lt) locales.</li>
+                                <li class="mb-2"><strong>Tipos de partes:</strong> Clasificación operativa (Materia prima, Semielaborado, etc.).</li>
+                                <li class="mb-2"><strong>Tipos de deposito:</strong> Categorización y configuración de los almacenes.</li>
+                                <li class="mb-2"><strong>Validaciones de movimientos:</strong> Reglas operativas para asegurar la consistencia.</li>
+                                <li class="mb-2"><strong>Grupos de partes:</strong> Agrupación para facilitar la búsqueda y contabilidad.</li>
+                                <li class="mb-2"><strong>Clientes y proveedores:</strong> Directorio de entidades comerciales asociadas.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empresa y Usuarios -->
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header" style="background-color: #495057; color: white; font-weight: bold;">
+                            <i class="fa-solid fa-users me-2"></i>Empresa y Usuarios
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small text-muted">
+                                <li class="mb-2"><strong>Empresa:</strong> Datos institucionales y fiscales de la compañía.</li>
+                                <li class="mb-2"><strong>Usuarios:</strong> Administración de acceso de los colaboradores.</li>
+                                <li class="mb-2"><strong>Roles:</strong> Declaración de perfiles de seguridad en el sistema.</li>
+                                <li class="mb-2"><strong>Permisos:</strong> Asignación granulada de acceso por módulo y acción.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
     <!-- Call to Action -->
     <aside class="bg-primary bg-gradient rounded-4 shadow-lg mb-4">
         <div class="container px-5 py-5 text-center">

@@ -1,38 +1,28 @@
-# ================================================================
-# Script de Deploy - Revision automatica
-# ================================================================
-# Uso:
-#   .\deploy.ps1 -Level X   # Major
-#   .\deploy.ps1 -Level Y   # Minor
-#   .\deploy.ps1 -Level Z   # Patch
-#   .\deploy.ps1            # Auto-detecta nivel segun cambios desde ultimo deploy
-#
-# Reglas:
-# - X incrementa major y reinicia minor/patch
-# - Y incrementa minor y reinicia patch
-# - Z incrementa patch
-# - Siempre incrementa build en +1
-# - Si es repositorio Git: hace commit de TODOS los cambios y crea tag vX.Y.Z-buildN
-# - No pide confirmaciones interactivas
-# ================================================================
+<#
+  Entry point de despliegue para VPS.
+    1) Actualiza revision automaticamente segun cambios.
+    2) Ejecuta commit git obligatorio.
+    3) Ejecuta deployvps.ps1 con los parametros remotos.
+#>
 
+[CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
-    [ValidateSet('X', 'Y', 'Z')]
-    [string]$Level
+    [string]$HostName = "181.13.244.35",
+    [int]$Port = 5073,
+    [string]$UserName = "root",
+    [string]$Password = 'w(6C%QnZC7EQPZ',
+    [string]$RemotePath = "/opt/mrp"
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = "Stop"
 
-function Write-Info { Write-Host $args -ForegroundColor Cyan }
-function Write-Success { Write-Host $args -ForegroundColor Green }
-function Write-Warning { Write-Host $args -ForegroundColor Yellow }
-function Write-ErrorLine { Write-Host $args -ForegroundColor Red }
+function Write-Step {
+    param([string]$Message)
+    Write-Host "[DEPLOY] $Message" -ForegroundColor Cyan
+}
 
 function Get-AutoLevel {
-    param(
-        [string]$RepoRoot
-    )
+    param([string]$RepoRoot)
 
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         return 'Z'
@@ -43,27 +33,7 @@ function Get-AutoLevel {
         return 'Z'
     }
 
-    $lastDeployTag = ''
-    try {
-        $lastDeployTagResult = git -C $RepoRoot describe --tags --match "v*-build*" --abbrev=0 2>$null
-        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($lastDeployTagResult)) {
-            $lastDeployTag = $lastDeployTagResult
-        }
-    }
-    catch {
-        $lastDeployTag = ''
-    }
     $changedFiles = New-Object System.Collections.Generic.HashSet[string]
-
-    if (-not [string]::IsNullOrWhiteSpace($lastDeployTag)) {
-        $committedChanges = git -C $RepoRoot diff --name-only "$lastDeployTag..HEAD"
-        foreach ($file in $committedChanges) {
-            if (-not [string]::IsNullOrWhiteSpace($file)) {
-                [void]$changedFiles.Add($file)
-            }
-        }
-    }
-
     $unstaged = git -C $RepoRoot diff --name-only
     $staged = git -C $RepoRoot diff --name-only --cached
     $untracked = git -C $RepoRoot ls-files --others --exclude-standard
@@ -116,102 +86,85 @@ function Get-AutoLevel {
     return 'Z'
 }
 
+function Update-ProjectRevision {
+    param([string]$ConfigPath, [string]$Level)
+
+    $content = Get-Content -Path $ConfigPath -Raw
+    $versionRegex = "'version'\s*=>\s*'(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)'"
+    $buildRegex = "'build'\s*=>\s*(?<build>\d+)"
+
+    $versionMatch = [regex]::Match($content, $versionRegex)
+    $buildMatch = [regex]::Match($content, $buildRegex)
+    if (-not $versionMatch.Success -or -not $buildMatch.Success) {
+        throw "No se pudo leer version/build en $ConfigPath"
+    }
+
+    $major = [int]$versionMatch.Groups['major'].Value
+    $minor = [int]$versionMatch.Groups['minor'].Value
+    $patch = [int]$versionMatch.Groups['patch'].Value
+    $build = [int]$buildMatch.Groups['build'].Value
+
+    switch ($Level) {
+        'X' { $major++; $minor = 0; $patch = 0 }
+        'Y' { $minor++; $patch = 0 }
+        'Z' { $patch++ }
+    }
+
+    $build++
+    $newVersion = "$major.$minor.$patch"
+
+    $newContent = [regex]::Replace($content, $versionRegex, "'version' => '$newVersion'", 1)
+    $newContent = [regex]::Replace($newContent, $buildRegex, "'build' => $build", 1)
+    Set-Content -Path $ConfigPath -Value $newContent -Encoding UTF8
+
+    return @{
+        Level = $Level
+        Version = $newVersion
+        Build = $build
+    }
+}
+
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$configPath = Join-Path $projectRoot 'config\app.php'
+$deployVpsPath = Join-Path $projectRoot "deployvps.ps1"
+$configPath = Join-Path $projectRoot "config/app.php"
 
-if (-not (Test-Path $configPath)) {
-    throw "No se encontro el archivo de configuracion: $configPath"
+if (-not (Test-Path -LiteralPath $deployVpsPath)) {
+    throw "No se encontro el script de despliegue VPS: $deployVpsPath"
 }
 
-if ([string]::IsNullOrWhiteSpace($Level)) {
-    $Level = Get-AutoLevel -RepoRoot $projectRoot
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    throw "Git no esta disponible. El flujo requiere commit antes de desplegar."
 }
 
-$content = Get-Content -Path $configPath -Raw
-
-$versionRegex = "'version'\s*=>\s*'(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)'"
-$buildRegex = "'build'\s*=>\s*(?<build>\d+)"
-
-$versionMatch = [regex]::Match($content, $versionRegex)
-$buildMatch = [regex]::Match($content, $buildRegex)
-
-if (-not $versionMatch.Success) {
-    throw "No se pudo leer 'app.version' en $configPath"
+$insideGit = git -C $projectRoot rev-parse --is-inside-work-tree 2>$null
+if ($insideGit -ne 'true') {
+    throw "El proyecto no es un repositorio git valido."
 }
 
-if (-not $buildMatch.Success) {
-    throw "No se pudo leer 'app.build' en $configPath"
+Write-Step "Actualizando revision local del proyecto..."
+$autoLevel = Get-AutoLevel -RepoRoot $projectRoot
+$rev = Update-ProjectRevision -ConfigPath $configPath -Level $autoLevel
+Write-Step "Revision nueva: v$($rev.Version) build $($rev.Build) (nivel $($rev.Level))"
+
+Write-Step "Creando commit git obligatorio antes del deploy..."
+$statusOutput = git -C $projectRoot status --porcelain
+if ([string]::IsNullOrWhiteSpace(($statusOutput -join ""))) {
+    git -C $projectRoot commit --allow-empty -m "chore: deploy v$($rev.Version) build $($rev.Build)" | Out-Null
+}
+else {
+    git -C $projectRoot add --all
+    git -C $projectRoot commit -m "chore: deploy v$($rev.Version) build $($rev.Build)" | Out-Null
 }
 
-$major = [int]$versionMatch.Groups['major'].Value
-$minor = [int]$versionMatch.Groups['minor'].Value
-$patch = [int]$versionMatch.Groups['patch'].Value
-$build = [int]$buildMatch.Groups['build'].Value
+Write-Host "[DEPLOY] Ejecutando deploy remoto a $UserName@${HostName}:$Port ..." -ForegroundColor Cyan
 
-$oldVersion = "$major.$minor.$patch"
-$oldBuild = $build
+& $deployVpsPath `
+    -HostName $HostName `
+    -Port $Port `
+    -UserName $UserName `
+    -Password $Password `
+    -RemotePath $RemotePath
 
-switch ($Level) {
-    'X' {
-        $major++
-        $minor = 0
-        $patch = 0
-    }
-    'Y' {
-        $minor++
-        $patch = 0
-    }
-    'Z' {
-        $patch++
-    }
-}
-
-$build++
-$newVersion = "$major.$minor.$patch"
-$newBuild = $build
-
-# Reemplazos puntuales en config/app.php
-$newContent = [regex]::Replace($content, $versionRegex, "'version' => '$newVersion'", 1)
-$newContent = [regex]::Replace($newContent, $buildRegex, "'build' => $newBuild", 1)
-
-Set-Content -Path $configPath -Value $newContent -Encoding UTF8
-
-Write-Host ""
-Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host "             DEPLOY - REVISION ACTUALIZADA              " -ForegroundColor Cyan
-Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Info "[INFO] Nivel aplicado: $Level"
-Write-Info "[INFO] Revision anterior: v$oldVersion build $oldBuild"
-Write-Success "[OK] Revision nueva:    v$newVersion build $newBuild"
-Write-Info "[INFO] Archivo actualizado: $configPath"
-
-# Si es repo git, realiza commit y tag en forma automatica
-if (Get-Command git -ErrorAction SilentlyContinue) {
-    try {
-        $insideGit = git -C $projectRoot rev-parse --is-inside-work-tree 2>$null
-        if ($insideGit -eq 'true') {
-            $tagName = "v$newVersion-build$newBuild"
-            $commitMessage = "chore: bump version to v$newVersion build $newBuild"
-
-            git -C $projectRoot add --all
-            git -C $projectRoot commit -m $commitMessage | Out-Null
-
-            $existingTag = git -C $projectRoot tag --list $tagName
-            if ([string]::IsNullOrWhiteSpace($existingTag)) {
-                git -C $projectRoot tag -a $tagName -m "Release $tagName" | Out-Null
-                Write-Success "[OK] Tag creado: $tagName"
-            }
-            else {
-                Write-Warning "[WARN] El tag ya existe y no se sobreescribe: $tagName"
-            }
-
-            Write-Host ""
-            Write-Info "[INFO] Commit creado: $commitMessage"
-            Write-Info "[NEXT] Sugerido: git push && git push origin $tagName"
-        }
-    }
-    catch {
-        Write-Warning "[WARN] No se pudo completar commit/tag automatico: $($_.Exception.Message)"
-    }
+if ($LASTEXITCODE -ne 0) {
+    throw "El despliegue VPS finalizo con codigo $LASTEXITCODE"
 }

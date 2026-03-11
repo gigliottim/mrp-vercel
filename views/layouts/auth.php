@@ -1,8 +1,12 @@
 <?php
 
+use App\Core\Auth\AuthManager;
 use App\Core\Support\AssetHelper;
 use App\Core\View\View;
 
+$isAuthenticated = AuthManager::check();
+$appVersion = (string) config('app.version', '0.0.0');
+$appBuild = (int) config('app.build', 0);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -18,17 +22,46 @@ use App\Core\View\View;
     <link rel="stylesheet" href="<?= AssetHelper::getFontAwesome() ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('global/main.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('components/cards.css') ?>">
+    <link rel="stylesheet" href="<?= AssetHelper::css('modules/public-site.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('modules/auth/login.css') ?>">
 </head>
 
-<body class="auth-body bg-light">
-    <main class="auth-main">
+<body class="public-body">
+    <header class="public-header border-bottom">
+        <div class="container-fluid py-3 d-flex align-items-center justify-content-between gap-3">
+            <a class="public-brand text-decoration-none" href="<?= url('/') ?>">
+                <i class="fa-solid fa-industry me-2"></i><?= View::escape(config('app.name', 'MRP')) ?>
+            </a>
+            <nav class="d-flex align-items-center gap-2">
+                <?php if ($isAuthenticated) : ?>
+                    <a class="btn btn-outline-secondary" href="<?= url('dashboard') ?>">Dashboard</a>
+                    <form method="post" action="<?= url('logout') ?>" class="d-inline">
+                        <button class="btn btn-dark" type="submit">Salir</button>
+                    </form>
+                <?php else : ?>
+                    <a class="btn btn-outline-secondary" href="<?= url('login') ?>">Ingresar</a>
+                    <a class="btn btn-primary" href="<?= url('register') ?>">Registrarse</a>
+                <?php endif; ?>
+            </nav>
+        </div>
+    </header>
+
+    <main class="auth-main flex-grow-1">
         <div class="container-fluid">
             <?= $content ?? '' ?>
         </div>
     </main>
+
+    <footer class="public-footer border-top mt-auto">
+        <div class="container-fluid py-3 d-flex flex-column flex-md-row justify-content-between gap-2">
+            <span class="small text-muted">&copy; <?= date('Y') ?> <?= View::escape(config('app.name', 'MRP')) ?></span>
+            <span class="small text-muted">MRP para operaciones industriales y pymes en crecimiento · v<?= View::escape($appVersion) ?> build <?= View::escape((string) $appBuild) ?></span>
+        </div>
+    </footer>
+
     <script src="<?= AssetHelper::getBootstrap('js') ?>" defer></script>
     <script src="<?= AssetHelper::getAlpineJS() ?>" defer></script>
+    <script src="<?= AssetHelper::js('main.js') ?>" type="module"></script>
 </body>
 
 </html>

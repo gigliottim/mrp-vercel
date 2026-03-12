@@ -3,7 +3,11 @@
 /**
  * Vista: Crear Orden de Producción
  */
+
+use App\Core\Helpers\AssetHelper;
+
 ?>
+<link rel="stylesheet" href="<?= AssetHelper::css('modules/SearchClient.css') ?>">
 
 <div class="container-fluid py-4" x-data="ordenForm()">
     <div class="row justify-content-center">
@@ -42,12 +46,29 @@
 
                             <!-- Producto/Variante -->
                             <div class="col-12">
-                                <label for="variante_id" class="form-label">Producto / Variante *</label>
-                                <select class="form-select" id="variante_id" name="variante_id"
-                                    x-model="varianteId" @change="cargarBoms" required>
-                                    <option value="">Seleccione un producto...</option>
-                                    <!-- Cargar con AJAX o desde PHP -->
-                                </select>
+                                <label for="search-variante-input" class="form-label">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i>
+                                    Producto / Variante *
+                                </label>
+                                <div class="position-relative">
+                                    <div class="input-group">
+                                        <input type="text"
+                                            class="form-control form-control-lg"
+                                            id="search-variante-input"
+                                            placeholder="Escriba al menos 2 caracteres para buscar producto o variante..."
+                                            autocomplete="off">
+                                        <button type="button" class="btn btn-outline-primary d-none" id="btn-cambiar-variante">
+                                            <i class="fa-solid fa-rotate me-1"></i> Cambiar
+                                        </button>
+                                    </div>
+                                    <div id="search-variante-results" class="search-results list-group mt-2"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fa-solid fa-info-circle me-1"></i>
+                                    Los resultados incluyen productos y variantes. Seleccione uno para continuar.
+                                </small>
+                                <!-- Campo oculto para validación -->
+                                <input type="hidden" id="variante_id" name="variante_id" x-model="varianteId" @change="cargarBoms" required>
                             </div>
 
                             <!-- BOM -->
@@ -108,6 +129,15 @@
     </div>
 </div>
 
+<style>
+    /* Indicador de parte seleccionada */
+    #search-variante-input.parte-seleccionada {
+        background-color: #d1e7dd;
+        border-color: #198754;
+    }
+</style>
+
+<script src="<?= AssetHelper::js('modules/SearchClient.js') ?>"></script>
 <script>
     function ordenForm() {
         return {
@@ -118,6 +148,7 @@
             async cargarBoms() {
                 if (!this.varianteId) {
                     this.boms = [];
+                    this.bomId = '';
                     return;
                 }
 
@@ -133,19 +164,62 @@
 
     // Cargar productos/variantes
     document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            const response = await fetch('<?= url('api/variantes') ?>?activo=1');
-            const variantes = await response.json();
+        const searchInput = document.getElementById('search-variante-input');
+        const searchResults = document.getElementById('search-variante-results');
+        const inputVarianteHidden = document.getElementById('variante_id');
+        const btnCambiar = document.getElementById('btn-cambiar-variante');
 
-            const select = document.getElementById('variante_id');
-            variantes.forEach(v => {
-                const option = document.createElement('option');
-                option.value = v.id;
-                option.textContent = `${v.producto_nombre} - ${v.codigo}`;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error cargando variantes:', error);
+        function buildSearchSelectionLabel(item) {
+            const parteCodigo = item.parte_codigo || 'N/A';
+            const parteDetalle = item.parte_detalle || 'Sin detalle';
+            const varianteCodigo = item.codigo_variante || 'N/A';
+            const varianteDetalle = item.detalle || item.variante_detalle || 'Sin detalle';
+
+            return `Producto: ${parteCodigo} - ${parteDetalle} | Variante: ${varianteCodigo} - ${varianteDetalle}`;
         }
+
+        const searchClientInstance = new SearchClient({
+            endpoint: '<?= url('api/v1/search/variantes') ?>',
+            inputElement: searchInput,
+            resultsContainer: searchResults,
+            minChars: 2,
+            debounceDelay: 300,
+            maxResults: 20,
+            format: 'detailed',
+            onSelect: (item) => {
+                const selectedLabel = buildSearchSelectionLabel(item);
+                
+                searchInput.value = selectedLabel;
+                searchInput.readOnly = true;
+                searchInput.classList.add('parte-seleccionada');
+                btnCambiar.classList.remove('d-none');
+                
+                inputVarianteHidden.value = item.id;
+                inputVarianteHidden.dispatchEvent(new Event('input', { bubbles: true })); // Para Alpine x-model
+                inputVarianteHidden.dispatchEvent(new Event('change', { bubbles: true })); // Para invocar cargarBoms
+            },
+            onError: (error) => {
+                console.error('[SearchClient Error]', error);
+                // Optional: Mostrar toast/notificación al usuario
+            }
+        });
+
+        btnCambiar.addEventListener('click', () => {
+            inputVarianteHidden.value = '';
+            inputVarianteHidden.dispatchEvent(new Event('input', { bubbles: true })); // Para Alpine x-model
+            inputVarianteHidden.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            searchInput.value = '';
+            searchInput.readOnly = false;
+            searchInput.classList.remove('parte-seleccionada');
+            btnCambiar.classList.add('d-none');
+            
+            setTimeout(() => {
+                searchInput.focus();
+            }, 50);
+        });
+
+        // Configuración inicial
+        searchInput.disabled = false;
     });
 </script>

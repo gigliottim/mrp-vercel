@@ -290,12 +290,21 @@ $filtro    = $filtro ?? null;
 <script>
     (function() {
         'use strict';
-        const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        tooltipEls.forEach(function(el) {
-            new bootstrap.Tooltip(el, {
-                trigger: 'hover focus',
-                sanitize: false
+
+        function initTooltips() {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                new bootstrap.Tooltip(el, {
+                    html: true,
+                    sanitize: false,
+                    trigger: 'hover focus'
+                });
             });
-        });
+        }
+        // Bootstrap se carga con defer; DOMContentLoaded garantiza que ya ejecutó
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTooltips);
+        } else {
+            initTooltips();
+        }
     })();
 </script>

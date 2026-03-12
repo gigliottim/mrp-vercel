@@ -7,7 +7,7 @@ $destinosPorOrigen = $destinosPorOrigen ?? [];
 $unidadesMedida = $unidadesMedida ?? [];
 
 ?>
-<section class="mb-4">
+<section class="mb-2">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <p class="text-uppercase text-muted small mb-1">Transacciones</p>
@@ -17,13 +17,14 @@ $unidadesMedida = $unidadesMedida ?? [];
     </div>
 </section>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
+<div class="row g-3 movimientos-layout">
+    <!-- LEFT: Formulario -->
+    <div class="col-lg-5 d-flex flex-column">
+        <div class="card flex-fill">
             <div class="card-header bg-white">
                 <h5 class="mb-0">Nuevo Movimiento</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body movimientos-form-body">
                 <form id="formMovimiento" method="POST" action="<?= url('transacciones/movimientos-partes') ?>">
                     <input type="hidden" id="movimiento_id" name="movimiento_id" value="">
                     <!-- Fila 1: Fecha/Hora y Depósitos -->
@@ -248,16 +249,14 @@ $unidadesMedida = $unidadesMedida ?? [];
             </div>
         </div>
     </div>
-</div>
 
-<!-- Tabla de movimientos registrados -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
+    <!-- RIGHT: Tabla de movimientos -->
+    <div class="col-lg-7 d-flex flex-column">
+        <div class="card flex-fill">
             <div class="card-header bg-white">
                 <h5 class="mb-0">Últimos 10 Movimientos Registrados</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0 movimientos-table-body">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -361,6 +360,31 @@ $unidadesMedida = $unidadesMedida ?? [];
 </div>
 
 <style>
+    /* Layout: formulario izquierda, tabla derecha */
+    .movimientos-layout {
+        min-height: 0;
+    }
+
+    .movimientos-layout>div[class*="col"] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .movimientos-layout .card {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .movimientos-form-body {
+        overflow-y: auto;
+        max-height: calc(100vh - 230px);
+    }
+
+    .movimientos-table-body {
+        overflow-y: auto;
+        max-height: calc(100vh - 230px);
+    }
+
     /* Estilos para SearchClient inline */
     #search-parte-results {
         position: absolute;

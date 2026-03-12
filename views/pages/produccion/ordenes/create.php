@@ -188,15 +188,19 @@ use App\Core\Helpers\AssetHelper;
             format: 'detailed',
             onSelect: (item) => {
                 const selectedLabel = buildSearchSelectionLabel(item);
-                
+
                 searchInput.value = selectedLabel;
                 searchInput.readOnly = true;
                 searchInput.classList.add('parte-seleccionada');
                 btnCambiar.classList.remove('d-none');
-                
+
                 inputVarianteHidden.value = item.id;
-                inputVarianteHidden.dispatchEvent(new Event('input', { bubbles: true })); // Para Alpine x-model
-                inputVarianteHidden.dispatchEvent(new Event('change', { bubbles: true })); // Para invocar cargarBoms
+                inputVarianteHidden.dispatchEvent(new Event('input', {
+                    bubbles: true
+                })); // Para Alpine x-model
+                inputVarianteHidden.dispatchEvent(new Event('change', {
+                    bubbles: true
+                })); // Para invocar cargarBoms
             },
             onError: (error) => {
                 console.error('[SearchClient Error]', error);
@@ -206,14 +210,18 @@ use App\Core\Helpers\AssetHelper;
 
         btnCambiar.addEventListener('click', () => {
             inputVarianteHidden.value = '';
-            inputVarianteHidden.dispatchEvent(new Event('input', { bubbles: true })); // Para Alpine x-model
-            inputVarianteHidden.dispatchEvent(new Event('change', { bubbles: true }));
-            
+            inputVarianteHidden.dispatchEvent(new Event('input', {
+                bubbles: true
+            })); // Para Alpine x-model
+            inputVarianteHidden.dispatchEvent(new Event('change', {
+                bubbles: true
+            }));
+
             searchInput.value = '';
             searchInput.readOnly = false;
             searchInput.classList.remove('parte-seleccionada');
             btnCambiar.classList.add('d-none');
-            
+
             setTimeout(() => {
                 searchInput.focus();
             }, 50);

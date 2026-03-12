@@ -4,7 +4,7 @@
  * Vista: Crear Orden de Producción
  */
 
-use App\Core\Helpers\AssetHelper;
+use App\Core\Support\AssetHelper;
 
 ?>
 <link rel="stylesheet" href="<?= AssetHelper::css('modules/SearchClient.css') ?>">

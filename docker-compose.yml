@@ -7,9 +7,11 @@ services:
       - php-fpm
     ports:
       - "80:8080"
+      - "443:8443"
     volumes:
       - ./:/app
       - ./docker/nginx/mrp.conf:/opt/bitnami/nginx/conf/server_blocks/mrp.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./docker/logs/nginx:/opt/bitnami/nginx/logs
     networks:
       - lepp-net

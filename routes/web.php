@@ -32,6 +32,7 @@ use App\Core\Http\Response;
 /** @var \App\Core\Routing\Router $router */
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/dashboard', [HomeController::class, 'dashboard']);
+$router->get('/menu', [HomeController::class, 'menu']);
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->get('/register', [AuthController::class, 'showRegister']);
 $router->post('/register', [AuthController::class, 'register']);

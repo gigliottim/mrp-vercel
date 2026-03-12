@@ -161,7 +161,21 @@ $renderSidebarItems = static function (array $items) use (&$renderSidebarItems, 
                     <?php
                     $items = is_array($section['items'] ?? null) ? $section['items'] : [];
                     $renderSidebarItems($items);
+                    if (($section['section_key'] ?? '') === 'panel') :
+                        $menuPath = '/menu';
+                        $isMenuActive = str_starts_with($normalizedCurrentPath, $menuPath);
                     ?>
+                        <li>
+                            <a
+                                class="app-sidebar__link<?= $isMenuActive ? ' is-active' : '' ?>"
+                                href="<?= View::escape(url('menu')) ?>"
+                                title="Mapa del sistema"
+                                aria-label="Mapa del sistema">
+                                <i class="fa-solid fa-grip"></i>
+                                <span>Mapa del sistema</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         <?php endforeach; ?>

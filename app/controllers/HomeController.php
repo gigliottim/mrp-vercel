@@ -92,4 +92,16 @@ final class HomeController extends Controller
             'diagnostics' => $this->diagnostics->run(),
         ]);
     }
+
+    public function menu(Request $request): Response
+    {
+        if (AuthManager::check() === false) {
+            return Response::redirect(url('login'));
+        }
+
+        return $this->render('pages/menu', [
+            'title' => 'MRP · Mapa del sistema',
+            'sections' => AuthManager::sidebarTree(),
+        ]);
+    }
 }

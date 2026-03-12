@@ -4,7 +4,7 @@
  */
 
 function parteManager(initialData) {
-  const BASE = (window.MRP_BASE_PATH || '');
+  const BASE = (window.MRP_BASE_PATH || '').replace(/\/$/, '');
   const isEditingVariantContext = Boolean(
     (initialData.editingVariant && initialData.editingVariant.id) || initialData.editingVariantId
   );
@@ -186,8 +186,9 @@ function parteManager(initialData) {
 
       // No redirigir, mantener la página actual
       // Para evitar recargas innecesarias, simplemente actualizar el estado
-      if (window.location.pathname !== BASE + '/productos/partes/manager') {
-        window.history.pushState({}, '', BASE + '/productos/partes/manager');
+      const managerUrl = new URL(`${BASE}/productos/partes/manager`, window.location.origin);
+      if (window.location.pathname !== managerUrl.pathname) {
+        window.history.pushState({}, '', managerUrl.href);
       }
     },
 

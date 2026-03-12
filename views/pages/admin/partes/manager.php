@@ -221,7 +221,7 @@ $dimensionFields = [
 
 <!-- Datos para JavaScript -->
 <script>
-    window.MRP_BASE_PATH = '<?= rtrim(config('app.asset_prefix'), '/') ?>';
+    window.MRP_BASE_PATH = '<?= url() ?>';
     window.unidadesMasaData = <?= json_encode($unidadesMasa) ?>;
     window.unidadesSuperficieData = <?= json_encode($unidadesSuperficie) ?>;
     window.unidadesVolumenData = <?= json_encode($unidadesVolumen) ?>;

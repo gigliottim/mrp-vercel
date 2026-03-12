@@ -124,8 +124,11 @@
 
     let selectedParteId = null;
 
+    const basePath = (window.MRP_BASE_PATH || '').replace(/\/$/, '');
+    const baseUrl = basePath.startsWith('http') ? basePath : window.location.origin + basePath;
+
     const parteSearchClient = new SearchClient({
-      endpoint: window.location.origin + '/mrp/api/v1/search/partes',
+      endpoint: baseUrl + '/api/v1/search/partes',
       inputElement: searchInput,
       resultsContainer: searchResults,
       minChars: 2,

@@ -308,16 +308,8 @@ mkdir -p __REMOTE_PATH__/storage/logs __REMOTE_PATH__/storage/cache
 chmod -R 775 __REMOTE_PATH__/storage || true
 chmod -R 777 __REMOTE_PATH__/storage/logs __REMOTE_PATH__/storage/cache || true
 
-echo "==> Validando servicios existentes (sin recrear contenedores)"
-if ! docker compose ps --services --filter status=running | grep -q '^php-fpm$'; then
-  echo "[ERROR] php-fpm no esta en running. Este deploy no recrea contenedores."
-  exit 1
-fi
-
-if ! docker compose ps --services --filter status=running | grep -q '^postgresql$'; then
-  echo "[ERROR] postgresql no esta en running. Este deploy no recrea contenedores."
-  exit 1
-fi
+echo "==> Levantando/Actualizando contenedores segun docker-compose.yml"
+docker compose up -d
 
 echo "==> Verificando driver PDO PostgreSQL en php-fpm"
 if ! docker compose exec -T php-fpm php -m | grep -q '^pdo_pgsql$'; then

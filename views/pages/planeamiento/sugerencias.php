@@ -27,7 +27,11 @@ $filtro    = $filtro ?? null;
 <!-- Tarjetas resumen -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-html="true"
+            title="<strong>Total de variantes</strong> que tienen al menos una BOM activa definida en el sistema.">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -42,7 +46,11 @@ $filtro    = $filtro ?? null;
         </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-html="true"
+            title="<strong>✅ Fabricable</strong><br>Condición: <code>min_ratio &ge; 1.0</code><br>Todos los componentes tienen stock suficiente para cubrir al menos 1 unidad completa (100&nbsp;%).">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -57,7 +65,11 @@ $filtro    = $filtro ?? null;
         </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-html="true"
+            title="<strong>⚠️ Stock parcial</strong><br>Condición: <code>0 &lt; min_ratio &lt; 1</code><br>Al menos un componente tiene stock, pero insuficiente para completar una unidad entera.">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -72,7 +84,11 @@ $filtro    = $filtro ?? null;
         </div>
     </div>
     <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            data-bs-html="true"
+            title="<strong>❌ Sin stock</strong><br>Condición: <code>min_ratio = 0</code><br>Al menos un componente no tiene ningún stock disponible.">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -270,3 +286,15 @@ $filtro    = $filtro ?? null;
         </div>
     </div>
 <?php endif; ?>
+
+<script>
+    (function() {
+        'use strict';
+        const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipEls.forEach(function(el) {
+            new bootstrap.Tooltip(el, {
+                trigger: 'hover focus'
+            });
+        });
+    })();
+</script>

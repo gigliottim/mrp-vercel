@@ -41,28 +41,9 @@ services:
     networks:
       - lepp-net
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: lepp-pgadmin
-    restart: always
-    depends_on:
-      - postgresql
-    env_file:
-      - .env.docker
-    environment:
-      - PGADMIN_CONFIG_LOG_FILE=/var/log/pgadmin/pgadmin4.log
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-      - ./docker/logs/pgadmin:/var/log/pgadmin
-    networks:
-      - lepp-net
-
 networks:
   lepp-net:
     driver: bridge
 
 volumes:
   postgresql_data:
-  pgadmin_data:

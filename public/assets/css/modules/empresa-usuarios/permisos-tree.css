@@ -9,86 +9,20 @@
 .acl-tree-panel {
   max-height: 600px;
   overflow-y: auto;
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  background: #fff;
-  padding: 0.25rem;
-}
-
-.acl-tree-section {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e5e7eb;
-  color: #6b7280;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.45rem 0.6rem;
-}
-
-.acl-tree-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.2rem 0.25rem 0.25rem 0.55rem;
-}
-
-.acl-tree-li {
-  margin: 0;
-  padding: 0.12rem 0 0.12rem 0.95rem;
-  position: relative;
-}
-
-.acl-tree-li::before {
-  border-left: 1px solid #d1d5db;
-  content: '';
-  left: 0.3rem;
-  position: absolute;
-  top: -0.3rem;
-  bottom: -0.3rem;
-}
-
-.acl-tree-li::after {
-  border-top: 1px solid #d1d5db;
-  content: '';
-  left: 0.3rem;
-  position: absolute;
-  top: 1.15rem;
-  width: 0.62rem;
-}
-
-.acl-tree-li:last-child::before {
-  bottom: 1.15rem;
 }
 
 .acl-tree-node {
-  border: 1px solid transparent;
-  border-radius: 0.4rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.15rem 0.2rem;
-  padding: 0.38rem 0.48rem;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
 .acl-tree-node:hover {
   background: #f0f0f0;
-  border-color: #e2e8f0;
   transform: translateX(2px);
 }
 
 .acl-tree-node.is-selected {
   background: #e9ecef;
-  border-color: #cbd5e1;
-}
-
-.acl-tree-node-code {
-  color: #6b7280;
-  font-size: 0.78rem;
 }
 
 .acl-selected-box {

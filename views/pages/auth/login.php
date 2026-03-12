@@ -89,14 +89,14 @@ $old = $old ?? [];
                             <!-- Paso 1: credenciales -->
                             <div>
                                 <label class="form-label" for="email">Mail</label>
-                                <input class="form-control<?= isset($errors['email']) ? ' is-invalid' : '' ?>" type="email" name="email" id="email" placeholder="tu@empresa.com" value="<?= View::escape($old['email'] ?? (config('app.env') === 'development' ? 'admin@demo-mrp.test' : '')) ?>" required autofocus autocomplete="username">
+                                <input class="form-control<?= isset($errors['email']) ? ' is-invalid' : '' ?>" type="email" name="email" id="email" placeholder="tu@empresa.com" value="<?= View::escape($old['email'] ?? '') ?>" required autofocus autocomplete="username">
                                 <?php if (isset($errors['email'])) : ?>
                                     <div class="invalid-feedback"><?= View::escape($errors['email']) ?></div>
                                 <?php endif; ?>
                             </div>
                             <div>
                                 <label class="form-label" for="password">Contraseña</label>
-                                <input class="form-control<?= isset($errors['password']) ? ' is-invalid' : '' ?>" type="password" name="password" id="password" placeholder="••••••••" value="<?= (config('app.env') === 'development' ? 'demo123' : '') ?>" required autocomplete="current-password">
+                                <input class="form-control<?= isset($errors['password']) ? ' is-invalid' : '' ?>" type="password" name="password" id="password" placeholder="••••••••" value="" required autocomplete="current-password">
                                 <?php if (isset($errors['password'])) : ?>
                                     <div class="invalid-feedback"><?= View::escape($errors['password']) ?></div>
                                 <?php endif; ?>

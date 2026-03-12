@@ -162,25 +162,28 @@ if ($menuTree === []) {
                                         $nodeId = (int) ($treeNode['id'] ?? 0);
                                         $nodeLabel = (string) ($treeNode['label'] ?? '');
                                         $nodeCode = (string) ($treeNode['code'] ?? '');
-                                        $nodeIcon = (string) ($treeNode['icon'] ?? 'fa-solid fa-circle');
                                         $isSelected = $nodeId === $selectedMenuId;
                                         $children = $childrenByParent[$nodeId] ?? [];
 
-                                        $html = '<li class="acl-tree-li" data-tree-li="1">';
-                                        $html .= '<div class="acl-tree-node' . ($isSelected ? ' is-selected' : '') . '"';
+                                        $iconClass = ($children !== []) ? 'fa-solid fa-folder text-warning' : 'fa-solid fa-cube text-info';
+
+                                        $html = '<li class="mb-1 acl-tree-li" data-tree-li="1">';
+                                        $html .= '<div class="p-2 rounded d-flex align-items-center gap-2 acl-tree-node' . ($isSelected ? ' is-selected' : '') . '"';
                                         $html .= ' data-tree-node';
                                         $html .= ' data-node-id="' . $nodeId . '"';
                                         $html .= ' data-node-label="' . esc($nodeLabel) . '"';
                                         $html .= ' data-node-code="' . esc($nodeCode) . '"';
                                         $html .= ' data-search-text="' . esc(mb_strtolower($nodeLabel . ' ' . $nodeCode)) . '">';
-                                        $html .= '<i class="' . esc($nodeIcon) . ' text-primary"></i>';
-                                        $html .= '<div class="d-flex flex-column">';
-                                        $html .= '<span class="fw-semibold">' . esc($nodeLabel) . '</span>';
-                                        $html .= '<span class="acl-tree-node-code">' . esc($nodeCode) . '</span>';
+
+                                        $html .= '<i class="' . $iconClass . ' fs-5" style="width:24px; text-align:center;"></i>';
+
+                                        $html .= '<div class="d-flex flex-column lh-sm">';
+                                        $html .= '<span class="fw-bold text-dark text-uppercase">' . esc($nodeCode) . '</span>';
+                                        $html .= '<small class="text-secondary text-uppercase" style="font-size: 0.75rem;">' . esc($nodeLabel) . '</small>';
                                         $html .= '</div></div>';
 
                                         if ($children !== []) {
-                                            $html .= '<ul class="acl-tree-list">';
+                                            $html .= '<ul class="list-unstyled ms-3 ps-2 border-start border-2 border-light mb-0 acl-tree-list mt-1">';
                                             foreach ($children as $childNode) {
                                                 $html .= $renderTreeNode($childNode);
                                             }
@@ -190,23 +193,47 @@ if ($menuTree === []) {
                                         $html .= '</li>';
                                         return $html;
                                     };
+
+                                    $tenantData = \App\Core\Auth\TenantContext::get();
+                                    $tenantName = $tenantData['name'] ?? 'Empresa';
                                     ?>
 
-                                    <div class="acl-tree-panel" id="acl-tree-panel">
-                                        <?php foreach ($sectionOrder as $sectionKey => $sectionLabel) : ?>
-                                            <?php $sectionRoots = $sectionRootsByKey[$sectionKey] ?? []; ?>
-                                            <?php if ($sectionRoots === []) {
-                                                continue;
-                                            } ?>
-                                            <div class="acl-tree-block" data-tree-section="1">
-                                                <div class="acl-tree-section"><?= View::escape((string) $sectionLabel) ?></div>
-                                                <ul class="acl-tree-list">
-                                                    <?php foreach ($sectionRoots as $rootNode) : ?>
-                                                        <?= $renderTreeNode($rootNode) ?>
+                                    <div class="acl-tree-panel border-0 px-0" id="acl-tree-panel">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2">
+                                                <div class="p-2 mb-2 bg-light rounded d-flex align-items-center gap-2">
+                                                    <i class="fa-solid fa-folder text-warning fs-5" style="width:24px; text-align:center;"></i>
+                                                    <div class="d-flex flex-column lh-sm">
+                                                        <span class="fw-bold text-dark text-uppercase"><?= View::escape($tenantName) ?></span>
+                                                        <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Administración de Permisos</small>
+                                                    </div>
+                                                </div>
+
+                                                <ul class="list-unstyled ms-3 ps-2 border-start border-2 border-light mb-0">
+                                                    <?php foreach ($sectionOrder as $sectionKey => $sectionLabel) : ?>
+                                                        <?php $sectionRoots = $sectionRootsByKey[$sectionKey] ?? []; ?>
+                                                        <?php if ($sectionRoots === []) {
+                                                            continue;
+                                                        } ?>
+                                                        <li class="mb-2" data-tree-section="1">
+                                                            <div class="p-2 mb-1 d-flex align-items-center gap-2 rounded">
+                                                                <i class="fa-solid fa-folder text-warning fs-5" style="width:24px; text-align:center;"></i>
+                                                                <div class="d-flex flex-column lh-sm">
+                                                                    <span class="fw-bold text-dark text-uppercase"><?= View::escape((string) $sectionLabel) ?></span>
+                                                                    <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Sección</small>
+                                                                </div>
+                                                            </div>
+
+                                                            <ul class="list-unstyled ms-3 ps-2 border-start border-2 border-light mb-0 acl-tree-list">
+                                                                <?php foreach ($sectionRoots as $rootNode) : ?>
+                                                                    <?= $renderTreeNode($rootNode) ?>
+                                                                <?php endforeach; ?>
+                                                            </ul>
+                                                        </li>
                                                     <?php endforeach; ?>
                                                 </ul>
-                                            </div>
-                                        <?php endforeach; ?>
+                                            </li>
+                                        </ul>
                                     </div>
 
                                 </div>

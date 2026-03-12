@@ -2,8 +2,8 @@
 
 return [
     'name' => env('APP_NAME', 'MRP'),
-    'version' => '30.13.0',
-    'build' => 4067,
+    'version' => '30.14.0',
+    'build' => 4068,
     'url' => env('APP_URL', 'http://localhost'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),

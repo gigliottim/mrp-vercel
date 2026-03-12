@@ -293,7 +293,8 @@ $filtro    = $filtro ?? null;
         const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         tooltipEls.forEach(function(el) {
             new bootstrap.Tooltip(el, {
-                trigger: 'hover focus'
+                trigger: 'hover focus',
+                sanitize: false
             });
         });
     })();

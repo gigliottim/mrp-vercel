@@ -191,6 +191,9 @@ use App\Core\Support\AssetHelper;
 
                 searchInput.value = selectedLabel;
                 searchInput.readOnly = true;
+                searchInput.disabled = true;
+                searchInput.setAttribute('aria-readonly', 'true');
+                searchInput.setAttribute('aria-disabled', 'true');
                 searchInput.classList.add('parte-seleccionada');
                 btnCambiar.classList.remove('d-none');
 
@@ -219,6 +222,9 @@ use App\Core\Support\AssetHelper;
 
             searchInput.value = '';
             searchInput.readOnly = false;
+            searchInput.disabled = false;
+            searchInput.setAttribute('aria-readonly', 'false');
+            searchInput.setAttribute('aria-disabled', 'false');
             searchInput.classList.remove('parte-seleccionada');
             btnCambiar.classList.add('d-none');
 

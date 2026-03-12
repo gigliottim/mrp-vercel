@@ -425,10 +425,11 @@ final class EmpresaUsuariosController extends Controller
     private function renderPermisos(?array $editing, array $errors, array $old): Response
     {
         $companyId = $this->service->currentCompanyId();
+        $hideSuperAdmin = !$this->service->isCurrentUserSuperAdmin();
         return $this->render('pages/admin/empresa-usuarios/permisos', [
             'aclRows' => $this->aclService->listAclRowsByCompany($companyId),
             'menuTree' => $this->aclService->listMenuTree(),
-            'subjects' => $this->aclService->listSubjectsForCompany($companyId),
+            'subjects' => $this->aclService->listSubjectsForCompany($companyId, $hideSuperAdmin),
             'editing' => $editing,
             'old' => $old,
             'errors' => $errors,

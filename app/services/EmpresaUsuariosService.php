@@ -58,6 +58,13 @@ final class EmpresaUsuariosService
         return $currentRoleName !== null && $this->isAdminRoleName($currentRoleName);
     }
 
+    public function isCurrentUserSuperAdmin(): bool
+    {
+        $tenant = AuthManager::tenant();
+        $roleName = mb_strtolower((string) ($tenant['role_name'] ?? ''));
+        return $roleName === 'super_admin';
+    }
+
     public function listCompanies(): array
     {
         $sql = 'SELECT id, name AS nombre, slug, tax_id AS cuit, contact_email AS email,
@@ -128,19 +135,22 @@ final class EmpresaUsuariosService
 
     public function listRoles(int $companyId): array
     {
+        $superAdminFilter = $this->isCurrentUserSuperAdmin() ? '' : "AND lower(r.name) <> 'super_admin'";
+
         $stmt = $this->connection->prepare(
-            'SELECT DISTINCT r.id, r.name AS nombre, r.guard_name AS codigo,
+            "SELECT DISTINCT r.id, r.name AS nombre, r.guard_name AS codigo,
                     CAST(NULL AS VARCHAR) AS descripcion,
                     1 AS activo
              FROM roles r
-             WHERE r.guard_name LIKE :company_guard
+             WHERE (r.guard_name LIKE :company_guard
                 OR EXISTS (
                     SELECT 1
                     FROM user_company uc
                     WHERE uc.role_id = r.id
                       AND uc.company_id = :company_id
-                )
-             ORDER BY r.name ASC'
+                ))
+             {$superAdminFilter}
+             ORDER BY r.name ASC"
         );
         $stmt->execute([
             'company_id' => $companyId,
@@ -247,7 +257,11 @@ final class EmpresaUsuariosService
 
     public function listUsersByCompany(int $companyId): array
     {
-        $sql = 'SELECT u.id,
+        $superAdminFilter = $this->isCurrentUserSuperAdmin()
+            ? ''
+            : "AND (r.name IS NULL OR lower(r.name) <> 'super_admin')";
+
+        $sql = "SELECT u.id,
                        u.name AS nombre,
                        u.email,
                        COALESCE(r.name, :no_role) AS rol_nombre,
@@ -258,7 +272,8 @@ final class EmpresaUsuariosService
                 INNER JOIN users u ON u.id = uc.user_id
                 LEFT JOIN roles r ON r.id = uc.role_id
                 WHERE uc.company_id = :company_id
-                ORDER BY u.name ASC';
+                {$superAdminFilter}
+                ORDER BY u.name ASC";
 
         $stmt = $this->connection->prepare($sql);
         $stmt->execute([

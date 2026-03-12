@@ -160,23 +160,36 @@ final class EmpresaUsuariosAclService
         ]);
     }
 
-    public function listSubjectsForCompany(int $companyId): array
+    public function listSubjectsForCompany(int $companyId, bool $hideSuperAdmin = false): array
     {
-        $sql = 'SELECT :role_type AS subject_type, r.id, ( :role_prefix || r.name ) AS label
+        $superAdminRoleFilter = $hideSuperAdmin ? "AND lower(r.name) <> 'super_admin'" : '';
+        $superAdminUserFilter = $hideSuperAdmin
+            ? 'AND NOT EXISTS (
+                   SELECT 1
+                   FROM user_company uc_sa
+                   INNER JOIN roles r_sa ON r_sa.id = uc_sa.role_id
+                   WHERE uc_sa.user_id = u.id
+                     AND lower(r_sa.name) = \'super_admin\'
+               )'
+            : '';
+
+        $sql = "SELECT :role_type AS subject_type, r.id, ( :role_prefix || r.name ) AS label
                 FROM roles r
-                                WHERE r.guard_name LIKE :company_guard
-                                     OR EXISTS (
-                                                SELECT 1
-                                                FROM user_company uc_roles
-                                                WHERE uc_roles.role_id = r.id
-                                                    AND uc_roles.company_id = :company_id
-                                     )
+                WHERE (r.guard_name LIKE :company_guard
+                     OR EXISTS (
+                                SELECT 1
+                                FROM user_company uc_roles
+                                WHERE uc_roles.role_id = r.id
+                                    AND uc_roles.company_id = :company_id
+                     ))
+                {$superAdminRoleFilter}
                 UNION ALL
                 SELECT :user_type AS subject_type, u.id, ( :user_prefix || u.name ) AS label
                 FROM user_company uc
                 INNER JOIN users u ON u.id = uc.user_id
                 WHERE uc.company_id = :company_id
-                ORDER BY subject_type, label';
+                {$superAdminUserFilter}
+                ORDER BY subject_type, label";
 
         $stmt = $this->connection->prepare($sql);
         $stmt->execute([

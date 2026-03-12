@@ -404,6 +404,43 @@ final class ReportesController extends Controller
         // Calcular requerimientos consolidados
         $requerimientos = $this->calcularRequerimientos($productosProgramados, $controlStockMap, $fechaCosto . ' 23:59:59');
 
+        $exportType = isset($request->query['export']) ? strtolower((string) $request->query['export']) : '';
+        if (($exportType === 'xlsx' || $exportType === 'pdf') && !empty($requerimientos)) {
+            $tabular = $this->listadoExport->buildTabularDataPlanificacion($requerimientos);
+
+            $tz = new \DateTimeZone('America/Argentina/Buenos_Aires');
+            $now = new \DateTimeImmutable('now', $tz);
+            $timestamp = $now->format('Ymd-His');
+            $fechaGeneracion = $now->format('d/m/Y H:i:s');
+
+            $productosResumen = [];
+            foreach ($productosProgramados as $vid => $cant) {
+                $productosResumen[] = ($variantes[(int) $vid]['codigo_variante'] ?? (string) $vid) . 'x' . $cant;
+            }
+            $subtitle = 'Productos: ' . implode(', ', array_slice($productosResumen, 0, 5))
+                . (count($productosResumen) > 5 ? ' ...' : '')
+                . ' | Fecha costo: ' . $fechaCosto
+                . ' | Generado: ' . $fechaGeneracion;
+
+            $baseName = 'planificacion-produccion-' . $timestamp;
+
+            if ($exportType === 'xlsx') {
+                $xlsx = $this->listadoExport->generateXlsx($tabular['headers'], $tabular['rows'], 'Planificación de la Producción', $subtitle);
+                return new Response($xlsx, 200, [
+                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'Content-Disposition' => 'attachment; filename="' . $baseName . '.xlsx"',
+                    'Content-Length' => (string) strlen($xlsx),
+                ]);
+            }
+
+            $pdf = $this->listadoExport->generatePdf($tabular['headers'], $tabular['rows'], 'Planificación de la Producción', $subtitle);
+            return new Response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $baseName . '.pdf"',
+                'Content-Length' => (string) strlen($pdf),
+            ]);
+        }
+
         return $this->render('pages/reportes/planificacion-produccion', [
             'title' => 'Planificación de la Producción',
             'variantes' => $variantes,

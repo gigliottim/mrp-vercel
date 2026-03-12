@@ -172,6 +172,35 @@ final class ListadoIngenieriaExportService
     }
 
     /**
+     * @param array<int, mixed> $requerimientos
+     * @return array{headers: array<int, string>, rows: array<int, array<int, string|float|int|null>>}
+     */
+    public function buildTabularDataPlanificacion(array $requerimientos): array
+    {
+        $headers = ['Código', 'Detalle', 'UM', 'Tipo', 'Programado', 'Stock', 'Faltante', 'A Comprar', 'UM Compra', 'Stock Final', 'A Comprar $'];
+        $rows = [];
+        foreach ($requerimientos as $item) {
+            $parteCodigo = trim((string) ($item['parte_codigo'] ?? ''));
+            $codigo = trim((string) ($item['codigo'] ?? 'N/A'));
+            $codigoCompleto = ($parteCodigo !== '') ? $parteCodigo . '-' . $codigo : $codigo;
+            $rows[] = [
+                $codigoCompleto,
+                (string) ($item['detalle'] ?? ''),
+                (string) ($item['unidad'] ?? 'UN'),
+                (string) ($item['tipo'] ?? ''),
+                (float) ($item['programado'] ?? 0),
+                (float) ($item['stock'] ?? 0),
+                (float) ($item['faltante'] ?? 0),
+                (float) ($item['a_comprar'] ?? 0),
+                (string) ($item['a_comprar_um'] ?? ''),
+                (float) ($item['stock_final'] ?? 0),
+                (float) ($item['a_comprar_precio'] ?? 0),
+            ];
+        }
+        return ['headers' => $headers, 'rows' => $rows];
+    }
+
+    /**
      * @param array<int, string> $headers
      * @param array<int, array<int, string|float|int|null>> $rows
      */
@@ -336,7 +365,7 @@ final class ListadoIngenieriaExportService
                     continue;
                 }
 
-                if (in_array($header, ['Cantidad', 'Precio Unit.', 'Subtotal'], true) && is_numeric($value)) {
+                if (in_array($header, ['Cantidad', 'Precio Unit.', 'Subtotal', 'Programado', 'Stock', 'Faltante', 'A Comprar', 'Stock Final', 'A Comprar $'], true) && is_numeric($value)) {
                     $sheet->setCellValueExplicit($col . $rowNum, (float) $value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_NUMERIC);
                 } else {
                     // Mantener Nivel como texto para no perder ceros/puntos
@@ -374,7 +403,7 @@ final class ListadoIngenieriaExportService
             $col = Coordinate::stringFromColumnIndex($i + 1);
             $range = $col . $startDataRow . ':' . $col . $endDataRow;
 
-            if (in_array($header, ['Cantidad', 'Precio Unit.', 'Subtotal'], true)) {
+            if (in_array($header, ['Cantidad', 'Precio Unit.', 'Subtotal', 'Programado', 'Stock', 'Faltante', 'A Comprar', 'Stock Final', 'A Comprar $'], true)) {
                 $sheet->getStyle($range)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
                 $sheet->getStyle($range)->getNumberFormat()->setFormatCode('#,##0.00');
             } else {

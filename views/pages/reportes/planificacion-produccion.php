@@ -211,11 +211,25 @@ $fechaCosto = $fechaCosto ?? date('Y-m-d');
 
     <!-- Requerimientos calculados -->
     <div class="card">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h2 class="h5 mb-0">
                 <i class="fa-solid fa-calculator me-2"></i>
                 Requerimientos de materiales (<?= count($requerimientos) ?> componentes)
             </h2>
+            <?php if (!empty($requerimientos)): ?>
+                <form method="GET" action="<?= url('reportes/planificacion-produccion') ?>" class="d-flex gap-2">
+                    <input type="hidden" name="fecha_costo" value="<?= View::escape((string) $fechaCosto) ?>">
+                    <?php foreach ($productosProgramados as $vid => $cant): ?>
+                        <input type="hidden" name="productos[<?= $vid ?>]" value="<?= $cant ?>">
+                    <?php endforeach; ?>
+                    <button type="submit" name="export" value="xlsx" class="btn btn-sm btn-light text-success fw-semibold">
+                        <i class="fa-solid fa-file-excel me-1"></i> Excel
+                    </button>
+                    <button type="submit" name="export" value="pdf" class="btn btn-sm btn-light text-danger fw-semibold">
+                        <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                    </button>
+                </form>
+            <?php endif; ?>
         </div>
         <div class="card-body">
             <?php if (empty($requerimientos)): ?>

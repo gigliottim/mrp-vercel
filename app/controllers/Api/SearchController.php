@@ -268,6 +268,7 @@ final class SearchController extends Controller
                 'id'                    => (int) $d['id'],
                 'variante_componente_id' => (int) $d['variante_componente_id'],
                 'parte_codigo'          => (string) ($d['parte_codigo']       ?? ''),
+                'parte_detalle'         => (string) ($d['parte_detalle']      ?? ''),
                 'componente_codigo'     => (string) ($d['componente_codigo']  ?? ''),
                 'componente_detalle'    => (string) ($d['componente_detalle'] ?? ''),
                 'tipo_codigo'           => (string) ($d['tipo_codigo']        ?? ''),

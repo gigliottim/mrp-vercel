@@ -174,8 +174,8 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                         <tbody>
                                             <?php foreach ($composicionRama1 as $item) : ?>
                                                 <?php
-                                                    $codComp  = ($item['parte_codigo'] ?? '') . '-' . ($item['componente_codigo'] ?? 'N/A');
-                                                    $detComp  = trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['componente_detalle'] ?? ''), ' -');
+                                                $codComp  = ($item['parte_codigo'] ?? '') . '-' . ($item['componente_codigo'] ?? 'N/A');
+                                                $detComp  = trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['componente_detalle'] ?? ''), ' -');
                                                 ?>
                                                 <tr>
                                                     <td>
@@ -224,8 +224,8 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                         <tbody>
                                             <?php foreach ($composicionPlana as $item) : ?>
                                                 <?php
-                                                    $codPlana = ($item['parte_codigo'] ?? '') . '-' . ($item['componente_codigo'] ?? 'N/A');
-                                                    $detPlana = trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['componente_detalle'] ?? ''), ' -');
+                                                $codPlana = ($item['parte_codigo'] ?? '') . '-' . ($item['componente_codigo'] ?? 'N/A');
+                                                $detPlana = trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['componente_detalle'] ?? ''), ' -');
                                                 ?>
                                                 <tr>
                                                     <td>

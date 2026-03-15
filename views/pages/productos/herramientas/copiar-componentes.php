@@ -202,7 +202,9 @@ $id_variante_destino = $id_variante_destino ?? null;
             }
             const rows = items.map(it => {
                 const cod = escHtml(it.parte_codigo + (it.componente_codigo ? '-' + it.componente_codigo : ''));
-                const det = escHtml(it.componente_detalle || '');
+                const det = escHtml(
+                    (it.parte_detalle ? it.parte_detalle + ' - ' : '') + (it.componente_detalle || '')
+                );
                 const tip = escHtml(it.tipo_codigo || '');
                 const qty = escHtml(fmtNum(it.cantidad));
                 const um = escHtml(it.unidad || '');

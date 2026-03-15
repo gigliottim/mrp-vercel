@@ -22,7 +22,7 @@
                     </div>
                 </div>
                 <div class="col-xl-5 col-xxl-6 d-none d-xl-block text-center position-relative z-1">
-                    <img class="img-fluid rounded-3 my-5 shadow-lg border" src="<?= url('assets/img/hero-mockup.webp') ?>" alt="MRP Dashboard" onerror="this.src='https://dummyimage.com/600x400/ced4da/6c757d.png&text=Dashboard+Preview'" />
+                    <img class="img-fluid rounded-3 my-5 shadow-lg border" src="<?= url('assets/img/hero-mockup.svg') ?>" alt="MRP Dashboard" />
                 </div>
             </div>
         </div>

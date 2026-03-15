@@ -24,6 +24,7 @@ use RuntimeException;
 final class SearchController extends Controller
 {
     private SearchService $searchService;
+    private PDO $tenantConnection;
 
     public function __construct()
     {
@@ -31,8 +32,8 @@ final class SearchController extends Controller
         $this->loadTenantFromSession();
 
         // Inyección de dependencias con conexión multi-tenant
-        $connection = $this->resolveConnection();
-        $repository = new SearchRepository($connection);
+        $this->tenantConnection = $this->resolveConnection();
+        $repository = new SearchRepository($this->tenantConnection);
         $this->searchService = new SearchService($repository);
     }
 
@@ -255,7 +256,7 @@ final class SearchController extends Controller
     public function getBomNivel1(Request $request, int $id): Response
     {
         try {
-            $bom    = new \App\Models\Bom();
+            $bom    = new \App\Models\Bom($this->tenantConnection);
             $header = $bom->getActiveByVariante($id);
 
             if ($header === null) {

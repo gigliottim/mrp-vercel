@@ -25,10 +25,40 @@ final class HerramientasBomController extends Controller
 
     public function copiarComponentes(Request $request): Response
     {
+        $origenId  = isset($request->query['id_variante_origen'])  ? (int) $request->query['id_variante_origen']  : null;
+        $destinoId = isset($request->query['id_variante_destino']) ? (int) $request->query['id_variante_destino'] : null;
+
+        $origenInfo       = null;
+        $destinoInfo      = null;
+        $origenDetalles   = [];
+        $destinoDetalles  = [];
+
+        if ($origenId > 0) {
+            $origenInfo = $this->variante->getFullDetails($origenId);
+            $origenBom  = $this->bom->getActiveByVariante($origenId);
+            if ($origenBom !== null) {
+                $origenDetalles = $this->bom->getDetalles((int) $origenBom['id']);
+            }
+        }
+
+        if ($destinoId > 0) {
+            $destinoInfo = $this->variante->getFullDetails($destinoId);
+            $destinoBom  = $this->bom->getActiveByVariante($destinoId);
+            if ($destinoBom !== null) {
+                $destinoDetalles = $this->bom->getDetalles((int) $destinoBom['id']);
+            }
+        }
+
         return $this->render('pages/productos/herramientas/copiar-componentes', [
-            'title'    => 'Copiar Componentes de BOM',
-            'resultado' => null,
-            'errors'   => [],
+            'title'              => 'Copiar Componentes de BOM',
+            'resultado'          => null,
+            'errors'             => [],
+            'id_variante_origen'  => $origenId,
+            'id_variante_destino' => $destinoId,
+            'origenInfo'          => $origenInfo,
+            'destinoInfo'         => $destinoInfo,
+            'origenDetalles'      => $origenDetalles,
+            'destinoDetalles'     => $destinoDetalles,
         ]);
     }
 

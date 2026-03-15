@@ -6,6 +6,18 @@ $resultado           = $resultado           ?? null;
 $errors              = $errors              ?? [];
 $id_variante_origen  = $id_variante_origen  ?? null;
 $id_variante_destino = $id_variante_destino ?? null;
+$origenInfo          = $origenInfo          ?? null;
+$destinoInfo         = $destinoInfo         ?? null;
+$origenDetalles      = $origenDetalles      ?? [];
+$destinoDetalles     = $destinoDetalles     ?? [];
+
+// Labels para mostrar en los inputs
+$origenLabel = $origenInfo !== null
+    ? 'Parte: ' . ($origenInfo['parte_codigo'] ?? '') . ' | Variante: ' . ($origenInfo['codigo_variante'] ?? '') . ' - ' . ($origenInfo['detalle'] ?? '')
+    : '';
+$destinoLabel = $destinoInfo !== null
+    ? 'Parte: ' . ($destinoInfo['parte_codigo'] ?? '') . ' | Variante: ' . ($destinoInfo['codigo_variante'] ?? '') . ' - ' . ($destinoInfo['detalle'] ?? '')
+    : '';
 ?>
 
 <section class="mb-4">
@@ -73,6 +85,8 @@ $id_variante_destino = $id_variante_destino ?? null;
         </div>
 
         <form method="post" action="<?= url('productos/copiar-componentes') ?>">
+            <input type="hidden" name="id_variante_origen"  value="<?= (int) ($id_variante_origen  ?? 0) ?>">
+            <input type="hidden" name="id_variante_destino" value="<?= (int) ($id_variante_destino ?? 0) ?>">
 
             <div class="row g-4">
                 <!-- Pieza Origen -->
@@ -85,25 +99,59 @@ $id_variante_destino = $id_variante_destino ?? null;
                         </div>
                         <div class="card-body">
                             <label class="form-label">Buscar pieza origen</label>
-                            <div id="search-origen-container" style="position:relative;">
+                            <div style="position:relative;">
                                 <input type="text"
                                     id="search-origen-input"
                                     class="form-control"
                                     placeholder="Código o descripción…"
-                                    autocomplete="off">
+                                    autocomplete="off"
+                                    value="<?= View::escape($origenLabel) ?>">
                                 <div id="search-origen-results"></div>
                             </div>
-                            <input type="hidden" name="id_variante_origen" id="id-variante-origen" value="<?= (int) ($id_variante_origen ?? 0) ?: '' ?>">
                         </div>
-                        <!-- Rama 1 origen -->
-                        <div id="origen-bom-wrap" class="border-top" style="display:none;">
+                        <?php if ($origenInfo !== null) : ?>
+                        <div class="border-top">
                             <div class="card-body py-2 px-3">
                                 <p class="text-uppercase text-muted small mb-2 fw-semibold">
                                     <i class="fa-solid fa-sitemap me-1"></i>Componentes nivel 1
                                 </p>
-                                <div id="origen-bom-content"></div>
+                                <?php if ($origenDetalles === []) : ?>
+                                    <p class="text-muted small fst-italic mb-0">Sin componentes en esta BOM.</p>
+                                <?php else : ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0 small">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Código</th><th>Detalle</th>
+                                                    <th class="text-center">Tipo</th>
+                                                    <th class="text-end">Cant.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($origenDetalles as $it) : ?>
+                                                    <tr>
+                                                        <td class="fw-semibold text-primary small">
+                                                            <?= View::escape(($it['parte_codigo'] ?? '') . '-' . ($it['componente_codigo'] ?? '')) ?>
+                                                        </td>
+                                                        <td class="small text-muted">
+                                                            <?= View::escape(trim(($it['parte_detalle'] ?? '') . ' - ' . ($it['componente_detalle'] ?? ''), ' -')) ?>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="badge bg-light text-dark border small"><?= View::escape($it['tipo_codigo'] ?? '') ?></span>
+                                                        </td>
+                                                        <td class="text-end small">
+                                                            <?= View::escape(app_format_number((float) ($it['cantidad_necesaria'] ?? 0))) ?>
+                                                            <?= View::escape($it['unidad_simbolo'] ?? '') ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -117,33 +165,68 @@ $id_variante_destino = $id_variante_destino ?? null;
                         </div>
                         <div class="card-body">
                             <label class="form-label">Buscar pieza destino</label>
-                            <div id="search-destino-container" style="position:relative;">
+                            <div style="position:relative;">
                                 <input type="text"
                                     id="search-destino-input"
                                     class="form-control"
                                     placeholder="Código o descripción…"
-                                    autocomplete="off">
+                                    autocomplete="off"
+                                    value="<?= View::escape($destinoLabel) ?>">
                                 <div id="search-destino-results"></div>
                             </div>
-                            <input type="hidden" name="id_variante_destino" id="id-variante-destino" value="<?= (int) ($id_variante_destino ?? 0) ?: '' ?>">
                         </div>
-                        <!-- Rama 1 destino -->
-                        <div id="destino-bom-wrap" class="border-top" style="display:none;">
+                        <?php if ($destinoInfo !== null) : ?>
+                        <div class="border-top">
                             <div class="card-body py-2 px-3">
                                 <p class="text-uppercase text-muted small mb-2 fw-semibold">
                                     <i class="fa-solid fa-sitemap me-1"></i>Componentes actuales nivel 1
-                                    <span class="badge bg-warning text-dark ms-1 fw-normal" title="Serán reemplazados al copiar">serán reemplazados</span>
+                                    <span class="badge bg-warning text-dark ms-1 fw-normal">serán reemplazados</span>
                                 </p>
-                                <div id="destino-bom-content"></div>
+                                <?php if ($destinoDetalles === []) : ?>
+                                    <p class="text-muted small fst-italic mb-0">Sin componentes en esta BOM.</p>
+                                <?php else : ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover align-middle mb-0 small">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Código</th><th>Detalle</th>
+                                                    <th class="text-center">Tipo</th>
+                                                    <th class="text-end">Cant.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($destinoDetalles as $it) : ?>
+                                                    <tr>
+                                                        <td class="fw-semibold text-success small">
+                                                            <?= View::escape(($it['parte_codigo'] ?? '') . '-' . ($it['componente_codigo'] ?? '')) ?>
+                                                        </td>
+                                                        <td class="small text-muted">
+                                                            <?= View::escape(trim(($it['parte_detalle'] ?? '') . ' - ' . ($it['componente_detalle'] ?? ''), ' -')) ?>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="badge bg-light text-dark border small"><?= View::escape($it['tipo_codigo'] ?? '') ?></span>
+                                                        </td>
+                                                        <td class="text-end small">
+                                                            <?= View::escape(app_format_number((float) ($it['cantidad_necesaria'] ?? 0))) ?>
+                                                            <?= View::escape($it['unidad_simbolo'] ?? '') ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="<?= url('productos/maestro') ?>" class="btn btn-outline-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary" id="btn-copiar" disabled>
+                <a href="<?= url('productos/copiar-componentes') ?>" class="btn btn-outline-secondary">Limpiar</a>
+                <button type="submit" class="btn btn-primary"
+                    <?= ($id_variante_origen > 0 && $id_variante_destino > 0) ? '' : 'disabled' ?>>
                     <i class="fa-solid fa-copy me-1"></i>Copiar Componentes
                 </button>
             </div>
@@ -158,94 +241,57 @@ $id_variante_destino = $id_variante_destino ?? null;
 <?php endif; ?>
 
 <script>
-    (function() {
-        'use strict';
+(function () {
+    'use strict';
 
-        const searchEndpoint = '<?= url('api/v1/search/variantes') ?>';
-        const bomBase = '<?= url('api/v1/bom/variantes') ?>';
-        const btnCopiar = document.getElementById('btn-copiar');
-        const state = {
-            origen: false,
-            destino: false
-        };
+    const searchEndpoint = '<?= url('api/v1/search/variantes') ?>';
+    const baseUrl        = '<?= url('productos/copiar-componentes') ?>';
+    const currentOrigen  = '<?= (int) ($id_variante_origen  ?? 0) ?>';
+    const currentDestino = '<?= (int) ($id_variante_destino ?? 0) ?>';
 
-        // ── utilidades ────────────────────────────────────────────────────────────
-        function escHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
 
-        function buildLabel(item) {
-            const parte = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
-            const variante = (item.codigo_variante || '') + (item.detalle ? ' - ' + item.detalle : '');
-            return 'Parte: ' + parte + ' | Variante: ' + variante;
-        }
+    function goTo(origenId, destinoId) {
+        const params = new URLSearchParams();
+        if (origenId  > 0) params.set('id_variante_origen',  origenId);
+        if (destinoId > 0) params.set('id_variante_destino', destinoId);
+        window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
+    }
 
-        function fmtNum(n) {
-            return (window.appFormatNumber ? window.appFormatNumber(n) : n);
-        }
+    function resultRender(item) {
+        return `<div class="d-flex flex-column p-2">
+            <span class="fw-bold text-primary">${escHtml(item.parte_codigo || '')} - ${escHtml(item.codigo_variante || '')}</span>
+            <small class="text-muted">${escHtml(item.parte_detalle || '')} - ${escHtml(item.detalle || '')}</small>
+        </div>`;
+    }
 
-        function resultRender(item) {
-            return `<div class="d-flex flex-column p-2">
-                    <span class="fw-bold text-primary">${escHtml(item.codigo_variante || '')}</span>
-                    <small class="text-muted">${escHtml(item.detalle || '')}</small>
-                </div>`;
-        }
+    if (typeof SearchClient !== 'undefined') {
+        new SearchClient({
+            endpoint:         searchEndpoint,
+            inputElement:     document.getElementById('search-origen-input'),
+            resultsContainer: document.getElementById('search-origen-results'),
+            minChars: 2, debounceDelay: 300,
+            customItemRender: resultRender,
+            onSelect(item) {
+                goTo(item.id, currentDestino);
+            },
+        });
 
-        function updateBtn() {
-            btnCopiar.disabled = !(state.origen && state.destino);
-        }
-
-        // ── tabla BOM nivel 1 ─────────────────────────────────────────────────────
-        function renderBomTable(items) {
-            if (!items || items.length === 0) {
-                return '<p class="text-muted small mb-0 fst-italic">Sin componentes en esta BOM.</p>';
-            }
-            const rows = items.map(it => {
-                const cod = escHtml(it.parte_codigo + (it.componente_codigo ? '-' + it.componente_codigo : ''));
-                const det = escHtml(
-                    (it.parte_detalle ? it.parte_detalle + ' - ' : '') + (it.componente_detalle || '')
-                );
-                const tip = escHtml(it.tipo_codigo || '');
-                const qty = escHtml(fmtNum(it.cantidad));
-                const um = escHtml(it.unidad || '');
-                return `<tr>
-                <td class="fw-semibold text-primary small">${cod}</td>
-                <td class="small text-muted">${det}</td>
-                <td class="text-center"><span class="badge bg-light text-dark border small">${tip}</span></td>
-                <td class="text-end small">${qty} ${um}</td>
-            </tr>`;
-            }).join('');
-            return `<table class="table table-sm table-hover align-middle mb-0 small">
-            <thead class="table-light">
-                <tr>
-                    <th>Código</th><th>Detalle</th>
-                    <th class="text-center">Tipo</th>
-                    <th class="text-end">Cant.</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>`;
-        }
-
-        function fetchBom(varianteId, role) {
-            const wrap = document.getElementById(role + '-bom-wrap');
-            const content = document.getElementById(role + '-bom-content');
-            if (!wrap || !content) return;
-
-            content.innerHTML = '<span class="text-muted small"><i class="fa-solid fa-spinner fa-spin me-1"></i>Cargando…</span>';
-            wrap.style.display = '';
-
-            fetch(bomBase + '/' + varianteId + '/nivel1', {
-                    credentials: 'same-origin'
-                })
-                .then(r => r.json())
-                .then(data => {
-                    content.innerHTML = renderBomTable(data.items || []);
-                })
-                .catch(() => {
-                    content.innerHTML = '<p class="text-danger small mb-0">No se pudo cargar la BOM.</p>';
-                });
-        }
+        new SearchClient({
+            endpoint:         searchEndpoint,
+            inputElement:     document.getElementById('search-destino-input'),
+            resultsContainer: document.getElementById('search-destino-results'),
+            minChars: 2, debounceDelay: 300,
+            customItemRender: resultRender,
+            onSelect(item) {
+                goTo(currentOrigen, item.id);
+            },
+        });
+    }
+}());
+</script>
 
         function clearBom(role) {
             const wrap = document.getElementById(role + '-bom-wrap');

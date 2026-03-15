@@ -173,12 +173,16 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                         </thead>
                                         <tbody>
                                             <?php foreach ($composicionRama1 as $item) : ?>
+                                                <?php
+                                                    $codComp  = ($item['parte_codigo'] ?? '') . '-' . ($item['componente_codigo'] ?? 'N/A');
+                                                    $detComp  = trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['componente_detalle'] ?? ''), ' -');
+                                                ?>
                                                 <tr>
                                                     <td>
-                                                        <strong><?= View::escape($item['componente_codigo'] ?? 'N/A') ?></strong>
+                                                        <strong><?= View::escape($codComp) ?></strong>
                                                     </td>
                                                     <td class="text-muted small">
-                                                        <?= View::escape($item['componente_detalle'] ?? '') ?>
+                                                        <?= View::escape($detComp) ?>
                                                     </td>
                                                     <td class="text-end">
                                                         <?= View::escape(app_format_number((float) ($item['cantidad_necesaria'] ?? 0))) ?>
@@ -219,12 +223,16 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                         </thead>
                                         <tbody>
                                             <?php foreach ($composicionPlana as $item) : ?>
+                                                <?php
+                                                    $codPlana = ($item['parte_codigo'] ?? '') . '-' . ($item['componente_codigo'] ?? 'N/A');
+                                                    $detPlana = trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['componente_detalle'] ?? ''), ' -');
+                                                ?>
                                                 <tr>
                                                     <td>
-                                                        <strong><?= View::escape($item['componente_codigo'] ?? 'N/A') ?></strong>
+                                                        <strong><?= View::escape($codPlana) ?></strong>
                                                     </td>
                                                     <td class="text-muted small">
-                                                        <?= View::escape($item['componente_detalle'] ?? '') ?>
+                                                        <?= View::escape($detPlana) ?>
                                                     </td>
                                                     <td class="text-end">
                                                         <?= View::escape(app_format_number((float) ($item['cantidad_necesaria'] ?? 0))) ?>
@@ -282,7 +290,7 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                                     <i class="fa-solid <?= $iconClass ?> me-2"></i>
                                                     <div class="flex-grow-1">
                                                         <div>
-                                                            <strong><?= View::escape($item['codigo_variante'] ?? 'N/A') ?></strong>
+                                                            <strong><?= View::escape(($item['parte_codigo'] ?? '') . '-' . ($item['codigo_variante'] ?? 'N/A')) ?></strong>
                                                             <?php if (isset($item['cantidad']) && $item['cantidad'] > 0) : ?>
                                                                 <span class="badge bg-secondary ms-2">
                                                                     <?= View::escape(app_format_number((float) $item['cantidad'])) ?>
@@ -293,7 +301,7 @@ $dondeSeUtiliza = $dondeSeUtiliza ?? [];
                                                                 <span class="badge bg-info ms-1"><?= View::escape($item['tipo_codigo']) ?></span>
                                                             <?php endif; ?>
                                                         </div>
-                                                        <div class="text-muted small"><?= View::escape($item['variante_detalle'] ?? '') ?></div>
+                                                        <div class="text-muted small"><?= View::escape(trim(($item['parte_detalle'] ?? '') . ' - ' . ($item['variante_detalle'] ?? ''), ' -')) ?></div>
                                                     </div>
                                                 </div>
                                             </li>

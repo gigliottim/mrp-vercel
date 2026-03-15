@@ -90,10 +90,12 @@ final class ReportesController extends Controller
                     } else {
                         // Primera aparición del componente
                         $consolidado[$varianteId] = [
-                            'componente_codigo' => $item['codigo_variante'] ?? 'N/A',
+                            'parte_codigo'       => $item['parte_codigo']    ?? '',
+                            'componente_codigo'  => $item['codigo_variante'] ?? 'N/A',
+                            'parte_detalle'      => $item['parte_detalle']   ?? '',
                             'componente_detalle' => $item['variante_detalle'] ?? '',
                             'cantidad_necesaria' => (float)$item['cantidad'],
-                            'unidad_simbolo' => $item['unidad'] ?? 'UN',
+                            'unidad_simbolo'     => $item['unidad'] ?? 'UN',
                         ];
                     }
                 }

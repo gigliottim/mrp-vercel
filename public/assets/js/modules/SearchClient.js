@@ -96,7 +96,11 @@ class SearchClient {
       maxHeight: '300px',
       overflowY: 'auto',
       display: 'none',
-      width: this.inputElement.offsetWidth + 'px'
+      width: this.inputElement.offsetWidth + 'px',
+      backgroundColor: '#fff',
+      border: '1px solid rgba(0,0,0,.15)',
+      borderRadius: '0.375rem',
+      boxShadow: '0 0.5rem 1rem rgba(0,0,0,.15)',
     });
 
     this.syncResultsWidth();

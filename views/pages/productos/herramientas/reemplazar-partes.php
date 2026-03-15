@@ -250,6 +250,12 @@ $nuevaLabel  = $nuevaInfo !== null
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
+        function buildLabel(item) {
+            const parte    = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
+            const variante = (item.codigo_variante || '') + (item.detalle ? ' - ' + item.detalle : '');
+            return 'Parte: ' + parte + ' | Variante: ' + variante;
+        }
+
         function resultRender(item) {
             return `<div class="d-flex flex-column p-2">
                     <span class="fw-bold text-primary">${escHtml(item.codigo_variante || '')}</span>
@@ -261,8 +267,8 @@ $nuevaLabel  = $nuevaInfo !== null
             const el = document.getElementById(badgeId);
             if (!el) return;
             el.innerHTML = item ?
-                `<span class="badge ${colorClass} text-white py-2 px-3 rounded-pill">
-                   <i class="fa-solid fa-check me-1"></i>${escHtml(item.codigo_variante)} — ${escHtml(item.detalle || '')}
+                `<span class="badge ${colorClass} text-white py-2 px-3" style="white-space:normal;word-break:break-word;">
+                   <i class="fa-solid fa-check me-1"></i>${escHtml(buildLabel(item))}
                </span>` :
                 '';
         }
@@ -277,8 +283,7 @@ $nuevaLabel  = $nuevaInfo !== null
                 customItemRender: resultRender,
                 onSelect(item) {
                     document.getElementById('id-variante-origen').value = item.id;
-                    document.getElementById('search-origen-input').value =
-                        (item.codigo_variante || '') + ' — ' + (item.detalle || '');
+                    document.getElementById('search-origen-input').value = buildLabel(item);
                     renderBadge('origen-badge', item, 'bg-danger');
                 },
             });
@@ -292,8 +297,7 @@ $nuevaLabel  = $nuevaInfo !== null
                 customItemRender: resultRender,
                 onSelect(item) {
                     document.getElementById('id-variante-nueva').value = item.id;
-                    document.getElementById('search-nueva-input').value =
-                        (item.codigo_variante || '') + ' — ' + (item.detalle || '');
+                    document.getElementById('search-nueva-input').value = buildLabel(item);
                     renderBadge('nueva-badge', item, 'bg-success');
                 },
             });

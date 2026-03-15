@@ -158,53 +158,62 @@ $id_variante_destino = $id_variante_destino ?? null;
 <?php endif; ?>
 
 <script>
-(function () {
-    'use strict';
+    (function() {
+        'use strict';
 
-    const searchEndpoint = '<?= url('api/v1/search/variantes') ?>';
-    const bomBase        = '<?= url('api/v1/bom/variantes') ?>';
-    const btnCopiar      = document.getElementById('btn-copiar');
-    const state          = { origen: false, destino: false };
+        const searchEndpoint = '<?= url('api/v1/search/variantes') ?>';
+        const bomBase = '<?= url('api/v1/bom/variantes') ?>';
+        const btnCopiar = document.getElementById('btn-copiar');
+        const state = {
+            origen: false,
+            destino: false
+        };
 
-    // ── utilidades ────────────────────────────────────────────────────────────
-    function escHtml(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+        // ── utilidades ────────────────────────────────────────────────────────────
+        function escHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
 
-    function fmtNum(n) {
-        return (window.appFormatNumber ? window.appFormatNumber(n) : n);
-    }
+        function buildLabel(item) {
+            const parte    = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
+            const variante = (item.codigo_variante || '') + (item.detalle ? ' - ' + item.detalle : '');
+            return 'Parte: ' + parte + ' | Variante: ' + variante;
+        }
 
-    function resultRender(item) {
-        return `<div class="d-flex flex-column p-2">
+        function fmtNum(n) {
+            return (window.appFormatNumber ? window.appFormatNumber(n) : n);
+        }
+
+        function resultRender(item) {
+            return `<div class="d-flex flex-column p-2">
                     <span class="fw-bold text-primary">${escHtml(item.codigo_variante || '')}</span>
                     <small class="text-muted">${escHtml(item.detalle || '')}</small>
                 </div>`;
-    }
-
-    function updateBtn() {
-        btnCopiar.disabled = !(state.origen && state.destino);
-    }
-
-    // ── tabla BOM nivel 1 ─────────────────────────────────────────────────────
-    function renderBomTable(items) {
-        if (!items || items.length === 0) {
-            return '<p class="text-muted small mb-0 fst-italic">Sin componentes en esta BOM.</p>';
         }
-        const rows = items.map(it => {
-            const cod = escHtml(it.parte_codigo + (it.componente_codigo ? '-' + it.componente_codigo : ''));
-            const det = escHtml(it.componente_detalle || '');
-            const tip = escHtml(it.tipo_codigo || '');
-            const qty = escHtml(fmtNum(it.cantidad));
-            const um  = escHtml(it.unidad || '');
-            return `<tr>
+
+        function updateBtn() {
+            btnCopiar.disabled = !(state.origen && state.destino);
+        }
+
+        // ── tabla BOM nivel 1 ─────────────────────────────────────────────────────
+        function renderBomTable(items) {
+            if (!items || items.length === 0) {
+                return '<p class="text-muted small mb-0 fst-italic">Sin componentes en esta BOM.</p>';
+            }
+            const rows = items.map(it => {
+                const cod = escHtml(it.parte_codigo + (it.componente_codigo ? '-' + it.componente_codigo : ''));
+                const det = escHtml(it.componente_detalle || '');
+                const tip = escHtml(it.tipo_codigo || '');
+                const qty = escHtml(fmtNum(it.cantidad));
+                const um = escHtml(it.unidad || '');
+                return `<tr>
                 <td class="fw-semibold text-primary small">${cod}</td>
                 <td class="small text-muted">${det}</td>
                 <td class="text-center"><span class="badge bg-light text-dark border small">${tip}</span></td>
                 <td class="text-end small">${qty} ${um}</td>
             </tr>`;
-        }).join('');
-        return `<table class="table table-sm table-hover align-middle mb-0 small">
+            }).join('');
+            return `<table class="table table-sm table-hover align-middle mb-0 small">
             <thead class="table-light">
                 <tr>
                     <th>Código</th><th>Detalle</th>
@@ -214,77 +223,79 @@ $id_variante_destino = $id_variante_destino ?? null;
             </thead>
             <tbody>${rows}</tbody>
         </table>`;
-    }
+        }
 
-    function fetchBom(varianteId, role) {
-        const wrap    = document.getElementById(role + '-bom-wrap');
-        const content = document.getElementById(role + '-bom-content');
-        if (!wrap || !content) return;
+        function fetchBom(varianteId, role) {
+            const wrap = document.getElementById(role + '-bom-wrap');
+            const content = document.getElementById(role + '-bom-content');
+            if (!wrap || !content) return;
 
-        content.innerHTML = '<span class="text-muted small"><i class="fa-solid fa-spinner fa-spin me-1"></i>Cargando…</span>';
-        wrap.style.display = '';
+            content.innerHTML = '<span class="text-muted small"><i class="fa-solid fa-spinner fa-spin me-1"></i>Cargando…</span>';
+            wrap.style.display = '';
 
-        fetch(bomBase + '/' + varianteId + '/nivel1', { credentials: 'same-origin' })
-            .then(r => r.json())
-            .then(data => {
-                content.innerHTML = renderBomTable(data.items || []);
-            })
-            .catch(() => {
-                content.innerHTML = '<p class="text-danger small mb-0">No se pudo cargar la BOM.</p>';
-            });
-    }
+            fetch(bomBase + '/' + varianteId + '/nivel1', {
+                    credentials: 'same-origin'
+                })
+                .then(r => r.json())
+                .then(data => {
+                    content.innerHTML = renderBomTable(data.items || []);
+                })
+                .catch(() => {
+                    content.innerHTML = '<p class="text-danger small mb-0">No se pudo cargar la BOM.</p>';
+                });
+        }
 
-    function clearBom(role) {
-        const wrap = document.getElementById(role + '-bom-wrap');
-        if (wrap) wrap.style.display = 'none';
-        const content = document.getElementById(role + '-bom-content');
-        if (content) content.innerHTML = '';
-    }
+        function clearBom(role) {
+            const wrap = document.getElementById(role + '-bom-wrap');
+            if (wrap) wrap.style.display = 'none';
+            const content = document.getElementById(role + '-bom-content');
+            if (content) content.innerHTML = '';
+        }
 
-    // ── SearchClient ──────────────────────────────────────────────────────────
-    if (typeof SearchClient !== 'undefined') {
-        new SearchClient({
-            endpoint: searchEndpoint,
-            inputElement:     document.getElementById('search-origen-input'),
-            resultsContainer: document.getElementById('search-origen-results'),
-            minChars: 2, debounceDelay: 300,
-            customItemRender: resultRender,
-            onSelect(item) {
-                document.getElementById('id-variante-origen').value = item.id;
-                document.getElementById('search-origen-input').value =
-                    (item.codigo_variante || '') + ' — ' + (item.detalle || '');
-                state.origen = true;
-                fetchBom(item.id, 'origen');
-                updateBtn();
-            },
-        });
-
-        new SearchClient({
-            endpoint: searchEndpoint,
-            inputElement:     document.getElementById('search-destino-input'),
-            resultsContainer: document.getElementById('search-destino-results'),
-            minChars: 2, debounceDelay: 300,
-            customItemRender: resultRender,
-            onSelect(item) {
-                document.getElementById('id-variante-destino').value = item.id;
-                document.getElementById('search-destino-input').value =
-                    (item.codigo_variante || '') + ' — ' + (item.detalle || '');
-                state.destino = true;
-                fetchBom(item.id, 'destino');
-                updateBtn();
-            },
-        });
-
-        ['origen', 'destino'].forEach(role => {
-            document.getElementById('search-' + role + '-input').addEventListener('input', function () {
-                if (this.value === '') {
-                    document.getElementById('id-variante-' + role).value = '';
-                    state[role] = false;
-                    clearBom(role);
+        // ── SearchClient ──────────────────────────────────────────────────────────
+        if (typeof SearchClient !== 'undefined') {
+            new SearchClient({
+                endpoint: searchEndpoint,
+                inputElement: document.getElementById('search-origen-input'),
+                resultsContainer: document.getElementById('search-origen-results'),
+                minChars: 2,
+                debounceDelay: 300,
+                customItemRender: resultRender,
+                onSelect(item) {
+                    document.getElementById('id-variante-origen').value = item.id;
+                    document.getElementById('search-origen-input').value = buildLabel(item);
+                    state.origen = true;
+                    fetchBom(item.id, 'origen');
                     updateBtn();
-                }
+                },
             });
-        });
-    }
-}());
+
+            new SearchClient({
+                endpoint: searchEndpoint,
+                inputElement: document.getElementById('search-destino-input'),
+                resultsContainer: document.getElementById('search-destino-results'),
+                minChars: 2,
+                debounceDelay: 300,
+                customItemRender: resultRender,
+                onSelect(item) {
+                    document.getElementById('id-variante-destino').value = item.id;
+                    document.getElementById('search-destino-input').value = buildLabel(item);
+                    state.destino = true;
+                    fetchBom(item.id, 'destino');
+                    updateBtn();
+                },
+            });
+
+            ['origen', 'destino'].forEach(role => {
+                document.getElementById('search-' + role + '-input').addEventListener('input', function() {
+                    if (this.value === '') {
+                        document.getElementById('id-variante-' + role).value = '';
+                        state[role] = false;
+                        clearBom(role);
+                        updateBtn();
+                    }
+                });
+            });
+        }
+    }());
 </script>

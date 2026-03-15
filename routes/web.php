@@ -23,6 +23,7 @@ use App\Controllers\Produccion\OrdenesProduccionController;
 use App\Controllers\Produccion\PlanificacionController;
 use App\Controllers\Productos\BomController;
 use App\Controllers\Productos\ComposicionController;
+use App\Controllers\Productos\HerramientasBomController;
 use App\Controllers\Inventario\CriticoController;
 use App\Controllers\Transacciones\MovimientosPartesController;
 use App\Controllers\Transacciones\ComprasController;
@@ -201,6 +202,12 @@ $router->delete('/configuracion/unidades/{id}', [UnidadesMedidaController::class
 // Productos - BOM y Composición
 $router->get('/productos/bom', [BomController::class, 'index']);
 $router->get('/productos/maestro', [ComposicionController::class, 'maestro']);
+
+// Productos - Herramientas BOM
+$router->get('/productos/copiar-componentes', [HerramientasBomController::class, 'copiarComponentes']);
+$router->post('/productos/copiar-componentes', [HerramientasBomController::class, 'ejecutarCopiarComponentes']);
+$router->get('/productos/reemplazar-partes', [HerramientasBomController::class, 'reemplazarPartes']);
+$router->post('/productos/reemplazar-partes', [HerramientasBomController::class, 'ejecutarReemplazarPartes']);
 $router->post('/productos/maestro/materiales', [ComposicionController::class, 'addItem']);
 $router->post('/productos/maestro/materiales/validar-candidatos', [ComposicionController::class, 'validateCandidates']);
 $router->get('/productos/maestro/materiales/{id}/editar', [ComposicionController::class, 'editItem']);

@@ -459,6 +459,36 @@ final class Bom extends BaseTenantModel
     }
 
     /**
+     * Elimina todos los componentes de nivel 1 de una BOM. Devuelve cantidad eliminada.
+     */
+    public function deleteAllDetails(int $bomId): int
+    {
+        $sql = 'DELETE FROM bom_detalle WHERE bom_id = :bom_id';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute(['bom_id' => $bomId]);
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Reemplaza un componente X por H en las BOMs indicadas.
+     * Devuelve la cantidad de filas actualizadas.
+     *
+     * @param int[]  $bomIds  Lista de IDs de bom_cabecera donde aplicar el reemplazo.
+     */
+    public function replaceComponentInBoms(int $oldComponentId, int $newComponentId, array $bomIds): int
+    {
+        if ($bomIds === []) {
+            return 0;
+        }
+        $placeholders = implode(',', array_fill(0, count($bomIds), '?'));
+        $params = array_merge([$newComponentId, $oldComponentId], $bomIds);
+        $sql = "UPDATE bom_detalle SET variante_componente_id = ? WHERE variante_componente_id = ? AND bom_id IN ({$placeholders})";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
+    /**
      * Obtiene todas las BOMs donde se utiliza una variante como componente
      */
     public function getWhereUsed(int $varianteId): array

@@ -231,7 +231,7 @@ $nuevaLabel  = $nuevaInfo !== null
         </div>
     <?php endif; ?>
 
-<?php endif; // end step !== resultado 
+<?php endif; // end step !== resultado
 ?>
 
 <?php if (class_exists('App\Core\Support\AssetHelper')) : ?>
@@ -251,7 +251,7 @@ $nuevaLabel  = $nuevaInfo !== null
         }
 
         function buildLabel(item) {
-            const parte    = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
+            const parte = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
             const variante = (item.codigo_variante || '') + (item.detalle ? ' - ' + item.detalle : '');
             return 'Parte: ' + parte + ' | Variante: ' + variante;
         }

@@ -175,7 +175,7 @@ $id_variante_destino = $id_variante_destino ?? null;
         }
 
         function buildLabel(item) {
-            const parte    = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
+            const parte = (item.parte_codigo || '') + (item.parte_detalle ? ' - ' + item.parte_detalle : '');
             const variante = (item.codigo_variante || '') + (item.detalle ? ' - ' + item.detalle : '');
             return 'Parte: ' + parte + ' | Variante: ' + variante;
         }

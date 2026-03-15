@@ -125,7 +125,8 @@ final class SearchService
             default:
                 // Balance entre información y tamaño
                 return array_merge($base, [
-                    'detalle' => $variante['detalle'] ?? '',
+                    'detalle'      => $variante['detalle']       ?? '',
+                    'parte_detalle' => $variante['parte_detalle'] ?? '',
                     'display_text' => "[{$base['tipo_codigo']}] {$base['codigo_variante']} - " .
                         ($variante['detalle'] ?? $variante['parte_detalle'] ?? 'Sin detalle')
                 ]);

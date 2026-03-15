@@ -12,10 +12,10 @@ $id_variante_origen = $id_variante_origen ?? null;
 $id_variante_nueva  = $id_variante_nueva  ?? null;
 
 $origenLabel = $origenInfo !== null
-    ? View::escape(($origenInfo['codigo_variante'] ?? '') . ' — ' . ($origenInfo['detalle'] ?? ''))
+    ? View::escape('Parte: ' . ($origenInfo['parte_codigo'] ?? '') . ' - ' . ($origenInfo['parte_detalle'] ?? '') . ' | Variante: ' . ($origenInfo['codigo_variante'] ?? '') . ' - ' . ($origenInfo['detalle'] ?? ''))
     : '';
 $nuevaLabel  = $nuevaInfo !== null
-    ? View::escape(($nuevaInfo['codigo_variante'] ?? '') . ' — ' . ($nuevaInfo['detalle'] ?? ''))
+    ? View::escape('Parte: ' . ($nuevaInfo['parte_codigo'] ?? '') . ' - ' . ($nuevaInfo['parte_detalle'] ?? '') . ' | Variante: ' . ($nuevaInfo['codigo_variante'] ?? '') . ' - ' . ($nuevaInfo['detalle'] ?? ''))
     : '';
 ?>
 
@@ -97,24 +97,24 @@ $nuevaLabel  = $nuevaInfo !== null
                             </div>
                             <div class="card-body">
                                 <label class="form-label">Buscar pieza a reemplazar</label>
-                                <div style="position:relative;">
-                                    <input type="text"
-                                        id="search-origen-input"
-                                        class="form-control"
-                                        placeholder="Código o descripción…"
-                                        autocomplete="off"
-                                        value="<?= $origenLabel ?>">
-                                    <div id="search-origen-results"></div>
+                                <div id="origen-search-wrap"<?= $origenInfo ? ' style="display:none"' : '' ?>>
+                                    <div style="position:relative;">
+                                        <input type="text"
+                                            id="search-origen-input"
+                                            class="form-control"
+                                            placeholder="Código o descripción…"
+                                            autocomplete="off">
+                                        <div id="search-origen-results"></div>
+                                    </div>
+                                </div>
+                                <div id="origen-selected-wrap" class="d-flex align-items-start gap-2"<?= !$origenInfo ? ' style="display:none"' : '' ?>>
+                                    <div class="flex-grow-1 form-control bg-light" id="origen-label-display"><?= $origenLabel ?></div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearVariante('origen')">
+                                        <i class="fa-solid fa-times me-1"></i>Cambiar
+                                    </button>
                                 </div>
                                 <input type="hidden" name="id_variante_origen" id="id-variante-origen"
                                     value="<?= (int) ($id_variante_origen ?? 0) ?: '' ?>">
-                                <div id="origen-badge" class="mt-2">
-                                    <?php if ($origenInfo) : ?>
-                                        <span class="badge bg-danger text-white py-2 px-3 rounded-pill">
-                                            <i class="fa-solid fa-check me-1"></i><?= $origenLabel ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -129,24 +129,24 @@ $nuevaLabel  = $nuevaInfo !== null
                             </div>
                             <div class="card-body">
                                 <label class="form-label">Buscar pieza de reemplazo</label>
-                                <div style="position:relative;">
-                                    <input type="text"
-                                        id="search-nueva-input"
-                                        class="form-control"
-                                        placeholder="Código o descripción…"
-                                        autocomplete="off"
-                                        value="<?= $nuevaLabel ?>">
-                                    <div id="search-nueva-results"></div>
+                                <div id="nueva-search-wrap"<?= $nuevaInfo ? ' style="display:none"' : '' ?>>
+                                    <div style="position:relative;">
+                                        <input type="text"
+                                            id="search-nueva-input"
+                                            class="form-control"
+                                            placeholder="Código o descripción…"
+                                            autocomplete="off">
+                                        <div id="search-nueva-results"></div>
+                                    </div>
+                                </div>
+                                <div id="nueva-selected-wrap" class="d-flex align-items-start gap-2"<?= !$nuevaInfo ? ' style="display:none"' : '' ?>>
+                                    <div class="flex-grow-1 form-control bg-light" id="nueva-label-display"><?= $nuevaLabel ?></div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearVariante('nueva')">
+                                        <i class="fa-solid fa-times me-1"></i>Cambiar
+                                    </button>
                                 </div>
                                 <input type="hidden" name="id_variante_nueva" id="id-variante-nueva"
                                     value="<?= (int) ($id_variante_nueva ?? 0) ?: '' ?>">
-                                <div id="nueva-badge" class="mt-2">
-                                    <?php if ($nuevaInfo) : ?>
-                                        <span class="badge bg-success text-white py-2 px-3 rounded-pill">
-                                            <i class="fa-solid fa-check me-1"></i><?= $nuevaLabel ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -188,7 +188,6 @@ $nuevaLabel  = $nuevaInfo !== null
                                 <tr>
                                     <th style="width:40px;"></th>
                                     <th>Maestro (padre)</th>
-                                    <th>Parte padre</th>
                                     <th class="text-end">Cantidad actual</th>
                                     <th>UM</th>
                                 </tr>
@@ -203,10 +202,9 @@ $nuevaLabel  = $nuevaInfo !== null
                                                 checked>
                                         </td>
                                         <td>
-                                            <strong><?= View::escape((string) ($row['padre_codigo'] ?? '')) ?></strong>
-                                            <small class="text-muted d-block"><?= View::escape((string) ($row['padre_detalle'] ?? '')) ?></small>
+                                            <strong><?= View::escape(($row['parte_padre_codigo'] ?? '') . '-' . ($row['padre_codigo'] ?? '')) ?></strong>
+                                            <small class="text-muted d-block"><?= View::escape(($row['padre_parte'] ?? '') . ' — ' . ($row['padre_detalle'] ?? '')) ?></small>
                                         </td>
-                                        <td class="text-muted small"><?= View::escape((string) ($row['padre_parte'] ?? '')) ?></td>
                                         <td class="text-end"><?= View::escape(app_format_number((float) ($row['cantidad_necesaria'] ?? 0))) ?></td>
                                         <td class="text-muted small"><?= View::escape((string) ($row['unidad_codigo'] ?? '')) ?></td>
                                     </tr>
@@ -258,19 +256,23 @@ $nuevaLabel  = $nuevaInfo !== null
 
         function resultRender(item) {
             return `<div class="d-flex flex-column p-2">
-                    <span class="fw-bold text-primary">${escHtml(item.codigo_variante || '')}</span>
-                    <small class="text-muted">${escHtml(item.detalle || '')}</small>
-                </div>`;
+                <span class="fw-bold text-primary">${escHtml((item.parte_codigo || '') + '-' + (item.codigo_variante || ''))}</span>
+                <small class="text-muted">${escHtml((item.parte_detalle || '') + ' - ' + (item.detalle || ''))}</small>
+            </div>`;
         }
 
-        function renderBadge(badgeId, item, colorClass) {
-            const el = document.getElementById(badgeId);
-            if (!el) return;
-            el.innerHTML = item ?
-                `<span class="badge ${colorClass} text-white py-2 px-3" style="white-space:normal;word-break:break-word;">
-                   <i class="fa-solid fa-check me-1"></i>${escHtml(buildLabel(item))}
-               </span>` :
-                '';
+        function selectVariante(role, item) {
+            document.getElementById('id-variante-' + role).value = item.id;
+            document.getElementById(role + '-label-display').textContent = buildLabel(item);
+            document.getElementById(role + '-search-wrap').style.display = 'none';
+            document.getElementById(role + '-selected-wrap').style.display = '';
+        }
+
+        function clearVariante(role) {
+            document.getElementById('id-variante-' + role).value = '';
+            document.getElementById('search-' + role + '-input').value = '';
+            document.getElementById(role + '-search-wrap').style.display = '';
+            document.getElementById(role + '-selected-wrap').style.display = 'none';
         }
 
         if (typeof SearchClient !== 'undefined') {
@@ -281,11 +283,7 @@ $nuevaLabel  = $nuevaInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) {
-                    document.getElementById('id-variante-origen').value = item.id;
-                    document.getElementById('search-origen-input').value = buildLabel(item);
-                    renderBadge('origen-badge', item, 'bg-danger');
-                },
+                onSelect(item) { selectVariante('origen', item); },
             });
 
             new SearchClient({
@@ -295,11 +293,7 @@ $nuevaLabel  = $nuevaInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) {
-                    document.getElementById('id-variante-nueva').value = item.id;
-                    document.getElementById('search-nueva-input').value = buildLabel(item);
-                    renderBadge('nueva-badge', item, 'bg-success');
-                },
+                onSelect(item) { selectVariante('nueva', item); },
             });
         }
     }());

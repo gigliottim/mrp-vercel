@@ -496,6 +496,7 @@ final class Bom extends BaseTenantModel
         $sql = "SELECT DISTINCT
                     bc.id AS bom_id,
                     bc.variante_padre_id,
+                    pp.codigo AS parte_padre_codigo,
                     vp.codigo_variante AS padre_codigo,
                     vp.detalle AS padre_detalle,
                     pp.detalle AS padre_parte,

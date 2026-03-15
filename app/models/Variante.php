@@ -198,6 +198,7 @@ final class Variante extends BaseTenantModel
                 v.costo,
                 v.lote_minimo,
                 p.codigo AS parte_codigo,
+                p.detalle AS parte_detalle,
                 p.id_um_uso,
                 p.id_um_compra,
                 COALESCE(p.factor_conversion, 1) as factor_conversion,

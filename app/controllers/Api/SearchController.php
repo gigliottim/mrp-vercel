@@ -247,4 +247,37 @@ final class SearchController extends Controller
         $result = $this->searchService->searchCentrosTrabajo($query);
         return $this->json($result);
     }
+
+    /**
+     * GET /api/v1/bom/variantes/:id/nivel1
+     * Devuelve los componentes directos (nivel 1) de la BOM activa de una variante.
+     */
+    public function getBomNivel1(Request $request, int $id): Response
+    {
+        try {
+            $bom    = new \App\Models\Bom();
+            $header = $bom->getActiveByVariante($id);
+
+            if ($header === null) {
+                return $this->json(['success' => true, 'bom_id' => null, 'items' => []]);
+            }
+
+            $detalles = $bom->getDetalles((int) $header['id']);
+
+            $items = array_map(static fn(array $d) => [
+                'id'                    => (int) $d['id'],
+                'variante_componente_id' => (int) $d['variante_componente_id'],
+                'parte_codigo'          => (string) ($d['parte_codigo']       ?? ''),
+                'componente_codigo'     => (string) ($d['componente_codigo']  ?? ''),
+                'componente_detalle'    => (string) ($d['componente_detalle'] ?? ''),
+                'tipo_codigo'           => (string) ($d['tipo_codigo']        ?? ''),
+                'cantidad'              => (float)  ($d['cantidad_necesaria'] ?? 0),
+                'unidad'                => (string) ($d['unidad_simbolo']     ?? ''),
+            ], $detalles);
+
+            return $this->json(['success' => true, 'bom_id' => (int) $header['id'], 'items' => $items]);
+        } catch (\Throwable $e) {
+            return $this->json(['success' => false, 'message' => $e->getMessage(), 'items' => []], 500);
+        }
+    }
 }

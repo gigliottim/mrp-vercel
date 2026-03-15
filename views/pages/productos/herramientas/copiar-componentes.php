@@ -85,7 +85,7 @@ $destinoLabel = $destinoInfo !== null
         </div>
 
         <form method="post" action="<?= url('productos/copiar-componentes') ?>">
-            <input type="hidden" name="id_variante_origen"  value="<?= (int) ($id_variante_origen  ?? 0) ?>">
+            <input type="hidden" name="id_variante_origen" value="<?= (int) ($id_variante_origen  ?? 0) ?>">
             <input type="hidden" name="id_variante_destino" value="<?= (int) ($id_variante_destino ?? 0) ?>">
 
             <div class="row g-4">
@@ -110,47 +110,48 @@ $destinoLabel = $destinoInfo !== null
                             </div>
                         </div>
                         <?php if ($origenInfo !== null) : ?>
-                        <div class="border-top">
-                            <div class="card-body py-2 px-3">
-                                <p class="text-uppercase text-muted small mb-2 fw-semibold">
-                                    <i class="fa-solid fa-sitemap me-1"></i>Componentes nivel 1
-                                </p>
-                                <?php if ($origenDetalles === []) : ?>
-                                    <p class="text-muted small fst-italic mb-0">Sin componentes en esta BOM.</p>
-                                <?php else : ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-hover align-middle mb-0 small">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Código</th><th>Detalle</th>
-                                                    <th class="text-center">Tipo</th>
-                                                    <th class="text-end">Cant.</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($origenDetalles as $it) : ?>
+                            <div class="border-top">
+                                <div class="card-body py-2 px-3">
+                                    <p class="text-uppercase text-muted small mb-2 fw-semibold">
+                                        <i class="fa-solid fa-sitemap me-1"></i>Componentes nivel 1
+                                    </p>
+                                    <?php if ($origenDetalles === []) : ?>
+                                        <p class="text-muted small fst-italic mb-0">Sin componentes en esta BOM.</p>
+                                    <?php else : ?>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0 small">
+                                                <thead class="table-light">
                                                     <tr>
-                                                        <td class="fw-semibold text-primary small">
-                                                            <?= View::escape(($it['parte_codigo'] ?? '') . '-' . ($it['componente_codigo'] ?? '')) ?>
-                                                        </td>
-                                                        <td class="small text-muted">
-                                                            <?= View::escape(trim(($it['parte_detalle'] ?? '') . ' - ' . ($it['componente_detalle'] ?? ''), ' -')) ?>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span class="badge bg-light text-dark border small"><?= View::escape($it['tipo_codigo'] ?? '') ?></span>
-                                                        </td>
-                                                        <td class="text-end small">
-                                                            <?= View::escape(app_format_number((float) ($it['cantidad_necesaria'] ?? 0))) ?>
-                                                            <?= View::escape($it['unidad_simbolo'] ?? '') ?>
-                                                        </td>
+                                                        <th>Código</th>
+                                                        <th>Detalle</th>
+                                                        <th class="text-center">Tipo</th>
+                                                        <th class="text-end">Cant.</th>
                                                     </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php endif; ?>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($origenDetalles as $it) : ?>
+                                                        <tr>
+                                                            <td class="fw-semibold text-primary small">
+                                                                <?= View::escape(($it['parte_codigo'] ?? '') . '-' . ($it['componente_codigo'] ?? '')) ?>
+                                                            </td>
+                                                            <td class="small text-muted">
+                                                                <?= View::escape(trim(($it['parte_detalle'] ?? '') . ' - ' . ($it['componente_detalle'] ?? ''), ' -')) ?>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span class="badge bg-light text-dark border small"><?= View::escape($it['tipo_codigo'] ?? '') ?></span>
+                                                            </td>
+                                                            <td class="text-end small">
+                                                                <?= View::escape(app_format_number((float) ($it['cantidad_necesaria'] ?? 0))) ?>
+                                                                <?= View::escape($it['unidad_simbolo'] ?? '') ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -176,48 +177,49 @@ $destinoLabel = $destinoInfo !== null
                             </div>
                         </div>
                         <?php if ($destinoInfo !== null) : ?>
-                        <div class="border-top">
-                            <div class="card-body py-2 px-3">
-                                <p class="text-uppercase text-muted small mb-2 fw-semibold">
-                                    <i class="fa-solid fa-sitemap me-1"></i>Componentes actuales nivel 1
-                                    <span class="badge bg-warning text-dark ms-1 fw-normal">serán reemplazados</span>
-                                </p>
-                                <?php if ($destinoDetalles === []) : ?>
-                                    <p class="text-muted small fst-italic mb-0">Sin componentes en esta BOM.</p>
-                                <?php else : ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-hover align-middle mb-0 small">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Código</th><th>Detalle</th>
-                                                    <th class="text-center">Tipo</th>
-                                                    <th class="text-end">Cant.</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($destinoDetalles as $it) : ?>
+                            <div class="border-top">
+                                <div class="card-body py-2 px-3">
+                                    <p class="text-uppercase text-muted small mb-2 fw-semibold">
+                                        <i class="fa-solid fa-sitemap me-1"></i>Componentes actuales nivel 1
+                                        <span class="badge bg-warning text-dark ms-1 fw-normal">serán reemplazados</span>
+                                    </p>
+                                    <?php if ($destinoDetalles === []) : ?>
+                                        <p class="text-muted small fst-italic mb-0">Sin componentes en esta BOM.</p>
+                                    <?php else : ?>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0 small">
+                                                <thead class="table-light">
                                                     <tr>
-                                                        <td class="fw-semibold text-success small">
-                                                            <?= View::escape(($it['parte_codigo'] ?? '') . '-' . ($it['componente_codigo'] ?? '')) ?>
-                                                        </td>
-                                                        <td class="small text-muted">
-                                                            <?= View::escape(trim(($it['parte_detalle'] ?? '') . ' - ' . ($it['componente_detalle'] ?? ''), ' -')) ?>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span class="badge bg-light text-dark border small"><?= View::escape($it['tipo_codigo'] ?? '') ?></span>
-                                                        </td>
-                                                        <td class="text-end small">
-                                                            <?= View::escape(app_format_number((float) ($it['cantidad_necesaria'] ?? 0))) ?>
-                                                            <?= View::escape($it['unidad_simbolo'] ?? '') ?>
-                                                        </td>
+                                                        <th>Código</th>
+                                                        <th>Detalle</th>
+                                                        <th class="text-center">Tipo</th>
+                                                        <th class="text-end">Cant.</th>
                                                     </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php endif; ?>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($destinoDetalles as $it) : ?>
+                                                        <tr>
+                                                            <td class="fw-semibold text-success small">
+                                                                <?= View::escape(($it['parte_codigo'] ?? '') . '-' . ($it['componente_codigo'] ?? '')) ?>
+                                                            </td>
+                                                            <td class="small text-muted">
+                                                                <?= View::escape(trim(($it['parte_detalle'] ?? '') . ' - ' . ($it['componente_detalle'] ?? ''), ' -')) ?>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span class="badge bg-light text-dark border small"><?= View::escape($it['tipo_codigo'] ?? '') ?></span>
+                                                            </td>
+                                                            <td class="text-end small">
+                                                                <?= View::escape(app_format_number((float) ($it['cantidad_necesaria'] ?? 0))) ?>
+                                                                <?= View::escape($it['unidad_simbolo'] ?? '') ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -241,66 +243,32 @@ $destinoLabel = $destinoInfo !== null
 <?php endif; ?>
 
 <script>
-(function () {
-    'use strict';
+    (function() {
+        'use strict';
 
-    const searchEndpoint = '<?= url('api/v1/search/variantes') ?>';
-    const baseUrl        = '<?= url('productos/copiar-componentes') ?>';
-    const currentOrigen  = '<?= (int) ($id_variante_origen  ?? 0) ?>';
-    const currentDestino = '<?= (int) ($id_variante_destino ?? 0) ?>';
+        const searchEndpoint = '<?= url('api/v1/search/variantes') ?>';
+        const baseUrl = '<?= url('productos/copiar-componentes') ?>';
+        const currentOrigen = '<?= (int) ($id_variante_origen  ?? 0) ?>';
+        const currentDestino = '<?= (int) ($id_variante_destino ?? 0) ?>';
 
-    function escHtml(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+        function escHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
 
-    function goTo(origenId, destinoId) {
-        const params = new URLSearchParams();
-        if (origenId  > 0) params.set('id_variante_origen',  origenId);
-        if (destinoId > 0) params.set('id_variante_destino', destinoId);
-        window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
-    }
+        function goTo(origenId, destinoId) {
+            const params = new URLSearchParams();
+            if (origenId > 0) params.set('id_variante_origen', origenId);
+            if (destinoId > 0) params.set('id_variante_destino', destinoId);
+            window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
+        }
 
-    function resultRender(item) {
-        return `<div class="d-flex flex-column p-2">
+        function resultRender(item) {
+            return `<div class="d-flex flex-column p-2">
             <span class="fw-bold text-primary">${escHtml(item.parte_codigo || '')} - ${escHtml(item.codigo_variante || '')}</span>
             <small class="text-muted">${escHtml(item.parte_detalle || '')} - ${escHtml(item.detalle || '')}</small>
         </div>`;
-    }
-
-    if (typeof SearchClient !== 'undefined') {
-        new SearchClient({
-            endpoint:         searchEndpoint,
-            inputElement:     document.getElementById('search-origen-input'),
-            resultsContainer: document.getElementById('search-origen-results'),
-            minChars: 2, debounceDelay: 300,
-            customItemRender: resultRender,
-            onSelect(item) {
-                goTo(item.id, currentDestino);
-            },
-        });
-
-        new SearchClient({
-            endpoint:         searchEndpoint,
-            inputElement:     document.getElementById('search-destino-input'),
-            resultsContainer: document.getElementById('search-destino-results'),
-            minChars: 2, debounceDelay: 300,
-            customItemRender: resultRender,
-            onSelect(item) {
-                goTo(currentOrigen, item.id);
-            },
-        });
-    }
-}());
-</script>
-
-        function clearBom(role) {
-            const wrap = document.getElementById(role + '-bom-wrap');
-            if (wrap) wrap.style.display = 'none';
-            const content = document.getElementById(role + '-bom-content');
-            if (content) content.innerHTML = '';
         }
 
-        // ── SearchClient ──────────────────────────────────────────────────────────
         if (typeof SearchClient !== 'undefined') {
             new SearchClient({
                 endpoint: searchEndpoint,
@@ -310,11 +278,7 @@ $destinoLabel = $destinoInfo !== null
                 debounceDelay: 300,
                 customItemRender: resultRender,
                 onSelect(item) {
-                    document.getElementById('id-variante-origen').value = item.id;
-                    document.getElementById('search-origen-input').value = buildLabel(item);
-                    state.origen = true;
-                    fetchBom(item.id, 'origen');
-                    updateBtn();
+                    goTo(item.id, currentDestino);
                 },
             });
 
@@ -326,23 +290,8 @@ $destinoLabel = $destinoInfo !== null
                 debounceDelay: 300,
                 customItemRender: resultRender,
                 onSelect(item) {
-                    document.getElementById('id-variante-destino').value = item.id;
-                    document.getElementById('search-destino-input').value = buildLabel(item);
-                    state.destino = true;
-                    fetchBom(item.id, 'destino');
-                    updateBtn();
+                    goTo(currentOrigen, item.id);
                 },
-            });
-
-            ['origen', 'destino'].forEach(role => {
-                document.getElementById('search-' + role + '-input').addEventListener('input', function() {
-                    if (this.value === '') {
-                        document.getElementById('id-variante-' + role).value = '';
-                        state[role] = false;
-                        clearBom(role);
-                        updateBtn();
-                    }
-                });
             });
         }
     }());

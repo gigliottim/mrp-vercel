@@ -79,8 +79,8 @@ $nuevaLabel  = $nuevaInfo !== null
         <div class="card-body">
             <div class="alert alert-info py-2 small mb-4">
                 <i class="fa-solid fa-circle-info me-1"></i>
-                Seleccione la <strong>Pieza X</strong> a reemplazar y la <strong>Pieza H</strong> con la que
-                desea sustituirla. Luego haga clic en <em>Buscar usos</em> para ver en qué maestros aparece X.
+                Seleccione la <strong>Pieza a reemplazar</strong> y la <strong>Pieza de reemplazo</strong> con la que
+                desea sustituirla. Luego haga clic en <em>Buscar usos</em> para ver en qué maestros aparece la pieza a reemplazar.
             </div>
 
             <form method="post" action="<?= url('productos/reemplazar-partes') ?>" id="form-reemplazar">
@@ -92,12 +92,12 @@ $nuevaLabel  = $nuevaInfo !== null
                         <div class="card border-danger h-100">
                             <div class="card-header bg-danger bg-opacity-10 border-danger">
                                 <h6 class="mb-0 text-danger">
-                                    <i class="fa-solid fa-xmark me-1"></i>Pieza X — A reemplazar
+                                    <i class="fa-solid fa-xmark me-1"></i>Pieza a reemplazar
                                 </h6>
                             </div>
                             <div class="card-body">
                                 <label class="form-label">Buscar pieza a reemplazar</label>
-                                <div id="origen-search-wrap"<?= $origenInfo ? ' style="display:none"' : '' ?>>
+                                <div id="origen-search-wrap" <?= $origenInfo ? ' style="display:none"' : '' ?>>
                                     <div style="position:relative;">
                                         <input type="text"
                                             id="search-origen-input"
@@ -107,7 +107,7 @@ $nuevaLabel  = $nuevaInfo !== null
                                         <div id="search-origen-results"></div>
                                     </div>
                                 </div>
-                                <div id="origen-selected-wrap" class="d-flex align-items-start gap-2"<?= !$origenInfo ? ' style="display:none"' : '' ?>>
+                                <div id="origen-selected-wrap" class="d-flex align-items-start gap-2" <?= !$origenInfo ? ' style="display:none"' : '' ?>>
                                     <div class="flex-grow-1 form-control bg-light" id="origen-label-display"><?= $origenLabel ?></div>
                                     <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearVariante('origen')">
                                         <i class="fa-solid fa-times me-1"></i>Cambiar
@@ -124,12 +124,12 @@ $nuevaLabel  = $nuevaInfo !== null
                         <div class="card border-success h-100">
                             <div class="card-header bg-success bg-opacity-10 border-success">
                                 <h6 class="mb-0 text-success">
-                                    <i class="fa-solid fa-check me-1"></i>Pieza H — Reemplazo
+                                    <i class="fa-solid fa-check me-1"></i>Pieza de reemplazo
                                 </h6>
                             </div>
                             <div class="card-body">
                                 <label class="form-label">Buscar pieza de reemplazo</label>
-                                <div id="nueva-search-wrap"<?= $nuevaInfo ? ' style="display:none"' : '' ?>>
+                                <div id="nueva-search-wrap" <?= $nuevaInfo ? ' style="display:none"' : '' ?>>
                                     <div style="position:relative;">
                                         <input type="text"
                                             id="search-nueva-input"
@@ -139,7 +139,7 @@ $nuevaLabel  = $nuevaInfo !== null
                                         <div id="search-nueva-results"></div>
                                     </div>
                                 </div>
-                                <div id="nueva-selected-wrap" class="d-flex align-items-start gap-2"<?= !$nuevaInfo ? ' style="display:none"' : '' ?>>
+                                <div id="nueva-selected-wrap" class="d-flex align-items-start gap-2" <?= !$nuevaInfo ? ' style="display:none"' : '' ?>>
                                     <div class="flex-grow-1 form-control bg-light" id="nueva-label-display"><?= $nuevaLabel ?></div>
                                     <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearVariante('nueva')">
                                         <i class="fa-solid fa-times me-1"></i>Cambiar
@@ -155,7 +155,7 @@ $nuevaLabel  = $nuevaInfo !== null
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <button type="button" class="btn btn-outline-secondary" id="btn-buscar"
                         onclick="document.getElementById('input-action').value='preview'; document.getElementById('form-reemplazar').submit();">
-                        <i class="fa-solid fa-magnifying-glass me-1"></i>Buscar usos de Pieza X
+                        <i class="fa-solid fa-magnifying-glass me-1"></i>Buscar usos de Pieza a reemplazar
                     </button>
                 </div>
             </form>
@@ -283,7 +283,9 @@ $nuevaLabel  = $nuevaInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) { selectVariante('origen', item); },
+                onSelect(item) {
+                    selectVariante('origen', item);
+                },
             });
 
             new SearchClient({
@@ -293,7 +295,9 @@ $nuevaLabel  = $nuevaInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) { selectVariante('nueva', item); },
+                onSelect(item) {
+                    selectVariante('nueva', item);
+                },
             });
         }
     }());

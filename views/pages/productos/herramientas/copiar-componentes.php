@@ -13,10 +13,10 @@ $destinoDetalles     = $destinoDetalles     ?? [];
 
 // Labels para mostrar en los inputs
 $origenLabel = $origenInfo !== null
-    ? 'Parte: ' . ($origenInfo['parte_codigo'] ?? '') . ' | Variante: ' . ($origenInfo['codigo_variante'] ?? '') . ' - ' . ($origenInfo['detalle'] ?? '')
+    ? 'Parte: ' . ($origenInfo['parte_codigo'] ?? '') . ' - ' . ($origenInfo['parte_detalle'] ?? '') . ' | Variante: ' . ($origenInfo['codigo_variante'] ?? '') . ' - ' . ($origenInfo['detalle'] ?? '')
     : '';
 $destinoLabel = $destinoInfo !== null
-    ? 'Parte: ' . ($destinoInfo['parte_codigo'] ?? '') . ' | Variante: ' . ($destinoInfo['codigo_variante'] ?? '') . ' - ' . ($destinoInfo['detalle'] ?? '')
+    ? 'Parte: ' . ($destinoInfo['parte_codigo'] ?? '') . ' - ' . ($destinoInfo['parte_detalle'] ?? '') . ' | Variante: ' . ($destinoInfo['codigo_variante'] ?? '') . ' - ' . ($destinoInfo['detalle'] ?? '')
     : '';
 ?>
 
@@ -99,14 +99,21 @@ $destinoLabel = $destinoInfo !== null
                         </div>
                         <div class="card-body">
                             <label class="form-label">Buscar pieza origen</label>
-                            <div style="position:relative;">
-                                <input type="text"
-                                    id="search-origen-input"
-                                    class="form-control"
-                                    placeholder="Código o descripción…"
-                                    autocomplete="off"
-                                    value="<?= View::escape($origenLabel) ?>">
-                                <div id="search-origen-results"></div>
+                            <div id="origen-search-wrap"<?= $origenInfo ? ' style="display:none"' : '' ?>>
+                                <div style="position:relative;">
+                                    <input type="text"
+                                        id="search-origen-input"
+                                        class="form-control"
+                                        placeholder="Código o descripción…"
+                                        autocomplete="off">
+                                    <div id="search-origen-results"></div>
+                                </div>
+                            </div>
+                            <div id="origen-selected-wrap" class="d-flex align-items-start gap-2"<?= !$origenInfo ? ' style="display:none"' : '' ?>>
+                                <div class="flex-grow-1 form-control bg-light" id="origen-label-display"><?= View::escape($origenLabel) ?></div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearOrigen()">
+                                    <i class="fa-solid fa-times me-1"></i>Cambiar
+                                </button>
                             </div>
                         </div>
                         <?php if ($origenInfo !== null) : ?>
@@ -166,14 +173,21 @@ $destinoLabel = $destinoInfo !== null
                         </div>
                         <div class="card-body">
                             <label class="form-label">Buscar pieza destino</label>
-                            <div style="position:relative;">
-                                <input type="text"
-                                    id="search-destino-input"
-                                    class="form-control"
-                                    placeholder="Código o descripción…"
-                                    autocomplete="off"
-                                    value="<?= View::escape($destinoLabel) ?>">
-                                <div id="search-destino-results"></div>
+                            <div id="destino-search-wrap"<?= $destinoInfo ? ' style="display:none"' : '' ?>>
+                                <div style="position:relative;">
+                                    <input type="text"
+                                        id="search-destino-input"
+                                        class="form-control"
+                                        placeholder="Código o descripción…"
+                                        autocomplete="off">
+                                    <div id="search-destino-results"></div>
+                                </div>
+                            </div>
+                            <div id="destino-selected-wrap" class="d-flex align-items-start gap-2"<?= !$destinoInfo ? ' style="display:none"' : '' ?>>
+                                <div class="flex-grow-1 form-control bg-light" id="destino-label-display"><?= View::escape($destinoLabel) ?></div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearDestino()">
+                                    <i class="fa-solid fa-times me-1"></i>Cambiar
+                                </button>
                             </div>
                         </div>
                         <?php if ($destinoInfo !== null) : ?>
@@ -262,11 +276,14 @@ $destinoLabel = $destinoInfo !== null
             window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
         }
 
+        function clearOrigen() { goTo(0, currentDestino); }
+        function clearDestino() { goTo(currentOrigen, 0); }
+
         function resultRender(item) {
             return `<div class="d-flex flex-column p-2">
-            <span class="fw-bold text-primary">${escHtml(item.parte_codigo || '')} - ${escHtml(item.codigo_variante || '')}</span>
-            <small class="text-muted">${escHtml(item.parte_detalle || '')} - ${escHtml(item.detalle || '')}</small>
-        </div>`;
+                <span class="fw-bold text-primary">${escHtml((item.parte_codigo || '') + '-' + (item.codigo_variante || ''))}</span>
+                <small class="text-muted">${escHtml((item.parte_detalle || '') + ' - ' + (item.detalle || ''))}</small>
+            </div>`;
         }
 
         if (typeof SearchClient !== 'undefined') {
@@ -277,9 +294,7 @@ $destinoLabel = $destinoInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) {
-                    goTo(item.id, currentDestino);
-                },
+                onSelect(item) { goTo(item.id, currentDestino); },
             });
 
             new SearchClient({
@@ -289,9 +304,7 @@ $destinoLabel = $destinoInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) {
-                    goTo(currentOrigen, item.id);
-                },
+                onSelect(item) { goTo(currentOrigen, item.id); },
             });
         }
     }());

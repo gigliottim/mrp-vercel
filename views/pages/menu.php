@@ -5,15 +5,11 @@ use App\Core\View\View;
 /** @var array<int, array<string, mixed>> $sections */
 
 $sectionMeta = [
-    'panel'                => ['color' => 'primary',   'icon' => 'fa-solid fa-gauge'],
-    'productos_bom'        => ['color' => 'success',   'icon' => 'fa-solid fa-layer-group'],
-    'planeamiento_mrp'     => ['color' => 'info',      'icon' => 'fa-solid fa-calendar-days'],
-    'produccion'           => ['color' => 'warning',   'icon' => 'fa-solid fa-industry'],
-    'transacciones'        => ['color' => 'danger',    'icon' => 'fa-solid fa-arrow-right-arrow-left'],
-    'inventario_stock'     => ['color' => 'success',   'icon' => 'fa-solid fa-boxes-stacked'],
+    'taller'               => ['color' => 'warning',   'icon' => 'fa-solid fa-industry'],
+    'catalogo_productos'   => ['color' => 'success',   'icon' => 'fa-solid fa-layer-group'],
+    'planificacion_compras' => ['color' => 'info',      'icon' => 'fa-solid fa-calendar-days'],
     'reportes'             => ['color' => 'secondary', 'icon' => 'fa-solid fa-chart-line'],
-    'parametros_catalogos' => ['color' => 'secondary', 'icon' => 'fa-solid fa-sliders'],
-    'empresa_usuarios'     => ['color' => 'dark',      'icon' => 'fa-solid fa-building-user'],
+    'administracion'       => ['color' => 'dark',      'icon' => 'fa-solid fa-sliders'],
 ];
 
 $resolveHref = static function (array $item): string {

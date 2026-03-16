@@ -11,15 +11,11 @@ final class MenuService
 {
     private const BYPASS_ROLE_NAMES = ['super_admin', 'admin_empresa', 'administrator'];
     private const SECTION_VISUAL_ORDER = [
-        'panel',
-        'productos_bom',
-        'planeamiento_mrp',
-        'produccion',
-        'transacciones',
-        'inventario_stock',
+        'taller',
+        'catalogo_productos',
+        'planificacion_compras',
         'reportes',
-        'parametros_catalogos',
-        'empresa_usuarios',
+        'administracion',
     ];
 
     private PDO $connection;
@@ -72,15 +68,11 @@ final class MenuService
              WHERE is_active = TRUE
              ORDER BY
                 CASE section_key
-                    WHEN 'panel' THEN 10
-                    WHEN 'productos_bom' THEN 20
-                    WHEN 'planeamiento_mrp' THEN 30
-                    WHEN 'produccion' THEN 40
-                    WHEN 'transacciones' THEN 50
-                    WHEN 'inventario_stock' THEN 60
-                    WHEN 'reportes' THEN 70
-                    WHEN 'parametros_catalogos' THEN 80
-                    WHEN 'empresa_usuarios' THEN 90
+                    WHEN 'taller' THEN 10
+                    WHEN 'catalogo_productos' THEN 20
+                    WHEN 'planificacion_compras' THEN 30
+                    WHEN 'reportes' THEN 40
+                    WHEN 'administracion' THEN 50
                     ELSE 999
                 END ASC,
                 sort_order ASC,

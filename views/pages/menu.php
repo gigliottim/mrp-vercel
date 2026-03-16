@@ -7,9 +7,10 @@ use App\Core\View\View;
 $sectionMeta = [
     'taller'               => ['color' => 'warning',   'icon' => 'fa-solid fa-industry'],
     'catalogo_productos'   => ['color' => 'success',   'icon' => 'fa-solid fa-layer-group'],
-    'planificacion_compras' => ['color' => 'info',      'icon' => 'fa-solid fa-calendar-days'],
+    'planificacion_compras'=> ['color' => 'info',      'icon' => 'fa-solid fa-calendar-days'],
     'reportes'             => ['color' => 'secondary', 'icon' => 'fa-solid fa-chart-line'],
-    'administracion'       => ['color' => 'dark',      'icon' => 'fa-solid fa-sliders'],
+    'administracion'       => ['color' => 'secondary', 'icon' => 'fa-solid fa-sliders'],
+    'empresa_usuarios'     => ['color' => 'dark',      'icon' => 'fa-solid fa-building-user'],
 ];
 
 $resolveHref = static function (array $item): string {

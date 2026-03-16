@@ -16,6 +16,7 @@ final class MenuService
         'planificacion_compras',
         'reportes',
         'administracion',
+        'empresa_usuarios',
     ];
 
     private PDO $connection;
@@ -73,6 +74,7 @@ final class MenuService
                     WHEN 'planificacion_compras' THEN 30
                     WHEN 'reportes' THEN 40
                     WHEN 'administracion' THEN 50
+                    WHEN 'empresa_usuarios' THEN 60
                     ELSE 999
                 END ASC,
                 sort_order ASC,

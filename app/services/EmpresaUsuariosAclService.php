@@ -31,6 +31,7 @@ final class EmpresaUsuariosAclService
                     WHEN 'planificacion_compras' THEN 30
                     WHEN 'reportes' THEN 40
                     WHEN 'administracion' THEN 50
+                    WHEN 'empresa_usuarios' THEN 60
                     ELSE 999
                 END ASC,
                 sort_order ASC,

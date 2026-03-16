@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Patch 2: mover ítems de Administración y crear sección Empresa/Usuarios
  * - produccion.centros_trabajo, produccion.rutas, catalogos.entidades → catalogo_productos
@@ -63,8 +64,10 @@ try {
 
 // Verificación
 echo "\nEstado final:\n";
-foreach ($pdo->query(
-    'SELECT section_key, section_label, COUNT(*) n FROM menu_items GROUP BY section_key, section_label ORDER BY section_key'
-)->fetchAll(PDO::FETCH_ASSOC) as $r) {
+foreach (
+    $pdo->query(
+        'SELECT section_key, section_label, COUNT(*) n FROM menu_items GROUP BY section_key, section_label ORDER BY section_key'
+    )->fetchAll(PDO::FETCH_ASSOC) as $r
+) {
     echo "  {$r['section_key']} ({$r['section_label']}): {$r['n']} ítems\n";
 }

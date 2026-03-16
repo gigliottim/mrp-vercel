@@ -6,8 +6,9 @@ use App\Core\View\View;
 
 $sectionMeta = [
     'taller'               => ['color' => 'warning',   'icon' => 'fa-solid fa-industry'],
+    'produccion'           => ['color' => 'primary',   'icon' => 'fa-solid fa-gears'],
     'catalogo_productos'   => ['color' => 'success',   'icon' => 'fa-solid fa-layer-group'],
-    'planificacion_compras'=> ['color' => 'info',      'icon' => 'fa-solid fa-calendar-days'],
+    'planificacion_compras' => ['color' => 'info',      'icon' => 'fa-solid fa-calendar-days'],
     'reportes'             => ['color' => 'secondary', 'icon' => 'fa-solid fa-chart-line'],
     'administracion'       => ['color' => 'secondary', 'icon' => 'fa-solid fa-sliders'],
     'empresa_usuarios'     => ['color' => 'dark',      'icon' => 'fa-solid fa-building-user'],
@@ -61,21 +62,23 @@ $resolveHref = static function (array $item): string {
         </div>
         <div class="row g-3">
             <?php foreach ($items as $item) :
-                $href  = $resolveHref($item);
-                $icon  = (string) ($item['icon'] ?? 'fa-solid fa-circle');
-                $label = (string) ($item['label'] ?? 'Sin título');
+                $href       = $resolveHref($item);
+                $icon       = (string) ($item['icon'] ?? 'fa-solid fa-circle');
+                $label      = (string) ($item['label'] ?? 'Sin título');
+                $itemCode   = (string) ($item['code'] ?? '');
                 $isDisabled = $href === '#';
+                $isWip      = str_starts_with($itemCode, 'produccion.');
             ?>
                 <div class="col-6 col-md-4 col-lg-3">
                     <a
-                        class="menu-card<?= $isDisabled ? ' menu-card--disabled' : '' ?> text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+                        class="menu-card<?= $isDisabled ? ' menu-card--disabled' : '' ?><?= $isWip ? ' menu-card--wip' : '' ?> text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border h-100"
                         href="<?= View::escape($href) ?>"
                         aria-label="<?= View::escape($label) ?>"
                         <?= $isDisabled ? 'aria-disabled="true" tabindex="-1"' : '' ?>>
-                        <div class="menu-card__icon mb-2 text-<?= View::escape($color) ?> bg-<?= View::escape($color) ?> bg-opacity-10 rounded-3">
+                        <div class="menu-card__icon mb-2 <?= $isWip ? 'text-white bg-white bg-opacity-25' : 'text-' . View::escape($color) . ' bg-' . View::escape($color) . ' bg-opacity-10' ?> rounded-3">
                             <i class="<?= View::escape($icon) ?>"></i>
                         </div>
-                        <div class="menu-card__label fw-medium small text-dark"><?= View::escape($label) ?></div>
+                        <div class="menu-card__label fw-medium small <?= $isWip ? 'text-white' : 'text-dark' ?>"><?= View::escape($label) ?></div>
                     </a>
                 </div>
             <?php endforeach; ?>

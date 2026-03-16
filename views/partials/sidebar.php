@@ -131,13 +131,15 @@ $renderSidebarItems = static function (array $items) use (&$renderSidebarItems, 
         $children = is_array($item['children'] ?? null) ? $item['children'] : [];
         $icon = (string) ($item['icon'] ?? 'fa-solid fa-circle');
         $label = (string) ($item['label'] ?? 'Sin titulo');
+        $itemCode = (string) ($item['code'] ?? '');
+        $isWip = str_starts_with($itemCode, 'produccion.');
 ?>
         <li>
             <a
-                class="app-sidebar__link<?= $isActive ? ' is-active' : '' ?>"
+                class="app-sidebar__link<?= $isActive ? ' is-active' : '' ?><?= $isWip ? ' app-sidebar__link--wip' : '' ?>"
                 href="<?= View::escape($href) ?>"
                 title="<?= View::escape($label) ?>"
-                aria-label="<?= View::escape($label) ?>">
+                aria-label="<?= View::escape($label) ?>"><?= $isWip ? '<span class="app-sidebar__wip-badge" title="En desarrollo">⚠</span>' : '' ?>
                 <i class="<?= View::escape($icon) ?>"></i>
                 <span><?= View::escape($label) ?></span>
             </a>

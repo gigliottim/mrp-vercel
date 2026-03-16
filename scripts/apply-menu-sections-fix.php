@@ -26,32 +26,34 @@ $updates = [
     ['taller', 'Taller', 30,   'transacciones.movimientos'],
     ['taller', 'Taller', 40,   'inventario.critico'],
     ['taller', 'Taller', 50,   'produccion.gantt'],
-    // CATÁLOGO DE PRODUCTOS
-    ['catalogo_productos', 'Catálogo de Productos', 10, 'productos.partes'],
-    ['catalogo_productos', 'Catálogo de Productos', 20, 'productos.manager'],
-    ['catalogo_productos', 'Catálogo de Productos', 30, 'productos.bom'],
-    ['catalogo_productos', 'Catálogo de Productos', 40, 'productos.maestro'],
-    ['catalogo_productos', 'Catálogo de Productos', 50, 'productos.copiar_componentes'],
-    ['catalogo_productos', 'Catálogo de Productos', 60, 'productos.reemplazar_partes'],
+    // DESARROLLO Y MAESTROS
+    ['catalogo_productos', 'Desarrollo y Maestros', 10, 'productos.partes'],
+    ['catalogo_productos', 'Desarrollo y Maestros', 20, 'productos.manager'],
+    ['catalogo_productos', 'Desarrollo y Maestros', 30, 'productos.bom'],
+    ['catalogo_productos', 'Desarrollo y Maestros', 40, 'productos.maestro'],
+    ['catalogo_productos', 'Desarrollo y Maestros', 50, 'productos.copiar_componentes'],
+    ['catalogo_productos', 'Desarrollo y Maestros', 60, 'productos.reemplazar_partes'],
     // PLANIFICACIÓN Y COMPRAS
     ['planificacion_compras', 'Planificación y Compras', 10, 'planeamiento.sugerencias'],
     ['planificacion_compras', 'Planificación y Compras', 20, 'planeamiento.ordenes'],
     ['planificacion_compras', 'Planificación y Compras', 30, 'produccion.planificacion'],
     ['planificacion_compras', 'Planificación y Compras', 40, 'transacciones.compras'],
+    ['planificacion_compras', 'Planificación y Compras', 50, 'catalogos.entidades'],
+    // PRODUCCIÓN (en desarrollo)
+    ['produccion', 'Producción', 10, 'produccion.centros_trabajo'],
+    ['produccion', 'Producción', 20, 'produccion.rutas'],
     // ADMINISTRACIÓN
     ['administracion', 'Administración', 10,  'catalogos.configuracion'],
-    ['administracion', 'Administración', 20,  'catalogos.entidades'],
-    ['administracion', 'Administración', 30,  'catalogos.unidades'],
-    ['administracion', 'Administración', 40,  'catalogos.tipos_partes'],
-    ['administracion', 'Administración', 50,  'catalogos.tipos_depositos'],
-    ['administracion', 'Administración', 60,  'catalogos.validaciones_depositos'],
-    ['administracion', 'Administración', 70,  'catalogos.grupos_partes'],
-    ['administracion', 'Administración', 80,  'produccion.centros_trabajo'],
-    ['administracion', 'Administración', 90,  'produccion.rutas'],
-    ['administracion', 'Administración', 100, 'admin.empresa'],
-    ['administracion', 'Administración', 110, 'admin.usuarios'],
-    ['administracion', 'Administración', 120, 'admin.roles'],
-    ['administracion', 'Administración', 130, 'admin.permisos'],
+    ['administracion', 'Administración', 20,  'catalogos.unidades'],
+    ['administracion', 'Administración', 30,  'catalogos.tipos_partes'],
+    ['administracion', 'Administración', 40,  'catalogos.tipos_depositos'],
+    ['administracion', 'Administración', 50,  'catalogos.validaciones_depositos'],
+    ['administracion', 'Administración', 60,  'catalogos.grupos_partes'],
+    // EMPRESA Y USUARIOS
+    ['empresa_usuarios', 'Empresa y Usuarios', 10, 'admin.empresa'],
+    ['empresa_usuarios', 'Empresa y Usuarios', 20, 'admin.usuarios'],
+    ['empresa_usuarios', 'Empresa y Usuarios', 30, 'admin.roles'],
+    ['empresa_usuarios', 'Empresa y Usuarios', 40, 'admin.permisos'],
 ];
 
 $stmt = $pdo->prepare(

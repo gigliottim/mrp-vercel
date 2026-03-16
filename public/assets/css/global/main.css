@@ -136,6 +136,25 @@ html.sidebar-desktop-hidden .app-sidebar__nav .app-sidebar__nav {
     font-weight: 500;
 }
 
+/* Items en desarrollo (produccion.*) */
+.app-sidebar__link--wip {
+    background: rgba(220, 53, 69, 0.25);
+    color: #fff;
+    border-left: 3px solid #dc3545;
+}
+
+.app-sidebar__link--wip:hover {
+    background: rgba(220, 53, 69, 0.40);
+    color: #fff;
+    transform: translateX(3px);
+}
+
+.app-sidebar__wip-badge {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
 .app-sidebar__card {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 1rem;

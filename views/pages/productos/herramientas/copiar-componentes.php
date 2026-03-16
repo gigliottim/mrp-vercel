@@ -99,7 +99,7 @@ $destinoLabel = $destinoInfo !== null
                         </div>
                         <div class="card-body">
                             <label class="form-label">Buscar pieza origen</label>
-                            <div id="origen-search-wrap"<?= $origenInfo ? ' style="display:none"' : '' ?>>
+                            <div id="origen-search-wrap" <?= $origenInfo ? ' style="display:none"' : '' ?>>
                                 <div style="position:relative;">
                                     <input type="text"
                                         id="search-origen-input"
@@ -109,7 +109,7 @@ $destinoLabel = $destinoInfo !== null
                                     <div id="search-origen-results"></div>
                                 </div>
                             </div>
-                            <div id="origen-selected-wrap" class="d-flex align-items-start gap-2"<?= !$origenInfo ? ' style="display:none"' : '' ?>>
+                            <div id="origen-selected-wrap" class="d-flex align-items-start gap-2" <?= !$origenInfo ? ' style="display:none"' : '' ?>>
                                 <div class="flex-grow-1 form-control bg-light" id="origen-label-display"><?= View::escape($origenLabel) ?></div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearOrigen()">
                                     <i class="fa-solid fa-times me-1"></i>Cambiar
@@ -173,7 +173,7 @@ $destinoLabel = $destinoInfo !== null
                         </div>
                         <div class="card-body">
                             <label class="form-label">Buscar pieza destino</label>
-                            <div id="destino-search-wrap"<?= $destinoInfo ? ' style="display:none"' : '' ?>>
+                            <div id="destino-search-wrap" <?= $destinoInfo ? ' style="display:none"' : '' ?>>
                                 <div style="position:relative;">
                                     <input type="text"
                                         id="search-destino-input"
@@ -183,7 +183,7 @@ $destinoLabel = $destinoInfo !== null
                                     <div id="search-destino-results"></div>
                                 </div>
                             </div>
-                            <div id="destino-selected-wrap" class="d-flex align-items-start gap-2"<?= !$destinoInfo ? ' style="display:none"' : '' ?>>
+                            <div id="destino-selected-wrap" class="d-flex align-items-start gap-2" <?= !$destinoInfo ? ' style="display:none"' : '' ?>>
                                 <div class="flex-grow-1 form-control bg-light" id="destino-label-display"><?= View::escape($destinoLabel) ?></div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" onclick="clearDestino()">
                                     <i class="fa-solid fa-times me-1"></i>Cambiar
@@ -276,8 +276,13 @@ $destinoLabel = $destinoInfo !== null
             window.location.href = baseUrl + (params.toString() ? '?' + params.toString() : '');
         }
 
-        function clearOrigen() { goTo(0, currentDestino); }
-        function clearDestino() { goTo(currentOrigen, 0); }
+        function clearOrigen() {
+            goTo(0, currentDestino);
+        }
+
+        function clearDestino() {
+            goTo(currentOrigen, 0);
+        }
 
         function resultRender(item) {
             return `<div class="d-flex flex-column p-2">
@@ -294,7 +299,9 @@ $destinoLabel = $destinoInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) { goTo(item.id, currentDestino); },
+                onSelect(item) {
+                    goTo(item.id, currentDestino);
+                },
             });
 
             new SearchClient({
@@ -304,7 +311,9 @@ $destinoLabel = $destinoInfo !== null
                 minChars: 2,
                 debounceDelay: 300,
                 customItemRender: resultRender,
-                onSelect(item) { goTo(currentOrigen, item.id); },
+                onSelect(item) {
+                    goTo(currentOrigen, item.id);
+                },
             });
         }
     }());

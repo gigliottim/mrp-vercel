@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa del sistema — Propuesta mini-pyme 2 operarios</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* ── Base ─────────────────────────────────────────────── */
+    body {
+      background-color: #f8fafc;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #1e293b;
+    }
+
+    /* ── Topbar simulada ──────────────────────────────────── */
+    .demo-topbar {
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: .5rem 1.5rem;
+      font-size: .78rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .demo-topbar strong {
+      color: #f1f5f9;
+    }
+
+    .demo-badge {
+      background: #0ea5e9;
+      color: #fff;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    .demo-badge-warn {
+      background: #f59e0b;
+      color: #1e293b;
+    }
+
+    /* ── Contenedor ───────────────────────────────────────── */
+    .page-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ── Cabecera de sección ──────────────────────────────── */
+    .menu-section__icon {
+      width: 1.75rem;
+      height: 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    /* ── Tarjeta ──────────────────────────────────────────── */
+    .menu-card {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      border-color: rgba(0, 0, 0, .08) !important;
+      gap: .25rem;
+      cursor: pointer;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .10);
+      border-color: var(--bs-primary) !important;
+    }
+
+    .menu-card:hover .menu-card__label {
+      color: var(--bs-primary) !important;
+    }
+
+    .menu-card__icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: .75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .menu-card__label {
+      line-height: 1.3;
+      font-size: .8rem;
+    }
+
+    /* ── Etiqueta "DIARIO" ────────────────────────────────── */
+    .badge-daily {
+      font-size: .62rem;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      vertical-align: middle;
+    }
+
+    /* ── Comparativa ─────────────────────────────────────── */
+    .compare-card {
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, .08);
+      border-radius: .75rem;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .compare-old {
+      border-left: 4px solid #f87171;
+    }
+
+    .compare-new {
+      border-left: 4px solid #34d399;
+    }
+
+    /* ── Divider decorativo ───────────────────────────────── */
+    .section-divider {
+      border: none;
+      border-top: 1px dashed #e2e8f0;
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Topbar simulada -->
+  <div class="demo-topbar">
+    <i class="fa-solid fa-flask me-1"></i>
+    <strong>Prototipo visual</strong>
+    <span class="demo-badge">PROPUESTA</span>
+    <span class="demo-badge demo-badge-warn">No implementado aún</span>
+    <span class="ms-auto">Mini-pyme · 2 operarios · 15 mar 2026</span>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- Encabezado -->
+    <section class="mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="fa-solid fa-grip me-2 text-primary"></i>Mapa del sistema
+          </h1>
+          <p class="text-muted mb-0">Propuesta reorganizada para equipos pequeños — flujo diario primero.</p>
+        </div>
+        <a class="btn btn-outline-secondary" href="#">
+          <i class="fa-solid fa-arrow-left me-1"></i> Panel inicial
+        </a>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECCIÓN 1 — TALLER  (uso diario)
+    ══════════════════════════════════════════════════ -->
+    <section class="mb-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="menu-section__icon text-warning">
+          <i class="fa-solid fa-industry"></i>
+        </span>
+        <h2 class="h5 fw-semibold mb-0 text-warning">Taller</h2>
+        <span class="badge text-bg-light text-muted ms-1">5</span>
+        <span class="badge-daily ms-1">USO DIARIO</span>
+      </div>
+      <div class="row g-3">
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Órdenes de Producción</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-gauge-high"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Dashboard de Operaciones</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Movimientos de Partes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Stock crítico</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-chart-gantt"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Vista Gantt</div>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECCIÓN 2 — CATÁLOGO DE PRODUCTOS
+    ══════════════════════════════════════════════════ -->
+    <section class="mb-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="menu-section__icon text-success">
+          <i class="fa-solid fa-layer-group"></i>
+        </span>
+        <h2 class="h5 fw-semibold mb-0 text-success">Catálogo de Productos</h2>
+        <span class="badge text-bg-light text-muted ms-1">6</span>
+      </div>
+      <div class="row g-3">
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-puzzle-piece"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Listado de Partes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-wrench"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Gestor de Partes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-diagram-project"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">BOM activas</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Composición de Variantes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-copy"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Copiar Componentes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-shuffle"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Reemplazar Partes en Maestro</div>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECCIÓN 3 — PLANIFICACIÓN Y COMPRAS
+    ══════════════════════════════════════════════════ -->
+    <section class="mb-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="menu-section__icon text-info">
+          <i class="fa-solid fa-calendar-days"></i>
+        </span>
+        <h2 class="h5 fw-semibold mb-0 text-info">Planificación y Compras</h2>
+        <span class="badge text-bg-light text-muted ms-1">4</span>
+      </div>
+      <div class="row g-3">
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Sugerencias MRP</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Órdenes planificadas</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-calendar-alt"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Planificación de Recursos</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-shopping-cart"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Gestión de Compras</div>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECCIÓN 4 — REPORTES
+    ══════════════════════════════════════════════════ -->
+    <section class="mb-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="menu-section__icon text-secondary">
+          <i class="fa-solid fa-chart-line"></i>
+        </span>
+        <h2 class="h5 fw-semibold mb-0 text-secondary">Reportes</h2>
+        <span class="badge text-bg-light text-muted ms-1">4</span>
+      </div>
+      <div class="row g-3">
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-sitemap"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Destino de Partes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Listado de Ingeniería</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-calendar-days"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Planificación de Producción</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Resumen por grupos</div>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECCIÓN 5 — ADMINISTRACIÓN
+    ══════════════════════════════════════════════════ -->
+    <section class="mb-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="menu-section__icon text-dark">
+          <i class="fa-solid fa-sliders"></i>
+        </span>
+        <h2 class="h5 fw-semibold mb-0 text-dark">Administración</h2>
+        <span class="badge text-bg-light text-muted ms-1">10</span>
+      </div>
+      <div class="row g-3">
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Configuración general</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-address-book"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Clientes y Proveedores</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-ruler-combined"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Unidades de medida</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-tags"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Tipos de partes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-warehouse"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Tipos de depósito</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Validaciones de movimientos</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Grupos de partes</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-industry"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Centros de Trabajo</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-route"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Rutas de Producción</div>
+          </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
+            href="#">
+            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
+              <i class="fa-solid fa-building-user"></i>
+            </div>
+            <div class="menu-card__label fw-medium small text-dark">Empresa · Usuarios · Roles</div>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ══════════════════════════════════════════════════
+         COMPARATIVA
+    ══════════════════════════════════════════════════ -->
+    <section class="mb-5">
+      <h2 class="h5 fw-semibold mb-3">
+        <i class="fa-solid fa-scale-balanced me-2 text-primary"></i>Comparativa con el menú actual
+      </h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="compare-card compare-old h-100">
+            <div class="fw-semibold text-danger mb-2">
+              <i class="fa-solid fa-circle-xmark me-1"></i>Menú actual — 9 secciones
+            </div>
+            <ol class="mb-0 ps-3 small text-muted">
+              <li>Panel</li>
+              <li>Productos y BOM <span class="text-muted">(6 ítems)</span></li>
+              <li>Planeamiento MRP <span class="text-muted">(2 ítems)</span></li>
+              <li>Producción <span class="text-muted">(6 ítems)</span></li>
+              <li>Transacciones <span class="text-muted">(2 ítems)</span></li>
+              <li>Inventario y stock <span class="text-muted">(1 ítem)</span></li>
+              <li>Reportes <span class="text-muted">(4 ítems)</span></li>
+              <li>Parámetros y catálogos <span class="text-muted">(7 ítems)</span></li>
+              <li>Empresa y Usuarios <span class="text-muted">(4 ítems)</span></li>
+            </ol>
+            <div class="mt-3 pt-2 border-top small">
+              <span class="text-danger fw-semibold">33 ítems</span> · Para ver <em>Movimientos</em> hay que ir a
+              "Transacciones"; para ver <em>Stock crítico</em> a otra sección distinta. El operario salta entre 3–4
+              secciones cada día.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="compare-card compare-new h-100">
+            <div class="fw-semibold text-success mb-2">
+              <i class="fa-solid fa-circle-check me-1"></i>Propuesta — 5 secciones
+            </div>
+            <ol class="mb-0 ps-3 small text-muted">
+              <li><strong class="text-dark">Taller</strong> — uso diario <span class="badge-daily ms-1">DIARIO</span>
+              </li>
+              <li>Catálogo de Productos</li>
+              <li>Planificación y Compras</li>
+              <li>Reportes</li>
+              <li>Administración <em>(ocultable por rol)</em></li>
+            </ol>
+            <div class="mt-3 pt-2 border-top small">
+              <span class="text-success fw-semibold">33 ítems</span> — <em>los mismos</em>, mejor agrupados. El operario
+              solo toca la sección <strong>Taller</strong> en su jornada. <br>
+              <span class="text-muted">Sin migración de rutas — solo cambia <code>section_key</code> y
+                <code>section_label</code>.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-wrap -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

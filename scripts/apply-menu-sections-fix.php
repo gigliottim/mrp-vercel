@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Script one-shot: aplica los UPDATEs de secciones del menú.
  * Ejecutar una sola vez en el servidor. Borrar luego.

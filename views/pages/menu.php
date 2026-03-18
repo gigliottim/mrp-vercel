@@ -53,12 +53,12 @@ $resolveHref = static function (array $item): string {
     }
 ?>
     <section class="mb-5">
-        <div class="d-flex align-items-center gap-2 mb-3">
-            <span class="menu-section__icon text-<?= View::escape($color) ?>">
+        <div class="d-flex align-items-center gap-2 menu-section__header">
+            <span class="menu-section__icon bg-<?= View::escape($color) ?> bg-opacity-10 text-<?= View::escape($color) ?> rounded-circle">
                 <i class="<?= View::escape($sectionIcon) ?>"></i>
             </span>
             <h2 class="h5 fw-semibold mb-0 text-<?= View::escape($color) ?>"><?= View::escape($sectionLabel) ?></h2>
-            <span class="badge text-bg-light text-muted ms-1"><?= count($items) ?></span>
+            <span class="badge rounded-pill text-bg-light text-muted ms-1 fw-normal"><?= count($items) ?></span>
         </div>
         <div class="row g-3">
             <?php foreach ($items as $item) :
@@ -71,14 +71,14 @@ $resolveHref = static function (array $item): string {
             ?>
                 <div class="col-6 col-md-4 col-lg-3">
                     <a
-                        class="menu-card<?= $isDisabled ? ' menu-card--disabled' : '' ?><?= $isWip ? ' menu-card--wip' : '' ?> text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border h-100"
+                        class="menu-card menu-card--<?= View::escape($color) ?><?= $isDisabled ? ' menu-card--disabled' : '' ?><?= $isWip ? ' menu-card--wip' : '' ?> text-decoration-none d-flex flex-column align-items-center text-center p-4 rounded-3 border h-100"
                         href="<?= View::escape($href) ?>"
                         aria-label="<?= View::escape($label) ?>"
                         <?= $isDisabled ? 'aria-disabled="true" tabindex="-1"' : '' ?>>
-                        <div class="menu-card__icon mb-2 <?= $isWip ? 'text-white bg-white bg-opacity-25' : 'text-' . View::escape($color) . ' bg-' . View::escape($color) . ' bg-opacity-10' ?> rounded-3">
+                        <div class="menu-card__icon mb-3 <?= $isWip ? 'text-white bg-white bg-opacity-25' : 'text-' . View::escape($color) . ' bg-' . View::escape($color) . ' bg-opacity-10' ?>">
                             <i class="<?= View::escape($icon) ?>"></i>
                         </div>
-                        <div class="menu-card__label fw-medium small <?= $isWip ? 'text-white' : 'text-dark' ?>"><?= View::escape($label) ?></div>
+                        <div class="menu-card__label <?= $isWip ? 'text-white' : '' ?>"><?= View::escape($label) ?></div>
                     </a>
                 </div>
             <?php endforeach; ?>

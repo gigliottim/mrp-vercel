@@ -33,33 +33,83 @@
 
 /* ── Tarjetas del mapa del sistema ─────────────────────────── */
 .menu-section__icon {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 1.05rem;
 }
 
+.menu-section__header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    padding-bottom: 0.625rem;
+    margin-bottom: 1rem;
+}
+
+/* Color accent por sección */
 .menu-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    border-color: rgba(0, 0, 0, 0.08) !important;
-    gap: 0.25rem;
+    --menu-card-accent: var(--bs-primary);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    border-color: rgba(0, 0, 0, 0.09) !important;
+    background-color: #fff;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--menu-card-accent);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.menu-card:hover::before {
+    opacity: 1;
+}
+
+.menu-card--primary {
+    --menu-card-accent: var(--bs-primary);
+}
+
+.menu-card--warning {
+    --menu-card-accent: var(--bs-warning);
+}
+
+.menu-card--success {
+    --menu-card-accent: var(--bs-success);
+}
+
+.menu-card--info {
+    --menu-card-accent: var(--bs-info);
+}
+
+.menu-card--secondary {
+    --menu-card-accent: var(--bs-secondary);
+}
+
+.menu-card--dark {
+    --menu-card-accent: #212529;
 }
 
 .menu-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
-    border-color: var(--bs-primary) !important;
-    color: var(--bs-primary) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.11);
+    border-color: var(--menu-card-accent) !important;
 }
 
 .menu-card:hover .menu-card__label {
-    color: var(--bs-primary) !important;
+    color: var(--menu-card-accent) !important;
 }
 
 .menu-card--disabled {
-    opacity: 0.45;
+    opacity: 0.40;
     pointer-events: none;
 }
 
@@ -67,6 +117,10 @@
 .menu-card--wip {
     background-color: #dc3545 !important;
     border-color: #dc3545 !important;
+}
+
+.menu-card--wip::before {
+    display: none;
 }
 
 .menu-card--wip .menu-card__icon {
@@ -80,8 +134,8 @@
 
 .menu-card--wip:hover {
     border-color: #b02a37 !important;
-    box-shadow: 0 8px 24px rgba(220, 53, 69, 0.35);
-    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(220, 53, 69, 0.35);
+    transform: translateY(-4px);
 }
 
 .menu-card--wip:hover .menu-card__label {
@@ -89,17 +143,19 @@
 }
 
 .menu-card__icon {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 0.75rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50% !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     flex-shrink: 0;
 }
 
 .menu-card__label {
     line-height: 1.3;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    color: #344054;
+    font-weight: 500 !important;
 }

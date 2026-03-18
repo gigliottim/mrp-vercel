@@ -370,6 +370,8 @@ fi
 mkdir -p database/migrations
 
 chmod -R 0777 __REMOTE_PATH__/docker/logs || true
+# Archivos en la raíz del proyecto (no están en subdirectorios, pero PHP-FPM debe poder leerlos)
+chmod 644 __REMOTE_PATH__/.env __REMOTE_PATH__/composer.json __REMOTE_PATH__/composer.lock __REMOTE_PATH__/migrate_database.php 2>/dev/null || true
 if [ "__SYNC_VENDOR__" = "1" ]; then
   find __REMOTE_PATH__/vendor -type d -exec chmod 755 {} +
   find __REMOTE_PATH__/vendor -type f -exec chmod 644 {} +

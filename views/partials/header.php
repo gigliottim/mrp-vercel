@@ -23,7 +23,7 @@ $tenant = AuthManager::tenant();
                 title="Ocultar/Fijar sidebar">
                 <i class="fa-solid fa-thumbtack"></i>
             </button>
-            <a class="navbar-brand fw-semibold text-decoration-none text-dark" href="<?= url('dashboard') ?>">
+            <a class="navbar-brand fw-semibold text-decoration-none text-dark" href="<?= url('menu') ?>">
                 <?= View::escape($appName) ?>
             </a>
             <span class="text-muted small d-none d-md-inline">MRP creado para emprendedores solos</span>

@@ -68,6 +68,7 @@ final class GrupoParte extends BaseTenantModel
                 v.lote_minimo,
                 um.simbolo as unidad_medida,
                 CASE
+                    WHEN v.stock_actual = 0 THEN 'critico'
                     WHEN v.stock_actual < v.punto_pedido THEN 'critico'
                     WHEN v.stock_actual < (v.punto_pedido * 1.5) THEN 'advertencia'
                     ELSE 'normal'

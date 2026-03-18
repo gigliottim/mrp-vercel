@@ -242,6 +242,7 @@ final class Variante extends BaseTenantModel
                 gp.color AS grupo_color,
                 um.simbolo AS unidad_medida,
                 CASE
+                    WHEN v.stock_actual = 0 THEN 'critico'
                     WHEN v.stock_actual < v.punto_pedido THEN 'critico'
                     WHEN v.stock_actual < (v.punto_pedido * 1.5) THEN 'advertencia'
                     ELSE 'normal'
@@ -257,15 +258,16 @@ final class Variante extends BaseTenantModel
 
         // Aplicar filtro de estado si no es null ni 'todos'
         if ($filtroEstado === 'critico') {
-            $sql .= " AND v.stock_actual < v.punto_pedido";
+            $sql .= " AND (v.stock_actual = 0 OR v.stock_actual < v.punto_pedido)";
         } elseif ($filtroEstado === 'advertencia') {
-            $sql .= " AND v.stock_actual >= v.punto_pedido AND v.stock_actual < (v.punto_pedido * 1.5)";
+            $sql .= " AND v.stock_actual != 0 AND v.stock_actual >= v.punto_pedido AND v.stock_actual < (v.punto_pedido * 1.5)";
         } elseif ($filtroEstado === 'normal') {
-            $sql .= " AND v.stock_actual >= (v.punto_pedido * 1.5)";
+            $sql .= " AND v.stock_actual != 0 AND v.stock_actual >= (v.punto_pedido * 1.5)";
         }
 
         $sql .= " ORDER BY
             CASE
+                WHEN v.stock_actual = 0 THEN 1
                 WHEN v.stock_actual < v.punto_pedido THEN 1
                 WHEN v.stock_actual < (v.punto_pedido * 1.5) THEN 2
                 ELSE 3
@@ -285,9 +287,9 @@ final class Variante extends BaseTenantModel
         $sql = "
             SELECT
                 COUNT(*) as total,
-                SUM(CASE WHEN stock_actual < punto_pedido THEN 1 ELSE 0 END) as critico,
-                SUM(CASE WHEN stock_actual >= punto_pedido AND stock_actual < (punto_pedido * 1.5) THEN 1 ELSE 0 END) as advertencia,
-                SUM(CASE WHEN stock_actual >= (punto_pedido * 1.5) THEN 1 ELSE 0 END) as normal
+                SUM(CASE WHEN stock_actual = 0 OR stock_actual < punto_pedido THEN 1 ELSE 0 END) as critico,
+                SUM(CASE WHEN stock_actual != 0 AND stock_actual >= punto_pedido AND stock_actual < (punto_pedido * 1.5) THEN 1 ELSE 0 END) as advertencia,
+                SUM(CASE WHEN stock_actual != 0 AND stock_actual >= (punto_pedido * 1.5) THEN 1 ELSE 0 END) as normal
             FROM variantes
             WHERE estado = 'activa'
         ";

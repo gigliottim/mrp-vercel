@@ -252,6 +252,11 @@ unset($_SESSION['bom_error'], $_SESSION['bom_success']);
                 <h1 class="h3 mb-0">Composición de variantes</h1>
                 <p class="text-muted small mb-0">Define los materiales y cantidades que componen cada variante</p>
             </div>
+            <div>
+                <a href="<?= url('productos/maestro/importar') ?>" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa-solid fa-file-arrow-up me-1"></i> Importar / Exportar BOM
+                </a>
+            </div>
         </div>
     </section>
 

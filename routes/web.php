@@ -24,6 +24,7 @@ use App\Controllers\Produccion\PlanificacionController;
 use App\Controllers\Productos\BomController;
 use App\Controllers\Productos\ComposicionController;
 use App\Controllers\Productos\HerramientasBomController;
+use App\Controllers\Productos\MaestroImportController;
 use App\Controllers\Inventario\CriticoController;
 use App\Controllers\Transacciones\MovimientosPartesController;
 use App\Controllers\Transacciones\ComprasController;
@@ -202,6 +203,12 @@ $router->delete('/configuracion/unidades/{id}', [UnidadesMedidaController::class
 // Productos - BOM y Composición
 $router->get('/productos/bom', [BomController::class, 'index']);
 $router->get('/productos/maestro', [ComposicionController::class, 'maestro']);
+
+// Productos - Importar/Exportar Maestro BOM
+$router->get('/productos/maestro/importar', [MaestroImportController::class, 'index']);
+$router->get('/productos/maestro/importar/template', [MaestroImportController::class, 'downloadTemplate']);
+$router->get('/productos/maestro/exportar', [MaestroImportController::class, 'export']);
+$router->post('/productos/maestro/importar', [MaestroImportController::class, 'import']);
 
 // Productos - Herramientas BOM
 $router->get('/productos/copiar-componentes', [HerramientasBomController::class, 'copiarComponentes']);

@@ -217,21 +217,24 @@ if ($roleOptions === []) {
                                     </td>
                                     <td class="text-end">
                                         <?php if ($isAdminCompany) : ?>
+                                            <?php $isSuper = strtolower((string) ($usuario['rol_nombre'] ?? '')) === 'super administrador' || strtolower((string) ($usuario['rol_nombre'] ?? '')) === 'super_admin'; ?>
                                             <div class="btn-group btn-group-sm">
                                                 <a
                                                     class="btn btn-outline-secondary"
                                                     href="<?= url('/empresa-usuarios/usuarios/' . (int) ($usuario['id'] ?? 0) . '/editar') ?>">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </a>
-                                                <form
-                                                    method="post"
-                                                    action="<?= url('/empresa-usuarios/usuarios/' . (int) ($usuario['id'] ?? 0)) ?>"
-                                                    onsubmit="return confirm('Eliminar usuario?');">
-                                                    <input type="hidden" name="_method" value="DELETE">
-                                                    <button class="btn btn-outline-danger" type="submit">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <?php if (!$isSuper) : ?>
+                                                    <form
+                                                        method="post"
+                                                        action="<?= url('/empresa-usuarios/usuarios/' . (int) ($usuario['id'] ?? 0)) ?>"
+                                                        onsubmit="return confirm('Eliminar usuario?');">
+                                                        <input type="hidden" name="_method" value="DELETE">
+                                                        <button class="btn btn-outline-danger" type="submit">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
                                             </div>
                                         <?php else : ?>
                                             <span class="text-muted small">Solo lectura</span>

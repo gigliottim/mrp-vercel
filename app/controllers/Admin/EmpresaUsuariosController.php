@@ -385,6 +385,8 @@ final class EmpresaUsuariosController extends Controller
             'editing' => $editing,
             'old' => $old,
             'errors' => $errors,
+            'currentCompanyId' => $this->service->currentCompanyId(),
+            'isSuperAdmin' => $this->service->isCurrentUserSuperAdmin(),
         ]);
     }
 

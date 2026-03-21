@@ -9,7 +9,7 @@ use PDO;
 
 final class MenuService
 {
-    private const BYPASS_ROLE_NAMES = ['super_admin', 'admin_empresa', 'administrator'];
+    private const BYPASS_ROLE_NAMES = ['super_admin', 'super administrador', 'admin_empresa', 'administrator', 'administrador'];
     private const SECTION_VISUAL_ORDER = [
         'taller',
         'catalogo_productos',
@@ -53,10 +53,40 @@ final class MenuService
         $aclRows = $this->fetchAclRows($companyId, $userId, $roleContext['role_ids']);
         $permissionMap = $this->resolvePermissionMap($menuItems, $aclRows);
 
+        if (in_array('usuario', $roleContext['role_names'], true)) {
+            $this->ensureDashboardAccess($menuItems, $permissionMap);
+        }
+
         return [
             'sidebar_tree' => $this->buildSidebarTree($menuItems, $permissionMap),
             'permissions' => $this->codePermissions($menuItems, $permissionMap),
         ];
+    }
+
+    /**
+     * Asegura que el rol Usuario siempre tenga acceso mínimo a panel.inicio.
+     */
+    private function ensureDashboardAccess(array $menuItems, array &$permissionMap): void
+    {
+        $dashboardId = null;
+        $parentId = null;
+
+        foreach ($menuItems as $item) {
+            if ($item['code'] === 'panel.inicio') {
+                $dashboardId = (int) $item['id'];
+                $parentId = isset($item['parent_id']) ? (int) $item['parent_id'] : null;
+                break;
+            }
+        }
+
+        if ($dashboardId !== null) {
+            if (!isset($permissionMap[$dashboardId])) {
+                $permissionMap[$dashboardId] = 'read';
+            }
+            if ($parentId !== null && (!isset($permissionMap[$parentId]) || $permissionMap[$parentId] === 'none')) {
+                $permissionMap[$parentId] = 'read';
+            }
+        }
     }
 
     /**

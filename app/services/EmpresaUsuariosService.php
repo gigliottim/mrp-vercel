@@ -11,7 +11,8 @@ use RuntimeException;
 
 final class EmpresaUsuariosService
 {
-    private const ADMIN_ROLE_NAMES = ['admin_empresa', 'administrator', 'super_admin'];
+    private const FIXED_ROLE_NAMES = ['admin_empresa', 'administrator', 'super administrador', 'administrador', 'usuario', 'user', 'super_admin'];
+    private const ADMIN_ROLE_NAMES = ['admin_empresa', 'administrator', 'super_admin', 'super administrador', 'administrador'];
     private const COMPANY_ROLE_GUARD_PREFIX = 'company:';
 
     private PDO $connection;
@@ -62,22 +63,31 @@ final class EmpresaUsuariosService
     {
         $tenant = AuthManager::tenant();
         $roleName = mb_strtolower((string) ($tenant['role_name'] ?? ''));
-        return $roleName === 'super_admin';
+        return in_array($roleName, ['super_admin', 'super administrador'], true);
     }
 
     public function listCompanies(): array
     {
+        $isSuperAdmin = $this->isCurrentUserSuperAdmin();
+
         $sql = 'SELECT id, name AS nombre, slug, tax_id AS cuit, contact_email AS email,
-                CASE WHEN status = :active THEN 1 ELSE 0 END AS activo
-                FROM companies
-                WHERE id = :id
-                LIMIT 1';
+                       CASE WHEN status = :active THEN 1 ELSE 0 END AS activo
+                FROM companies';
+
+        if (!$isSuperAdmin) {
+            $sql .= ' WHERE id = :id LIMIT 1';
+        } else {
+            $sql .= ' ORDER BY name ASC';
+        }
 
         $stmt = $this->connection->prepare($sql);
-        $stmt->execute([
-            'active' => 'active',
-            'id' => $this->currentCompanyId(),
-        ]);
+
+        $params = ['active' => 'active'];
+        if (!$isSuperAdmin) {
+            $params['id'] = $this->currentCompanyId();
+        }
+
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -85,7 +95,7 @@ final class EmpresaUsuariosService
     public function findCompany(int $id): ?array
     {
         $currentCompanyId = $this->currentCompanyId();
-        if ($id !== $currentCompanyId) {
+        if ($id !== $currentCompanyId && !$this->isCurrentUserSuperAdmin()) {
             return null;
         }
 
@@ -108,8 +118,14 @@ final class EmpresaUsuariosService
     public function updateCompany(int $id, array $data): void
     {
         $currentCompanyId = $this->currentCompanyId();
-        if ($id !== $currentCompanyId) {
+        $isSuperAdmin = $this->isCurrentUserSuperAdmin();
+
+        if ($id !== $currentCompanyId && !$isSuperAdmin) {
             throw new RuntimeException('Solo puedes editar la empresa activa en sesion.');
+        }
+
+        if ($id === $currentCompanyId && ((int) ($data['activo'] ?? 1)) === 0) {
+            throw new RuntimeException('No puedes desactivar tu propia empresa.');
         }
 
         $stmt = $this->connection->prepare(
@@ -235,8 +251,8 @@ final class EmpresaUsuariosService
         }
 
         $name = $this->roleNameById($id);
-        if ($name !== null && $this->isAdminRoleName($name)) {
-            throw new RuntimeException('No se puede eliminar un rol administrador base.');
+        if ($name !== null && in_array(mb_strtolower($name), self::FIXED_ROLE_NAMES, true)) {
+            throw new RuntimeException('No se puede eliminar un rol del sistema base (Administrador, Usuario o Super Administrador).');
         }
 
         $userCompany = $this->connection->prepare('SELECT 1 FROM user_company WHERE role_id = :id LIMIT 1');
@@ -357,6 +373,11 @@ final class EmpresaUsuariosService
         try {
             $existingRoleName = $this->roleNameByUserCompany($companyId, $userId);
             $newRoleName = $this->roleNameById((int) $data['role_id']);
+
+            if ($existingRoleName === 'super_admin' && $newRoleName !== 'super_admin') {
+                throw new RuntimeException('Ningún Super Administrador puede ser modificado a otro rol.');
+            }
+
             if ($existingRoleName !== null && $this->isAdminRoleName($existingRoleName) && !$this->isAdminRoleName((string) $newRoleName)) {
                 if ($this->adminCountForCompany($companyId) <= 1) {
                     throw new RuntimeException('Debe existir al menos un admin activo por empresa.');
@@ -417,6 +438,9 @@ final class EmpresaUsuariosService
     public function deleteUserForCompany(int $companyId, int $userId): void
     {
         $roleName = $this->roleNameByUserCompany($companyId, $userId);
+        if ($roleName === 'super_admin') {
+            throw new RuntimeException('Ningún Super Administrador puede ser eliminado.');
+        }
         if ($roleName !== null && $this->isAdminRoleName($roleName)) {
             if ($this->adminCountForCompany($companyId) <= 1) {
                 throw new RuntimeException('Debe existir al menos un admin activo por empresa.');
@@ -538,19 +562,19 @@ final class EmpresaUsuariosService
 
     private function adminCountForCompany(int $companyId): int
     {
+        $placeholders = implode(', ', array_fill(0, count(self::ADMIN_ROLE_NAMES), '?'));
+
         $stmt = $this->connection->prepare(
-            'SELECT COUNT(*)
+            "SELECT COUNT(*)
              FROM user_company uc
              INNER JOIN roles r ON r.id = uc.role_id
-             WHERE uc.company_id = :company_id
-               AND lower(r.name) IN (:role_1, :role_2, :role_3)'
+             WHERE uc.company_id = ?
+               AND lower(r.name) IN ($placeholders)"
         );
-        $stmt->execute([
-            'company_id' => $companyId,
-            'role_1' => self::ADMIN_ROLE_NAMES[0],
-            'role_2' => self::ADMIN_ROLE_NAMES[1],
-            'role_3' => self::ADMIN_ROLE_NAMES[2],
-        ]);
+
+        $params = array_merge([$companyId], self::ADMIN_ROLE_NAMES);
+        $stmt->execute($params);
+
         return (int) $stmt->fetchColumn();
     }
 

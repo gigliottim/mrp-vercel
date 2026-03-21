@@ -420,9 +420,10 @@ if ($menuTree === []) {
                             document.getElementById('menu_item_id').value = '';
                         }
 
-                        // Reset all selects to "none"
+                        // Reset all selects depending on node type
+                        const defaultVal = isItem ? 'none' : 'allow';
                         document.querySelectorAll('select[name^="perms["]').forEach(select => {
-                            select.value = 'none';
+                            select.value = defaultVal;
                             updateRowState(select);
                         });
 

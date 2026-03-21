@@ -119,13 +119,19 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                     </div>
 
                     <div class="form-check form-switch">
+                        <?php $isOwnCompany = (isset($currentCompanyId) && isset($editing['id']) && $currentCompanyId === $editing['id']); ?>
                         <input
                             id="empresa-activa"
                             class="form-check-input"
                             type="checkbox"
                             name="activo"
-                            <?= (int) $oldValue('activo', '1') === 1 ? 'checked' : '' ?>>
+                            <?= (int) $oldValue('activo', '1') === 1 ? 'checked' : '' ?>
+                            <?= $isOwnCompany ? 'disabled' : '' ?>>
                         <label class="form-check-label" for="empresa-activa">Empresa activa</label>
+                        <?php if ($isOwnCompany): ?>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">No puede desactivar la empresa de su sesión actual.</small>
+                            <input type="hidden" name="activo" value="<?= (int) $oldValue('activo', '1') ?>">
+                        <?php endif; ?>
                     </div>
 
                     <div class="d-grid">
@@ -140,7 +146,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h5 mb-0">Empresa activa</h2>
+                    <h2 class="h5 mb-0"><?= (isset($isSuperAdmin) && $isSuperAdmin) ? 'Todas las empresas' : 'Empresa activa' ?></h2>
                     <span class="text-muted small"><?= count($empresas) ?> resultados</span>
                 </div>
 

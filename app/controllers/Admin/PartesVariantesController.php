@@ -495,19 +495,18 @@ final class PartesVariantesController extends Controller
         $search = $overrides['search'] ?? '';
         $listing = $this->partes->paginated($page, $perPage, $search);
 
-        $filteredParteId = $overrides['filteredParteId'] ?? null;
-        $variantsListing = $this->variantes->paginatedWithSearch(
-            $filteredParteId !== null && $filteredParteId > 0 ? (int) $filteredParteId : null,
-            $page,
-            $perPage,
-            $search
-        );
+        // Novedad: Buscamos variantes pre-cargadas para las partes
+        $partIds = array_column($listing['items'], 'id');
+        $variantsGrouped = $this->variantes->byParteIds($partIds);
+
+        foreach ($listing['items'] as &$parteItem) {
+            $parteItem['variantes'] = $variantsGrouped[$parteItem['id']] ?? [];
+        }
+        unset($parteItem);
 
         $defaults = [
             'title' => 'Partes y variantes',
             'parts' => $listing,
-            'variants' => $variantsListing['items'],
-            'variantsMeta' => $variantsListing,
             'partOptions' => $this->partes->options(),
             'tipos' => $this->tipos->activos(),
             'grupos' => $this->grupos->activos(),

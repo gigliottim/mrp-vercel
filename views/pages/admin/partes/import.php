@@ -14,15 +14,16 @@ $report = $report ?? null;
             <p class="text-uppercase text-muted small mb-1">Productos</p>
             <h1 class="h3 mb-0">Importar Partes y Variantes</h1>
         </div>
-        <ul class="nav nav-pills">
+        <ul class="nav nav-pills d-flex gap-2">
             <li class="nav-item">
-                <a class="nav-link" href="<?= url('productos/partes?tab=partes') ?>">Partes</a>
+                <a class="btn btn-outline-secondary" href="<?= url('productos/partes') ?>">
+                    <i class="fa-solid fa-list me-1"></i> Listado
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="<?= url('productos/partes?tab=variantes') ?>">Variantes</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="<?= url('productos/partes/importar') ?>">Importar</a>
+                <a class="btn btn-primary" href="<?= url('productos/partes/manager') ?>">
+                    <i class="fa-solid fa-plus me-1"></i> Nueva Parte / Variante
+                </a>
             </li>
         </ul>
     </div>

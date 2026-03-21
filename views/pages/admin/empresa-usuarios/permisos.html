@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Permisos - UI/UX</title>
+  <!-- Usamos Bootstrap similar al proyecto -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .acl-tree-card {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .acl-tree-node {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .acl-tree-node:hover {
+      background-color: #e9ecef;
+    }
+
+    .acl-tree-node.is-selected {
+      background-color: #cfe2ff;
+      border-left: 3px solid #0d6efd;
+    }
+
+    .permission-row {
+      transition: background-color 0.2s;
+    }
+
+    .permission-row:hover {
+      background-color: #f8f9fa;
+    }
+
+    .role-group-header,
+    .user-group-header {
+      background-color: #e9ecef;
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container-fluid">
+    <section class="mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <p class="text-uppercase text-muted small mb-1">Empresa y Usuarios</p>
+          <h1 class="h3 mb-0">Permisos (UI/UX Demo)</h1>
+        </div>
+      </div>
+    </section>
+
+    <nav class="nav nav-pills mb-4 flex-wrap gap-2">
+      <a class="nav-link" href="#">Empresa</a>
+      <a class="nav-link" href="#">Usuarios</a>
+      <a class="nav-link" href="#">Roles</a>
+      <a class="nav-link active" href="#">Permisos</a>
+    </nav>
+
+    <div class="row g-4">
+      <!-- Columna 1: Árbol de Menú -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100 acl-tree-card">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center sticky-top">
+            <h3 class="h6 mb-0">Estructura del Sistema</h3>
+            <small class="text-muted">Seleccione un módulo</small>
+          </div>
+          <div class="card-body">
+            <div class="input-group input-group-sm mb-3">
+              <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="text" class="form-control" placeholder="Filtrar menú...">
+            </div>
+
+            <ul class="list-unstyled mb-0">
+              <!-- Sección General -->
+              <li class="mb-2">
+                <div class="p-2 mb-1 d-flex align-items-center gap-2 rounded acl-tree-node"
+                  onclick="selectNode('Configuración', 'configuracion', false)">
+                  <i class="fa-solid fa-folder text-warning fs-5" style="width:24px; text-align:center;"></i>
+                  <div class="d-flex flex-column lh-sm">
+                    <span class="fw-bold text-dark text-uppercase">Configuración</span>
+                    <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Rama / Sección</small>
+                  </div>
+                </div>
+                <ul class="list-unstyled ms-3 ps-2 border-start border-2 border-light mb-0">
+                  <li class="mb-1">
+                    <div class="p-2 rounded d-flex align-items-center gap-2 acl-tree-node is-selected"
+                      onclick="selectNode('Usuarios', 'usuarios', true)">
+                      <i class="fa-solid fa-users text-info fs-5" style="width:24px; text-align:center;"></i>
+                      <div class="d-flex flex-column lh-sm">
+                        <span class="fw-bold text-dark text-uppercase">USUARIOS</span>
+                        <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Gestión de
+                          usuarios</small>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="mb-1">
+                    <div class="p-2 rounded d-flex align-items-center gap-2 acl-tree-node"
+                      onclick="selectNode('Roles', 'roles', true)">
+                      <i class="fa-solid fa-shield-halved text-info fs-5" style="width:24px; text-align:center;"></i>
+                      <div class="d-flex flex-column lh-sm">
+                        <span class="fw-bold text-dark text-uppercase">ROLES</span>
+                        <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Gestión de
+                          roles</small>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+
+              <!-- Sección Operaciones -->
+              <li class="mb-2 mt-3">
+                <div class="p-2 mb-1 d-flex align-items-center gap-2 rounded acl-tree-node"
+                  onclick="selectNode('Operaciones', 'operaciones', false)">
+                  <i class="fa-solid fa-folder text-warning fs-5" style="width:24px; text-align:center;"></i>
+                  <div class="d-flex flex-column lh-sm">
+                    <span class="fw-bold text-dark text-uppercase">Operaciones</span>
+                    <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Rama / Sección</small>
+                  </div>
+                </div>
+                <ul class="list-unstyled ms-3 ps-2 border-start border-2 border-light mb-0">
+                  <li class="mb-1">
+                    <div class="p-2 rounded d-flex align-items-center gap-2 acl-tree-node"
+                      onclick="selectNode('Inventario', 'inventario', false)">
+                      <i class="fa-solid fa-boxes-stacked text-warning fs-5" style="width:24px; text-align:center;"></i>
+                      <div class="d-flex flex-column lh-sm">
+                        <span class="fw-bold text-dark text-uppercase">INVENTARIO</span>
+                        <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Control de
+                          stock</small>
+                      </div>
+                    </div>
+                    <!-- Sub-items -->
+                    <ul class="list-unstyled ms-4 ps-2 border-start border-2 border-light mb-0 mt-1">
+                      <li class="mb-1">
+                        <div class="p-2 rounded d-flex align-items-center gap-2 acl-tree-node"
+                          onclick="selectNode('Ajustes de Stock', 'ajustes_stock', true)">
+                          <i class="fa-solid fa-pen-to-square text-info fs-5"
+                            style="width:24px; text-align:center;"></i>
+                          <div class="d-flex flex-column lh-sm">
+                            <span class="fw-bold text-dark text-uppercase">Ajustes</span>
+                            <small class="text-secondary text-uppercase" style="font-size: 0.75rem;">Modificar
+                              cantidades</small>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna 2: Sujetos (Roles y Usuarios) y sus Permisos asignados al nodo seleccionado -->
+      <div class="col-12 col-md-8">
+        <div class="card h-100">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center sticky-top">
+            <div>
+              <h3 class="h6 mb-0">Asignación de Permisos</h3>
+              <small class="text-muted">Para: <strong id="selected-node-title" class="text-primary">USUARIOS</strong>
+                <span id="selected-node-type" class="badge bg-secondary ms-1">Item</span></small>
+            </div>
+            <div class="input-group input-group-sm" style="width: 200px;">
+              <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input type="text" class="form-control" placeholder="Buscar sujeto...">
+            </div>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 border-top-0">
+                <thead class="table-light sticky-top" style="top: 60px; z-index: 10;">
+                  <tr>
+                    <th class="ps-4">Sujeto (Rol / Usuario)</th>
+                    <th style="width: 35%">Nivel de Permiso</th>
+                    <th style="width: 15%" class="text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- ROLES (Ordenados alfabéticamente) -->
+                  <tr>
+                    <td colspan="3" class="p-0">
+                      <div class="role-group-header ms-3 me-3"><i
+                          class="fa-solid fa-shield-halved text-secondary me-2"></i>Roles</div>
+                    </td>
+                  </tr>
+
+                  <tr class="permission-row">
+                    <td class="ps-4 fw-medium">Administrador</td>
+                    <td>
+                      <select
+                        class="form-select form-select-sm border-0 fw-bold text-primary bg-transparent shadow-none">
+                        <option value="allow" selected>Acceder</option>
+                        <option value="deny">Denegar</option>
+                        <option value="none">No definido (Heredada)</option>
+                      </select>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>
+                    </td>
+                  </tr>
+
+                  <tr class="permission-row bg-light">
+                    <td class="ps-4 fw-medium">Auditor</td>
+                    <td>
+                      <select
+                        class="form-select form-select-sm border-0 text-primary fw-bold bg-transparent shadow-none">
+                        <option value="allow" selected>Acceder</option>
+                        <option value="deny">Denegar</option>
+                        <option value="none">No definido (Heredada)</option>
+                      </select>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>
+                    </td>
+                  </tr>
+
+                  <tr class="permission-row">
+                    <td class="ps-4 fw-medium text-muted">Operador</td>
+                    <td>
+                      <select class="form-select form-select-sm border-0 bg-transparent shadow-none text-muted">
+                        <option value="none" selected>No definido (Heredada)</option>
+                        <option value="allow">Acceder</option>
+                        <option value="deny">Denegar</option>
+                      </select>
+                    </td>
+                    <td class="text-center">
+                      <span class="text-muted"><i class="fa-solid fa-minus"></i></span>
+                    </td>
+                  </tr>
+
+                  <!-- USUARIOS (Ordenados alfabéticamente) -->
+                  <tr>
+                    <td colspan="3" class="p-0">
+                      <div class="user-group-header ms-3 me-3"><i
+                          class="fa-solid fa-user text-secondary me-2"></i>Usuarios (Excepciones específicas)</div>
+                    </td>
+                  </tr>
+
+                  <tr class="permission-row">
+                    <td class="ps-4 fw-medium d-flex align-items-center gap-2">
+                      <div
+                        class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center"
+                        style="width: 24px; height: 24px; font-size: 10px;">CC</div>
+                      Carlos Castro
+                      <span class="badge bg-light text-dark border ms-2" style="font-size: 0.65rem;">Operador</span>
+                    </td>
+                    <td>
+                      <select
+                        class="form-select form-select-sm border-0 text-danger fw-bold bg-transparent shadow-none">
+                        <option value="allow">Acceder</option>
+                        <option value="deny" selected>Denegar</option>
+                        <option value="none">No definido (Heredada)</option>
+                      </select>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>
+                    </td>
+                  </tr>
+
+                  <tr class="permission-row">
+                    <td class="ps-4 fw-medium d-flex align-items-center gap-2 text-muted">
+                      <div
+                        class="bg-light text-secondary rounded-circle border d-flex justify-content-center align-items-center"
+                        style="width: 24px; height: 24px; font-size: 10px;">LM</div>
+                      Laura Martinez
+                      <span class="badge bg-light text-dark border ms-2"
+                        style="font-size: 0.65rem;">Administrador</span>
+                    </td>
+                    <td>
+                      <select class="form-select form-select-sm border-0 bg-transparent shadow-none text-muted">
+                        <option value="none" selected>No definido (Heredada)</option>
+                        <option value="allow">Acceder</option>
+                        <option value="deny">Denegar</option>
+                      </select>
+                    </td>
+                    <td class="text-center">
+                      <span class="text-muted"><i class="fa-solid fa-minus"></i></span>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+            <button class="btn btn-outline-secondary">Descartar Cambios</button>
+            <button class="btn btn-primary d-flex align-items-center gap-2">
+              <i class="fa-solid fa-save"></i> Guardar Permisos
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectNode(label, code, isItem) {
+      // Actualizar visual del árbol
+      document.querySelectorAll('.acl-tree-node').forEach(el => el.classList.remove('is-selected'));
+      event.currentTarget.classList.add('is-selected');
+
+      // Actualizar título de la tabla
+      document.getElementById('selected-node-title').textContent = label.toUpperCase();
+
+      let badge = document.getElementById('selected-node-type');
+      if (isItem) {
+        badge.textContent = 'Menú Ítem';
+        badge.className = 'badge bg-secondary ms-1';
+      } else {
+        badge.textContent = 'Rama / Grupo';
+        badge.className = 'badge bg-warning text-dark ms-1';
+      }
+
+      // Simular carga cambiando la opacidad
+      const tbody = document.querySelector('tbody');
+      tbody.style.opacity = '0.3';
+      setTimeout(() => {
+        tbody.style.opacity = '1';
+      }, 300);
+    }
+  </script>
+
+  <!-- Scripts de Bootstrap requeridos si hay tooltips/dropdowns -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

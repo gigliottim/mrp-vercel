@@ -59,13 +59,13 @@ $buildUrl = static function (array $params) use ($search): string {
                     <span class="input-group-text bg-light text-muted border-end-0">
                         <i class="fa-solid fa-search"></i>
                     </span>
-                    <input type="text" 
-                        class="form-control border-start-0 ps-0" 
+                    <input type="text"
+                        class="form-control border-start-0 ps-0"
                         id="search-input-partes"
-                        name="q" 
-                        value="<?= View::escape($search) ?>" 
+                        name="q"
+                        value="<?= View::escape($search) ?>"
                         data-has-search="<?= $search !== '' ? 'true' : 'false' ?>"
-                        placeholder="Buscar por código o detalle de parte / variante..." 
+                        placeholder="Buscar por código o detalle de parte / variante..."
                         autocomplete="off" />
                 </div>
             </div>
@@ -95,18 +95,18 @@ $buildUrl = static function (array $params) use ($search): string {
         <?php else: ?>
             <div class="accordion accordion-flush" id="accordionPartesList">
                 <?php foreach ($partItems as $index => $parte): ?>
-                    <?php 
-                        $variantes = $parte['variantes'] ?? []; 
-                        $collapseId = 'collapse_parte_' . $parte['id'];
-                        $headingId = 'heading_parte_' . $parte['id'];
+                    <?php
+                    $variantes = $parte['variantes'] ?? [];
+                    $collapseId = 'collapse_parte_' . $parte['id'];
+                    $headingId = 'heading_parte_' . $parte['id'];
                     ?>
                     <div class="accordion-item border-bottom">
                         <!-- HEADER: Datos de la Parte -->
                         <h2 class="accordion-header" id="<?= $headingId ?>">
                             <div class="d-flex align-items-center w-100 px-3 py-2 custom-accordion-hover">
-                                <button class="accordion-button collapsed flex-grow-1 p-2 bg-transparent shadow-none" 
-                                    type="button" 
-                                    data-bs-toggle="collapse" 
+                                <button class="accordion-button collapsed flex-grow-1 p-2 bg-transparent shadow-none"
+                                    type="button"
+                                    data-bs-toggle="collapse"
                                     data-bs-target="#<?= $collapseId ?>"
                                     aria-expanded="false"
                                     aria-controls="<?= $collapseId ?>">
@@ -128,9 +128,9 @@ $buildUrl = static function (array $params) use ($search): string {
                                 </button>
                                 <!-- Acciones de la PARTE -->
                                 <div class="ms-2">
-                                    <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>" 
-                                       class="btn btn-sm btn-outline-primary" 
-                                       title="Editar / Gestionar Parte">
+                                    <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="Editar / Gestionar Parte">
                                         <i class="fa-solid fa-pen"></i> Editar parte
                                     </a>
                                 </div>
@@ -138,9 +138,9 @@ $buildUrl = static function (array $params) use ($search): string {
                         </h2>
 
                         <!-- BODY: Tabla de Variante(s) -->
-                        <div id="<?= $collapseId ?>" 
-                            class="accordion-collapse collapse bg-light" 
-                            aria-labelledby="<?= $headingId ?>" 
+                        <div id="<?= $collapseId ?>"
+                            class="accordion-collapse collapse bg-light"
+                            aria-labelledby="<?= $headingId ?>"
                             data-bs-parent="#accordionPartesList">
                             <div class="accordion-body p-3">
                                 <?php if (empty($variantes)): ?>
@@ -161,14 +161,14 @@ $buildUrl = static function (array $params) use ($search): string {
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($variantes as $variante) : ?>
-                                                    <?php 
-                                                        $estadoColors = [
-                                                            'activa' => 'success',
-                                                            'desarrollo' => 'info',
-                                                            'obsoleta' => 'warning',
-                                                            'descontinuada' => 'danger'
-                                                        ];
-                                                        $color = $estadoColors[$variante['estado']] ?? 'secondary';
+                                                    <?php
+                                                    $estadoColors = [
+                                                        'activa' => 'success',
+                                                        'desarrollo' => 'info',
+                                                        'obsoleta' => 'warning',
+                                                        'descontinuada' => 'danger'
+                                                    ];
+                                                    $color = $estadoColors[$variante['estado']] ?? 'secondary';
                                                     ?>
                                                     <tr>
                                                         <td class="ps-3 py-2 fw-medium"><?= View::escape($variante['codigo_variante']) ?></td>
@@ -179,9 +179,9 @@ $buildUrl = static function (array $params) use ($search): string {
                                                             </span>
                                                         </td>
                                                         <td class="text-end pe-3">
-                                                            <a href="<?= url("productos/partes/manager/$parte['id']/variantes/$variante['id']") ?>" 
-                                                               class="btn btn-sm btn-light border text-primary"
-                                                               title="Editar variante">
+                                                            <a href="<?= url("productos/partes/manager/{$parte['id']}/variantes/{$variante['id']}") ?>"
+                                                                class="btn btn-sm btn-light border text-primary"
+                                                                title="Editar variante">
                                                                 <i class="fa-solid fa-pencil"></i>
                                                             </a>
                                                         </td>
@@ -198,7 +198,7 @@ $buildUrl = static function (array $params) use ($search): string {
             </div>
         <?php endif; ?>
     </div>
-    
+
     <!-- Paginación -->
     <?php if (!$showAll && $totalPages > 1): ?>
         <div class="card-footer bg-white pt-3 pb-2 border-top">
@@ -230,9 +230,9 @@ $buildUrl = static function (array $params) use ($search): string {
 </div>
 
 <style>
-.custom-accordion-hover:hover {
-    background-color: var(--bs-light) !important;
-}
+    .custom-accordion-hover:hover {
+        background-color: var(--bs-light) !important;
+    }
 </style>
 
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>" defer></script>

@@ -104,7 +104,10 @@ if ($menuTree === []) {
 ?>
 <style>
     .acl-tree-card {
-        max-height: 600px;
+        /* eliminamos max-height fijo para que se adapte al contenedor padre */
+    }
+
+    .acl-tree-card .card-body {
         overflow-y: auto;
     }
 
@@ -144,7 +147,7 @@ if ($menuTree === []) {
 </style>
 <link rel="stylesheet" href="<?= AssetHelper::css('modules/empresa-usuarios/permisos-tree.css') ?>">
 
-<section class="mb-4">
+<section class="mb-4 flex-shrink-0">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <p class="text-uppercase text-muted small mb-1">Empresa y Usuarios</p>
@@ -153,17 +156,17 @@ if ($menuTree === []) {
     </div>
 </section>
 
-<nav class="nav nav-pills mb-4 flex-wrap gap-2">
+<nav class="nav nav-pills mb-4 flex-wrap gap-2 flex-shrink-0">
     <a class="nav-link" href="<?= url('/empresa-usuarios/empresa') ?>">Empresa</a>
     <a class="nav-link" href="<?= url('/empresa-usuarios/usuarios') ?>">Usuarios</a>
     <a class="nav-link" href="<?= url('/empresa-usuarios/roles') ?>">Roles</a>
     <a class="nav-link active" href="<?= url('/empresa-usuarios/permisos') ?>">Permisos</a>
 </nav>
 
-<div class="row g-4">
-    <div class="col-12">
-        <div class="card h-100">
-            <div class="card-body">
+<div class="row g-4 flex-grow-1" style="min-height: 50vh;">
+    <div class="col-12 h-100 d-flex flex-column">
+        <div class="card flex-grow-1 d-flex flex-column">
+            <div class="card-body d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <p class="text-muted small text-uppercase mb-1">Formulario ACL</p>
@@ -181,10 +184,10 @@ if ($menuTree === []) {
                 <form
                     method="post"
                     action="<?= url('/roles-permisos/acl') ?>"
-                    class="vstack gap-3">
-                    <div class="row g-4">
-                        <div class="col-12 col-md-4">
-                            <div class="card h-100 acl-tree-card">
+                    class="vstack gap-3 flex-grow-1">
+                    <div class="row g-4 flex-grow-1 mb-4">
+                        <div class="col-12 col-md-4 d-flex flex-column">
+                            <div class="card d-flex flex-column flex-grow-1 acl-tree-card">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center sticky-top">
                                     <h3 class="h6 mb-0">Estructura</h3>
                                     <small class="text-muted">Seleccione un módulo</small>
@@ -287,8 +290,8 @@ if ($menuTree === []) {
                                 min="1">
                         </div>
 
-                        <div class="col-12 col-md-8">
-                            <div class="card h-100">
+                        <div class="col-12 col-md-8 d-flex flex-column">
+                            <div class="card h-100 d-flex flex-column flex-grow-1">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center sticky-top">
                                     <div>
                                         <h3 class="h6 mb-0">Asignación de Permisos</h3>
@@ -301,8 +304,8 @@ if ($menuTree === []) {
                                     </div>
                                 </div>
 
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
+                                <div class="card-body p-0 flex-grow-1" style="overflow-y: auto;">
+                                    <div class="table-responsive h-100">
                                         <table class="table table-hover align-middle mb-0 border-top-0">
                                             <thead class="table-light sticky-top" style="top: 0px; z-index: 10;">
                                                 <tr>

@@ -26,8 +26,8 @@ $appFormattingSettings = app_general_settings();
 <body class="app-body">
     <?php include base_path('views/partials/header.php'); ?>
     <div class="app-shell">
-        <main class="app-shell__content">
-            <div class="app-shell__content-inner">
+        <main class="app-shell__content d-flex flex-column">
+            <div class="app-shell__content-inner flex-grow-1 d-flex flex-column">
                 <?= $content ?? '' ?>
             </div>
         </main>

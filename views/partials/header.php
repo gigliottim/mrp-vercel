@@ -22,9 +22,6 @@ $tenant = AuthManager::tenant();
                 title="Menú (Ctrl + K)">
                 <i class="fa-solid fa-bars me-1"></i> Menú (Ctrl + K)
             </button>
-            <a class="navbar-brand fw-semibold text-decoration-none text-dark d-none d-md-inline" href="<?= url('menu') ?>">
-                <?= View::escape($appName) ?>
-            </a>
             <span class="text-muted small d-none d-md-inline">MRP creado para emprendedores solos</span>
         </div>
         <div class="d-flex align-items-center gap-3">

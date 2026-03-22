@@ -553,7 +553,10 @@ $flattenItems = static function (array $items) use (&$flattenItems): array {
             window.event.currentTarget.classList.add("active");
         }
 
+        const sections = document.querySelectorAll(".unified-category-block");
+
         if (catId === "todos") {
+            sections.forEach(sec => sec.classList.remove("unified-hidden"));
             menuContent.scrollTo({
                 top: 0,
                 behavior: "smooth"
@@ -561,13 +564,17 @@ $flattenItems = static function (array $items) use (&$flattenItems): array {
             return;
         }
 
-        const targetSection = document.getElementById("cat-" + catId);
-        if (targetSection) {
-            const topPos = targetSection.offsetTop - menuContent.offsetTop - 10;
-            menuContent.scrollTo({
-                top: topPos,
-                behavior: "smooth"
-            });
-        }
+        sections.forEach(sec => {
+            if (sec.id === "cat-" + catId) {
+                sec.classList.remove("unified-hidden");
+            } else {
+                sec.classList.add("unified-hidden");
+            }
+        });
+
+        menuContent.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     }
 </script>

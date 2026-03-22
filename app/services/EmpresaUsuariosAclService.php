@@ -29,6 +29,7 @@ final class EmpresaUsuariosAclService
                     WHEN 'taller' THEN 10
                     WHEN 'catalogo_productos' THEN 20
                     WHEN 'planificacion_compras' THEN 30
+                    WHEN 'produccion' THEN 35
                     WHEN 'reportes' THEN 40
                     WHEN 'administracion' THEN 50
                     WHEN 'empresa_usuarios' THEN 60

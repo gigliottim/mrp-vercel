@@ -51,10 +51,7 @@ $dimensionFields = [
             </div>
             <ul class="nav nav-pills">
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= url('productos/partes?tab=partes') ?>">Partes</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= url('productos/partes?tab=variantes') ?>">Variantes</a>
+                    <a class="nav-link" href="<?= url('productos/partes') ?>">Partes y Variantes</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?= url('productos/partes/importar') ?>">Importar</a>

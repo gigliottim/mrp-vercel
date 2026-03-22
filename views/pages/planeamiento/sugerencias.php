@@ -184,7 +184,7 @@ $filtro    = $filtro ?? null;
                                     <div>
                                         <span class="fw-semibold me-2">
                                             <?= View::escape($v['parte_codigo']) ?>
-                                            <span class="text-muted">/ <?= View::escape($v['variante_codigo']) ?></span>
+                                            <span class="text-muted">- <?= View::escape($v['variante_codigo']) ?></span>
                                         </span>
                                         <span class="text-muted small"><?= View::escape($v['parte_detalle']) ?></span>
                                         <?php if ($v['variante_detalle']) : ?>
@@ -248,7 +248,7 @@ $filtro    = $filtro ?? null;
                                                 <tr>
                                                     <td>
                                                         <span class="fw-semibold"><?= View::escape($comp['comp_parte_codigo']) ?></span>
-                                                        <span class="text-muted"> / <?= View::escape($comp['comp_codigo']) ?></span>
+                                                        <span class="text-muted"> - <?= View::escape($comp['comp_codigo']) ?></span>
                                                     </td>
                                                     <td class="text-muted small"><?= View::escape($comp['comp_detalle']) ?></td>
                                                     <td class="text-end">

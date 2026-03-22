@@ -188,7 +188,7 @@ if ($menuTree === []) {
                                     <h3 class="h6 mb-0">Estructura</h3>
                                     <small class="text-muted">Seleccione un módulo</small>
                                 </div>
-                                <div class="card-body d-flex flex-column" style="overflow-y: hidden;">
+                                <div class="card-body d-flex flex-column" style="overflow: hidden; flex: 1 1 0;">
                                     <div class="input-group input-group-sm mb-2 flex-shrink-0">
                                         <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
                                         <input id="menu-tree-search" type="text" class="form-control" placeholder="Filtrar menú...">
@@ -237,7 +237,7 @@ if ($menuTree === []) {
                                     $tenantName = $tenantData['name'] ?? 'Empresa';
                                     ?>
 
-                                    <div class="acl-tree-panel border-0 px-0 flex-grow-1" id="acl-tree-panel" style="overflow-y: auto;">
+                                    <div class="acl-tree-panel border-0 px-0 flex-grow-1" id="acl-tree-panel" style="overflow-y: auto; min-height: 0;">
                                         <ul class="list-unstyled mb-0">
                                             <li class="mb-2">
                                                 <div class="p-2 mb-2 bg-light rounded d-flex align-items-center gap-2">

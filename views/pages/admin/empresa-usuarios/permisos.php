@@ -203,21 +203,13 @@ if ($menuTree === []) {
 </style>
 <link rel="stylesheet" href="<?= AssetHelper::css('modules/empresa-usuarios/permisos-tree.css') ?>">
 
-<section class="mb-4 flex-shrink-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <p class="text-uppercase text-muted small mb-1">Empresa y Usuarios</p>
-            <h1 class="h3 mb-0">Permisos</h1>
-        </div>
-    </div>
-</section>
-
-<nav class="nav nav-pills mb-4 flex-wrap gap-2 flex-shrink-0">
-    <a class="nav-link" href="<?= url('/empresa-usuarios/empresa') ?>">Empresa</a>
-    <a class="nav-link" href="<?= url('/empresa-usuarios/usuarios') ?>">Usuarios</a>
-    <a class="nav-link" href="<?= url('/empresa-usuarios/roles') ?>">Roles</a>
-    <a class="nav-link active" href="<?= url('/empresa-usuarios/permisos') ?>">Permisos</a>
-</nav>
+<?php
+$activeTab    = 'permisos';
+$sectionClass = 'flex-shrink-0';
+$navClass     = 'flex-shrink-0';
+include __DIR__ . '/_header.php';
+unset($sectionClass, $navClass);
+?>
 
 <div id="acl-outer-row" class="row g-4 flex-grow-1">
     <div id="acl-outer-col" class="col-12 d-flex flex-column">

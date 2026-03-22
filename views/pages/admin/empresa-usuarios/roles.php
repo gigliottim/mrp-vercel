@@ -22,21 +22,8 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
 };
 ?>
 
-<section class="mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <p class="text-uppercase text-muted small mb-1">Empresa y Usuarios</p>
-            <h1 class="h3 mb-0">Roles</h1>
-        </div>
-    </div>
-</section>
-
-<nav class="nav nav-pills mb-4 flex-wrap gap-2">
-    <a class="nav-link" href="<?= url('/empresa-usuarios/empresa') ?>">Empresa</a>
-    <a class="nav-link" href="<?= url('/empresa-usuarios/usuarios') ?>">Usuarios</a>
-    <a class="nav-link active" href="<?= url('/empresa-usuarios/roles') ?>">Roles</a>
-    <a class="nav-link" href="<?= url('/empresa-usuarios/permisos') ?>">Permisos</a>
-</nav>
+<?php $activeTab = 'roles';
+include __DIR__ . '/_header.php'; ?>
 
 <div class="row g-4">
     <div class="col-12 col-lg-4">

@@ -103,9 +103,69 @@ if ($menuTree === []) {
 }
 ?>
 <style>
-    .acl-tree-card {
-        /* eliminamos max-height fijo para que se adapte al contenedor padre */
+    /* ─── ACL full-height layout chain ─────────────────────────────────────
+     * Regla: cada flex item en la cadena necesita min-height:0 para que su
+     * contenido no deforme el espacio asignado por el padre (Flexbox default
+     * es min-height:auto = se expande al contenido, rompiendo el scroll).
+     * ─────────────────────────────────────────────────────────────────── */
+    #acl-outer-row {
+        align-items: stretch;
+        min-height: 0;
     }
+
+    #acl-outer-col {
+        min-height: 0;
+    }
+
+    #acl-outer-card {
+        min-height: 0;
+    }
+
+    #acl-outer-card>.card-body {
+        flex: 1 1 0;
+        /* 0 como base: crece pero NO hereda tamaño del contenido */
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    #acl-form {
+        min-height: 0;
+    }
+
+    #acl-inner-row {
+        min-height: 0;
+        align-items: stretch;
+    }
+
+    #acl-col-left,
+    #acl-col-right {
+        min-height: 0;
+    }
+
+    .acl-tree-card {
+        min-height: 0;
+    }
+
+    .acl-tree-card>.card-body {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    #acl-tree-panel {
+        overflow-y: auto;
+        min-height: 0;
+    }
+
+    #acl-col-right>.card {
+        min-height: 0;
+    }
+
+    #acl-col-right>.card>.card-body {
+        min-height: 0;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────── */
 
     .acl-tree-node {
         cursor: pointer;
@@ -159,9 +219,9 @@ if ($menuTree === []) {
     <a class="nav-link active" href="<?= url('/empresa-usuarios/permisos') ?>">Permisos</a>
 </nav>
 
-<div class="row g-4 flex-grow-1" style="min-height: 50vh;">
-    <div class="col-12 h-100 d-flex flex-column">
-        <div class="card flex-grow-1 d-flex flex-column">
+<div id="acl-outer-row" class="row g-4 flex-grow-1">
+    <div id="acl-outer-col" class="col-12 d-flex flex-column">
+        <div id="acl-outer-card" class="card flex-grow-1 d-flex flex-column">
             <div class="card-body d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
@@ -178,17 +238,18 @@ if ($menuTree === []) {
                 <?php endif; ?>
 
                 <form
+                    id="acl-form"
                     method="post"
                     action="<?= url('/roles-permisos/acl') ?>"
                     class="vstack gap-3 flex-grow-1">
-                    <div class="row g-4 flex-grow-1 mb-4">
-                        <div class="col-12 col-md-4 d-flex flex-column">
+                    <div id="acl-inner-row" class="row g-4 flex-grow-1 mb-4">
+                        <div id="acl-col-left" class="col-12 col-md-4 d-flex flex-column">
                             <div class="card d-flex flex-column flex-grow-1 acl-tree-card">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center sticky-top">
                                     <h3 class="h6 mb-0">Estructura</h3>
                                     <small class="text-muted">Seleccione un módulo</small>
                                 </div>
-                                <div class="card-body d-flex flex-column" style="overflow: hidden; flex: 1 1 0;">
+                                <div class="card-body d-flex flex-column">
                                     <div class="input-group input-group-sm mb-2 flex-shrink-0">
                                         <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
                                         <input id="menu-tree-search" type="text" class="form-control" placeholder="Filtrar menú...">
@@ -237,7 +298,7 @@ if ($menuTree === []) {
                                     $tenantName = $tenantData['name'] ?? 'Empresa';
                                     ?>
 
-                                    <div class="acl-tree-panel border-0 px-0 flex-grow-1" id="acl-tree-panel" style="overflow-y: auto; min-height: 0;">
+                                    <div class="acl-tree-panel border-0 px-0 flex-grow-1" id="acl-tree-panel">
                                         <ul class="list-unstyled mb-0">
                                             <li class="mb-2">
                                                 <div class="p-2 mb-2 bg-light rounded d-flex align-items-center gap-2">
@@ -286,8 +347,8 @@ if ($menuTree === []) {
                                 min="1">
                         </div>
 
-                        <div class="col-12 col-md-8 d-flex flex-column">
-                            <div class="card h-100 d-flex flex-column flex-grow-1">
+                        <div id="acl-col-right" class="col-12 col-md-8 d-flex flex-column">
+                            <div class="card d-flex flex-column flex-grow-1">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center sticky-top">
                                     <div>
                                         <h3 class="h6 mb-0">Asignación de Permisos</h3>
@@ -300,7 +361,7 @@ if ($menuTree === []) {
                                     </div>
                                 </div>
 
-                                <div class="card-body p-0 flex-grow-1" style="overflow-y: auto;">
+                                <div class="card-body p-0 flex-grow-1" style="overflow-y: auto; min-height: 0;">
                                     <div class="table-responsive h-100">
                                         <table class="table table-hover align-middle mb-0 border-top-0">
                                             <thead class="table-light sticky-top" style="top: 0px; z-index: 10;">

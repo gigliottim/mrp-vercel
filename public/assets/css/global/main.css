@@ -212,6 +212,7 @@ html.sidebar-desktop-hidden .app-sidebar__nav .app-sidebar__nav {
 .app-shell__content-inner {
     max-width: 100%;
     margin: 0 auto;
+    min-height: 100%;
 }
 
 @media (max-width: 991.98px) {

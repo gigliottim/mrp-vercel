@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa del sistema — Propuesta mini-pyme 2 operarios</title>
+  <title>Dashboard Unificado MRP</title>
 
   <!-- Bootstrap 5 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -12,81 +12,256 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    /* ── Base ─────────────────────────────────────────────── */
     body {
       background-color: #f8fafc;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: "Segoe UI", system-ui, sans-serif;
       color: #1e293b;
     }
 
-    /* ── Topbar simulada ──────────────────────────────────── */
     .demo-topbar {
       background: #1e293b;
       color: #cbd5e1;
-      padding: .5rem 1.5rem;
-      font-size: .78rem;
+      padding: .75rem 1.5rem;
       display: flex;
       align-items: center;
-      gap: .75rem;
+      justify-content: space-between;
     }
 
     .demo-topbar strong {
       color: #f1f5f9;
     }
 
-    .demo-badge {
-      background: #0ea5e9;
-      color: #fff;
-      border-radius: 4px;
-      padding: 1px 7px;
-      font-size: .7rem;
+    .btn-trigger {
+      background: #3b82f6;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
     }
 
-    .demo-badge-warn {
-      background: #f59e0b;
+    .btn-trigger:hover {
+      background: #2563eb;
+      color: white;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Modal Content */
+    .modal-container {
+      background: white;
+      width: 90%;
+      max-width: 1100px;
+      height: 85vh;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      transform: translateY(20px) scale(0.98);
+      transition: transform 0.2s ease-out;
+    }
+
+    .modal-overlay.active .modal-container {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Header & Buscador */
+    .modal-header-custom {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #ffffff;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 1.1rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 48px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
       color: #1e293b;
+      background: #f8fafc;
+      transition: all 0.2s;
     }
 
-    /* ── Contenedor ───────────────────────────────────────── */
-    .page-wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
+    .search-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     }
 
-    /* ── Cabecera de sección ──────────────────────────────── */
-    .menu-section__icon {
-      width: 1.75rem;
-      height: 1.75rem;
+    .close-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: #64748b;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      transition: all 0.2s;
     }
 
-    /* ── Tarjeta ──────────────────────────────────────────── */
-    .menu-card {
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-      border-color: rgba(0, 0, 0, .08) !important;
-      gap: .25rem;
+    .close-btn:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    /* Layout modal interior */
+    .modal-body-custom {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar unificada (Categorías) */
+    .unified-sidebar {
+      width: 260px;
+      background: #f8fafc;
+      border-right: 1px solid #e2e8f0;
+      padding: 20px 12px;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 4px;
+      font-weight: 500;
+      color: #475569;
       cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+      font-size: 1.1rem;
+      color: #94a3b8;
+    }
+
+    .nav-item:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .nav-item:hover i {
+      color: #64748b;
+    }
+
+    .nav-item.active {
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .nav-item.active i {
+      color: #3b82f6;
+    }
+
+    /* Contenido Grid */
+    .unified-content {
+      flex: 1;
+      padding: 24px 32px;
+      overflow-y: auto;
+      background: #ffffff;
+      scroll-behavior: smooth;
+    }
+
+    .category-block {
+      margin-bottom: 40px;
+    }
+
+    .category-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .grid-menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .menu-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
     }
 
     .menu-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, .10);
-      border-color: var(--bs-primary) !important;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
-    .menu-card:hover .menu-card__label {
-      color: var(--bs-primary) !important;
-    }
-
-    .menu-card__icon {
-      width: 3rem;
-      height: 3rem;
-      border-radius: .75rem;
+    .menu-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -94,508 +269,472 @@
       flex-shrink: 0;
     }
 
-    .menu-card__label {
-      line-height: 1.3;
-      font-size: .8rem;
+    .icon-warning {
+      background: #fffbeb;
+      color: #d97706;
     }
 
-    /* ── Etiqueta "DIARIO" ────────────────────────────────── */
-    .badge-daily {
-      font-size: .62rem;
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #bbf7d0;
-      border-radius: 4px;
-      padding: 1px 6px;
+    .icon-success {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .icon-info {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .icon-secondary {
+      background: #f8fafc;
+      color: #475569;
+    }
+
+    .icon-dark {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .menu-text {
+      flex: 1;
+    }
+
+    .menu-card-title {
       font-weight: 600;
-      letter-spacing: .03em;
-      vertical-align: middle;
+      color: #1e293b;
+      margin: 0 0 4px 0;
+      font-size: 0.95rem;
     }
 
-    /* ── Comparativa ─────────────────────────────────────── */
-    .compare-card {
-      background: #fff;
-      border: 1px solid rgba(0, 0, 0, .08);
-      border-radius: .75rem;
-      padding: 1.25rem 1.5rem;
+    .menu-card-desc {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.4;
     }
 
-    .compare-old {
-      border-left: 4px solid #f87171;
+    .hidden {
+      display: none !important;
     }
 
-    .compare-new {
-      border-left: 4px solid #34d399;
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
     }
 
-    /* ── Divider decorativo ───────────────────────────────── */
-    .section-divider {
-      border: none;
-      border-top: 1px dashed #e2e8f0;
-      margin: 2rem 0;
+    .no-results i {
+      font-size: 3rem;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .modal-body-custom {
+        flex-direction: column;
+      }
+
+      .unified-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        overflow-x: auto;
+        padding: 12px;
+      }
+
+      .nav-item {
+        margin-bottom: 0;
+        margin-right: 8px;
+        white-space: nowrap;
+      }
+
+      .modal-container {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Topbar simulada -->
+  <!-- Topbar principal  -->
   <div class="demo-topbar">
-    <i class="fa-solid fa-flask me-1"></i>
-    <strong>Prototipo visual</strong>
-    <span class="demo-badge">PROPUESTA</span>
-    <span class="demo-badge demo-badge-warn">No implementado aún</span>
-    <span class="ms-auto">Mini-pyme · 2 operarios · 15 mar 2026</span>
+    <div>
+      <i class="fa-solid fa-flask me-2"></i>
+      <strong>Prototipo: Menú Unificado MRP</strong>
+    </div>
+    <button class="btn-trigger" onclick="openMenu()">
+      <i class="fa-solid fa-bars"></i> Menú (Ctrl + K)
+    </button>
   </div>
 
-  <div class="page-wrap">
-
-    <!-- Encabezado -->
-    <section class="mb-4">
-      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-        <div>
-          <h1 class="h3 mb-1">
-            <i class="fa-solid fa-grip me-2 text-primary"></i>Mapa del sistema
-          </h1>
-          <p class="text-muted mb-0">Propuesta reorganizada para equipos pequeños — flujo diario primero.</p>
-        </div>
-        <a class="btn btn-outline-secondary" href="#">
-          <i class="fa-solid fa-arrow-left me-1"></i> Panel inicial
-        </a>
+  <!-- Contenido Background (Ejemplo de Panel) -->
+  <div class="container mt-5">
+    <div class="row text-center mb-5">
+      <div class="col-12">
+        <h1 class="mb-3">Bienvenido al MRP</h1>
+        <p class="text-muted">Presiona <kbd>Ctrl</kbd> + <kbd>K</kbd> o utiliza el botón del menú superior para abrir el
+          navegador unificado de aplicaciones.</p>
+        <button class="btn btn-primary mt-3 py-2 px-4 shadow-sm" onclick="openMenu()">
+          <i class="fa-solid fa-magnifying-glass me-2"></i> Explorar Módulos
+        </button>
       </div>
-    </section>
+    </div>
 
-    <!-- ══════════════════════════════════════════════════
-         SECCIÓN 1 — TALLER  (uso diario)
-    ══════════════════════════════════════════════════ -->
-    <section class="mb-5">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="menu-section__icon text-warning">
-          <i class="fa-solid fa-industry"></i>
-        </span>
-        <h2 class="h5 fw-semibold mb-0 text-warning">Taller</h2>
-        <span class="badge text-bg-light text-muted ms-1">5</span>
-        <span class="badge-daily ms-1">USO DIARIO</span>
-      </div>
-      <div class="row g-3">
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-clipboard-list"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Órdenes de Producción</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-gauge-high"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Dashboard de Operaciones</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-arrow-right-arrow-left"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Movimientos de Partes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Stock crítico</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-warning bg-warning bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-chart-gantt"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Vista Gantt</div>
-          </a>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════
-         SECCIÓN 2 — CATÁLOGO DE PRODUCTOS
-    ══════════════════════════════════════════════════ -->
-    <section class="mb-5">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="menu-section__icon text-success">
-          <i class="fa-solid fa-layer-group"></i>
-        </span>
-        <h2 class="h5 fw-semibold mb-0 text-success">Catálogo de Productos</h2>
-        <span class="badge text-bg-light text-muted ms-1">6</span>
-      </div>
-      <div class="row g-3">
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-puzzle-piece"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Listado de Partes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-wrench"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Gestor de Partes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-diagram-project"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">BOM activas</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-layer-group"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Composición de Variantes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-copy"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Copiar Componentes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-success bg-success bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-shuffle"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Reemplazar Partes en Maestro</div>
-          </a>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════
-         SECCIÓN 3 — PLANIFICACIÓN Y COMPRAS
-    ══════════════════════════════════════════════════ -->
-    <section class="mb-5">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="menu-section__icon text-info">
-          <i class="fa-solid fa-calendar-days"></i>
-        </span>
-        <h2 class="h5 fw-semibold mb-0 text-info">Planificación y Compras</h2>
-        <span class="badge text-bg-light text-muted ms-1">4</span>
-      </div>
-      <div class="row g-3">
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-list-check"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Sugerencias MRP</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-calendar-check"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Órdenes planificadas</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-calendar-alt"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Planificación de Recursos</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-info bg-info bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-shopping-cart"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Gestión de Compras</div>
-          </a>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════
-         SECCIÓN 4 — REPORTES
-    ══════════════════════════════════════════════════ -->
-    <section class="mb-5">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="menu-section__icon text-secondary">
-          <i class="fa-solid fa-chart-line"></i>
-        </span>
-        <h2 class="h5 fw-semibold mb-0 text-secondary">Reportes</h2>
-        <span class="badge text-bg-light text-muted ms-1">4</span>
-      </div>
-      <div class="row g-3">
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-sitemap"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Destino de Partes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-list-check"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Listado de Ingeniería</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-calendar-days"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Planificación de Producción</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-secondary bg-secondary bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-layer-group"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Resumen por grupos</div>
-          </a>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════
-         SECCIÓN 5 — ADMINISTRACIÓN
-    ══════════════════════════════════════════════════ -->
-    <section class="mb-5">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="menu-section__icon text-dark">
-          <i class="fa-solid fa-sliders"></i>
-        </span>
-        <h2 class="h5 fw-semibold mb-0 text-dark">Administración</h2>
-        <span class="badge text-bg-light text-muted ms-1">10</span>
-      </div>
-      <div class="row g-3">
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-sliders"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Configuración general</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-address-book"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Clientes y Proveedores</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-ruler-combined"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Unidades de medida</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-tags"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Tipos de partes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-warehouse"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Tipos de depósito</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-arrow-right-arrow-left"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Validaciones de movimientos</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-layer-group"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Grupos de partes</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-industry"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Centros de Trabajo</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-route"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Rutas de Producción</div>
-          </a>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="menu-card text-decoration-none d-flex flex-column align-items-center text-center p-3 rounded-3 border bg-white h-100"
-            href="#">
-            <div class="menu-card__icon mb-2 text-dark bg-dark bg-opacity-10 rounded-3">
-              <i class="fa-solid fa-building-user"></i>
-            </div>
-            <div class="menu-card__label fw-medium small text-dark">Empresa · Usuarios · Roles</div>
-          </a>
-        </div>
-
-      </div>
-    </section>
-
-    <hr class="section-divider">
-
-    <!-- ══════════════════════════════════════════════════
-         COMPARATIVA
-    ══════════════════════════════════════════════════ -->
-    <section class="mb-5">
-      <h2 class="h5 fw-semibold mb-3">
-        <i class="fa-solid fa-scale-balanced me-2 text-primary"></i>Comparativa con el menú actual
-      </h2>
-      <div class="row g-3">
-        <div class="col-md-6">
-          <div class="compare-card compare-old h-100">
-            <div class="fw-semibold text-danger mb-2">
-              <i class="fa-solid fa-circle-xmark me-1"></i>Menú actual — 9 secciones
-            </div>
-            <ol class="mb-0 ps-3 small text-muted">
-              <li>Panel</li>
-              <li>Productos y BOM <span class="text-muted">(6 ítems)</span></li>
-              <li>Planeamiento MRP <span class="text-muted">(2 ítems)</span></li>
-              <li>Producción <span class="text-muted">(6 ítems)</span></li>
-              <li>Transacciones <span class="text-muted">(2 ítems)</span></li>
-              <li>Inventario y stock <span class="text-muted">(1 ítem)</span></li>
-              <li>Reportes <span class="text-muted">(4 ítems)</span></li>
-              <li>Parámetros y catálogos <span class="text-muted">(7 ítems)</span></li>
-              <li>Empresa y Usuarios <span class="text-muted">(4 ítems)</span></li>
-            </ol>
-            <div class="mt-3 pt-2 border-top small">
-              <span class="text-danger fw-semibold">33 ítems</span> · Para ver <em>Movimientos</em> hay que ir a
-              "Transacciones"; para ver <em>Stock crítico</em> a otra sección distinta. El operario salta entre 3–4
-              secciones cada día.
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="compare-card compare-new h-100">
-            <div class="fw-semibold text-success mb-2">
-              <i class="fa-solid fa-circle-check me-1"></i>Propuesta — 5 secciones
-            </div>
-            <ol class="mb-0 ps-3 small text-muted">
-              <li><strong class="text-dark">Taller</strong> — uso diario <span class="badge-daily ms-1">DIARIO</span>
-              </li>
-              <li>Catálogo de Productos</li>
-              <li>Planificación y Compras</li>
-              <li>Reportes</li>
-              <li>Administración <em>(ocultable por rol)</em></li>
-            </ol>
-            <div class="mt-3 pt-2 border-top small">
-              <span class="text-success fw-semibold">33 ítems</span> — <em>los mismos</em>, mejor agrupados. El operario
-              solo toca la sección <strong>Taller</strong> en su jornada. <br>
-              <span class="text-muted">Sin migración de rutas — solo cambia <code>section_key</code> y
-                <code>section_label</code>.</span>
-            </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title text-warning"><i class="fa-solid fa-clipboard-list me-2"></i> Órdenes Activas</h5>
+            <p class="card-text text-muted">Existen 4 órdenes de trabajo requiriendo acción en planta hoy.</p>
           </div>
         </div>
       </div>
-    </section>
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> Alertas de Stock
+            </h5>
+            <p class="card-text text-muted">2 materias primas se encuentran por debajo del stock mínimo de seguridad.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title text-success"><i class="fa-solid fa-diagram-project me-2"></i> Ingeniería</h5>
+            <p class="card-text text-muted">1 nueva BOM fue aprobada en revisión y lista para su uso productivo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  </div><!-- /page-wrap -->
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- ==============================================
+         MODAL MENÚ UNIFICADO
+         ============================================== -->
+  <div class="modal-overlay" id="menuModal" onclick="closeMenuOnOutsideClick(event)">
+    <div class="modal-container">
+
+      <!-- Buscador y Header -->
+      <div class="modal-header-custom">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" class="search-input"
+            placeholder="Buscar módulos, reportes o configuraciones... (Ej: Producción, Stock, BOM, Usuarios)"
+            oninput="filterMenu()">
+        </div>
+        <button class="close-btn" onclick="closeMenu()" title="Cerrar (Esc)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body-custom">
+        <!-- Sidebar Lateral (Categorías) -->
+        <div class="unified-sidebar">
+          <div class="nav-item active" onclick="scrollToCategory('todos')">
+            <i class="fa-solid fa-layer-group"></i> Todos los módulos
+          </div>
+          <div class="nav-item" onclick="scrollToCategory('taller')">
+            <i class="fa-solid fa-industry text-warning"></i> Operaciones Taller
+          </div>
+          <div class="nav-item" onclick="scrollToCategory('catalogo')">
+            <i class="fa-solid fa-puzzle-piece text-success"></i> Catálogo e Ingeniería
+          </div>
+          <div class="nav-item" onclick="scrollToCategory('planificacion')">
+            <i class="fa-solid fa-calendar-days text-info"></i> Planificación y MRP
+          </div>
+          <div class="nav-item" onclick="scrollToCategory('reportes')">
+            <i class="fa-solid fa-chart-line text-secondary"></i> Reportes
+          </div>
+          <div class="nav-item" onclick="scrollToCategory('admin')">
+            <i class="fa-solid fa-sliders text-dark"></i> Administración
+          </div>
+        </div>
+
+        <!-- Contenido Principal (Grilla de Navegación) -->
+        <div class="unified-content" id="menuContent">
+
+          <div id="noResults" class="no-results hidden">
+            <i class="fa-regular fa-face-frown-open"></i>
+            <h4>No encontramos coincidencias</h4>
+            <p>Intenta buscar con otros términos como "stock", "orden" o "BOM".</p>
+          </div>
+
+          <!-- SECCIÓN: TALLER -->
+          <div class="category-block" id="cat-taller">
+            <h3 class="category-title"><i class="fa-solid fa-industry text-warning"></i> Operaciones Taller (Uso Diario)
+            </h3>
+            <div class="grid-menu">
+              <a href="#" class="menu-card" data-title="ordenes de produccion taller trabajo operarios mrp"
+                data-category="taller">
+                <div class="menu-icon icon-warning"><i class="fa-solid fa-clipboard-list"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Órdenes de Producción</h4>
+                  <p class="menu-card-desc">Seguimiento de órdenes de trabajo en planta.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="dashboard operaciones resumen KPIs" data-category="taller">
+                <div class="menu-icon icon-warning"><i class="fa-solid fa-gauge-high"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Dashboard Operaciones</h4>
+                  <p class="menu-card-desc">Vista general del piso de planta en tiempo real.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card"
+                data-title="movimientos de partes stock transacciones ingresos egresos transferencias"
+                data-category="taller">
+                <div class="menu-icon icon-warning"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Movimientos</h4>
+                  <p class="menu-card-desc">Ingresos, egresos y transferencias de depósito.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="stock critico faltantes requerimientos alertas inventario"
+                data-category="taller">
+                <div class="menu-icon icon-warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Stock Crítico</h4>
+                  <p class="menu-card-desc">Visor de alertas de inventario y puntos de pedido.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: CATÁLOGO -->
+          <div class="category-block" id="cat-catalogo">
+            <h3 class="category-title"><i class="fa-solid fa-layer-group text-success"></i> Catálogo e Ingeniería</h3>
+            <div class="grid-menu">
+              <a href="#" class="menu-card" data-title="listado partes maestro inventario productos semi elaborados"
+                data-category="catalogo">
+                <div class="menu-icon icon-success"><i class="fa-solid fa-puzzle-piece"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Maestro de Partes</h4>
+                  <p class="menu-card-desc">Catálogo unificado de todos los artículos.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="bom lista de materiales activos recetas estructuras"
+                data-category="catalogo">
+                <div class="menu-icon icon-success"><i class="fa-solid fa-diagram-project"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Listas de Materiales (BOM)</h4>
+                  <p class="menu-card-desc">Definiciones de recetas y procesos de armado.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="composicion variantes productos derivados customizables"
+                data-category="catalogo">
+                <div class="menu-icon icon-success"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Composición Variantes</h4>
+                  <p class="menu-card-desc">Soporte y diseño de variaciones sobre productos base.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: PLANIFICACIÓN -->
+          <div class="category-block" id="cat-planificacion">
+            <h3 class="category-title"><i class="fa-solid fa-calendar-days text-info"></i> Planificación y MRP</h3>
+            <div class="grid-menu">
+              <a href="#" class="menu-card" data-title="sugerencias mrp requerimientos compras"
+                data-category="planificacion">
+                <div class="menu-icon icon-info"><i class="fa-solid fa-list-check"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Sugerencias MRP</h4>
+                  <p class="menu-card-desc">Cálculo algorítmico de necesidades netas y brutas.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="gestion ordenes compras ocompra proveedores remitos"
+                data-category="planificacion">
+                <div class="menu-icon icon-info"><i class="fa-solid fa-shopping-cart"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Gestión Compra Puntos</h4>
+                  <p class="menu-card-desc">Abastecimiento y pedidos a proveedores regulares.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: REPORTES -->
+          <div class="category-block" id="cat-reportes">
+            <h3 class="category-title"><i class="fa-solid fa-chart-line text-secondary"></i> Reportes</h3>
+            <div class="grid-menu">
+              <a href="#" class="menu-card" data-title="reporte destinos trazabilidad uso material"
+                data-category="reportes">
+                <div class="menu-icon icon-secondary"><i class="fa-solid fa-sitemap"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Destino de Partes</h4>
+                  <p class="menu-card-desc">Análisis "Where-Used" (dónde se usa cada parte).</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="reporte avance ordenes dashboard" data-category="reportes">
+                <div class="menu-icon icon-secondary"><i class="fa-solid fa-chart-bar"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Productividad</h4>
+                  <p class="menu-card-desc">Estadísticas sobre horas-hombre y despilfarros.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: ADMINISTRACIÓN -->
+          <div class="category-block" id="cat-admin">
+            <h3 class="category-title"><i class="fa-solid fa-sliders text-dark"></i> Administración</h3>
+            <div class="grid-menu">
+              <a href="#" class="menu-card" data-title="configuracion general settings parametros"
+                data-category="admin">
+                <div class="menu-icon icon-dark"><i class="fa-solid fa-gear"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Configuración General</h4>
+                  <p class="menu-card-desc">Parámetros globales y defaults de la aplicación.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="empresa clientes proveedores multitenant" data-category="admin">
+                <div class="menu-icon icon-dark"><i class="fa-solid fa-building"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Unidades de Negocio</h4>
+                  <p class="menu-card-desc">Listado de empresas, clientes y proveedores.</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="usuarios roles permisos perfiles de acceso"
+                data-category="admin">
+                <div class="menu-icon icon-dark"><i class="fa-solid fa-users"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Usuarios y Permisos</h4>
+                  <p class="menu-card-desc">Manejo de credenciales, roles y autorizaciones (ACL).</p>
+                </div>
+              </a>
+              <a href="#" class="menu-card" data-title="unidades medida conversiones um m2 longitud equivalencias"
+                data-category="admin">
+                <div class="menu-icon icon-dark"><i class="fa-solid fa-ruler-combined"></i></div>
+                <div class="menu-text">
+                  <h4 class="menu-card-title">Unidades de Medida</h4>
+                  <p class="menu-card-desc">Gestión de dimensiones, factures de conversión y cajas.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script de lógica de UI unificada -->
+  <script>
+    const modal = document.getElementById("menuModal");
+    const searchInput = document.getElementById("searchInput");
+    const menuContent = document.getElementById("menuContent");
+
+    function openMenu() {
+      modal.classList.add("active");
+      searchInput.value = "";
+      filterMenu();
+      setTimeout(() => searchInput.focus(), 150); // Autofocus en buscador
+    }
+
+    function closeMenu() {
+      modal.classList.remove("active");
+    }
+
+    // Cerrar al clickear el fondo semi-transparente
+    function closeMenuOnOutsideClick(event) {
+      if (event.target === modal) closeMenu();
+    }
+
+    // Shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("active")) {
+        closeMenu();
+      }
+      // Atajo Ctrl+K o Cmd+K para abrir buscador de menú de forma global
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openMenu();
+      }
+    });
+
+    // Filtrado en vivo de tarjetas y ocultamiento de secciones vacías
+    function filterMenu() {
+      const query = searchInput.value.toLowerCase().trim();
+      const cards = document.querySelectorAll(".menu-card");
+      const sections = document.querySelectorAll(".category-block");
+      let hasResults = false;
+
+      // Al empezar a buscar, quitar la marca activa del sidebar
+      if (query !== "") {
+        document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+      }
+
+      cards.forEach(card => {
+        const searchTerms = card.getAttribute("data-title") || "";
+        const title = card.querySelector(".menu-card-title").textContent.toLowerCase();
+        const desc = card.querySelector(".menu-card-desc").textContent.toLowerCase();
+
+        if (searchTerms.includes(query) || title.includes(query) || desc.includes(query)) {
+          card.classList.remove("hidden");
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+
+      // Ocultar categorías si todas sus cards están hidden
+      sections.forEach(sec => {
+        const visibleCards = sec.querySelectorAll(".menu-card:not(.hidden)");
+        if (visibleCards.length === 0) {
+          sec.classList.add("hidden");
+        } else {
+          sec.classList.remove("hidden");
+          hasResults = true;
+        }
+      });
+
+      // "No results" alert
+      const noResults = document.getElementById("noResults");
+      if (!hasResults && query !== "") {
+        noResults.classList.remove("hidden");
+      } else {
+        noResults.classList.add("hidden");
+      }
+    }
+
+    // Navegación ancla desde la Sidebar al contenido (hace un scroll suave o reinicia la vista)
+    function scrollToCategory(catId) {
+      // Reiniciar estado si estaba filtrando
+      if (searchInput.value !== '') {
+        searchInput.value = "";
+        filterMenu();
+      }
+
+      // Reflejar estado visual de activo en la sidebar
+      document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+
+      // Asigna la clase activo comprobando el id clickeado desde la función directamente
+      // usando el current target porque event.currentTarget mapea al div .nav-item
+      // event puede no estar garantizado en algunos browsers estrictos, pero aquí es un handler inline válido
+      if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add("active");
+      }
+
+      if (catId === "todos") {
+        menuContent.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      const targetSection = document.getElementById("cat-" + catId);
+      if (targetSection) {
+        // Cálculo de posición compensando un pequeño margen
+        const topPos = targetSection.offsetTop - menuContent.offsetTop - 10;
+        menuContent.scrollTo({
+          top: topPos,
+          behavior: "smooth"
+        });
+      }
+    }
+  </script>
 </body>
 
 </html>

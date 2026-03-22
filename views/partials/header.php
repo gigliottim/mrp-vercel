@@ -11,19 +11,18 @@ $tenant = AuthManager::tenant();
 <header class="app-header bg-white border-bottom shadow-sm">
     <div class="container-fluid d-flex align-items-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-outline-primary d-lg-none" type="button" data-sidebar-toggle aria-label="Mostrar menú" aria-expanded="false">
+            <button class="btn btn-outline-primary d-lg-none" type="button" onclick="openUnifiedMenu()" aria-label="Mostrar menú" aria-expanded="false">
                 <i class="fa-solid fa-bars"></i>
             </button>
             <button
                 class="btn btn-outline-secondary btn-sm d-none d-lg-inline-flex"
                 type="button"
-                data-sidebar-pin-toggle
-                aria-label="Ocultar o fijar sidebar"
-                aria-pressed="false"
-                title="Ocultar/Fijar sidebar">
-                <i class="fa-solid fa-thumbtack"></i>
+                onclick="openUnifiedMenu()"
+                aria-label="Abrir Menú Principal"
+                title="Menú (Ctrl + K)">
+                <i class="fa-solid fa-bars me-1"></i> Menú (Ctrl + K)
             </button>
-            <a class="navbar-brand fw-semibold text-decoration-none text-dark" href="<?= url('menu') ?>">
+            <a class="navbar-brand fw-semibold text-decoration-none text-dark d-none d-md-inline" href="<?= url('menu') ?>">
                 <?= View::escape($appName) ?>
             </a>
             <span class="text-muted small d-none d-md-inline">MRP creado para emprendedores solos</span>

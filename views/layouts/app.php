@@ -21,36 +21,18 @@ $appFormattingSettings = app_general_settings();
     <link rel="stylesheet" href="<?= AssetHelper::css('global/main.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('components/cards.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('modules/public-site.css') ?>">
-    <script>
-        (function applyDesktopSidebarPreferenceEarly() {
-            try {
-                const storageKey = 'mrp.sidebar.desktop.visible';
-                const isDesktop = window.matchMedia('(min-width: 992px)').matches;
-
-                if (!isDesktop) {
-                    return;
-                }
-
-                if (window.localStorage.getItem(storageKey) === '0') {
-                    document.documentElement.classList.add('sidebar-desktop-hidden');
-                }
-            } catch (error) {
-                // Si localStorage no esta disponible, se mantiene el estado por defecto.
-            }
-        })();
-    </script>
 </head>
 
 <body class="app-body">
     <?php include base_path('views/partials/header.php'); ?>
     <div class="app-shell">
-        <?php include base_path('views/partials/sidebar.php'); ?>
         <main class="app-shell__content">
             <div class="app-shell__content-inner">
                 <?= $content ?? '' ?>
             </div>
         </main>
     </div>
+    <?php include base_path('views/partials/unified_menu_modal.php'); ?>
     <?php include base_path('views/partials/footer.php'); ?>
     <script src="<?= AssetHelper::getBootstrap('js') ?>" defer></script>
     <script src="<?= AssetHelper::getAlpineJS() ?>" defer></script>
@@ -105,7 +87,6 @@ $appFormattingSettings = app_general_settings();
         };
     </script>
     <script src="<?= AssetHelper::js('main.js') ?>" type="module"></script>
-    <script src="<?= AssetHelper::js('sidebar-scroll.js') ?>" defer></script>
 </body>
 
 </html>

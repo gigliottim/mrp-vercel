@@ -28,7 +28,9 @@ $tenant = AuthManager::tenant();
             <span class="text-muted small d-none d-md-inline">MRP creado para emprendedores solos</span>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <span class="badge text-bg-light text-uppercase small">Entorno: <?= $env ?></span>
+            <?php if (strtolower($env) !== 'production') : ?>
+                <span class="badge text-bg-light text-uppercase small">Entorno: <?= $env ?></span>
+            <?php endif; ?>
             <?php if ($user !== null) : ?>
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">

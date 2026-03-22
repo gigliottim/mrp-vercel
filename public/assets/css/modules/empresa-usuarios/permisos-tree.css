@@ -13,16 +13,16 @@
 
 .acl-tree-node {
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.2s;
 }
 
 .acl-tree-node:hover {
-  background: #f0f0f0;
-  transform: translateX(2px);
+  background-color: #e9ecef;
 }
 
 .acl-tree-node.is-selected {
-  background: #e9ecef;
+  background-color: #cfe2ff;
+  border-left: 3px solid #0d6efd;
 }
 
 .acl-selected-box {
@@ -30,4 +30,80 @@
   border: 1px dashed #cfd8e3;
   border-radius: 10px;
   padding: 0.6rem 0.75rem;
+}
+
+/* ─── ACL full-height layout chain ─────────────────────────────────────
+ * Cada flex item necesita min-height:0 para que su contenido no deforme
+ * el espacio asignado por el padre (Flexbox default: min-height:auto).
+ * ─────────────────────────────────────────────────────────────────── */
+#acl-outer-row {
+  align-items: stretch;
+  min-height: 0;
+}
+
+#acl-outer-col {
+  min-height: 0;
+}
+
+#acl-outer-card {
+  min-height: 0;
+}
+
+#acl-outer-card>.card-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#acl-form {
+  min-height: 0;
+}
+
+#acl-inner-row {
+  min-height: 0;
+  align-items: stretch;
+}
+
+#acl-col-left,
+#acl-col-right {
+  min-height: 0;
+}
+
+.acl-tree-card>.card-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#acl-tree-panel {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#acl-col-right>.card {
+  min-height: 0;
+}
+
+#acl-col-right>.card>.card-body {
+  min-height: 0;
+}
+
+.permission-row {
+  transition: background-color 0.2s;
+}
+
+.permission-row:hover {
+  background-color: #f8f9fa;
+}
+
+.role-group-header,
+.user-group-header {
+  background-color: #e9ecef;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  margin-top: 15px;
+  margin-bottom: 10px;
 }

@@ -110,3 +110,83 @@ document.addEventListener('DOMContentLoaded', function () {
     syncSubjectPicker();
   }
 });
+
+/**
+ * Selecciona un nodo del árbol ACL y carga los permisos guardados.
+ * aclData debe estar definida globalmente antes de cargar este script.
+ *
+ * @param {Event|null} e
+ * @param {number|string} nodeId
+ * @param {string} label
+ * @param {string} code
+ * @param {boolean} isItem
+ */
+function selectNode(e, nodeId, label, code, isItem) {
+  document.querySelectorAll('.acl-tree-node').forEach(el => el.classList.remove('is-selected'));
+  if (e) {
+    e.currentTarget.classList.add('is-selected');
+  }
+
+  document.getElementById('selected-node-title').textContent = label.toUpperCase();
+
+  const badge = document.getElementById('selected-node-type');
+  if (isItem) {
+    badge.textContent = 'Menú Ítem';
+    badge.className = 'badge bg-secondary ms-1';
+  } else {
+    badge.textContent = 'Rama / Grupo';
+    badge.className = 'badge bg-warning text-dark ms-1';
+  }
+
+  const numId = parseInt(nodeId, 10);
+  if (!isNaN(numId)) {
+    document.getElementById('menu_item_id').value = numId;
+  } else {
+    document.getElementById('menu_item_id').value = '';
+  }
+
+  const defaultVal = isItem ? 'none' : 'allow';
+  document.querySelectorAll('select[name^="perms["]').forEach(select => {
+    select.value = defaultVal;
+    updateRowState(select);
+  });
+
+  if (!isNaN(numId) && typeof aclData !== 'undefined') {
+    const nodeAcls = aclData.filter(row => parseInt(row.menu_item_id, 10) === numId);
+    nodeAcls.forEach(acl => {
+      const sel = document.querySelector(`select[name="perms[${acl.subject_type}][${acl.subject_id}]"]`);
+      if (sel) {
+        sel.value = acl.permission_level;
+        updateRowState(sel);
+      }
+    });
+  }
+
+  const tbody = document.querySelector('tbody');
+  tbody.style.opacity = '0.3';
+  setTimeout(() => { tbody.style.opacity = '1'; }, 300);
+}
+
+/**
+ * Actualiza el indicador visual de estado en la fila de permiso.
+ *
+ * @param {HTMLSelectElement} selectElement
+ */
+function updateRowState(selectElement) {
+  const val = selectElement.value;
+  const rootRow = selectElement.closest('tr');
+  const indicator = rootRow.querySelector('.status-indicator');
+
+  selectElement.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
+
+  if (val === 'allow') {
+    selectElement.classList.add('text-primary', 'fw-bold');
+    indicator.innerHTML = '<span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>';
+  } else if (val === 'deny') {
+    selectElement.classList.add('text-danger', 'fw-bold');
+    indicator.innerHTML = '<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-xmark"></i></span>';
+  } else {
+    selectElement.classList.add('text-muted');
+    indicator.innerHTML = '<span class="text-muted"><i class="fa-solid fa-minus"></i></span>';
+  }
+}

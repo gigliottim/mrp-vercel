@@ -51,6 +51,7 @@ unset($sectionClass, $navClass);
 
                 <script>
                     const aclData = <?= json_encode($aclRows, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ?>;
+                    const nodeTreeData = <?= json_encode($nodesById, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ?>;
                 </script>
 
                 <script src="<?= AssetHelper::js('modules/empresa-usuarios/permisos-tree.js') ?>" defer></script>

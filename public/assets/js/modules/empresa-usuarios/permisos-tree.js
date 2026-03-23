@@ -162,9 +162,50 @@ function selectNode(e, nodeId, label, code, isItem) {
     });
   }
 
+  // Actualizar el texto de la opción "Heredada" con el permiso del padre
+  document.querySelectorAll('select[name^="perms["]').forEach(select => {
+    const match = select.name.match(/^perms\[(\w+)\]\[(\d+)\]$/);
+    if (match && !isNaN(numId)) {
+      const inherited = resolveInheritedPermission(numId, match[1], match[2]);
+      select.options[0].textContent = `Heredada (${inherited === 'deny' ? 'Denegar' : 'Acceder'})`;
+    } else {
+      select.options[0].textContent = 'Heredada (Acceder)';
+    }
+  });
+
   const tbody = document.querySelector('tbody');
   tbody.style.opacity = '0.3';
   setTimeout(() => { tbody.style.opacity = '1'; }, 300);
+}
+
+/**
+ * Resuelve el permiso heredado para un sujeto recorriendo los ancestros del nodo.
+ * Requiere que nodeTreeData y aclData estén definidos globalmente.
+ *
+ * @param {number} nodeId  - ID del nodo actualmente seleccionado
+ * @param {string} subjectType - 'role' | 'user'
+ * @param {string|number} subjectId
+ * @returns {'allow'|'deny'}
+ */
+function resolveInheritedPermission(nodeId, subjectType, subjectId) {
+  if (typeof nodeTreeData === 'undefined' || typeof aclData === 'undefined') {
+    return 'allow';
+  }
+  const sid = parseInt(subjectId, 10);
+  let currentId = Number(nodeTreeData[nodeId]?.parent_id ?? 0);
+  while (currentId > 0) {
+    const acl = aclData.find(row =>
+      parseInt(row.menu_item_id, 10) === currentId &&
+      row.subject_type === subjectType &&
+      parseInt(row.subject_id, 10) === sid &&
+      row.permission_level !== 'none'
+    );
+    if (acl) {
+      return acl.permission_level;
+    }
+    currentId = Number(nodeTreeData[currentId]?.parent_id ?? 0);
+  }
+  return 'allow';
 }
 
 /**

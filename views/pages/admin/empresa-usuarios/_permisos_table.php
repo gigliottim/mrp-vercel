@@ -47,7 +47,7 @@ use App\Core\View\View;
                                 <td class="ps-4 fw-medium"><?= View::escape((string) ($role['label'] ?? '')) ?></td>
                                 <td>
                                     <select name="perms[role][<?= (int) ($role['id'] ?? 0) ?>]" class="form-select form-select-sm border-0 bg-transparent shadow-none" onchange="updateRowState(this)">
-                                        <option value="none" selected>No definido (Heredada)</option>
+                                        <option value="none" selected>Heredada (Acceder)</option>
                                         <option value="allow">Acceder</option>
                                         <option value="deny">Denegar</option>
                                     </select>
@@ -85,7 +85,7 @@ use App\Core\View\View;
                                 </td>
                                 <td>
                                     <select name="perms[user][<?= (int) ($user['id'] ?? 0) ?>]" class="form-select form-select-sm border-0 bg-transparent shadow-none text-muted" onchange="updateRowState(this)">
-                                        <option value="none" selected>No definido (Heredada)</option>
+                                        <option value="none" selected>Heredada (Acceder)</option>
                                         <option value="allow">Acceder</option>
                                         <option value="deny">Denegar</option>
                                     </select>

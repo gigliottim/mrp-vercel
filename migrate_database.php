@@ -11,13 +11,14 @@ use App\Core\Support\Env;
 Env::load(base_path('.env'));
 Config::load(base_path('config'));
 
-$options = getopt('', ['connection::', 'path::', 'dry-run', 'status', 'db-host::', 'db-port::', 'skip-existing']);
+$options = getopt('', ['connection::', 'path::', 'dry-run', 'status', 'db-host::', 'db-port::', 'skip-existing', 'all-tenants']);
 
 $connectionName = (string) ($options['connection'] ?? 'default');
 $migrationsPath = (string) ($options['path'] ?? base_path('database/migrations'));
 $isDryRun = array_key_exists('dry-run', $options);
 $showStatusOnly = array_key_exists('status', $options);
 $skipExisting = array_key_exists('skip-existing', $options);
+$allTenants = array_key_exists('all-tenants', $options);
 $dbHostOverride = isset($options['db-host']) ? trim((string) $options['db-host']) : null;
 $dbPortOverride = isset($options['db-port']) ? trim((string) $options['db-port']) : null;
 
@@ -95,6 +96,91 @@ function isIdempotentSqlError(Throwable $error): bool
     return false;
 }
 
+/**
+ * @param string[] $files
+ * @return array{applied: int, skipped: int, errors: string[]}
+ */
+function runMigrationsForConnection(PDO $connection, array $files, bool $skipExisting, bool $showStatusOnly): array
+{
+    ensureMigrationsTable($connection);
+    $executed = getExecutedMigrations($connection);
+
+    $pending = [];
+    foreach ($files as $file) {
+        if (!isset($executed[basename($file)])) {
+            $pending[] = $file;
+        }
+    }
+
+    out('  Pendientes: ' . count($pending));
+
+    if ($showStatusOnly) {
+        foreach ($pending as $file) {
+            out('  - ' . basename($file));
+        }
+        return ['applied' => 0, 'skipped' => 0, 'errors' => []];
+    }
+
+    if ($pending === []) {
+        out('  Al dia.');
+        return ['applied' => 0, 'skipped' => 0, 'errors' => []];
+    }
+
+    $applied = 0;
+    $skipped = 0;
+    $errors = [];
+
+    foreach ($pending as $file) {
+        $filename = basename($file);
+        $sql = file_get_contents($file);
+
+        if ($sql === false || trim($sql) === '') {
+            $errors[] = "Migración vacía o ilegible: {$filename}";
+            continue;
+        }
+
+        $connection->beginTransaction();
+        try {
+            $connection->exec($sql);
+            $insert = $connection->prepare('INSERT INTO schema_migrations (filename) VALUES (:filename)');
+            $insert->execute(['filename' => $filename]);
+            $connection->commit();
+            $applied++;
+            out("  OK: {$filename}");
+        } catch (Throwable $e) {
+            $connection->rollBack();
+
+            if ($skipExisting && isIdempotentSqlError($e)) {
+                $insert = $connection->prepare('INSERT INTO schema_migrations (filename) VALUES (:filename) ON CONFLICT (filename) DO NOTHING');
+                $insert->execute(['filename' => $filename]);
+                $skipped++;
+                out("  SKIP(existing): {$filename}");
+                continue;
+            }
+
+            $errors[] = "Error en {$filename}: " . $e->getMessage();
+        }
+    }
+
+    return ['applied' => $applied, 'skipped' => $skipped, 'errors' => $errors];
+}
+
+function makeTenantPdo(string $host, string $port, string $database, string $username, string $password): PDO
+{
+    $dsn = sprintf(
+        "pgsql:host=%s;port=%s;dbname=%s;options='--client_encoding=UTF8'",
+        $host,
+        $port,
+        $database
+    );
+
+    return new PDO($dsn, $username, $password, [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+}
+
 try {
     if (!is_dir($migrationsPath)) {
         throw new RuntimeException("Directorio de migraciones no encontrado: {$migrationsPath}");
@@ -108,7 +194,6 @@ try {
     sort($files, SORT_STRING);
 
     out('=== Migraciones DB ===');
-    out('Conexión: ' . $connectionName);
     out('Directorio: ' . $migrationsPath);
     out('Total archivos: ' . count($files));
 
@@ -119,6 +204,69 @@ try {
         }
         exit(0);
     }
+
+    // ── Modo all-tenants ──────────────────────────────────────────────────────
+    if ($allTenants) {
+        out('Modo: all-tenants (todas las BDs empresa)');
+
+        $authConnection = DatabaseManager::connection('mrp_auth');
+        $stmt = $authConnection->query(
+            'SELECT database_name, host, port, username, password_encrypted
+             FROM company_databases
+             ORDER BY database_name'
+        );
+        $tenants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($tenants)) {
+            out('Sin tenants registrados en company_databases.');
+            exit(0);
+        }
+
+        out('Tenants encontrados: ' . count($tenants));
+
+        $globalErrors = [];
+
+        foreach ($tenants as $tenant) {
+            $dbName   = (string) ($tenant['database_name'] ?? '');
+            $host     = (string) ($tenant['host'] ?? '');
+            $port     = (string) ($tenant['port'] ?? '5432');
+            $username = (string) ($tenant['username'] ?? '');
+            $rawPass  = (string) ($tenant['password_encrypted'] ?? '');
+            $password = ($rawPass === 'ENC(local-dev-only)') ? 'a77MUbg_7QxdvdP7C9MrR' : $rawPass;
+
+            out('');
+            out("--- Tenant: {$dbName} ({$host}:{$port}) ---");
+
+            try {
+                $tenantConn = makeTenantPdo($host, $port, $dbName, $username, $password);
+                $result = runMigrationsForConnection($tenantConn, $files, $skipExisting, $showStatusOnly);
+
+                out("  Aplicadas: {$result['applied']}  Saltadas: {$result['skipped']}");
+
+                foreach ($result['errors'] as $err) {
+                    out("  ERROR: {$err}");
+                    $globalErrors[] = "[{$dbName}] {$err}";
+                }
+            } catch (Throwable $e) {
+                out("  FALLO conexion/migracion: " . $e->getMessage());
+                $globalErrors[] = "[{$dbName}] " . $e->getMessage();
+            }
+        }
+
+        out('');
+        out('=== Resumen all-tenants ===');
+        out('Tenants procesados: ' . count($tenants));
+        out('Errores: ' . count($globalErrors));
+
+        foreach ($globalErrors as $err) {
+            out('  ' . $err);
+        }
+
+        exit($globalErrors !== [] ? 1 : 0);
+    }
+
+    // ── Modo single-connection (comportamiento original) ──────────────────────
+    out('Conexión: ' . $connectionName);
 
     $connection = DatabaseManager::connection($connectionName);
     ensureMigrationsTable($connection);

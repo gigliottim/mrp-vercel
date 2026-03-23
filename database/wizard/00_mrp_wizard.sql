@@ -1,12 +1,15 @@
-﻿-- Wizard SQL 00 - Estructura completa MRP (sin datos)
-
+-- Wizard SQL 00 - Estructura completa MRP (sin datos)
+-- Generado desde: mrp_tunna
+-- Fecha: 2026-03-23 15:43:29
+--
 --
 -- PostgreSQL database dump
 --
 
+\restrict GTElbXYaPfT4MW3qdF9kQO6nDSfDfs2rO7ahrNQLp6D5VeRhb4Yx3GLHX8dXv42
 
--- Dumped from database version 18.1
--- Dumped by pg_dump version 18.1
+-- Dumped from database version 18.3
+-- Dumped by pg_dump version 18.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -21,13 +24,11 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: public; Type: SCHEMA; Schema: -; Owner: mrp
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
 -- *not* creating schema, since initdb creates it
 
-
-ALTER SCHEMA public OWNER TO mrp;
 
 --
 -- Name: btree_gist; Type: EXTENSION; Schema: -; Owner: -
@@ -37,7 +38,7 @@ CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner:
+-- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
@@ -51,7 +52,7 @@ CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner:
+-- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
@@ -65,14 +66,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner:
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 
 --
--- Name: actualizar_stock_trigger(); Type: FUNCTION; Schema: public; Owner: mrp
+-- Name: actualizar_stock_trigger(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.actualizar_stock_trigger() RETURNS trigger
@@ -102,10 +103,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.actualizar_stock_trigger() OWNER TO mrp;
-
 --
--- Name: update_fecha_modificacion_column(); Type: FUNCTION; Schema: public; Owner: mrp
+-- Name: update_fecha_modificacion_column(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.update_fecha_modificacion_column() RETURNS trigger
@@ -118,10 +117,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.update_fecha_modificacion_column() OWNER TO mrp;
-
 --
--- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: mrp
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
@@ -134,14 +131,12 @@ END;
 $$;
 
 
-ALTER FUNCTION public.update_updated_at_column() OWNER TO mrp;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: almacenes; Type: TABLE; Schema: public; Owner: mrp
+-- Name: almacenes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.almacenes (
@@ -154,10 +149,8 @@ CREATE TABLE public.almacenes (
 );
 
 
-ALTER TABLE public.almacenes OWNER TO mrp;
-
 --
--- Name: almacenes_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: almacenes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.almacenes_id_seq
@@ -169,17 +162,15 @@ CREATE SEQUENCE public.almacenes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.almacenes_id_seq OWNER TO mrp;
-
 --
--- Name: almacenes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: almacenes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.almacenes_id_seq OWNED BY public.almacenes.id;
 
 
 --
--- Name: bom_cabecera; Type: TABLE; Schema: public; Owner: mrp
+-- Name: bom_cabecera; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.bom_cabecera (
@@ -197,10 +188,8 @@ CREATE TABLE public.bom_cabecera (
 );
 
 
-ALTER TABLE public.bom_cabecera OWNER TO mrp;
-
 --
--- Name: bom_cabecera_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: bom_cabecera_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.bom_cabecera_id_seq
@@ -212,17 +201,15 @@ CREATE SEQUENCE public.bom_cabecera_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.bom_cabecera_id_seq OWNER TO mrp;
-
 --
--- Name: bom_cabecera_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: bom_cabecera_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.bom_cabecera_id_seq OWNED BY public.bom_cabecera.id;
 
 
 --
--- Name: bom_detalle; Type: TABLE; Schema: public; Owner: mrp
+-- Name: bom_detalle; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.bom_detalle (
@@ -243,10 +230,8 @@ CREATE TABLE public.bom_detalle (
 );
 
 
-ALTER TABLE public.bom_detalle OWNER TO mrp;
-
 --
--- Name: bom_detalle_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: bom_detalle_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.bom_detalle_id_seq
@@ -258,17 +243,15 @@ CREATE SEQUENCE public.bom_detalle_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.bom_detalle_id_seq OWNER TO mrp;
-
 --
--- Name: bom_detalle_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: bom_detalle_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.bom_detalle_id_seq OWNED BY public.bom_detalle.id;
 
 
 --
--- Name: centros_trabajo; Type: TABLE; Schema: public; Owner: mrp
+-- Name: centros_trabajo; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.centros_trabajo (
@@ -288,14 +271,12 @@ CREATE TABLE public.centros_trabajo (
     observaciones text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT centros_trabajo_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['manual'::character varying, 'semi_automatico'::character varying, 'automatico'::character varying])::text[])))
+    CONSTRAINT centros_trabajo_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('manual'::character varying)::text, ('semi_automatico'::character varying)::text, ('automatico'::character varying)::text])))
 );
 
 
-ALTER TABLE public.centros_trabajo OWNER TO mrp;
-
 --
--- Name: centros_trabajo_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: centros_trabajo_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.centros_trabajo_id_seq
@@ -307,17 +288,15 @@ CREATE SEQUENCE public.centros_trabajo_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.centros_trabajo_id_seq OWNER TO mrp;
-
 --
--- Name: centros_trabajo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: centros_trabajo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.centros_trabajo_id_seq OWNED BY public.centros_trabajo.id;
 
 
 --
--- Name: composicion_variantes; Type: TABLE; Schema: public; Owner: mrp
+-- Name: composicion_variantes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.composicion_variantes (
@@ -331,10 +310,8 @@ CREATE TABLE public.composicion_variantes (
 );
 
 
-ALTER TABLE public.composicion_variantes OWNER TO mrp;
-
 --
--- Name: composicion_variantes_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: composicion_variantes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.composicion_variantes_id_seq
@@ -346,17 +323,15 @@ CREATE SEQUENCE public.composicion_variantes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.composicion_variantes_id_seq OWNER TO mrp;
-
 --
--- Name: composicion_variantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: composicion_variantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.composicion_variantes_id_seq OWNED BY public.composicion_variantes.id;
 
 
 --
--- Name: compras; Type: TABLE; Schema: public; Owner: mrp
+-- Name: compras; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.compras (
@@ -372,10 +347,8 @@ CREATE TABLE public.compras (
 );
 
 
-ALTER TABLE public.compras OWNER TO mrp;
-
 --
--- Name: compras_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: compras_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.compras_id_seq
@@ -387,17 +360,15 @@ CREATE SEQUENCE public.compras_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.compras_id_seq OWNER TO mrp;
-
 --
--- Name: compras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: compras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.compras_id_seq OWNED BY public.compras.id;
 
 
 --
--- Name: configuracion; Type: TABLE; Schema: public; Owner: mrp
+-- Name: configuracion; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.configuracion (
@@ -407,14 +378,33 @@ CREATE TABLE public.configuracion (
     descripcion text,
     tipo character varying(20) DEFAULT 'string'::character varying,
     fecha_actualizacion timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT configuracion_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['string'::character varying, 'number'::character varying, 'boolean'::character varying, 'json'::character varying])::text[])))
+    CONSTRAINT configuracion_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('string'::character varying)::text, ('number'::character varying)::text, ('boolean'::character varying)::text, ('json'::character varying)::text])))
 );
 
 
-ALTER TABLE public.configuracion OWNER TO mrp;
+--
+-- Name: configuracion_general; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.configuracion_general (
+    id smallint DEFAULT 1 NOT NULL,
+    decimal_places smallint DEFAULT 4 NOT NULL,
+    rounding_mode character varying(20) DEFAULT 'half_up'::character varying NOT NULL,
+    thousand_separator character varying(1) DEFAULT '.'::character varying NOT NULL,
+    decimal_separator character varying(1) DEFAULT ','::character varying NOT NULL,
+    date_format character varying(20) DEFAULT 'd/m/Y'::character varying NOT NULL,
+    time_format character varying(20) DEFAULT 'H:i'::character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_configuracion_general_rounding_mode CHECK (((rounding_mode)::text = ANY (ARRAY[('half_up'::character varying)::text, ('half_down'::character varying)::text, ('half_even'::character varying)::text, ('truncate'::character varying)::text]))),
+    CONSTRAINT chk_configuracion_general_separators CHECK (((thousand_separator)::text <> (decimal_separator)::text)),
+    CONSTRAINT configuracion_general_decimal_places_check CHECK (((decimal_places >= 1) AND (decimal_places <= 10))),
+    CONSTRAINT configuracion_general_id_check CHECK ((id = 1))
+);
+
 
 --
--- Name: configuracion_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: configuracion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.configuracion_id_seq
@@ -426,17 +416,15 @@ CREATE SEQUENCE public.configuracion_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.configuracion_id_seq OWNER TO mrp;
-
 --
--- Name: configuracion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: configuracion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.configuracion_id_seq OWNED BY public.configuracion.id;
 
 
 --
--- Name: entidades; Type: TABLE; Schema: public; Owner: mrp
+-- Name: entidades; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.entidades (
@@ -449,14 +437,12 @@ CREATE TABLE public.entidades (
     direccion text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT entidades_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['PROVEEDOR'::character varying, 'CLIENTE'::character varying, 'AMBOS'::character varying])::text[])))
+    CONSTRAINT entidades_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('PROVEEDOR'::character varying)::text, ('CLIENTE'::character varying)::text, ('AMBOS'::character varying)::text])))
 );
 
 
-ALTER TABLE public.entidades OWNER TO mrp;
-
 --
--- Name: entidades_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: entidades_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.entidades_id_seq
@@ -468,17 +454,15 @@ CREATE SEQUENCE public.entidades_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.entidades_id_seq OWNER TO mrp;
-
 --
--- Name: entidades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: entidades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.entidades_id_seq OWNED BY public.entidades.id;
 
 
 --
--- Name: grupos_partes; Type: TABLE; Schema: public; Owner: mrp
+-- Name: grupos_partes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.grupos_partes (
@@ -493,10 +477,8 @@ CREATE TABLE public.grupos_partes (
 );
 
 
-ALTER TABLE public.grupos_partes OWNER TO mrp;
-
 --
--- Name: grupos_partes_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: grupos_partes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.grupos_partes_id_seq
@@ -508,17 +490,15 @@ CREATE SEQUENCE public.grupos_partes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.grupos_partes_id_seq OWNER TO mrp;
-
 --
--- Name: grupos_partes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: grupos_partes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.grupos_partes_id_seq OWNED BY public.grupos_partes.id;
 
 
 --
--- Name: movimientos_inventario; Type: TABLE; Schema: public; Owner: mrp
+-- Name: movimientos_inventario; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.movimientos_inventario (
@@ -535,14 +515,12 @@ CREATE TABLE public.movimientos_inventario (
     observaciones text,
     referencia_documento character varying(100),
     CONSTRAINT movimientos_inventario_signo_check CHECK ((signo = ANY (ARRAY[1, '-1'::integer]))),
-    CONSTRAINT movimientos_inventario_tipo_movimiento_check CHECK (((tipo_movimiento)::text = ANY ((ARRAY['compra_recepcion'::character varying, 'produccion_ingreso'::character varying, 'produccion_consumo'::character varying, 'produccion_descarte'::character varying, 'ajuste_inventario'::character varying, 'venta_despacho'::character varying, 'transferencia_salida'::character varying, 'transferencia_entrada'::character varying])::text[])))
+    CONSTRAINT movimientos_inventario_tipo_movimiento_check CHECK (((tipo_movimiento)::text = ANY (ARRAY[('compra_recepcion'::character varying)::text, ('produccion_ingreso'::character varying)::text, ('produccion_consumo'::character varying)::text, ('produccion_descarte'::character varying)::text, ('ajuste_inventario'::character varying)::text, ('venta_despacho'::character varying)::text, ('transferencia_salida'::character varying)::text, ('transferencia_entrada'::character varying)::text])))
 );
 
 
-ALTER TABLE public.movimientos_inventario OWNER TO mrp;
-
 --
--- Name: movimientos_inventario_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: movimientos_inventario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.movimientos_inventario_id_seq
@@ -554,17 +532,15 @@ CREATE SEQUENCE public.movimientos_inventario_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.movimientos_inventario_id_seq OWNER TO mrp;
-
 --
--- Name: movimientos_inventario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: movimientos_inventario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.movimientos_inventario_id_seq OWNED BY public.movimientos_inventario.id;
 
 
 --
--- Name: movimientos_stock; Type: TABLE; Schema: public; Owner: mrp
+-- Name: movimientos_stock; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.movimientos_stock (
@@ -582,24 +558,22 @@ CREATE TABLE public.movimientos_stock (
 );
 
 
-ALTER TABLE public.movimientos_stock OWNER TO mrp;
-
 --
--- Name: TABLE movimientos_stock; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: TABLE movimientos_stock; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.movimientos_stock IS 'Historial de movimientos de stock entre dep├│sitos (tipos)';
+COMMENT ON TABLE public.movimientos_stock IS 'Historial de movimientos de stock entre depÔö£Ôöésitos (tipos)';
 
 
 --
--- Name: COLUMN movimientos_stock.cantidad; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN movimientos_stock.cantidad; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON COLUMN public.movimientos_stock.cantidad IS 'Cantidad movida en Unidad de Uso de la variante';
 
 
 --
--- Name: movimientos_stock_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: movimientos_stock_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.movimientos_stock_id_seq
@@ -611,17 +585,15 @@ CREATE SEQUENCE public.movimientos_stock_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.movimientos_stock_id_seq OWNER TO mrp;
-
 --
--- Name: movimientos_stock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: movimientos_stock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.movimientos_stock_id_seq OWNED BY public.movimientos_stock.id;
 
 
 --
--- Name: mrp_calculos_cabecera; Type: TABLE; Schema: public; Owner: mrp
+-- Name: mrp_calculos_cabecera; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.mrp_calculos_cabecera (
@@ -633,10 +605,8 @@ CREATE TABLE public.mrp_calculos_cabecera (
 );
 
 
-ALTER TABLE public.mrp_calculos_cabecera OWNER TO mrp;
-
 --
--- Name: mrp_calculos_cabecera_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: mrp_calculos_cabecera_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.mrp_calculos_cabecera_id_seq
@@ -648,17 +618,15 @@ CREATE SEQUENCE public.mrp_calculos_cabecera_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.mrp_calculos_cabecera_id_seq OWNER TO mrp;
-
 --
--- Name: mrp_calculos_cabecera_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: mrp_calculos_cabecera_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.mrp_calculos_cabecera_id_seq OWNED BY public.mrp_calculos_cabecera.id;
 
 
 --
--- Name: mrp_sugerencias; Type: TABLE; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.mrp_sugerencias (
@@ -676,15 +644,13 @@ CREATE TABLE public.mrp_sugerencias (
     prioridad character varying(20) DEFAULT 'normal'::character varying,
     estado character varying(20) DEFAULT 'pendiente'::character varying,
     observaciones text,
-    CONSTRAINT mrp_sugerencias_estado_check CHECK (((estado)::text = ANY ((ARRAY['pendiente'::character varying, 'aprobada'::character varying, 'rechazada'::character varying, 'convertida'::character varying])::text[]))),
-    CONSTRAINT mrp_sugerencias_tipo_accion_check CHECK (((tipo_accion)::text = ANY ((ARRAY['producir'::character varying, 'comprar'::character varying, 'transferir'::character varying, 'cancelar_orden'::character varying])::text[])))
+    CONSTRAINT mrp_sugerencias_estado_check CHECK (((estado)::text = ANY (ARRAY[('pendiente'::character varying)::text, ('aprobada'::character varying)::text, ('rechazada'::character varying)::text, ('convertida'::character varying)::text]))),
+    CONSTRAINT mrp_sugerencias_tipo_accion_check CHECK (((tipo_accion)::text = ANY (ARRAY[('producir'::character varying)::text, ('comprar'::character varying)::text, ('transferir'::character varying)::text, ('cancelar_orden'::character varying)::text])))
 );
 
 
-ALTER TABLE public.mrp_sugerencias OWNER TO mrp;
-
 --
--- Name: mrp_sugerencias_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.mrp_sugerencias_id_seq
@@ -696,17 +662,15 @@ CREATE SEQUENCE public.mrp_sugerencias_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.mrp_sugerencias_id_seq OWNER TO mrp;
-
 --
--- Name: mrp_sugerencias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.mrp_sugerencias_id_seq OWNED BY public.mrp_sugerencias.id;
 
 
 --
--- Name: ordenes_produccion; Type: TABLE; Schema: public; Owner: mrp
+-- Name: ordenes_produccion; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.ordenes_produccion (
@@ -728,15 +692,13 @@ CREATE TABLE public.ordenes_produccion (
     usuario_creador bigint,
     fecha_creacion timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT ordenes_produccion_estado_check CHECK (((estado)::text = ANY ((ARRAY['borrador'::character varying, 'planificada'::character varying, 'liberada'::character varying, 'en_proceso'::character varying, 'pausada'::character varying, 'completada'::character varying, 'cancelada'::character varying, 'cerrada'::character varying])::text[]))),
-    CONSTRAINT ordenes_produccion_prioridad_check CHECK (((prioridad)::text = ANY ((ARRAY['baja'::character varying, 'normal'::character varying, 'alta'::character varying, 'urgente'::character varying])::text[])))
+    CONSTRAINT ordenes_produccion_estado_check CHECK (((estado)::text = ANY (ARRAY[('borrador'::character varying)::text, ('planificada'::character varying)::text, ('liberada'::character varying)::text, ('en_proceso'::character varying)::text, ('pausada'::character varying)::text, ('completada'::character varying)::text, ('cancelada'::character varying)::text, ('cerrada'::character varying)::text]))),
+    CONSTRAINT ordenes_produccion_prioridad_check CHECK (((prioridad)::text = ANY (ARRAY[('baja'::character varying)::text, ('normal'::character varying)::text, ('alta'::character varying)::text, ('urgente'::character varying)::text])))
 );
 
 
-ALTER TABLE public.ordenes_produccion OWNER TO mrp;
-
 --
--- Name: ordenes_produccion_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: ordenes_produccion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.ordenes_produccion_id_seq
@@ -748,17 +710,15 @@ CREATE SEQUENCE public.ordenes_produccion_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.ordenes_produccion_id_seq OWNER TO mrp;
-
 --
--- Name: ordenes_produccion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: ordenes_produccion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.ordenes_produccion_id_seq OWNED BY public.ordenes_produccion.id;
 
 
 --
--- Name: partes; Type: TABLE; Schema: public; Owner: mrp
+-- Name: partes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.partes (
@@ -791,31 +751,29 @@ CREATE TABLE public.partes (
 );
 
 
-ALTER TABLE public.partes OWNER TO mrp;
-
 --
--- Name: COLUMN partes.id_um_compra; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN partes.id_um_compra; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.partes.id_um_compra IS 'Unidad de medida en la que se compra el ├â┬¡tem';
+COMMENT ON COLUMN public.partes.id_um_compra IS 'Unidad de medida en la que se compra el Ôö£├óÔö¼┬ítem';
 
 
 --
--- Name: COLUMN partes.id_um_uso; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN partes.id_um_uso; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.partes.id_um_uso IS 'Unidad de medida en la que se usa el ├â┬¡tem en producci├â┬│n';
-
-
---
--- Name: COLUMN partes.factor_conversion; Type: COMMENT; Schema: public; Owner: mrp
---
-
-COMMENT ON COLUMN public.partes.factor_conversion IS 'Factor de conversi├│n: 1 UM Compra = X UM Uso';
+COMMENT ON COLUMN public.partes.id_um_uso IS 'Unidad de medida en la que se usa el Ôö£├óÔö¼┬ítem en producciÔö£├óÔö¼Ôöén';
 
 
 --
--- Name: partes_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: COLUMN partes.factor_conversion; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.partes.factor_conversion IS 'Factor de conversiÔö£Ôöén: 1 UM Compra = X UM Uso';
+
+
+--
+-- Name: partes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.partes_id_seq
@@ -827,17 +785,15 @@ CREATE SEQUENCE public.partes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.partes_id_seq OWNER TO mrp;
-
 --
--- Name: partes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: partes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.partes_id_seq OWNED BY public.partes.id;
 
 
 --
--- Name: planificacion_recursos; Type: TABLE; Schema: public; Owner: mrp
+-- Name: planificacion_recursos; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.planificacion_recursos (
@@ -849,14 +805,12 @@ CREATE TABLE public.planificacion_recursos (
     estado character varying(20) DEFAULT 'programado'::character varying,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT periodo_valido CHECK ((lower(periodo) < upper(periodo))),
-    CONSTRAINT planificacion_recursos_estado_check CHECK (((estado)::text = ANY ((ARRAY['programado'::character varying, 'en_ejecucion'::character varying, 'completado'::character varying])::text[])))
+    CONSTRAINT planificacion_recursos_estado_check CHECK (((estado)::text = ANY (ARRAY[('programado'::character varying)::text, ('en_ejecucion'::character varying)::text, ('completado'::character varying)::text])))
 );
 
 
-ALTER TABLE public.planificacion_recursos OWNER TO mrp;
-
 --
--- Name: planificacion_recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: planificacion_recursos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.planificacion_recursos_id_seq
@@ -868,17 +822,15 @@ CREATE SEQUENCE public.planificacion_recursos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.planificacion_recursos_id_seq OWNER TO mrp;
-
 --
--- Name: planificacion_recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: planificacion_recursos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.planificacion_recursos_id_seq OWNED BY public.planificacion_recursos.id;
 
 
 --
--- Name: rutas_produccion; Type: TABLE; Schema: public; Owner: mrp
+-- Name: rutas_produccion; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.rutas_produccion (
@@ -899,10 +851,8 @@ CREATE TABLE public.rutas_produccion (
 );
 
 
-ALTER TABLE public.rutas_produccion OWNER TO mrp;
-
 --
--- Name: rutas_produccion_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: rutas_produccion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.rutas_produccion_id_seq
@@ -914,17 +864,15 @@ CREATE SEQUENCE public.rutas_produccion_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.rutas_produccion_id_seq OWNER TO mrp;
-
 --
--- Name: rutas_produccion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: rutas_produccion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.rutas_produccion_id_seq OWNED BY public.rutas_produccion.id;
 
 
 --
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: mrp
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.schema_migrations (
@@ -934,10 +882,8 @@ CREATE TABLE public.schema_migrations (
 );
 
 
-ALTER TABLE public.schema_migrations OWNER TO mrp;
-
 --
--- Name: schema_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: schema_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.schema_migrations_id_seq
@@ -949,17 +895,15 @@ CREATE SEQUENCE public.schema_migrations_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.schema_migrations_id_seq OWNER TO mrp;
-
 --
--- Name: schema_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: schema_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.schema_migrations_id_seq OWNED BY public.schema_migrations.id;
 
 
 --
--- Name: tipos_depositos; Type: TABLE; Schema: public; Owner: mrp
+-- Name: tipos_depositos; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tipos_depositos (
@@ -975,24 +919,22 @@ CREATE TABLE public.tipos_depositos (
 );
 
 
-ALTER TABLE public.tipos_depositos OWNER TO mrp;
-
 --
--- Name: TABLE tipos_depositos; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: TABLE tipos_depositos; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.tipos_depositos IS 'Cat├â┬ílogo de tipos de dep├â┬│sito del sistema';
+COMMENT ON TABLE public.tipos_depositos IS 'CatÔö£├óÔö¼├¡logo de tipos de depÔö£├óÔö¼Ôöésito del sistema';
 
 
 --
--- Name: COLUMN tipos_depositos.es_sistema; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN tipos_depositos.es_sistema; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON COLUMN public.tipos_depositos.es_sistema IS 'Indica si el tipo es del sistema y no puede ser eliminado';
 
 
 --
--- Name: tipos_depositos_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: tipos_depositos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.tipos_depositos_id_seq
@@ -1004,17 +946,15 @@ CREATE SEQUENCE public.tipos_depositos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipos_depositos_id_seq OWNER TO mrp;
-
 --
--- Name: tipos_depositos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: tipos_depositos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.tipos_depositos_id_seq OWNED BY public.tipos_depositos.id;
 
 
 --
--- Name: tipos_depositos_movimientos; Type: TABLE; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tipos_depositos_movimientos (
@@ -1028,38 +968,36 @@ CREATE TABLE public.tipos_depositos_movimientos (
 );
 
 
-ALTER TABLE public.tipos_depositos_movimientos OWNER TO mrp;
-
 --
--- Name: TABLE tipos_depositos_movimientos; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: TABLE tipos_depositos_movimientos; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON TABLE public.tipos_depositos_movimientos IS 'Configuraci??n de movimientos permitidos entre tipos de dep??sitos';
 
 
 --
--- Name: COLUMN tipos_depositos_movimientos.tipo_deposito_origen_id; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN tipos_depositos_movimientos.tipo_deposito_origen_id; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON COLUMN public.tipos_depositos_movimientos.tipo_deposito_origen_id IS 'Tipo de dep??sito de origen del movimiento';
 
 
 --
--- Name: COLUMN tipos_depositos_movimientos.tipo_deposito_destino_id; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN tipos_depositos_movimientos.tipo_deposito_destino_id; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON COLUMN public.tipos_depositos_movimientos.tipo_deposito_destino_id IS 'Tipo de dep??sito de destino del movimiento';
 
 
 --
--- Name: COLUMN tipos_depositos_movimientos.activo; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: COLUMN tipos_depositos_movimientos.activo; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON COLUMN public.tipos_depositos_movimientos.activo IS 'Indica si el movimiento est?? habilitado';
 
 
 --
--- Name: tipos_depositos_movimientos_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.tipos_depositos_movimientos_id_seq
@@ -1071,17 +1009,15 @@ CREATE SEQUENCE public.tipos_depositos_movimientos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipos_depositos_movimientos_id_seq OWNER TO mrp;
-
 --
--- Name: tipos_depositos_movimientos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.tipos_depositos_movimientos_id_seq OWNED BY public.tipos_depositos_movimientos.id;
 
 
 --
--- Name: tipos_partes; Type: TABLE; Schema: public; Owner: mrp
+-- Name: tipos_partes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tipos_partes (
@@ -1097,10 +1033,8 @@ CREATE TABLE public.tipos_partes (
 );
 
 
-ALTER TABLE public.tipos_partes OWNER TO mrp;
-
 --
--- Name: tipos_partes_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: tipos_partes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.tipos_partes_id_seq
@@ -1112,17 +1046,15 @@ CREATE SEQUENCE public.tipos_partes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tipos_partes_id_seq OWNER TO mrp;
-
 --
--- Name: tipos_partes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: tipos_partes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.tipos_partes_id_seq OWNED BY public.tipos_partes.id;
 
 
 --
--- Name: unidades_medida; Type: TABLE; Schema: public; Owner: mrp
+-- Name: unidades_medida; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.unidades_medida (
@@ -1137,14 +1069,12 @@ CREATE TABLE public.unidades_medida (
     fecha_modificacion timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     is_system boolean DEFAULT false NOT NULL,
     locked boolean DEFAULT false NOT NULL,
-    CONSTRAINT unidades_medida_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['longitud'::character varying, 'superficie'::character varying, 'volumen'::character varying, 'masa'::character varying, 'tiempo'::character varying, 'temperatura'::character varying, 'unidad'::character varying])::text[])))
+    CONSTRAINT unidades_medida_tipo_check CHECK (((tipo)::text = ANY (ARRAY[('longitud'::character varying)::text, ('superficie'::character varying)::text, ('volumen'::character varying)::text, ('masa'::character varying)::text, ('tiempo'::character varying)::text, ('temperatura'::character varying)::text, ('unidad'::character varying)::text])))
 );
 
 
-ALTER TABLE public.unidades_medida OWNER TO mrp;
-
 --
--- Name: unidades_medida_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: unidades_medida_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.unidades_medida_id_seq
@@ -1156,17 +1086,15 @@ CREATE SEQUENCE public.unidades_medida_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.unidades_medida_id_seq OWNER TO mrp;
-
 --
--- Name: unidades_medida_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: unidades_medida_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.unidades_medida_id_seq OWNED BY public.unidades_medida.id;
 
 
 --
--- Name: variantes; Type: TABLE; Schema: public; Owner: mrp
+-- Name: variantes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.variantes (
@@ -1193,14 +1121,12 @@ CREATE TABLE public.variantes (
     ubicacion_cuerpo character varying(100),
     ubicacion_pasillo character varying(100),
     ubicacion_estante character varying(100),
-    CONSTRAINT variantes_estado_check CHECK (((estado)::text = ANY ((ARRAY['activa'::character varying, 'obsoleta'::character varying, 'descontinuada'::character varying, 'desarrollo'::character varying])::text[])))
+    CONSTRAINT variantes_estado_check CHECK (((estado)::text = ANY (ARRAY[('activa'::character varying)::text, ('obsoleta'::character varying)::text, ('descontinuada'::character varying)::text, ('desarrollo'::character varying)::text])))
 );
 
 
-ALTER TABLE public.variantes OWNER TO mrp;
-
 --
--- Name: variantes_id_seq; Type: SEQUENCE; Schema: public; Owner: mrp
+-- Name: variantes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.variantes_id_seq
@@ -1212,431 +1138,176 @@ CREATE SEQUENCE public.variantes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.variantes_id_seq OWNER TO mrp;
-
 --
--- Name: variantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: mrp
+-- Name: variantes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.variantes_id_seq OWNED BY public.variantes.id;
 
 
 --
--- Name: almacenes id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: almacenes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.almacenes ALTER COLUMN id SET DEFAULT nextval('public.almacenes_id_seq'::regclass);
 
 
 --
--- Name: bom_cabecera id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: bom_cabecera id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_cabecera ALTER COLUMN id SET DEFAULT nextval('public.bom_cabecera_id_seq'::regclass);
 
 
 --
--- Name: bom_detalle id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: bom_detalle id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_detalle ALTER COLUMN id SET DEFAULT nextval('public.bom_detalle_id_seq'::regclass);
 
 
 --
--- Name: centros_trabajo id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: centros_trabajo id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.centros_trabajo ALTER COLUMN id SET DEFAULT nextval('public.centros_trabajo_id_seq'::regclass);
 
 
 --
--- Name: composicion_variantes id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: composicion_variantes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.composicion_variantes ALTER COLUMN id SET DEFAULT nextval('public.composicion_variantes_id_seq'::regclass);
 
 
 --
--- Name: compras id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: compras id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.compras ALTER COLUMN id SET DEFAULT nextval('public.compras_id_seq'::regclass);
 
 
 --
--- Name: configuracion id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: configuracion id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.configuracion ALTER COLUMN id SET DEFAULT nextval('public.configuracion_id_seq'::regclass);
 
 
 --
--- Name: entidades id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: entidades id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.entidades ALTER COLUMN id SET DEFAULT nextval('public.entidades_id_seq'::regclass);
 
 
 --
--- Name: grupos_partes id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: grupos_partes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grupos_partes ALTER COLUMN id SET DEFAULT nextval('public.grupos_partes_id_seq'::regclass);
 
 
 --
--- Name: movimientos_inventario id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: movimientos_inventario id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_inventario ALTER COLUMN id SET DEFAULT nextval('public.movimientos_inventario_id_seq'::regclass);
 
 
 --
--- Name: movimientos_stock id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: movimientos_stock id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_stock ALTER COLUMN id SET DEFAULT nextval('public.movimientos_stock_id_seq'::regclass);
 
 
 --
--- Name: mrp_calculos_cabecera id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: mrp_calculos_cabecera id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mrp_calculos_cabecera ALTER COLUMN id SET DEFAULT nextval('public.mrp_calculos_cabecera_id_seq'::regclass);
 
 
 --
--- Name: mrp_sugerencias id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mrp_sugerencias ALTER COLUMN id SET DEFAULT nextval('public.mrp_sugerencias_id_seq'::regclass);
 
 
 --
--- Name: ordenes_produccion id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: ordenes_produccion id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ordenes_produccion ALTER COLUMN id SET DEFAULT nextval('public.ordenes_produccion_id_seq'::regclass);
 
 
 --
--- Name: partes id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: partes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes ALTER COLUMN id SET DEFAULT nextval('public.partes_id_seq'::regclass);
 
 
 --
--- Name: planificacion_recursos id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: planificacion_recursos id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.planificacion_recursos ALTER COLUMN id SET DEFAULT nextval('public.planificacion_recursos_id_seq'::regclass);
 
 
 --
--- Name: rutas_produccion id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: rutas_produccion id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rutas_produccion ALTER COLUMN id SET DEFAULT nextval('public.rutas_produccion_id_seq'::regclass);
 
 
 --
--- Name: schema_migrations id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: schema_migrations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.schema_migrations ALTER COLUMN id SET DEFAULT nextval('public.schema_migrations_id_seq'::regclass);
 
 
 --
--- Name: tipos_depositos id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: tipos_depositos id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos ALTER COLUMN id SET DEFAULT nextval('public.tipos_depositos_id_seq'::regclass);
 
 
 --
--- Name: tipos_depositos_movimientos id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos_movimientos ALTER COLUMN id SET DEFAULT nextval('public.tipos_depositos_movimientos_id_seq'::regclass);
 
 
 --
--- Name: tipos_partes id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: tipos_partes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_partes ALTER COLUMN id SET DEFAULT nextval('public.tipos_partes_id_seq'::regclass);
 
 
 --
--- Name: unidades_medida id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: unidades_medida id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.unidades_medida ALTER COLUMN id SET DEFAULT nextval('public.unidades_medida_id_seq'::regclass);
 
 
 --
--- Name: variantes id; Type: DEFAULT; Schema: public; Owner: mrp
+-- Name: variantes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.variantes ALTER COLUMN id SET DEFAULT nextval('public.variantes_id_seq'::regclass);
 
 
 --
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
---
-
-
-
---
--- Name: almacenes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: bom_cabecera_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: bom_detalle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: centros_trabajo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: composicion_variantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: compras_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: configuracion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: entidades_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: grupos_partes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: movimientos_inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: movimientos_stock_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: mrp_calculos_cabecera_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: mrp_sugerencias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: ordenes_produccion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: partes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: planificacion_recursos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: rutas_produccion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: schema_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: tipos_depositos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: tipos_depositos_movimientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: tipos_partes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: unidades_medida_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: variantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: mrp
---
-
-
-
---
--- Name: almacenes almacenes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: almacenes almacenes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.almacenes
@@ -1644,7 +1315,7 @@ ALTER TABLE ONLY public.almacenes
 
 
 --
--- Name: almacenes almacenes_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: almacenes almacenes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.almacenes
@@ -1652,7 +1323,7 @@ ALTER TABLE ONLY public.almacenes
 
 
 --
--- Name: bom_cabecera bom_cabecera_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_cabecera bom_cabecera_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_cabecera
@@ -1660,7 +1331,7 @@ ALTER TABLE ONLY public.bom_cabecera
 
 
 --
--- Name: bom_cabecera bom_cabecera_variante_padre_id_version_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_cabecera bom_cabecera_variante_padre_id_version_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_cabecera
@@ -1668,7 +1339,7 @@ ALTER TABLE ONLY public.bom_cabecera
 
 
 --
--- Name: bom_detalle bom_detalle_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_detalle bom_detalle_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_detalle
@@ -1676,7 +1347,7 @@ ALTER TABLE ONLY public.bom_detalle
 
 
 --
--- Name: centros_trabajo centros_trabajo_codigo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: centros_trabajo centros_trabajo_codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.centros_trabajo
@@ -1684,7 +1355,7 @@ ALTER TABLE ONLY public.centros_trabajo
 
 
 --
--- Name: centros_trabajo centros_trabajo_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: centros_trabajo centros_trabajo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.centros_trabajo
@@ -1692,7 +1363,7 @@ ALTER TABLE ONLY public.centros_trabajo
 
 
 --
--- Name: composicion_variantes composicion_variantes_id_padre_id_hijo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: composicion_variantes composicion_variantes_id_padre_id_hijo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.composicion_variantes
@@ -1700,7 +1371,7 @@ ALTER TABLE ONLY public.composicion_variantes
 
 
 --
--- Name: composicion_variantes composicion_variantes_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: composicion_variantes composicion_variantes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.composicion_variantes
@@ -1708,7 +1379,7 @@ ALTER TABLE ONLY public.composicion_variantes
 
 
 --
--- Name: compras compras_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: compras compras_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.compras
@@ -1716,7 +1387,7 @@ ALTER TABLE ONLY public.compras
 
 
 --
--- Name: configuracion configuracion_clave_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: configuracion configuracion_clave_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.configuracion
@@ -1724,7 +1395,15 @@ ALTER TABLE ONLY public.configuracion
 
 
 --
--- Name: configuracion configuracion_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: configuracion_general configuracion_general_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.configuracion_general
+    ADD CONSTRAINT configuracion_general_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: configuracion configuracion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.configuracion
@@ -1732,7 +1411,7 @@ ALTER TABLE ONLY public.configuracion
 
 
 --
--- Name: entidades entidades_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: entidades entidades_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.entidades
@@ -1740,7 +1419,7 @@ ALTER TABLE ONLY public.entidades
 
 
 --
--- Name: grupos_partes grupos_partes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: grupos_partes grupos_partes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grupos_partes
@@ -1748,7 +1427,7 @@ ALTER TABLE ONLY public.grupos_partes
 
 
 --
--- Name: grupos_partes grupos_partes_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: grupos_partes grupos_partes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.grupos_partes
@@ -1756,7 +1435,7 @@ ALTER TABLE ONLY public.grupos_partes
 
 
 --
--- Name: movimientos_inventario movimientos_inventario_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: movimientos_inventario movimientos_inventario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_inventario
@@ -1764,7 +1443,7 @@ ALTER TABLE ONLY public.movimientos_inventario
 
 
 --
--- Name: movimientos_stock movimientos_stock_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: movimientos_stock movimientos_stock_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_stock
@@ -1772,7 +1451,7 @@ ALTER TABLE ONLY public.movimientos_stock
 
 
 --
--- Name: mrp_calculos_cabecera mrp_calculos_cabecera_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: mrp_calculos_cabecera mrp_calculos_cabecera_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mrp_calculos_cabecera
@@ -1780,7 +1459,7 @@ ALTER TABLE ONLY public.mrp_calculos_cabecera
 
 
 --
--- Name: mrp_sugerencias mrp_sugerencias_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias mrp_sugerencias_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mrp_sugerencias
@@ -1788,7 +1467,7 @@ ALTER TABLE ONLY public.mrp_sugerencias
 
 
 --
--- Name: ordenes_produccion ordenes_produccion_numero_orden_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: ordenes_produccion ordenes_produccion_numero_orden_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ordenes_produccion
@@ -1796,7 +1475,7 @@ ALTER TABLE ONLY public.ordenes_produccion
 
 
 --
--- Name: ordenes_produccion ordenes_produccion_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: ordenes_produccion ordenes_produccion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ordenes_produccion
@@ -1804,7 +1483,7 @@ ALTER TABLE ONLY public.ordenes_produccion
 
 
 --
--- Name: partes partes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -1812,7 +1491,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -1820,7 +1499,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: planificacion_recursos planificacion_recursos_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: planificacion_recursos planificacion_recursos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.planificacion_recursos
@@ -1828,7 +1507,7 @@ ALTER TABLE ONLY public.planificacion_recursos
 
 
 --
--- Name: rutas_produccion rutas_produccion_bom_id_secuencia_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: rutas_produccion rutas_produccion_bom_id_secuencia_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rutas_produccion
@@ -1836,7 +1515,7 @@ ALTER TABLE ONLY public.rutas_produccion
 
 
 --
--- Name: rutas_produccion rutas_produccion_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: rutas_produccion rutas_produccion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rutas_produccion
@@ -1844,7 +1523,7 @@ ALTER TABLE ONLY public.rutas_produccion
 
 
 --
--- Name: schema_migrations schema_migrations_filename_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: schema_migrations schema_migrations_filename_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.schema_migrations
@@ -1852,7 +1531,7 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.schema_migrations
@@ -1860,7 +1539,7 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: tipos_depositos tipos_depositos_codigo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_depositos tipos_depositos_codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos
@@ -1868,7 +1547,7 @@ ALTER TABLE ONLY public.tipos_depositos
 
 
 --
--- Name: tipos_depositos_movimientos tipos_depositos_movimientos_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos tipos_depositos_movimientos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos_movimientos
@@ -1876,7 +1555,7 @@ ALTER TABLE ONLY public.tipos_depositos_movimientos
 
 
 --
--- Name: tipos_depositos tipos_depositos_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_depositos tipos_depositos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos
@@ -1884,7 +1563,7 @@ ALTER TABLE ONLY public.tipos_depositos
 
 
 --
--- Name: tipos_partes tipos_partes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_partes tipos_partes_codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_partes
@@ -1892,7 +1571,7 @@ ALTER TABLE ONLY public.tipos_partes
 
 
 --
--- Name: tipos_partes tipos_partes_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_partes tipos_partes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_partes
@@ -1900,7 +1579,7 @@ ALTER TABLE ONLY public.tipos_partes
 
 
 --
--- Name: unidades_medida unidades_medida_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: unidades_medida unidades_medida_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.unidades_medida
@@ -1908,7 +1587,7 @@ ALTER TABLE ONLY public.unidades_medida
 
 
 --
--- Name: unidades_medida unidades_medida_tipo_simbolo_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: unidades_medida unidades_medida_tipo_simbolo_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.unidades_medida
@@ -1916,7 +1595,7 @@ ALTER TABLE ONLY public.unidades_medida
 
 
 --
--- Name: unidades_medida unidades_medida_tipo_unidad_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: unidades_medida unidades_medida_tipo_unidad_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.unidades_medida
@@ -1924,7 +1603,7 @@ ALTER TABLE ONLY public.unidades_medida
 
 
 --
--- Name: tipos_depositos_movimientos uq_origen_destino; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos uq_origen_destino; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos_movimientos
@@ -1932,7 +1611,7 @@ ALTER TABLE ONLY public.tipos_depositos_movimientos
 
 
 --
--- Name: variantes variantes_id_parte_codigo_variante_key; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: variantes variantes_id_parte_codigo_variante_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.variantes
@@ -1940,7 +1619,7 @@ ALTER TABLE ONLY public.variantes
 
 
 --
--- Name: variantes variantes_pkey; Type: CONSTRAINT; Schema: public; Owner: mrp
+-- Name: variantes variantes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.variantes
@@ -1948,161 +1627,161 @@ ALTER TABLE ONLY public.variantes
 
 
 --
--- Name: idx_mov_destino; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_mov_destino; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_mov_destino ON public.movimientos_stock USING btree (id_tipo_deposito_destino);
 
 
 --
--- Name: idx_mov_fecha; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_mov_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_mov_fecha ON public.movimientos_stock USING btree (fecha);
 
 
 --
--- Name: idx_mov_origen; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_mov_origen; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_mov_origen ON public.movimientos_stock USING btree (id_tipo_deposito_origen);
 
 
 --
--- Name: idx_mov_referencia; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_mov_referencia; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_mov_referencia ON public.movimientos_stock USING btree (referencia_tipo, referencia_id);
 
 
 --
--- Name: idx_mov_variante; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_mov_variante; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_mov_variante ON public.movimientos_stock USING btree (id_variante);
 
 
 --
--- Name: idx_movimientos_fecha; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_movimientos_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_movimientos_fecha ON public.movimientos_inventario USING btree (fecha_movimiento);
 
 
 --
--- Name: idx_movimientos_variante; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_movimientos_variante; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_movimientos_variante ON public.movimientos_inventario USING btree (variante_id);
 
 
 --
--- Name: idx_partes_id_um_compra; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_partes_id_um_compra; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_partes_id_um_compra ON public.partes USING btree (id_um_compra);
 
 
 --
--- Name: idx_partes_id_um_uso; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_partes_id_um_uso; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_partes_id_um_uso ON public.partes USING btree (id_um_uso);
 
 
 --
--- Name: idx_planificacion_periodo; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_planificacion_periodo; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_planificacion_periodo ON public.planificacion_recursos USING gist (centro_trabajo_id, periodo);
 
 
 --
--- Name: idx_tdm_activo; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_tdm_activo; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tdm_activo ON public.tipos_depositos_movimientos USING btree (activo);
 
 
 --
--- Name: idx_tdm_destino; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_tdm_destino; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tdm_destino ON public.tipos_depositos_movimientos USING btree (tipo_deposito_destino_id);
 
 
 --
--- Name: idx_tdm_origen; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_tdm_origen; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tdm_origen ON public.tipos_depositos_movimientos USING btree (tipo_deposito_origen_id);
 
 
 --
--- Name: idx_tipos_depositos_activo; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_tipos_depositos_activo; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tipos_depositos_activo ON public.tipos_depositos USING btree (activo);
 
 
 --
--- Name: idx_tipos_depositos_codigo; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_tipos_depositos_codigo; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tipos_depositos_codigo ON public.tipos_depositos USING btree (codigo);
 
 
 --
--- Name: idx_variantes_atributos; Type: INDEX; Schema: public; Owner: mrp
+-- Name: idx_variantes_atributos; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_variantes_atributos ON public.variantes USING gin (atributos);
 
 
 --
--- Name: ordenes_produccion set_timestamp_ordenes; Type: TRIGGER; Schema: public; Owner: mrp
+-- Name: ordenes_produccion set_timestamp_ordenes; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_timestamp_ordenes BEFORE UPDATE ON public.ordenes_produccion FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
--- Name: partes set_timestamp_partes; Type: TRIGGER; Schema: public; Owner: mrp
+-- Name: partes set_timestamp_partes; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_timestamp_partes BEFORE UPDATE ON public.partes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
--- Name: variantes set_timestamp_variantes; Type: TRIGGER; Schema: public; Owner: mrp
+-- Name: variantes set_timestamp_variantes; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER set_timestamp_variantes BEFORE UPDATE ON public.variantes FOR EACH ROW EXECUTE FUNCTION public.update_fecha_modificacion_column();
 
 
 --
--- Name: TRIGGER set_timestamp_variantes ON variantes; Type: COMMENT; Schema: public; Owner: mrp
+-- Name: TRIGGER set_timestamp_variantes ON variantes; Type: COMMENT; Schema: public; Owner: -
 --
 
 COMMENT ON TRIGGER set_timestamp_variantes ON public.variantes IS 'Actualiza autom├íticamente fecha_modificacion en cada UPDATE';
 
 
 --
--- Name: movimientos_inventario trg_actualizar_stock; Type: TRIGGER; Schema: public; Owner: mrp
+-- Name: movimientos_inventario trg_actualizar_stock; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_actualizar_stock AFTER INSERT ON public.movimientos_inventario FOR EACH ROW EXECUTE FUNCTION public.actualizar_stock_trigger();
 
 
 --
--- Name: partes update_partes_updated_at; Type: TRIGGER; Schema: public; Owner: mrp
+-- Name: partes update_partes_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_partes_updated_at BEFORE UPDATE ON public.partes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
--- Name: bom_cabecera bom_cabecera_variante_padre_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_cabecera bom_cabecera_variante_padre_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_cabecera
@@ -2110,7 +1789,7 @@ ALTER TABLE ONLY public.bom_cabecera
 
 
 --
--- Name: bom_detalle bom_detalle_bom_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_detalle bom_detalle_bom_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_detalle
@@ -2118,7 +1797,7 @@ ALTER TABLE ONLY public.bom_detalle
 
 
 --
--- Name: bom_detalle bom_detalle_unidad_medida_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_detalle bom_detalle_unidad_medida_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_detalle
@@ -2126,7 +1805,7 @@ ALTER TABLE ONLY public.bom_detalle
 
 
 --
--- Name: bom_detalle bom_detalle_variante_componente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: bom_detalle bom_detalle_variante_componente_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bom_detalle
@@ -2134,7 +1813,7 @@ ALTER TABLE ONLY public.bom_detalle
 
 
 --
--- Name: composicion_variantes composicion_variantes_id_hijo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: composicion_variantes composicion_variantes_id_hijo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.composicion_variantes
@@ -2142,7 +1821,7 @@ ALTER TABLE ONLY public.composicion_variantes
 
 
 --
--- Name: composicion_variantes composicion_variantes_id_padre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: composicion_variantes composicion_variantes_id_padre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.composicion_variantes
@@ -2150,7 +1829,7 @@ ALTER TABLE ONLY public.composicion_variantes
 
 
 --
--- Name: compras fk_compras_entidad; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: compras fk_compras_entidad; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.compras
@@ -2158,7 +1837,7 @@ ALTER TABLE ONLY public.compras
 
 
 --
--- Name: compras fk_compras_movimiento; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: compras fk_compras_movimiento; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.compras
@@ -2166,7 +1845,7 @@ ALTER TABLE ONLY public.compras
 
 
 --
--- Name: movimientos_stock fk_mov_variante; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: movimientos_stock fk_mov_variante; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_stock
@@ -2174,7 +1853,7 @@ ALTER TABLE ONLY public.movimientos_stock
 
 
 --
--- Name: tipos_depositos_movimientos fk_tipo_destino; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos fk_tipo_destino; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos_movimientos
@@ -2182,7 +1861,7 @@ ALTER TABLE ONLY public.tipos_depositos_movimientos
 
 
 --
--- Name: tipos_depositos_movimientos fk_tipo_origen; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: tipos_depositos_movimientos fk_tipo_origen; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tipos_depositos_movimientos
@@ -2190,7 +1869,7 @@ ALTER TABLE ONLY public.tipos_depositos_movimientos
 
 
 --
--- Name: movimientos_inventario movimientos_inventario_almacen_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: movimientos_inventario movimientos_inventario_almacen_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_inventario
@@ -2198,7 +1877,7 @@ ALTER TABLE ONLY public.movimientos_inventario
 
 
 --
--- Name: movimientos_inventario movimientos_inventario_orden_produccion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: movimientos_inventario movimientos_inventario_orden_produccion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_inventario
@@ -2206,7 +1885,7 @@ ALTER TABLE ONLY public.movimientos_inventario
 
 
 --
--- Name: movimientos_inventario movimientos_inventario_variante_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: movimientos_inventario movimientos_inventario_variante_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.movimientos_inventario
@@ -2214,7 +1893,7 @@ ALTER TABLE ONLY public.movimientos_inventario
 
 
 --
--- Name: mrp_sugerencias mrp_sugerencias_calculo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias mrp_sugerencias_calculo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mrp_sugerencias
@@ -2222,7 +1901,7 @@ ALTER TABLE ONLY public.mrp_sugerencias
 
 
 --
--- Name: mrp_sugerencias mrp_sugerencias_variante_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: mrp_sugerencias mrp_sugerencias_variante_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mrp_sugerencias
@@ -2230,7 +1909,7 @@ ALTER TABLE ONLY public.mrp_sugerencias
 
 
 --
--- Name: ordenes_produccion ordenes_produccion_bom_id_utilizada_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: ordenes_produccion ordenes_produccion_bom_id_utilizada_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ordenes_produccion
@@ -2238,7 +1917,7 @@ ALTER TABLE ONLY public.ordenes_produccion
 
 
 --
--- Name: ordenes_produccion ordenes_produccion_variante_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: ordenes_produccion ordenes_produccion_variante_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ordenes_produccion
@@ -2246,7 +1925,7 @@ ALTER TABLE ONLY public.ordenes_produccion
 
 
 --
--- Name: partes partes_id_grupo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_grupo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2254,7 +1933,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_tipo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_tipo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2262,7 +1941,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_ancho_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_ancho_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2270,7 +1949,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_compra_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_compra_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2278,7 +1957,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_espesor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_espesor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2286,7 +1965,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_largo_alto_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_largo_alto_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2294,7 +1973,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_superficie_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_superficie_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2302,7 +1981,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_uso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_uso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2310,7 +1989,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: partes partes_id_um_volumen_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: partes partes_id_um_volumen_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.partes
@@ -2318,7 +1997,7 @@ ALTER TABLE ONLY public.partes
 
 
 --
--- Name: planificacion_recursos planificacion_recursos_centro_trabajo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: planificacion_recursos planificacion_recursos_centro_trabajo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.planificacion_recursos
@@ -2326,7 +2005,7 @@ ALTER TABLE ONLY public.planificacion_recursos
 
 
 --
--- Name: planificacion_recursos planificacion_recursos_operacion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: planificacion_recursos planificacion_recursos_operacion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.planificacion_recursos
@@ -2334,7 +2013,7 @@ ALTER TABLE ONLY public.planificacion_recursos
 
 
 --
--- Name: planificacion_recursos planificacion_recursos_orden_produccion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: planificacion_recursos planificacion_recursos_orden_produccion_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.planificacion_recursos
@@ -2342,7 +2021,7 @@ ALTER TABLE ONLY public.planificacion_recursos
 
 
 --
--- Name: rutas_produccion rutas_produccion_bom_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: rutas_produccion rutas_produccion_bom_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rutas_produccion
@@ -2350,7 +2029,7 @@ ALTER TABLE ONLY public.rutas_produccion
 
 
 --
--- Name: rutas_produccion rutas_produccion_centro_trabajo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: rutas_produccion rutas_produccion_centro_trabajo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rutas_produccion
@@ -2358,7 +2037,7 @@ ALTER TABLE ONLY public.rutas_produccion
 
 
 --
--- Name: variantes variantes_id_parte_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: variantes variantes_id_parte_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.variantes
@@ -2366,7 +2045,7 @@ ALTER TABLE ONLY public.variantes
 
 
 --
--- Name: variantes variantes_id_um_peso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: mrp
+-- Name: variantes variantes_id_um_peso_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.variantes
@@ -2376,3 +2055,5 @@ ALTER TABLE ONLY public.variantes
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict GTElbXYaPfT4MW3qdF9kQO6nDSfDfs2rO7ahrNQLp6D5VeRhb4Yx3GLHX8dXv42

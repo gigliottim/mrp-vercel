@@ -463,7 +463,7 @@ if ! docker compose exec -T php-fpm sh -lc "cd /app && php /opt/bitnami/php/bin/
   exit 1
 fi
 
-echo "==> Ejecutando migraciones SQL"
+echo "==> Ejecutando migraciones SQL (single connection default)"
 if [ "__HAS_MIGRATIONS__" != "1" ]; then
   echo "[WARN] Sin archivos .sql locales. Se omite migracion."
 else
@@ -472,14 +472,21 @@ else
     MIGRATIONS_PATH="/app/migrations"
   fi
   if docker compose exec -T php-fpm php /app/migrate_database.php --path="$MIGRATIONS_PATH" --skip-existing; then
-    echo "[OK] Migraciones completadas"
+    echo "[OK] Migraciones default completadas"
   else
     MIGRATION_FILES_COUNT=$(docker compose exec -T php-fpm sh -lc "ls -1 $MIGRATIONS_PATH/*.sql 2>/dev/null | wc -l" | tr -d '\r')
     if [ "${MIGRATION_FILES_COUNT:-0}" = "0" ]; then
       echo "[WARN] Sin archivos .sql en $MIGRATIONS_PATH. Se omite migracion."
     else
-      echo "[ERROR] Fallaron las migraciones"; exit 1
+      echo "[ERROR] Fallaron las migraciones default"; exit 1
     fi
+  fi
+
+  echo "==> Ejecutando migraciones en todas las BDs empresa (all-tenants)"
+  if docker compose exec -T php-fpm php /app/migrate_database.php --path="$MIGRATIONS_PATH" --skip-existing --all-tenants; then
+    echo "[OK] Migraciones all-tenants completadas"
+  else
+    echo "[ERROR] Fallaron las migraciones en alguna BD empresa"; exit 1
   fi
 fi
 

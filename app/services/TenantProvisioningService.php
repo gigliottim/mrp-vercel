@@ -455,6 +455,14 @@ final class TenantProvisioningService
         $sql = $this->stripUtf8Bom($sql);
 
         if (preg_match('/^\s*--\s*SOURCE_DUMP_SCHEMA\s*:\s*(.+)\s*$/mi', $sql, $matches) !== 1) {
+            // Filtrar meta-comandos psql (\restrict, \connect, etc.) que no son SQL válido
+            $lines = preg_split('/\r\n|\r|\n/', $sql);
+            if ($lines !== false) {
+                $lines = array_filter($lines, static function (string $line): bool {
+                    return preg_match('/^\s*\\\\[a-zA-Z]/', $line) !== 1;
+                });
+                $sql = implode(PHP_EOL, $lines);
+            }
             return $sql;
         }
 

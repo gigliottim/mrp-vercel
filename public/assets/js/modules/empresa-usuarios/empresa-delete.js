@@ -21,7 +21,9 @@
     const modal = document.getElementById('modalEliminarEmpresa');
     if (!modal) return;
 
-    const bsModal = new bootstrap.Modal(modal);
+    // NO crear bootstrap.Modal aqui: este script puede ejecutarse antes de que
+    // bootstrap.bundle.min.js haya corrido (ambos tienen defer, orden de documento).
+    // Se usa getOrCreateInstance() de forma lazily en el click handler.
     const lblNombre = modal.querySelector('[data-delete-nombre]');
     const lblCodigo = modal.querySelector('[data-delete-codigo]');
     const inputCodigo = modal.querySelector('[data-delete-input]');
@@ -46,7 +48,8 @@
           form.action = form.dataset.baseAction.replace('__ID__', empresaId);
         }
 
-        bsModal.show();
+        // Bootstrap garantizado disponible al momento del click del usuario
+        bootstrap.Modal.getOrCreateInstance(modal).show();
       });
     });
 

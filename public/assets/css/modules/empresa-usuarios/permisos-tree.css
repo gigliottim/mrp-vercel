@@ -1,5 +1,6 @@
 .acl-tree-card {
   border: 1px solid #e5e7eb;
+  min-height: 0;
 }
 
 .acl-tree-card .card-body {
@@ -7,7 +8,6 @@
 }
 
 .acl-tree-panel {
-  max-height: 600px;
   overflow-y: auto;
 }
 
@@ -76,6 +76,7 @@
 }
 
 #acl-tree-panel {
+  flex: 1 1 0;
   overflow-y: auto;
   min-height: 0;
 }

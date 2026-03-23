@@ -21,7 +21,7 @@ $tenantName = $tenantData['name'] ?? 'Empresa';
             <h3 class="h6 mb-0">Estructura</h3>
             <small class="text-muted">Seleccione un módulo</small>
         </div>
-        <div class="card-body d-flex flex-column">
+        <div class="card-body d-flex flex-column flex-grow-1">
             <div class="input-group input-group-sm mb-2 flex-shrink-0">
                 <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
                 <input id="menu-tree-search" type="text" class="form-control" placeholder="Filtrar menú...">

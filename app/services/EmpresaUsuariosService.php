@@ -674,12 +674,17 @@ final class EmpresaUsuariosService
                 )->execute($exclusiveUserIds);
             }
 
-            // 4. Registro de la base de datos de la empresa
+            // 4. ACL de menú de la empresa (FK sin CASCADE)
+            $this->connection->prepare(
+                'DELETE FROM menu_acl WHERE company_id = :id'
+            )->execute(['id' => $id]);
+
+            // 5. Registro de la base de datos de la empresa
             $this->connection->prepare(
                 'DELETE FROM company_databases WHERE company_id = :id'
             )->execute(['id' => $id]);
 
-            // 5. Empresa
+            // 6. Empresa
             $this->connection->prepare(
                 'DELETE FROM companies WHERE id = :id'
             )->execute(['id' => $id]);

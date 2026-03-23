@@ -202,30 +202,39 @@ final class AuthService
      */
     private function resolveSidebarPayload(int $companyId, int $userId): array
     {
-        try {
-            return $this->menuService->resolveForUser($companyId, $userId);
-        } catch (Throwable $exception) {
-            // Keep login available while mrp_auth menu tables are being rolled out.
-            return [
-                'sidebar_tree' => [
-                    [
-                        'section_key' => 'panel',
-                        'section_label' => 'Panel',
-                        'items' => [
-                            [
-                                'id' => 0,
-                                'code' => 'panel.inicio',
-                                'label' => 'Panel inicial',
-                                'route' => '/dashboard',
-                                'icon' => 'fa-solid fa-gauge',
-                                'children' => [],
-                                'permission_level' => 'write',
-                            ],
+        $fallback = [
+            'sidebar_tree' => [
+                [
+                    'section_key'   => 'panel',
+                    'section_label' => 'Panel',
+                    'items'         => [
+                        [
+                            'id'               => 0,
+                            'code'             => 'panel.inicio',
+                            'label'            => 'Panel inicial',
+                            'route'            => '/dashboard',
+                            'icon'             => 'fa-solid fa-gauge',
+                            'children'         => [],
+                            'permission_level' => 'write',
                         ],
                     ],
                 ],
-                'permissions' => ['panel.inicio' => 'write'],
-            ];
+            ],
+            'permissions' => ['panel.inicio' => 'write'],
+        ];
+
+        try {
+            $resolution = $this->menuService->resolveForUser($companyId, $userId);
+        } catch (Throwable $exception) {
+            // Tablas de menú aún no disponibles: devolver panel mínimo.
+            return $fallback;
         }
+
+        // Garantizar que panel.inicio siempre sea accesible para cualquier usuario.
+        if (!isset($resolution['permissions']['panel.inicio'])) {
+            $resolution['permissions']['panel.inicio'] = 'write';
+        }
+
+        return $resolution;
     }
 }

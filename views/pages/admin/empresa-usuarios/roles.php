@@ -133,8 +133,16 @@ include __DIR__ . '/_header.php'; ?>
                         </thead>
                         <tbody>
                             <?php foreach ($roles as $rol) : ?>
+                                <?php $esSistema = !empty($rol['is_system']); ?>
                                 <tr>
-                                    <td class="fw-semibold"><?= View::escape((string) ($rol['nombre'] ?? '')) ?></td>
+                                    <td class="fw-semibold">
+                                        <?= View::escape((string) ($rol['nombre'] ?? '')) ?>
+                                        <?php if ($esSistema) : ?>
+                                            <span class="badge text-bg-secondary ms-1" title="Rol del sistema: no se puede eliminar ni editar">
+                                                <i class="fa-solid fa-lock"></i> Sistema
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= View::escape((string) ($rol['codigo'] ?? '')) ?></td>
                                     <td><?= View::escape((string) ($rol['descripcion'] ?? '')) ?></td>
                                     <td>
@@ -144,20 +152,26 @@ include __DIR__ . '/_header.php'; ?>
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <div class="btn-group btn-group-sm">
-                                            <a class="btn btn-outline-secondary" href="<?= url('/empresa-usuarios/roles/' . (int) ($rol['id'] ?? 0) . '/editar') ?>">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </a>
-                                            <form
-                                                method="post"
-                                                action="<?= url('/empresa-usuarios/roles/' . (int) ($rol['id'] ?? 0)) ?>"
-                                                onsubmit="return confirm('Eliminar rol?');">
-                                                <input type="hidden" name="_method" value="DELETE">
-                                                <button class="btn btn-outline-danger" type="submit">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                        <?php if ($esSistema) : ?>
+                                            <span class="text-muted small" title="Rol del sistema protegido">
+                                                <i class="fa-solid fa-shield-halved"></i>
+                                            </span>
+                                        <?php else : ?>
+                                            <div class="btn-group btn-group-sm">
+                                                <a class="btn btn-outline-secondary" href="<?= url('/empresa-usuarios/roles/' . (int) ($rol['id'] ?? 0) . '/editar') ?>">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </a>
+                                                <form
+                                                    method="post"
+                                                    action="<?= url('/empresa-usuarios/roles/' . (int) ($rol['id'] ?? 0)) ?>"
+                                                    onsubmit="return confirm('Eliminar rol?');">
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <button class="btn btn-outline-danger" type="submit">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

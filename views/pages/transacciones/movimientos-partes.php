@@ -170,7 +170,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                                     name="precio_unitario"
                                     step="0.01"
                                     min="0"
-                                    readonly>
+                                    disabled>
                             </div>
                         </div>
                         <div class="col-md-4 field-compra d-none">
@@ -187,7 +187,7 @@ $unidadesMedida = $unidadesMedida ?? [];
                         </div>
                         <!-- Fin Campos Compras -->
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 field-compra d-none">
                             <label for="importe_total" class="form-label">Importe Total $</label>
                             <input type="number"
                                 class="form-control"

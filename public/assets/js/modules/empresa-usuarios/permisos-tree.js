@@ -78,10 +78,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 aclData.push({
                   menu_item_id: String(savedMenuId),
                   subject_type: match[1],
-                  subject_id:   match[2],
-                  scope:        'item',
+                  subject_id: match[2],
+                  scope: 'item',
                   permission_level: val === 'deny' ? 'deny' : 'read',
-                  effect:           val === 'deny' ? 'deny' : 'allow',
+                  effect: val === 'deny' ? 'deny' : 'allow',
                 });
               });
             }

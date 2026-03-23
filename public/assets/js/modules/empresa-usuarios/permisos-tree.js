@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   // ── árbol de menú (panel izquierdo) ────────────────────────────────────────
-  const treeNodes  = Array.from(document.querySelectorAll('[data-tree-node]'));
-  const menuInput  = document.getElementById('menu_item_id');
+  const treeNodes = Array.from(document.querySelectorAll('[data-tree-node]'));
+  const menuInput = document.getElementById('menu_item_id');
   const treeSearch = document.getElementById('menu-tree-search');
 
   treeNodes.forEach((node) => {
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const query = treeSearch.value.trim().toLowerCase();
       treeNodes.forEach((node) => {
         const text = (node.dataset.searchText || '').toLowerCase();
-        const li   = node.closest('[data-tree-li]') || node;
+        const li = node.closest('[data-tree-li]') || node;
         li.style.display = (query === '' || text.includes(query)) ? '' : 'none';
       });
       document.querySelectorAll('[data-tree-section]').forEach((section) => {
@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── form: guardar por AJAX ─────────────────────────────────────────────────
-  const form      = document.getElementById('acl-form');
-  const saveBtn   = form ? form.querySelector('button[type="submit"]') : null;
+  const form = document.getElementById('acl-form');
+  const saveBtn = form ? form.querySelector('button[type="submit"]') : null;
   const alertZone = document.getElementById('acl-alert-zone');
 
   if (form) {
@@ -42,22 +42,49 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       const formData = new FormData(form);
-      const body     = new URLSearchParams(formData);
+      const body = new URLSearchParams(formData);
 
       if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando…';
       }
 
+      const savedMenuId = menuId;
+
       fetch(typeof aclBulkUrl !== 'undefined' ? aclBulkUrl : form.action, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-        body:    body.toString(),
+        body: body.toString(),
       })
         .then(r => r.json())
         .then(data => {
           if (data.ok) {
             showAlert('Permisos guardados correctamente.', 'success');
+            // Sincronizar aclData en memoria para que selectNode() refleje los valores
+            // recién guardados sin necesidad de recargar la página.
+            if (typeof aclData !== 'undefined') {
+              // 1. Eliminar entradas antiguas de este nodo
+              for (let i = aclData.length - 1; i >= 0; i--) {
+                if (parseInt(aclData[i].menu_item_id, 10) === savedMenuId) {
+                  aclData.splice(i, 1);
+                }
+              }
+              // 2. Insertar las entradas actuales (allow/deny); 'inherit' no genera registro
+              form.querySelectorAll('select[name^="perms["]').forEach(sel => {
+                const val = sel.value;
+                if (val === 'inherit') return;
+                const match = sel.name.match(/^perms\[(\w+)\]\[(\d+)\]$/);
+                if (!match) return;
+                aclData.push({
+                  menu_item_id: String(savedMenuId),
+                  subject_type: match[1],
+                  subject_id:   match[2],
+                  scope:        'item',
+                  permission_level: val === 'deny' ? 'deny' : 'read',
+                  effect:           val === 'deny' ? 'deny' : 'allow',
+                });
+              });
+            }
           } else {
             showAlert(data.error || 'Error al guardar permisos.', 'danger');
           }
@@ -95,10 +122,10 @@ function selectNode(e, nodeId, label, code, isItem) {
   const badge = document.getElementById('selected-node-type');
   if (badge) {
     badge.textContent = isItem ? 'Menú Ítem' : 'Rama / Grupo';
-    badge.className   = isItem ? 'badge bg-secondary ms-1' : 'badge bg-warning text-dark ms-1';
+    badge.className = isItem ? 'badge bg-secondary ms-1' : 'badge bg-warning text-dark ms-1';
   }
 
-  const numId    = parseInt(nodeId, 10);
+  const numId = parseInt(nodeId, 10);
   const menuInpt = document.getElementById('menu_item_id');
   if (menuInpt) menuInpt.value = isNaN(numId) ? '' : String(numId);
 
@@ -171,8 +198,8 @@ function extractSubjectId(name) {
  * Actualiza el indicador visual de estado en la fila de permiso.
  */
 function updateRowState(selectEl) {
-  const val      = selectEl.value;
-  const rootRow  = selectEl.closest('tr');
+  const val = selectEl.value;
+  const rootRow = selectEl.closest('tr');
   const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
 
   selectEl.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
@@ -189,7 +216,7 @@ function updateRowState(selectEl) {
     if (indicator) indicator.innerHTML = '<span class="text-muted"><i class="fa-solid fa-minus"></i></span>';
 
     // Si hay un rol asignado, propagar el visual actual
-    const row    = selectEl.closest('tr[data-user-row]');
+    const row = selectEl.closest('tr[data-user-row]');
     const roleId = row ? parseInt(row.dataset.roleId || '0', 10) : 0;
     if (roleId > 0) {
       const roleSel = document.querySelector(`select[name="perms[role][${roleId}]"]`);
@@ -202,7 +229,7 @@ function updateRowState(selectEl) {
  * Actualiza indicador de usuario heredado (atenuado) según el valor del rol.
  */
 function updateRowStateInherited(selectEl, roleValue) {
-  const rootRow   = selectEl.closest('tr');
+  const rootRow = selectEl.closest('tr');
   const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
   if (!indicator) return;
 

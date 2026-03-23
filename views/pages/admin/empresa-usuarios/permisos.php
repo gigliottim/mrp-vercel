@@ -62,7 +62,7 @@ unset($sectionClass, $navClass);
                     }
                     ?>
                     const userRoleMap = <?= json_encode($userRoleMap, JSON_THROW_ON_ERROR) ?>;
-                    const aclBulkUrl  = <?= json_encode(url('/roles-permisos/acl/bulk'), JSON_THROW_ON_ERROR) ?>;
+                    const aclBulkUrl = <?= json_encode(url('/roles-permisos/acl/bulk'), JSON_THROW_ON_ERROR) ?>;
                 </script>
 
                 <script src="<?= AssetHelper::js('modules/empresa-usuarios/permisos-tree.js') ?>" defer></script>

@@ -364,6 +364,32 @@ final class EmpresaUsuariosController extends Controller
         return Response::redirect(url('/empresa-usuarios/permisos'));
     }
 
+    public function permisosStoreBulk(Request $request): Response
+    {
+        if (!$this->service->isCurrentUserCompanyAdmin()) {
+            return $this->json(['ok' => false, 'error' => 'Sin permiso'], 403);
+        }
+
+        $body       = $request->body;
+        $menuItemId = (int) ($body['menu_item_id'] ?? 0);
+        $perms      = isset($body['perms']) && is_array($body['perms']) ? $body['perms'] : [];
+
+        if ($menuItemId <= 0) {
+            return $this->json(['ok' => false, 'error' => 'Debes seleccionar un ítem de menú válido.'], 422);
+        }
+
+        try {
+            $this->aclService->upsertBulkAclForMenuNode(
+                $this->service->currentCompanyId(),
+                $menuItemId,
+                $perms
+            );
+            return $this->json(['ok' => true]);
+        } catch (RuntimeException $exception) {
+            return $this->json(['ok' => false, 'error' => $exception->getMessage()], 500);
+        }
+    }
+
     public function permisosTree(Request $request): Response
     {
         if (!$this->service->isCurrentUserCompanyAdmin()) {

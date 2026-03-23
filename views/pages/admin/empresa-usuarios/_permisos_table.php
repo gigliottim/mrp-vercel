@@ -43,17 +43,16 @@ use App\Core\View\View;
                             </td>
                         </tr>
                         <?php foreach ($rolesList as $role) : ?>
-                            <tr class="permission-row">
+                            <tr class="permission-row" data-role-row="<?= (int) ($role['id'] ?? 0) ?>">
                                 <td class="ps-4 fw-medium"><?= View::escape((string) ($role['label'] ?? '')) ?></td>
                                 <td>
-                                    <select name="perms[role][<?= (int) ($role['id'] ?? 0) ?>]" class="form-select form-select-sm border-0 bg-transparent shadow-none" onchange="updateRowState(this)">
-                                        <option value="none" selected>Heredada (Acceder)</option>
-                                        <option value="allow">Acceder</option>
+                                    <select name="perms[role][<?= (int) ($role['id'] ?? 0) ?>]" class="form-select form-select-sm border-0 bg-transparent shadow-none" onchange="onRolePermChange(this, <?= (int) ($role['id'] ?? 0) ?>)">
+                                        <option value="allow" selected>Acceder</option>
                                         <option value="deny">Denegar</option>
                                     </select>
                                 </td>
                                 <td class="text-center status-indicator">
-                                    <span class="text-muted"><i class="fa-solid fa-minus"></i></span>
+                                    <span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -72,10 +71,11 @@ use App\Core\View\View;
                         </tr>
                         <?php foreach ($usersList as $user) : ?>
                             <?php
-                            $userName = (string) ($user['label'] ?? '');
-                            $initials = mb_substr($userName, 0, 2);
+                            $userName  = (string) ($user['label'] ?? '');
+                            $initials  = mb_substr($userName, 0, 2);
+                            $userRolId = isset($user['role_id']) && $user['role_id'] !== null ? (int) $user['role_id'] : 0;
                             ?>
-                            <tr class="permission-row">
+                            <tr class="permission-row" data-user-row="<?= (int) ($user['id'] ?? 0) ?>" data-role-id="<?= $userRolId ?>">
                                 <td class="ps-4 fw-medium d-flex align-items-center gap-2">
                                     <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center"
                                         style="width: 24px; height: 24px; font-size: 10px;">
@@ -85,7 +85,7 @@ use App\Core\View\View;
                                 </td>
                                 <td>
                                     <select name="perms[user][<?= (int) ($user['id'] ?? 0) ?>]" class="form-select form-select-sm border-0 bg-transparent shadow-none text-muted" onchange="updateRowState(this)">
-                                        <option value="none" selected>Heredada (Acceder)</option>
+                                        <option value="inherit" selected>(Usa rol)</option>
                                         <option value="allow">Acceder</option>
                                         <option value="deny">Denegar</option>
                                     </select>
@@ -106,11 +106,14 @@ use App\Core\View\View;
             </div>
         </div>
 
-        <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
-            <button class="btn btn-outline-secondary" type="button">Descartar Cambios</button>
-            <button class="btn btn-primary d-flex align-items-center gap-2" type="submit">
-                <i class="fa-solid fa-save"></i> Guardar Permisos
-            </button>
+        <div class="card-footer bg-light d-flex flex-column gap-2 py-3">
+            <div id="acl-alert-zone" class="alert py-2 px-3 mb-0" style="display:none;" role="alert"></div>
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" type="button" onclick="selectNode(null, document.getElementById('menu_item_id').value, document.getElementById('selected-node-title').textContent, '', false)">Descartar Cambios</button>
+                <button class="btn btn-primary d-flex align-items-center gap-2" type="submit">
+                    <i class="fa-solid fa-save"></i> Guardar Permisos
+                </button>
+            </div>
         </div>
     </div>
 </div>

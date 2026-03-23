@@ -1,233 +1,214 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const treeNodes = Array.from(document.querySelectorAll('[data-tree-node]'));
-  const menuInput = document.getElementById('menu_item_id');
-  const selectedMenuNode = document.getElementById('selected-menu-node');
+  // ── árbol de menú (panel izquierdo) ────────────────────────────────────────
+  const treeNodes  = Array.from(document.querySelectorAll('[data-tree-node]'));
+  const menuInput  = document.getElementById('menu_item_id');
   const treeSearch = document.getElementById('menu-tree-search');
-  const subjectType = document.getElementById('subject_type');
-  const subjectRef = document.getElementById('subject_ref');
-  const subjectId = document.getElementById('subject_id');
-
-  const setSelectedNode = (id) => {
-    let found = false;
-
-    treeNodes.forEach((node) => {
-      const nodeId = Number(node.dataset.nodeId || 0);
-      const isMatch = nodeId === Number(id);
-      node.classList.toggle('is-selected', isMatch);
-
-      if (isMatch && selectedMenuNode) {
-        const label = node.dataset.nodeLabel || '';
-        const code = node.dataset.nodeCode || '';
-        selectedMenuNode.textContent = code ? `${label} (${code})` : label;
-        found = true;
-      }
-    });
-
-    if (!found && selectedMenuNode) {
-      selectedMenuNode.textContent = 'Ninguno';
-    }
-  };
 
   treeNodes.forEach((node) => {
     node.addEventListener('click', () => {
       const nodeId = Number(node.dataset.nodeId || 0);
-      if (nodeId <= 0 || !menuInput) {
-        return;
-      }
-
+      if (nodeId <= 0 || !menuInput) return;
       menuInput.value = String(nodeId);
-      setSelectedNode(nodeId);
+      treeNodes.forEach(n => n.classList.toggle('is-selected', n === node));
     });
   });
-
-  if (menuInput && menuInput.value !== '') {
-    setSelectedNode(Number(menuInput.value));
-  }
 
   if (treeSearch) {
     treeSearch.addEventListener('input', () => {
       const query = treeSearch.value.trim().toLowerCase();
-
       treeNodes.forEach((node) => {
         const text = (node.dataset.searchText || '').toLowerCase();
-        const visible = query === '' || text.includes(query);
-        const nodeContainer = node.closest('[data-tree-li]') || node;
-        nodeContainer.style.display = visible ? '' : 'none';
+        const li   = node.closest('[data-tree-li]') || node;
+        li.style.display = (query === '' || text.includes(query)) ? '' : 'none';
       });
-
-      const sections = Array.from(document.querySelectorAll('[data-tree-section]'));
-      sections.forEach((section) => {
-        const hasVisibleNode = section.querySelector('[data-tree-li]:not([style*="display: none"])');
-        section.style.display = hasVisibleNode ? '' : 'none';
+      document.querySelectorAll('[data-tree-section]').forEach((section) => {
+        section.style.display = section.querySelector('[data-tree-li]:not([style*="display: none"])') ? '' : 'none';
       });
     });
   }
 
-  const syncSubjectPicker = () => {
-    if (!subjectType || !subjectRef) {
-      return;
-    }
+  // ── form: guardar por AJAX ─────────────────────────────────────────────────
+  const form      = document.getElementById('acl-form');
+  const saveBtn   = form ? form.querySelector('button[type="submit"]') : null;
+  const alertZone = document.getElementById('acl-alert-zone');
 
-    const typeValue = subjectType.value;
-    Array.from(subjectRef.options).forEach((option) => {
-      const optionType = option.dataset.subjectType || '';
-      if (option.value === '') {
-        option.hidden = false;
-        return;
-      }
-      option.hidden = optionType !== typeValue;
-    });
-
-    const selected = subjectRef.selectedOptions[0];
-    if (selected && !selected.hidden && selected.dataset.subjectId && subjectId) {
-      subjectId.value = selected.dataset.subjectId;
-    }
-  };
-
-  if (subjectRef && subjectId) {
-    subjectRef.addEventListener('change', () => {
-      const selected = subjectRef.selectedOptions[0];
-      if (!selected) {
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const menuId = menuInput ? Number(menuInput.value) : 0;
+      if (menuId <= 0) {
+        showAlert('Selecciona primero un módulo del árbol.', 'warning');
         return;
       }
 
-      const nextType = selected.dataset.subjectType || '';
-      const nextId = selected.dataset.subjectId || '';
+      const formData = new FormData(form);
+      const body     = new URLSearchParams(formData);
 
-      if (nextType !== '' && subjectType && subjectType.value !== nextType) {
-        subjectType.value = nextType;
-      }
-      if (nextId !== '') {
-        subjectId.value = nextId;
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando…';
       }
 
-      syncSubjectPicker();
+      fetch(typeof aclBulkUrl !== 'undefined' ? aclBulkUrl : form.action, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+        body:    body.toString(),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) {
+            showAlert('Permisos guardados correctamente.', 'success');
+          } else {
+            showAlert(data.error || 'Error al guardar permisos.', 'danger');
+          }
+        })
+        .catch(() => showAlert('Error de red al guardar permisos.', 'danger'))
+        .finally(() => {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Guardar Permisos';
+          }
+        });
     });
   }
 
-  if (subjectType) {
-    subjectType.addEventListener('change', syncSubjectPicker);
-    syncSubjectPicker();
+  function showAlert(msg, type) {
+    if (!alertZone) return;
+    alertZone.className = `alert alert-${type} py-2 px-3 mb-0`;
+    alertZone.textContent = msg;
+    alertZone.style.display = '';
+    clearTimeout(alertZone._timer);
+    alertZone._timer = setTimeout(() => { alertZone.style.display = 'none'; }, 4000);
   }
 });
 
 /**
  * Selecciona un nodo del árbol ACL y carga los permisos guardados.
- * aclData debe estar definida globalmente antes de cargar este script.
- *
- * @param {Event|null} e
- * @param {number|string} nodeId
- * @param {string} label
- * @param {string} code
- * @param {boolean} isItem
+ * aclData, nodeTreeData y userRoleMap deben estar definidos globalmente.
  */
 function selectNode(e, nodeId, label, code, isItem) {
   document.querySelectorAll('.acl-tree-node').forEach(el => el.classList.remove('is-selected'));
-  if (e) {
-    e.currentTarget.classList.add('is-selected');
-  }
+  if (e) e.currentTarget.classList.add('is-selected');
 
   document.getElementById('selected-node-title').textContent = label.toUpperCase();
 
   const badge = document.getElementById('selected-node-type');
-  if (isItem) {
-    badge.textContent = 'Menú Ítem';
-    badge.className = 'badge bg-secondary ms-1';
-  } else {
-    badge.textContent = 'Rama / Grupo';
-    badge.className = 'badge bg-warning text-dark ms-1';
+  if (badge) {
+    badge.textContent = isItem ? 'Menú Ítem' : 'Rama / Grupo';
+    badge.className   = isItem ? 'badge bg-secondary ms-1' : 'badge bg-warning text-dark ms-1';
   }
 
-  const numId = parseInt(nodeId, 10);
-  if (!isNaN(numId)) {
-    document.getElementById('menu_item_id').value = numId;
-  } else {
-    document.getElementById('menu_item_id').value = '';
-  }
+  const numId    = parseInt(nodeId, 10);
+  const menuInpt = document.getElementById('menu_item_id');
+  if (menuInpt) menuInpt.value = isNaN(numId) ? '' : String(numId);
 
-  const defaultVal = isItem ? 'none' : 'allow';
-  document.querySelectorAll('select[name^="perms["]').forEach(select => {
-    select.value = defaultVal;
-    updateRowState(select);
+  // 1. Restablecer todos los roles a "allow" y usuarios a "inherit"
+  document.querySelectorAll('select[name^="perms[role]"]').forEach(sel => {
+    sel.value = 'allow';
+    updateRowState(sel);
+  });
+  document.querySelectorAll('select[name^="perms[user]"]').forEach(sel => {
+    sel.value = 'inherit';
+    updateRowState(sel);
   });
 
+  // 2. Cargar valores desde aclData para el nodo seleccionado
   if (!isNaN(numId) && typeof aclData !== 'undefined') {
     const nodeAcls = aclData.filter(row => parseInt(row.menu_item_id, 10) === numId);
     nodeAcls.forEach(acl => {
       const sel = document.querySelector(`select[name="perms[${acl.subject_type}][${acl.subject_id}]"]`);
       if (sel) {
-        sel.value = acl.permission_level;
+        sel.value = (acl.permission_level === 'deny' || acl.effect === 'deny') ? 'deny' : 'allow';
         updateRowState(sel);
       }
     });
   }
 
-  // Actualizar el texto de la opción "Heredada" con el permiso del padre
-  document.querySelectorAll('select[name^="perms["]').forEach(select => {
-    const match = select.name.match(/^perms\[(\w+)\]\[(\d+)\]$/);
-    if (match && !isNaN(numId)) {
-      const inherited = resolveInheritedPermission(numId, match[1], match[2]);
-      select.options[0].textContent = `Heredada (${inherited === 'deny' ? 'Denegar' : 'Acceder'})`;
-    } else {
-      select.options[0].textContent = 'Heredada (Acceder)';
-    }
+  // 3. Cascada visual: actualizar usuarios con "inherit" según su rol
+  document.querySelectorAll('select[name^="perms[role]"]').forEach(roleSelect => {
+    const roleId = extractSubjectId(roleSelect.name);
+    if (roleId > 0) propagateRoleToUsers(roleId, roleSelect.value);
   });
 
   const tbody = document.querySelector('tbody');
-  tbody.style.opacity = '0.3';
-  setTimeout(() => { tbody.style.opacity = '1'; }, 300);
+  if (tbody) {
+    tbody.style.opacity = '0.3';
+    setTimeout(() => { tbody.style.opacity = '1'; }, 250);
+  }
 }
 
 /**
- * Resuelve el permiso heredado para un sujeto recorriendo los ancestros del nodo.
- * Requiere que nodeTreeData y aclData estén definidos globalmente.
- *
- * @param {number} nodeId  - ID del nodo actualmente seleccionado
- * @param {string} subjectType - 'role' | 'user'
- * @param {string|number} subjectId
- * @returns {'allow'|'deny'}
+ * Llamado desde onchange de los selects de rol.
+ * Propaga el nuevo permiso a los usuarios herededos de ese rol.
  */
-function resolveInheritedPermission(nodeId, subjectType, subjectId) {
-  if (typeof nodeTreeData === 'undefined' || typeof aclData === 'undefined') {
-    return 'allow';
-  }
-  const sid = parseInt(subjectId, 10);
-  let currentId = Number(nodeTreeData[nodeId]?.parent_id ?? 0);
-  while (currentId > 0) {
-    const acl = aclData.find(row =>
-      parseInt(row.menu_item_id, 10) === currentId &&
-      row.subject_type === subjectType &&
-      parseInt(row.subject_id, 10) === sid &&
-      row.permission_level !== 'none'
-    );
-    if (acl) {
-      return acl.permission_level;
+function onRolePermChange(selectEl, roleId) {
+  updateRowState(selectEl);
+  propagateRoleToUsers(roleId, selectEl.value);
+}
+
+/**
+ * Para todos los usuarios del rol dado que aún tienen "inherit",
+ * actualiza el indicador visual mostrando el permiso del rol (atenuado).
+ */
+function propagateRoleToUsers(roleId, roleValue) {
+  document.querySelectorAll(`tr[data-user-row][data-role-id="${roleId}"]`).forEach(row => {
+    const sel = row.querySelector('select[name^="perms[user]"]');
+    if (sel && sel.value === 'inherit') {
+      updateRowStateInherited(sel, roleValue);
     }
-    currentId = Number(nodeTreeData[currentId]?.parent_id ?? 0);
-  }
-  return 'allow';
+  });
+}
+
+/**
+ * Extrae el subject_id numérico del atributo name="perms[type][id]".
+ */
+function extractSubjectId(name) {
+  const m = name.match(/\[(\d+)\]$/);
+  return m ? parseInt(m[1], 10) : 0;
 }
 
 /**
  * Actualiza el indicador visual de estado en la fila de permiso.
- *
- * @param {HTMLSelectElement} selectElement
  */
-function updateRowState(selectElement) {
-  const val = selectElement.value;
-  const rootRow = selectElement.closest('tr');
-  const indicator = rootRow.querySelector('.status-indicator');
+function updateRowState(selectEl) {
+  const val      = selectEl.value;
+  const rootRow  = selectEl.closest('tr');
+  const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
 
-  selectElement.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
+  selectEl.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
 
   if (val === 'allow') {
-    selectElement.classList.add('text-primary', 'fw-bold');
-    indicator.innerHTML = '<span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>';
+    selectEl.classList.add('text-primary', 'fw-bold');
+    if (indicator) indicator.innerHTML = '<span class="badge bg-success rounded-pill"><i class="fa-solid fa-check"></i></span>';
   } else if (val === 'deny') {
-    selectElement.classList.add('text-danger', 'fw-bold');
-    indicator.innerHTML = '<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-xmark"></i></span>';
+    selectEl.classList.add('text-danger', 'fw-bold');
+    if (indicator) indicator.innerHTML = '<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-xmark"></i></span>';
   } else {
-    selectElement.classList.add('text-muted');
-    indicator.innerHTML = '<span class="text-muted"><i class="fa-solid fa-minus"></i></span>';
+    // 'inherit': mostrar el estado del rol padre (se actualiza por propagateRoleToUsers)
+    selectEl.classList.add('text-muted');
+    if (indicator) indicator.innerHTML = '<span class="text-muted"><i class="fa-solid fa-minus"></i></span>';
+
+    // Si hay un rol asignado, propagar el visual actual
+    const row    = selectEl.closest('tr[data-user-row]');
+    const roleId = row ? parseInt(row.dataset.roleId || '0', 10) : 0;
+    if (roleId > 0) {
+      const roleSel = document.querySelector(`select[name="perms[role][${roleId}]"]`);
+      if (roleSel) updateRowStateInherited(selectEl, roleSel.value);
+    }
+  }
+}
+
+/**
+ * Actualiza indicador de usuario heredado (atenuado) según el valor del rol.
+ */
+function updateRowStateInherited(selectEl, roleValue) {
+  const rootRow   = selectEl.closest('tr');
+  const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
+  if (!indicator) return;
+
+  if (roleValue === 'deny') {
+    indicator.innerHTML = '<span class="badge bg-danger opacity-50 rounded-pill" title="Denegado por rol"><i class="fa-solid fa-xmark"></i></span>';
+  } else {
+    indicator.innerHTML = '<span class="badge bg-success opacity-50 rounded-pill" title="Acceso por rol"><i class="fa-solid fa-check"></i></span>';
   }
 }

@@ -40,7 +40,7 @@ unset($sectionClass, $navClass);
                 <form
                     id="acl-form"
                     method="post"
-                    action="<?= url('/roles-permisos/acl') ?>"
+                    action="<?= url('/roles-permisos/acl/bulk') ?>"
                     class="vstack gap-3 flex-grow-1">
                     <div id="acl-inner-row" class="row g-4 flex-grow-1 mb-4">
                         <?php include __DIR__ . '/_permisos_tree.php'; ?>
@@ -52,6 +52,17 @@ unset($sectionClass, $navClass);
                 <script>
                     const aclData = <?= json_encode($aclRows, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ?>;
                     const nodeTreeData = <?= json_encode($nodesById, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) ?>;
+                    <?php
+                    // Mapa userId → roleId para cascada visual en la tabla de permisos
+                    $userRoleMap = [];
+                    foreach ($usersList as $u) {
+                        if (isset($u['id'], $u['role_id']) && $u['role_id'] !== null) {
+                            $userRoleMap[(int) $u['id']] = (int) $u['role_id'];
+                        }
+                    }
+                    ?>
+                    const userRoleMap = <?= json_encode($userRoleMap, JSON_THROW_ON_ERROR) ?>;
+                    const aclBulkUrl  = <?= json_encode(url('/roles-permisos/acl/bulk'), JSON_THROW_ON_ERROR) ?>;
                 </script>
 
                 <script src="<?= AssetHelper::js('modules/empresa-usuarios/permisos-tree.js') ?>" defer></script>

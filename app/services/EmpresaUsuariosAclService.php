@@ -171,7 +171,7 @@ final class EmpresaUsuariosAclService
                )'
             : '';
 
-        $sql = "SELECT :role_type AS subject_type, r.id, ( :role_prefix || r.name ) AS label
+        $sql = "SELECT :role_type AS subject_type, r.id, ( :role_prefix || r.name ) AS label, NULL::int AS role_id
                 FROM roles r
                 WHERE (r.guard_name LIKE :company_guard
                      OR EXISTS (
@@ -182,7 +182,7 @@ final class EmpresaUsuariosAclService
                      ))
                 {$superAdminRoleFilter}
                 UNION ALL
-                SELECT :user_type AS subject_type, u.id, ( :user_prefix || u.name ) AS label
+                SELECT :user_type AS subject_type, u.id, ( :user_prefix || u.name ) AS label, uc.role_id
                 FROM user_company uc
                 INNER JOIN users u ON u.id = uc.user_id
                 WHERE uc.company_id = :company_id
@@ -200,6 +200,47 @@ final class EmpresaUsuariosAclService
         ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function upsertBulkAclForMenuNode(int $companyId, int $menuItemId, array $perms): void
+    {
+        foreach (['role', 'user'] as $subjectType) {
+            $entries = (array) ($perms[$subjectType] ?? []);
+            foreach ($entries as $rawId => $value) {
+                $subjectId = (int) $rawId;
+                if ($subjectId <= 0) {
+                    continue;
+                }
+                if ($value === 'allow' || $value === 'deny') {
+                    $this->upsertAclForCompany($companyId, [
+                        'menu_item_id'     => $menuItemId,
+                        'subject_type'     => $subjectType,
+                        'subject_id'       => $subjectId,
+                        'scope'            => 'item',
+                        'permission_level' => $value,
+                    ]);
+                } else {
+                    $this->deleteAclByMenuSubject($companyId, $menuItemId, $subjectType, $subjectId);
+                }
+            }
+        }
+    }
+
+    private function deleteAclByMenuSubject(int $companyId, int $menuItemId, string $subjectType, int $subjectId): void
+    {
+        $stmt = $this->connection->prepare(
+            'DELETE FROM menu_acl
+             WHERE company_id   = :company_id
+               AND menu_item_id = :menu_item_id
+               AND subject_type = :subject_type
+               AND subject_id   = :subject_id'
+        );
+        $stmt->execute([
+            'company_id'   => $companyId,
+            'menu_item_id' => $menuItemId,
+            'subject_type' => $subjectType,
+            'subject_id'   => $subjectId,
+        ]);
     }
 
     private function normalizeAclPermission(string $input): array

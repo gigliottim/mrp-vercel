@@ -189,6 +189,7 @@ $router->delete('/empresa-usuarios/permisos/{id}', [EmpresaUsuariosController::c
 $router->get('/roles-permisos/arbol', [EmpresaUsuariosController::class, 'permisosTree']);
 $router->get('/roles-permisos/acl', [EmpresaUsuariosController::class, 'permisosAcl']);
 $router->post('/roles-permisos/acl', [EmpresaUsuariosController::class, 'permisosStore']);
+$router->post('/roles-permisos/acl/bulk', [EmpresaUsuariosController::class, 'permisosStoreBulk']);
 $router->get('/roles-permisos/acl/{id}/editar', [EmpresaUsuariosController::class, 'permisosEdit']);
 $router->put('/roles-permisos/acl/{id}', [EmpresaUsuariosController::class, 'permisosUpdate']);
 $router->delete('/roles-permisos/acl/{id}', [EmpresaUsuariosController::class, 'permisosDestroy']);

@@ -162,12 +162,29 @@ include __DIR__ . '/_header.php'; ?>
                                             <?= $activa ? 'Activa' : 'Inactiva' ?>
                                         </span>
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end d-flex gap-1 justify-content-end">
                                         <a
                                             class="btn btn-sm btn-outline-secondary"
                                             href="<?= url('/empresa-usuarios/empresa/' . (int) ($empresa['id'] ?? 0) . '/editar') ?>">
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
+                                        <?php if (isset($isSuperAdmin) && $isSuperAdmin) : ?>
+                                            <?php $esPropia = (isset($currentCompanyId) && (int) ($empresa['id'] ?? -1) === $currentCompanyId); ?>
+                                            <?php if ($esPropia) : ?>
+                                                <button class="btn btn-sm btn-outline-danger" type="button" disabled title="No puedes eliminar tu propia empresa">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            <?php else : ?>
+                                                <button
+                                                    class="btn btn-sm btn-danger"
+                                                    type="button"
+                                                    data-delete-empresa="<?= (int) ($empresa['id'] ?? 0) ?>"
+                                                    data-delete-nombre="<?= View::escape((string) ($empresa['nombre'] ?? '')) ?>"
+                                                    title="Eliminar empresa">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -186,3 +203,48 @@ include __DIR__ . '/_header.php'; ?>
         </div>
     </div>
 </div>
+
+<?php if (isset($isSuperAdmin) && $isSuperAdmin) : ?>
+    <div class="modal fade" id="modalEliminarEmpresa" tabindex="-1" aria-labelledby="modalEliminarEmpresaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="modalEliminarEmpresaLabel">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Eliminar empresa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Vas a eliminar permanentemente la empresa:</p>
+                    <p class="fw-bold fs-5 mb-3" data-delete-nombre></p>
+                    <div class="alert alert-danger py-2 mb-3">
+                        <i class="fa-solid fa-database me-1"></i>
+                        Esta accion eliminara la base de datos completa y todos sus datos. <strong>Es irreversible.</strong>
+                    </div>
+                    <p class="mb-1 text-muted small">Escribe el siguiente codigo para confirmar:</p>
+                    <p class="font-monospace fw-bold fs-4 text-center letter-spacing-wide py-2 rounded bg-light mb-3" data-delete-codigo></p>
+                    <input
+                        class="form-control"
+                        type="text"
+                        maxlength="6"
+                        autocomplete="off"
+                        placeholder="Ingresa el codigo"
+                        data-delete-input>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form
+                        method="post"
+                        data-delete-form
+                        data-base-action="<?= url('/empresa-usuarios/empresa/__ID__') ?>">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button class="btn btn-danger" type="submit" data-delete-confirm disabled>
+                            <i class="fa-solid fa-trash me-1"></i>Eliminar empresa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="<?= \App\Core\Support\AssetHelper::js('modules/empresa-usuarios/empresa-delete.js') ?>" defer></script>
+<?php endif; ?>

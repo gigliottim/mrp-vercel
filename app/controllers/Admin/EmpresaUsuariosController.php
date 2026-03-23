@@ -82,7 +82,15 @@ final class EmpresaUsuariosController extends Controller
 
     public function empresaDestroy(Request $request, $id): Response
     {
-        return Response::redirect(url('/empresa-usuarios/empresa'));
+        if (!$this->service->isCurrentUserSuperAdmin()) {
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        }
+        try {
+            $this->service->deleteCompany((int) $id);
+            return Response::redirect(url('/empresa-usuarios/empresa'));
+        } catch (\RuntimeException $exception) {
+            return $this->renderEmpresa(null, ['general' => $exception->getMessage()], []);
+        }
     }
 
     public function usuarios(Request $request): Response

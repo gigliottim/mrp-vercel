@@ -607,4 +607,99 @@ final class EmpresaUsuariosService
 
         return $parts[2];
     }
+
+    /**
+     * Elimina completamente una empresa: registros en mrp_auth y su base de datos.
+     * Solo SuperAdmin puede ejecutar este método y no puede borrar su propia empresa activa.
+     *
+     * @throws \RuntimeException Si no tiene permisos o intenta borrar la empresa activa.
+     * @throws \Throwable        Cualquier error de BD relanza tras rollback.
+     */
+    public function deleteCompany(int $id): void
+    {
+        if (!$this->isCurrentUserSuperAdmin()) {
+            throw new \RuntimeException('Solo Super Administradores pueden eliminar empresas.');
+        }
+        if ($id === $this->currentCompanyId()) {
+            throw new \RuntimeException('No puedes eliminar la empresa en la que estás logueado.');
+        }
+
+        $stmt = $this->connection->prepare(
+            'SELECT cd.database_name
+               FROM company_databases cd
+              WHERE cd.company_id = :id
+              LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+        $row    = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $dbName = ($row !== false && isset($row['database_name']))
+            ? (string) $row['database_name']
+            : '';
+
+        // Usuarios que pertenecen EXCLUSIVAMENTE a esta empresa (no tienen otras).
+        // Solo esos se borrarán de la tabla `users`; los que comparten empresa quedan intactos.
+        $stmtExclusive = $this->connection->prepare(
+            'SELECT uc.user_id
+               FROM user_company uc
+              WHERE uc.company_id = :id
+                AND NOT EXISTS (
+                    SELECT 1 FROM user_company uc2
+                     WHERE uc2.user_id    = uc.user_id
+                       AND uc2.company_id <> :id
+                )'
+        );
+        $stmtExclusive->execute(['id' => $id]);
+        $exclusiveUserIds = $stmtExclusive->fetchAll(\PDO::FETCH_COLUMN);
+
+        $this->connection->beginTransaction();
+        try {
+            // 1. Roles de los usuarios de esta empresa
+            $this->connection->prepare(
+                'DELETE FROM user_has_roles
+                  WHERE user_id IN (
+                      SELECT user_id FROM user_company WHERE company_id = :id
+                  )'
+            )->execute(['id' => $id]);
+
+            // 2. Relación usuario ↔ empresa
+            $this->connection->prepare(
+                'DELETE FROM user_company WHERE company_id = :id'
+            )->execute(['id' => $id]);
+
+            // 3. Usuarios que no pertenecen a ninguna otra empresa
+            if ($exclusiveUserIds !== []) {
+                $placeholders = implode(',', array_fill(0, count($exclusiveUserIds), '?'));
+                $this->connection->prepare(
+                    'DELETE FROM users WHERE id IN (' . $placeholders . ')'
+                )->execute($exclusiveUserIds);
+            }
+
+            // 4. Registro de la base de datos de la empresa
+            $this->connection->prepare(
+                'DELETE FROM company_databases WHERE company_id = :id'
+            )->execute(['id' => $id]);
+
+            // 5. Empresa
+            $this->connection->prepare(
+                'DELETE FROM companies WHERE id = :id'
+            )->execute(['id' => $id]);
+
+            $this->connection->commit();
+        } catch (\Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+
+        if ($dbName !== '' && preg_match('/^[a-z][a-z0-9_]*$/', $dbName) === 1) {
+            $this->connection->prepare(
+                'SELECT pg_terminate_backend(pid)
+                   FROM pg_stat_activity
+                  WHERE datname = :db
+                    AND pid <> pg_backend_pid()'
+            )->execute(['db' => $dbName]);
+
+            $quoted = '"' . $dbName . '"';
+            $this->connection->exec('DROP DATABASE IF EXISTS ' . $quoted);
+        }
+    }
 }

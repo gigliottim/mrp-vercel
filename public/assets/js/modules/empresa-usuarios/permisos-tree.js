@@ -215,6 +215,27 @@ function selectNode(e, nodeId, label, code, isItem) {
         updateRowState(sel);
       }
     });
+  } else if (isSectionNode && typeof aclData !== 'undefined' && window._aclPropagateIds.length > 0) {
+    // Para secciones: inferir consenso de permisos recorriendo todos los hijos.
+    // Por cada subject, si cualquier hijo tiene 'deny' → deny; si alguno tiene 'allow' → allow.
+    const propagateIds = window._aclPropagateIds;
+    /** @type {Map<string, string>} clave "type:id" → valor consenso */
+    const consensus = new Map();
+    aclData.forEach(row => {
+      if (!propagateIds.includes(parseInt(row.menu_item_id, 10))) return;
+      const key = `${row.subject_type}:${row.subject_id}`;
+      const val = (row.permission_level === 'deny' || row.effect === 'deny') ? 'deny' : 'allow';
+      // deny tiene prioridad sobre allow
+      if (!consensus.has(key) || val === 'deny') consensus.set(key, val);
+    });
+    consensus.forEach((val, key) => {
+      const [type, id] = key.split(':');
+      const sel = document.querySelector(`select[name="perms[${type}][${id}]"]`);
+      if (sel) {
+        sel.value = val;
+        updateRowState(sel);
+      }
+    });
   }
 
   // 3. Cascada visual: actualizar usuarios con "inherit" según su rol

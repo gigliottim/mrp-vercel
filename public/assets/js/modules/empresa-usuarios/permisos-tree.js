@@ -217,22 +217,28 @@ function selectNode(e, nodeId, label, code, isItem) {
     });
   } else if (isSectionNode && typeof aclData !== 'undefined' && window._aclPropagateIds.length > 0) {
     // Para secciones: inferir consenso de permisos recorriendo todos los hijos.
-    // Por cada subject, si cualquier hijo tiene 'deny' → deny; si alguno tiene 'allow' → allow.
+    // Rastrear allow y deny por separado para detectar estado mixto en usuarios.
     const propagateIds = window._aclPropagateIds;
-    /** @type {Map<string, string>} clave "type:id" → valor consenso */
+    /** @type {Map<string, {hasAllow: boolean, hasDeny: boolean}>} clave "type:id" */
     const consensus = new Map();
     aclData.forEach(row => {
       if (!propagateIds.includes(parseInt(row.menu_item_id, 10))) return;
       const key = `${row.subject_type}:${row.subject_id}`;
-      const val = (row.permission_level === 'deny' || row.effect === 'deny') ? 'deny' : 'allow';
-      // deny tiene prioridad sobre allow
-      if (!consensus.has(key) || val === 'deny') consensus.set(key, val);
+      const isDeny = (row.permission_level === 'deny' || row.effect === 'deny');
+      const cur = consensus.get(key) || { hasAllow: false, hasDeny: false };
+      if (isDeny) cur.hasDeny = true; else cur.hasAllow = true;
+      consensus.set(key, cur);
     });
-    consensus.forEach((val, key) => {
+    consensus.forEach(({ hasAllow, hasDeny }, key) => {
       const [type, id] = key.split(':');
       const sel = document.querySelector(`select[name="perms[${type}][${id}]"]`);
-      if (sel) {
-        sel.value = val;
+      if (!sel) return;
+      const isMixed = type === 'user' && hasAllow && hasDeny;
+      if (isMixed) {
+        sel.value = 'inherit';
+        updateRowStateMixed(sel);
+      } else {
+        sel.value = hasDeny ? 'deny' : 'allow';
         updateRowState(sel);
       }
     });
@@ -309,6 +315,19 @@ function updateRowState(selectEl) {
       const roleSel = document.querySelector(`select[name="perms[role][${roleId}]"]`);
       if (roleSel) updateRowStateInherited(selectEl, roleSel.value);
     }
+  }
+}
+
+/**
+ * Muestra badge naranja "Mixto" cuando un usuario tiene permisos distintos en distintos hijos.
+ */
+function updateRowStateMixed(selectEl) {
+  const rootRow = selectEl.closest('tr');
+  const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
+  selectEl.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
+  selectEl.classList.add('text-muted');
+  if (indicator) {
+    indicator.innerHTML = '<span class="badge rounded-pill text-dark" style="background:#fd7e14" title="Permisos mixtos en esta sección"><i class="fa-solid fa-shuffle me-1"></i>Mixto</span>';
   }
 }
 

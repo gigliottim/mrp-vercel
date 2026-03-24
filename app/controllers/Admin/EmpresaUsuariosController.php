@@ -370,20 +370,35 @@ final class EmpresaUsuariosController extends Controller
             return $this->json(['ok' => false, 'error' => 'Sin permiso'], 403);
         }
 
-        $body       = $request->body;
-        $menuItemId = (int) ($body['menu_item_id'] ?? 0);
-        $perms      = isset($body['perms']) && is_array($body['perms']) ? $body['perms'] : [];
+        $body  = $request->body;
+        $perms = isset($body['perms']) && is_array($body['perms']) ? $body['perms'] : [];
 
-        if ($menuItemId <= 0) {
+        // Soporte para propagación a múltiples nodos (menu_item_ids[]) o nodo individual
+        $menuItemIds = [];
+        if (isset($body['menu_item_ids']) && is_array($body['menu_item_ids'])) {
+            foreach ($body['menu_item_ids'] as $rawId) {
+                $id = (int) $rawId;
+                if ($id > 0) {
+                    $menuItemIds[] = $id;
+                }
+            }
+        }
+        if ($menuItemIds === []) {
+            $single = (int) ($body['menu_item_id'] ?? 0);
+            if ($single > 0) {
+                $menuItemIds = [$single];
+            }
+        }
+
+        if ($menuItemIds === []) {
             return $this->json(['ok' => false, 'error' => 'Debes seleccionar un ítem de menú válido.'], 422);
         }
 
         try {
-            $this->aclService->upsertBulkAclForMenuNode(
-                $this->service->currentCompanyId(),
-                $menuItemId,
-                $perms
-            );
+            $companyId = $this->service->currentCompanyId();
+            foreach ($menuItemIds as $menuItemId) {
+                $this->aclService->upsertBulkAclForMenuNode($companyId, $menuItemId, $perms);
+            }
             return $this->json(['ok' => true]);
         } catch (RuntimeException $exception) {
             return $this->json(['ok' => false, 'error' => $exception->getMessage()], 500);

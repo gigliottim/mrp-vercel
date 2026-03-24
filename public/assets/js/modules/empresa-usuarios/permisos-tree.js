@@ -317,7 +317,7 @@ function onRolePermChange(selectEl, roleId) {
 function propagateRoleToUsers(roleId, roleValue) {
   document.querySelectorAll(`tr[data-user-row][data-role-id="${roleId}"]`).forEach(row => {
     const sel = row.querySelector('select[name^="perms[user]"]');
-    if (sel && sel.value === 'inherit') {
+    if (sel && sel.value === 'inherit' && sel.dataset.mixed !== '1') {
       updateRowStateInherited(sel, roleValue);
     }
   });
@@ -340,6 +340,7 @@ function updateRowState(selectEl) {
   const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
 
   selectEl.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
+  delete selectEl.dataset.mixed;
 
   if (val === 'allow') {
     selectEl.classList.add('text-primary', 'fw-bold');
@@ -370,6 +371,7 @@ function updateRowStateMixed(selectEl) {
   const indicator = rootRow ? rootRow.querySelector('.status-indicator') : null;
   selectEl.classList.remove('text-primary', 'text-danger', 'text-muted', 'fw-bold');
   selectEl.classList.add('text-muted');
+  selectEl.dataset.mixed = '1';
   if (indicator) {
     indicator.innerHTML = '<span class="badge rounded-pill text-dark" style="background:#fd7e14" title="Permisos mixtos en esta sección"><i class="fa-solid fa-shuffle me-1"></i>Mixto</span>';
   }

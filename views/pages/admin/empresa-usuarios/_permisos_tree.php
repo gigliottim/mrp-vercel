@@ -45,8 +45,7 @@ $tenantName = $tenantData['name'] ?? 'Empresa';
                                     continue;
                                 } ?>
                                 <li class="mb-2 mt-3" data-tree-section="1">
-                                    <div class="p-2 mb-1 d-flex align-items-center gap-2 rounded acl-tree-node"
-                                        onclick="selectNode(event, '<?= esc((string) $sectionKey) ?>', '<?= esc((string) $sectionLabel) ?>', '<?= esc((string) $sectionKey) ?>', false)">
+                                    <div class="p-2 mb-1 d-flex align-items-center gap-2 rounded text-muted" style="cursor:default;">
                                         <i class="fa-solid fa-folder text-warning fs-5" style="width:24px; text-align:center;"></i>
                                         <div class="d-flex flex-column lh-sm">
                                             <span class="fw-bold text-dark text-uppercase"><?= View::escape((string) $sectionLabel) ?></span>

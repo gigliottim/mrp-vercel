@@ -216,30 +216,74 @@ function selectNode(e, nodeId, label, code, isItem) {
       }
     });
   } else if (isSectionNode && typeof aclData !== 'undefined' && window._aclPropagateIds.length > 0) {
-    // Para secciones: inferir consenso de permisos recorriendo todos los hijos.
-    // Rastrear allow y deny por separado para detectar estado mixto en usuarios.
     const propagateIds = window._aclPropagateIds;
-    /** @type {Map<string, {hasAllow: boolean, hasDeny: boolean}>} clave "type:id" */
-    const consensus = new Map();
+
+    // ── Roles: consenso directo desde aclData (deny gana) ──────────────────
+    const roleConsensus = new Map(); // roleId → {hasAllow, hasDeny}
     aclData.forEach(row => {
+      if (row.subject_type !== 'role') return;
       if (!propagateIds.includes(parseInt(row.menu_item_id, 10))) return;
-      const key = `${row.subject_type}:${row.subject_id}`;
+      const rId = parseInt(row.subject_id, 10);
       const isDeny = (row.permission_level === 'deny' || row.effect === 'deny');
-      const cur = consensus.get(key) || { hasAllow: false, hasDeny: false };
+      const cur = roleConsensus.get(rId) || { hasAllow: false, hasDeny: false };
       if (isDeny) cur.hasDeny = true; else cur.hasAllow = true;
-      consensus.set(key, cur);
+      roleConsensus.set(rId, cur);
     });
-    consensus.forEach(({ hasAllow, hasDeny }, key) => {
-      const [type, id] = key.split(':');
-      const sel = document.querySelector(`select[name="perms[${type}][${id}]"]`);
-      if (!sel) return;
-      const isMixed = type === 'user' && hasAllow && hasDeny;
-      if (isMixed) {
-        sel.value = 'inherit';
-        updateRowStateMixed(sel);
+    roleConsensus.forEach(({ hasDeny }, roleId) => {
+      const sel = document.querySelector(`select[name="perms[role][${roleId}]"]`);
+      if (sel) { sel.value = hasDeny ? 'deny' : 'allow'; updateRowState(sel); }
+    });
+
+    // ── Usuarios: permiso efectivo considerando herencia de rol ─────────────
+    // Para cada nodo del subárbol: si hay excepción explícita del usuario → úsala;
+    // si no, heredar del permiso del rol en ese nodo (o 'allow' por defecto).
+    document.querySelectorAll('select[name^="perms[user]"]').forEach(userSel => {
+      const userId = extractSubjectId(userSel.name);
+      if (userId <= 0) return;
+      const roleId = (typeof userRoleMap !== 'undefined') ? (userRoleMap[userId] || 0) : 0;
+      let hasAllow = false, hasDeny = false;
+
+      propagateIds.forEach(nodeId => {
+        // 1. ¿Excepción explícita del usuario en este nodo?
+        const userRow = aclData.find(r =>
+          parseInt(r.menu_item_id, 10) === nodeId &&
+          r.subject_type === 'user' &&
+          parseInt(r.subject_id, 10) === userId
+        );
+        let val;
+        if (userRow) {
+          val = (userRow.permission_level === 'deny' || userRow.effect === 'deny') ? 'deny' : 'allow';
+        } else if (roleId > 0) {
+          // 2. Permiso del rol en este nodo
+          const roleRow = aclData.find(r =>
+            parseInt(r.menu_item_id, 10) === nodeId &&
+            r.subject_type === 'role' &&
+            parseInt(r.subject_id, 10) === roleId
+          );
+          val = roleRow
+            ? ((roleRow.permission_level === 'deny' || roleRow.effect === 'deny') ? 'deny' : 'allow')
+            : 'allow'; // sin registro de rol = acceso por defecto
+        } else {
+          val = 'allow';
+        }
+        if (val === 'deny') hasDeny = true; else hasAllow = true;
+      });
+
+      if (hasAllow && hasDeny) {
+        userSel.value = 'inherit';
+        updateRowStateMixed(userSel);
+      } else if (hasDeny) {
+        userSel.value = 'deny';
+        updateRowState(userSel);
       } else {
-        sel.value = hasDeny ? 'deny' : 'allow';
-        updateRowState(sel);
+        // Solo allow: mostrar excepción explícita si la hay, si no usa rol
+        const hasExplicit = aclData.some(r =>
+          propagateIds.includes(parseInt(r.menu_item_id, 10)) &&
+          r.subject_type === 'user' &&
+          parseInt(r.subject_id, 10) === userId
+        );
+        userSel.value = hasExplicit ? 'allow' : 'inherit';
+        updateRowState(userSel);
       }
     });
   }

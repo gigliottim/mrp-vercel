@@ -49,6 +49,8 @@ services:
       - "6379:6379"
     volumes:
       - valkey_data:/bitnami/valkey/data
+    env_file:
+      - .env.docker
     environment:
       - VALKEY_DISABLE_THREADS=1
     networks:

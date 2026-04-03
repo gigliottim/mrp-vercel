@@ -41,9 +41,23 @@ services:
     networks:
       - lepp-net
 
+  valkey:
+    image: bitnami/valkey:latest
+    container_name: lepp-valkey
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/bitnami/valkey/data
+    environment:
+      - VALKEY_DISABLE_THREADS=1
+    networks:
+      - lepp-net
+
 networks:
   lepp-net:
     driver: bridge
 
 volumes:
   postgresql_data:
+  valkey_data:

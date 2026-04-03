@@ -252,6 +252,14 @@ rev_info=$(update_project_revision "$AUTO_LEVEL")
 REV_LEVEL="${rev_info%%|*}"; _tmp="${rev_info#*|}"; REV_VERSION="${_tmp%%|*}"; REV_BUILD="${_tmp##*|}"
 step "Revision nueva: v$REV_VERSION build $REV_BUILD (nivel $REV_LEVEL)"
 
+# Configurar identidad de git si no está configurada
+if ! git config user.email >/dev/null 2>&1; then
+  git config user.email "deploy@mrp.local"
+fi
+if ! git config user.name >/dev/null 2>&1; then
+  git config user.name "Deploy Script"
+fi
+
 step "Creando commit git obligatorio antes del deploy..."
 status_output=$(git -C "$SCRIPT_DIR" status --porcelain)
 if [[ -z "$status_output" ]]; then

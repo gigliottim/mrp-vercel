@@ -250,6 +250,11 @@ $router->put('/productos/partes/{idParte}/variantes/{id}', [PartesVariantesContr
 $router->delete('/productos/partes/{idParte}/variantes/{id}', [PartesVariantesController::class, 'destroyVariant']);
 
 // Transacciones - Compras (Módulo Simple)
+use App\Controllers\agent_AgentController;
+
+// Agente AI
+$router->get('/agent', [agent_AgentController::class, 'showChat']);
+
 $router->get('/compras', [ComprasController::class, 'index']);
 $router->get('/compras/create', [ComprasController::class, 'create']);
 $router->post('/compras/store', [ComprasController::class, 'store']);

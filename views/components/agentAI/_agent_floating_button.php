@@ -11,8 +11,14 @@ use App\Core\View\View;
         @click="toggleChat"
         aria-label="Abrir Agente AI"
         title="Agente AI - Asistente Virtual">
-        <i class="bi bi-robot" x-show="!isMinimized"></i>
-        <i class="bi bi-chat-dots" x-show="isMinimized"></i>
+        <svg class="icon" x-show="!isMinimized" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V3.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+            <path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z" />
+            <path d="M9 16h6" />
+        </svg>
+        <svg class="icon" x-show="isMinimized" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
     </button>
 
     <!-- Contenedor del chat flotante -->
@@ -20,7 +26,11 @@ use App\Core\View\View;
         <!-- Header del chat flotante -->
         <div class="agent-float-header">
             <div class="agent-float-header-info">
-                <i class="bi bi-robot"></i>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V3.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                    <path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z" />
+                    <path d="M9 16h6" />
+                </svg>
                 <div>
                     <strong>Agente AI</strong>
                     <span class="agent-status online">En línea</span>
@@ -28,10 +38,15 @@ use App\Core\View\View;
             </div>
             <div class="agent-float-header-actions">
                 <button class="agent-float-btn" @click="minimizeChat" aria-label="Minimizar">
-                    <i class="bi bi-dash-lg"></i>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
                 </button>
                 <button class="agent-float-btn" @click="closeChat" aria-label="Cerrar">
-                    <i class="bi bi-x-lg"></i>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -62,7 +77,10 @@ use App\Core\View\View;
                 placeholder="Escribe tu mensaje..."
                 :disabled="isLoading"></textarea>
             <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim()">
-                <i class="bi bi-send" x-show="!isLoading"></i>
+                <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
                 <span x-show="isLoading">...</span>
             </button>
         </div>
@@ -159,8 +177,11 @@ use App\Core\View\View;
         gap: 10px;
     }
 
-    .agent-float-header-info i {
+    .agent-float-header-info i,
+    .agent-float-header-info .icon {
         font-size: 24px;
+        width: 24px;
+        height: 24px;
     }
 
     .agent-float-header-info strong {
@@ -296,8 +317,11 @@ use App\Core\View\View;
         border-color: #007bff;
     }
 
-    .agent-float-suggestion-chip i {
+    .agent-float-suggestion-chip i,
+    .agent-float-suggestion-chip .icon {
         font-size: 12px;
+        width: 12px;
+        height: 12px;
     }
 
     /* Área de input */
@@ -377,6 +401,32 @@ use App\Core\View\View;
             padding: 10px;
         }
     }
+
+    /* Estilos para iconos SVG */
+    .icon {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+    }
+
+    .agent-float-toggle .icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .agent-float-btn .icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .agent-float-suggestion-chip .icon {
+        width: 14px;
+        height: 14px;
+    }
 </style>
 
 <script>
@@ -448,16 +498,18 @@ use App\Core\View\View;
                 }
             },
 
-            renderSuggestions() {
+            renderSuggestions(suggestions = null) {
                 const grid = document.getElementById('agent-float-suggestions-grid');
                 if (!grid) return;
 
-                grid.innerHTML = this.suggestions.map(s => `
+                const data = suggestions ?? this.suggestions;
+
+                grid.innerHTML = data.map(s => `
                 <button class="agent-float-suggestion-chip"
-                        data-intent="${s.intent}"
-                        onclick="selectFloatSuggestion('${s.intent}', '${s.label}')">
-                    <i class="${s.icon}"></i>
-                    <span>${s.label}</span>
+                        data-intent="${s.intent || ''}"
+                        onclick="selectFloatSuggestion('${s.intent || ''}', '${s.label || s}')">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>${s.label || s}</span>
                 </button>
             `).join('');
             },
@@ -514,9 +566,27 @@ use App\Core\View\View;
                     timestamp: new Date().toLocaleTimeString()
                 });
 
+                // Renderizar mensaje
+                const messagesContainer = document.getElementById('agent-float-messages');
+                if (!messagesContainer) return;
+
+                const messageClass = role === 'user' ? 'user' : (role === 'assistant' ? 'assistant' : 'system');
+                const avatar = role === 'assistant' ?
+                    `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V3.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1z"/><path d="M9 16h6"/></svg>` :
+                    (role === 'user' ? `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>` :
+                        `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`);
+
+                messagesContainer.innerHTML += `
+                    <div class="agent-float-message agent-float-message-${messageClass}">
+                        <div class="agent-float-message-content">
+                            <p>${this.escapeHtml(content)}</p>
+                        </div>
+                        <span class="agent-float-timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                `;
+
                 // Scroll al último mensaje
                 setTimeout(() => {
-                    const messagesContainer = document.getElementById('agent-float-messages');
                     if (messagesContainer) {
                         messagesContainer.scrollTop = messagesContainer.scrollHeight;
                     }

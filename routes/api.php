@@ -37,3 +37,4 @@ use App\Controllers\agent_AgentController;
 $router->post('/api/v1/agent/message', [agent_AgentController::class, 'handleMessage']);
 $router->post('/api/v1/agent/confirm', [agent_AgentController::class, 'confirmSave']);
 $router->get('/api/v1/agent/suggestions', [agent_AgentController::class, 'getSuggestions']);
+$router->get('/api/v1/agent/config', [agent_AgentController::class, 'checkConfiguration']);

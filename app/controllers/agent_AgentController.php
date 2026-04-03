@@ -104,6 +104,50 @@ final class agent_AgentController extends Controller
     }
 
     /**
+     * Verificar configuración del agente AI
+     */
+    public function checkConfiguration(Request $request): Response
+    {
+        $config = config('agent_ai');
+        $mode = $config['mode'];
+
+        $hasValidConfig = false;
+        $errorMessage = '';
+
+        if ($mode === 'local') {
+            // Verificar configuración local
+            $localEndpoint = $config['local']['endpoint'];
+            $localModel = $config['local']['model'];
+
+            if ($localEndpoint && $localModel) {
+                $hasValidConfig = true;
+            } else {
+                $errorMessage = 'Configuración local incompleta. Verifica AGENT_AI_LOCAL_ENDPOINT y AGENT_AI_LOCAL_MODEL.';
+            }
+        } elseif ($mode === 'api') {
+            // Verificar configuración API
+            $apiEndpoint = $config['api']['endpoint'];
+            $apiModel = $config['api']['model'];
+            $apiKey = $config['api']['key'];
+
+            if ($apiEndpoint && $apiModel && $apiKey) {
+                $hasValidConfig = true;
+            } else {
+                $errorMessage = 'Configuración API incompleta. Verifica AGENT_AI_API_ENDPOINT, AGENT_AI_API_MODEL y AGENT_AI_API_KEY.';
+            }
+        } else {
+            $errorMessage = 'Modo de configuración inválido. Usa "local" o "api".';
+        }
+
+        return $this->json([
+            'success' => true,
+            'isOnline' => $hasValidConfig,
+            'mode' => $mode,
+            'message' => $hasValidConfig ? 'Configuración válida' : $errorMessage,
+        ]);
+    }
+
+    /**
      * Limpiar caché de Valkey (para administradores)
      */
     public function clearCache(Request $request): Response

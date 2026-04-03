@@ -11,9 +11,26 @@ function agentChat() {
     isLoading: false,
     conversationId: null,
     currentIntent: null,
+    isOffline: false,
 
-    init() {
+    async init() {
+      await this.checkConfiguration();
       this.loadSuggestions();
+    },
+
+    async checkConfiguration() {
+      try {
+        const response = await fetch('/api/v1/agent/config');
+        const data = await response.json();
+
+        if (data.success) {
+          this.isOffline = !data.isOnline;
+        }
+      } catch (error) {
+        console.error('Error checking configuration:', error);
+        // Si falla la verificación, asumir que está offline
+        this.isOffline = true;
+      }
     },
 
     async loadSuggestions() {
@@ -44,7 +61,27 @@ function agentChat() {
             `).join('');
     },
 
+    addNewLine(e) {
+      // Agregar salto de línea al textarea
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+
+      textarea.value = text.substring(0, start) + '\n' + text.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + 1;
+
+      // Ajustar altura del textarea
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    },
+
     async sendMessage() {
+      if (this.isOffline) {
+        console.warn('Chat offline - No se puede enviar mensaje');
+        return;
+      }
+
       if (!this.userInput.trim() || this.isLoading) return;
 
       const message = this.userInput.trim();

@@ -18,6 +18,7 @@ $appFormattingSettings = app_general_settings();
     <link rel="preload" as="style" href="<?= AssetHelper::getBootstrap('css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::getBootstrap('css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::getFontAwesome() ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?= AssetHelper::css('global/main.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('components/cards.css') ?>">
     <link rel="stylesheet" href="<?= AssetHelper::css('modules/public-site.css') ?>">

@@ -14,3 +14,6 @@ $appBuild = (int) config('app.build', 0);
         </span>
     </div>
 </footer>
+
+<!-- Botón Flotante del Agente AI -->
+<?php include base_path('views/components/agentAI/_agent_floating_button.php'); ?>

@@ -12,6 +12,7 @@ function agentChat() {
     conversationId: null,
     currentIntent: null,
     isOffline: false,
+    mode: null, // 'local' o 'api'
 
     async init() {
       await this.checkConfiguration();
@@ -25,6 +26,7 @@ function agentChat() {
 
         if (data.success) {
           this.isOffline = !data.isOnline;
+          this.mode = data.mode;
         }
       } catch (error) {
         console.error('Error checking configuration:', error);
@@ -245,6 +247,32 @@ function agentChat() {
       }
 
       return 'general_query';
+    },
+
+    getStatusMessage() {
+      // Obtener el elemento de estado para agregar la clase
+      const statusElement = document.querySelector('.agent-status');
+      if (statusElement) {
+        // Remover clases anteriores
+        statusElement.classList.remove('mode-local', 'mode-api');
+        // Agregar clase según el modo
+        if (this.mode === 'local') {
+          statusElement.classList.add('mode-local');
+        } else if (this.mode === 'api') {
+          statusElement.classList.add('mode-api');
+        }
+      }
+
+      if (this.isOffline) {
+        return '<i class="bi bi-x-octagon"></i> Fuera de línea';
+      }
+      if (this.mode === 'local') {
+        return '<i class="bi bi-server"></i> Usando Ollama local (sin costo)';
+      }
+      if (this.mode === 'api') {
+        return '<i class="bi bi-cloud"></i> Usando DashScope/OpenRouter (API externa)';
+      }
+      return '¿En qué puedo ayudarte hoy?';
     }
   };
 }

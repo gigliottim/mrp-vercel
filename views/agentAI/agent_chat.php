@@ -15,7 +15,7 @@
         <!-- Header -->
         <div class="agent-chat-header">
             <h2><i class="bi bi-robot"></i> Agente AI</h2>
-            <p class="agent-status" x-show="!isOffline">¿En qué puedo ayudarte hoy?</p>
+            <p class="agent-status" x-show="!isOffline" x-html="getStatusMessage()"></p>
             <p class="agent-status offline-status" x-show="isOffline"><i class="bi bi-x-octagon"></i> Fuera de línea</p>
         </div>
 

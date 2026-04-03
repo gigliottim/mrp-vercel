@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use Exception;
-use ValkeyClient;
+use App\Core\Database\ValkeyClient;
 
 /**
  * Repository para la conversación del Agente AI

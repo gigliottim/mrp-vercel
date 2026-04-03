@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\AgentAI;
 
 use Exception;
-use ValkeyClient;
+use App\Core\Database\ValkeyClient;
 
 /**
  * Servicio de Conversación para el Agente AI

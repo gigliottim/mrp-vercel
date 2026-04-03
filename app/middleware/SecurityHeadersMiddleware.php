@@ -18,7 +18,7 @@ final class SecurityHeadersMiddleware implements MiddlewareInterface
         header('X-Frame-Options: SAMEORIGIN');
         header('Referrer-Policy: same-origin');
         header('Permissions-Policy: geolocation=(), microphone=()');
-        header('Content-Security-Policy: default-src \'self\'; img-src \'self\' data:; font-src \'self\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'; style-src \'self\' \'unsafe-inline\'');
+        header('Content-Security-Policy: default-src \'self\'; img-src \'self\' data:; font-src \'self\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com');
 
         return $response;
     }

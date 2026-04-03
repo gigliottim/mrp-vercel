@@ -26,21 +26,28 @@ final class AssetHelper
     public static function getBootstrap(string $type = 'css'): string
     {
         $version = config('cdn.cdn.versions.bootstrap', '5.3.7');
-        $base = 'CDN/bootstrap/' . $version;
-        $path = $type === 'js' ? $base . '/js/bootstrap.bundle.min.js' : $base . '/css/bootstrap.min.css';
-        return self::buildPath($path);
+        $cdn_urls = config('cdn.fallbacks.external_cdn_urls', []);
+
+        if ($type === 'js') {
+            $url = $cdn_urls['bootstrap_js'] ?? 'https://cdn.jsdelivr.net/npm/bootstrap@' . $version . '/dist/js/bootstrap.bundle.min.js';
+        } else {
+            $url = $cdn_urls['bootstrap'] ?? 'https://cdn.jsdelivr.net/npm/bootstrap@' . $version . '/dist/css/bootstrap.min.css';
+        }
+        return $url;
     }
 
     public static function getFontAwesome(): string
     {
         $version = config('cdn.cdn.versions.fontawesome', '6.7.2');
-        return self::buildPath('CDN/font-awesome/' . $version . '/css/all.min.css');
+        $cdn_urls = config('cdn.fallbacks.external_cdn_urls', []);
+        return $cdn_urls['fontawesome'] ?? 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/' . $version . '/css/all.min.css';
     }
 
     public static function getAlpineJS(): string
     {
         $version = config('cdn.cdn.versions.alpinejs', '3.14.9');
-        return self::buildPath('CDN/alpinejs/' . $version . '/alpine.min.js');
+        $cdn_urls = config('cdn.fallbacks.external_cdn_urls', []);
+        return $cdn_urls['alpinejs'] ?? 'https://cdn.jsdelivr.net/npm/alpinejs@' . $version . '/dist/cdn.min.js';
     }
 
     private static function buildPath(string $path): string

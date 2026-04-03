@@ -46,7 +46,6 @@ final class AuthenticateMiddleware implements MiddlewareInterface
 
         if (
             str_starts_with($path, '/assets/') ||
-            str_starts_with($path, '/CDN/') ||
             $path === '/favicon.ico'
         ) {
             return true;

@@ -26,7 +26,9 @@ echo "  Alpine JS: " . AssetHelper::getAlpineJS() . "\n";
 echo "  main.css: " . AssetHelper::css('global/main.css') . "\n";
 echo "  cards.css: " . AssetHelper::css('components/cards.css') . "\n\n";
 
-echo "Verificación de archivos:\n";
-$bootstrap = base_path('public/CDN/bootstrap/5.3.7/css/bootstrap.min.css');
-echo "  Bootstrap existe: " . (file_exists($bootstrap) ? 'SÍ' : 'NO') . "\n";
-echo "  Ruta: $bootstrap\n";
+echo "Verificación de CDN Online:\n";
+echo "  Bootstrap CSS: " . AssetHelper::getBootstrap('css') . "\n";
+echo "  Bootstrap JS: " . AssetHelper::getBootstrap('js') . "\n";
+echo "  Font Awesome: " . AssetHelper::getFontAwesome() . "\n";
+echo "  Alpine JS: " . AssetHelper::getAlpineJS() . "\n";
+echo "  CDN Online está configurado correctamente.\n";

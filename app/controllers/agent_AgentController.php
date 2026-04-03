@@ -7,9 +7,9 @@ namespace App\Controllers;
 use App\Services\AgentAI\AgentService;
 use App\Services\AgentAI\AgentConversationService;
 use App\Services\AgentAI\AgentResponse;
-use Framework\Controller;
-use Framework\Request;
-use Framework\Response;
+use App\Core\Controllers\Controller;
+use App\Core\Http\Request;
+use App\Core\Http\Response;
 
 /**
  * Controller para el Agente AI

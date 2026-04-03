@@ -7,7 +7,8 @@ declare(strict_types=1);
  */
 
 return [
-    'host' => env('VALKEY_HOST', 'localhost'),
+    'enabled' => env('VALKEY_ENABLED', true),
+    'host' => env('VALKEY_HOST', 'lepp-valkey'),
     'port' => (int)env('VALKEY_PORT', 6379),
     'password' => env('VALKEY_PASSWORD'),
     'prefix' => 'mrp:agent:',

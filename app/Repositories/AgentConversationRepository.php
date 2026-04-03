@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use Exception;
 use ValkeyClient;
 
 /**
@@ -11,22 +12,40 @@ use ValkeyClient;
  */
 final class AgentConversationRepository
 {
-    private ValkeyClient $valkey;
+    private ?ValkeyClient $valkey;
     private string $prefix;
+    private bool $enabled;
 
     public function __construct()
     {
-        $this->valkey = new ValkeyClient();
-        $this->valkey->connect(
-            config('valkey')['host'],
-            (int)config('valkey')['port']
-        );
+        $valkeyConfig = config('valkey');
+        $this->enabled = $valkeyConfig['enabled'] ?? true;
 
-        if ($password = config('valkey')['password']) {
-            $this->valkey->auth($password);
+        if (!$this->enabled) {
+            $this->valkey = null;
+            $this->prefix = $valkeyConfig['prefix'] ?? 'mrp:agent:';
+            return;
         }
 
-        $this->prefix = config('valkey')['prefix'];
+        $this->valkey = new ValkeyClient();
+
+        try {
+            $this->valkey->connect(
+                $valkeyConfig['host'],
+                (int)$valkeyConfig['port'],
+                2.0  // timeout de 2 segundos
+            );
+
+            if ($password = $valkeyConfig['password']) {
+                $this->valkey->auth($password);
+            }
+        } catch (Exception $e) {
+            // Si Valkey no está disponible, continuar sin caché
+            $this->valkey = null;
+            error_log("Valkey connection failed: " . $e->getMessage());
+        }
+
+        $this->prefix = $valkeyConfig['prefix'] ?? 'mrp:agent:';
     }
 
     /**
@@ -106,6 +125,10 @@ final class AgentConversationRepository
      */
     public function getCachedResponse(string $promptHash): ?array
     {
+        if (!$this->valkey) {
+            return null;
+        }
+
         $key = $this->prefix . "ai:response:{$promptHash}";
         $cached = $this->valkey->get($key);
 
@@ -121,6 +144,10 @@ final class AgentConversationRepository
      */
     public function setCachedResponse(string $promptHash, array $data): void
     {
+        if (!$this->valkey) {
+            return;
+        }
+
         $key = $this->prefix . "ai:response:{$promptHash}";
         $ttl = config('valkey')['ttl']['response'];
         $this->valkey->setex($key, $ttl, json_encode($data));
@@ -131,6 +158,10 @@ final class AgentConversationRepository
      */
     public function invalidateCachedResponse(string $promptHash): void
     {
+        if (!$this->valkey) {
+            return;
+        }
+
         $key = $this->prefix . "ai:response:{$promptHash}";
         $this->valkey->del($key);
     }
@@ -140,6 +171,10 @@ final class AgentConversationRepository
      */
     public function getActiveSessions(int $tenantId, int $userId): array
     {
+        if (!$this->valkey) {
+            return [];
+        }
+
         $key = $this->prefix . "session:{$userId}:{$tenantId}";
         $session = $this->valkey->hGetAll($key);
 
@@ -155,6 +190,10 @@ final class AgentConversationRepository
      */
     public function saveSession(string $key, array $data, int $ttl = 1800): void
     {
+        if (!$this->valkey) {
+            return;
+        }
+
         $fullKey = $this->prefix . $key;
         $this->valkey->hMSet($fullKey, $data);
         $this->valkey->expire($fullKey, $ttl);
@@ -165,6 +204,10 @@ final class AgentConversationRepository
      */
     public function invalidateSession(string $key): void
     {
+        if (!$this->valkey) {
+            return;
+        }
+
         $fullKey = $this->prefix . $key;
         $this->valkey->del($fullKey);
     }

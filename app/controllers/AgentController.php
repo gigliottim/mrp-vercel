@@ -17,12 +17,17 @@ use Framework\Response;
 final class AgentController extends Controller
 {
     private AgentService $service;
-    private AgentConversationService $conversationService;
+    private ?AgentConversationService $conversationService = null;
 
     public function __construct()
     {
         $this->service = new AgentService();
-        $this->conversationService = new AgentConversationService();
+        try {
+            $this->conversationService = new AgentConversationService();
+        } catch (\Exception $e) {
+            error_log("Valkey connection failed in AgentController: " . $e->getMessage());
+            $this->conversationService = null;
+        }
     }
 
     /**
@@ -50,10 +55,15 @@ final class AgentController extends Controller
 
         // Si no hay conversación ID, crear una nueva
         if (!$convId) {
-            if (!$intent) {
-                $intent = $this->conversationService->resolveIntent($userInput);
+            if ($this->conversationService) {
+                if (!$intent) {
+                    $intent = $this->conversationService->resolveIntent($userInput);
+                }
+                $convId = $this->conversationService->startConversation($userId, $tenantId, $intent);
+            } else {
+                // Si Valkey no está disponible, generar un ID temporal
+                $convId = 'temp_' . uniqid();
             }
-            $convId = $this->conversationService->startConversation($userId, $tenantId, $intent);
         }
 
         // Procesar mensaje

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\AgentAI;
 
+use App\Repositories\AgentConversationRepository;
+
 /**
  * Servicio Principal del Agente AI
  * Orquesta todos los componentes del agente
@@ -13,14 +15,22 @@ final class AgentService
     private AgentAiClient $client;
     private AgentPromptBuilder $promptBuilder;
     private AgentResponseValidator $validator;
-    private AgentConversationService $conversationService;
+    private ?AgentConversationService $conversationService;
+    private ?AgentConversationRepository $repository;
 
     public function __construct()
     {
         $this->client = new AgentAiClient();
         $this->promptBuilder = new AgentPromptBuilder();
         $this->validator = new AgentResponseValidator();
-        $this->conversationService = new AgentConversationService();
+        try {
+            $this->conversationService = new AgentConversationService();
+            $this->repository = new AgentConversationRepository();
+        } catch (\Exception $e) {
+            error_log("Valkey connection failed in AgentService: " . $e->getMessage());
+            $this->conversationService = null;
+            $this->repository = null;
+        }
     }
 
     /**
@@ -28,8 +38,8 @@ final class AgentService
      */
     public function processMessage(string $convId, string $userInput): AgentResponse
     {
-        // Obtener historial de conversación
-        $history = $this->conversationService->getHistory($convId);
+        // Obtener historial de conversación (si Valkey está disponible)
+        $history = $this->conversationService ? $this->conversationService->getHistory($convId) : [];
 
         // Detectar intent (si no se especificó)
         $intent = $this->promptBuilder->detectIntent($userInput);
@@ -99,8 +109,10 @@ final class AgentService
         // Aquí iría la lógica para llamar al servicio real del dominio
         // Ejemplo: PartService::create(), BomService::create(), etc.
 
-        // Marcar conversación como completada
-        $this->conversationService->markCompleted($convId);
+        // Marcar conversación como completada (si Valkey está disponible)
+        if ($this->conversationService) {
+            $this->conversationService->markCompleted($convId);
+        }
 
         return [
             'success' => true,
@@ -131,14 +143,10 @@ final class AgentService
      */
     private function getCachedResponse(string $promptHash): ?array
     {
-        $key = "ai:response:{$promptHash}";
-        $cached = $this->conversationService->valkey->get($key);
-
-        if (!$cached) {
+        if (!$this->repository) {
             return null;
         }
-
-        return json_decode($cached, true);
+        return $this->repository->getCachedResponse($promptHash);
     }
 
     /**
@@ -146,9 +154,9 @@ final class AgentService
      */
     private function setCachedResponse(string $promptHash, array $response): void
     {
-        $key = "ai:response:{$promptHash}";
-        $ttl = config('valkey')['ttl']['response'];
-        $this->conversationService->valkey->setex($key, $ttl, json_encode($response));
+        if ($this->repository) {
+            $this->repository->setCachedResponse($promptHash, $response);
+        }
     }
 
     /**
@@ -156,8 +164,9 @@ final class AgentService
      */
     private function invalidateCachedResponse(string $promptHash): void
     {
-        $key = "ai:response:{$promptHash}";
-        $this->conversationService->valkey->del($key);
+        if ($this->repository) {
+            $this->repository->invalidateCachedResponse($promptHash);
+        }
     }
 
     /**

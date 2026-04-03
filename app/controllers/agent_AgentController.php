@@ -16,13 +16,28 @@ use Framework\Response;
  */
 final class agent_AgentController extends Controller
 {
-    private AgentService $service;
-    private AgentConversationService $conversationService;
+    private ?AgentService $service = null;
+    private ?AgentConversationService $conversationService = null;
 
-    public function __construct()
+    private function getService(): AgentService
     {
-        $this->service = new AgentService();
-        $this->conversationService = new AgentConversationService();
+        if ($this->service === null) {
+            $this->service = new AgentService();
+        }
+        return $this->service;
+    }
+
+    private function getConversationService(): ?AgentConversationService
+    {
+        if ($this->conversationService === null) {
+            try {
+                $this->conversationService = new AgentConversationService();
+            } catch (\Exception $e) {
+                // Si Valkey no está disponible, devolver null
+                $this->conversationService = null;
+            }
+        }
+        return $this->conversationService;
     }
 
     /**
@@ -50,14 +65,20 @@ final class agent_AgentController extends Controller
 
         // Si no hay conversación ID, crear una nueva
         if (!$convId) {
-            if (!$intent) {
-                $intent = $this->conversationService->resolveIntent($userInput);
+            $conversationService = $this->getConversationService();
+            if (!$intent && $conversationService) {
+                $intent = $conversationService->resolveIntent($userInput);
             }
-            $convId = $this->conversationService->startConversation($userId, $tenantId, $intent);
+            if ($conversationService) {
+                $convId = $conversationService->startConversation($userId, $tenantId, $intent);
+            } else {
+                // Si Valkey no está disponible, generar un ID temporal
+                $convId = 'temp_' . uniqid();
+            }
         }
 
         // Procesar mensaje
-        $response = $this->service->processMessage($convId, $userInput);
+        $response = $this->getService()->processMessage($convId, $userInput);
 
         return $this->json([
             'success' => true,
@@ -81,7 +102,7 @@ final class agent_AgentController extends Controller
         $intent = $request->input('intent', '');
 
         // Confirmar y guardar
-        $result = $this->service->confirmAndSave($convId, $confirmedData, $intent);
+        $result = $this->getService()->confirmAndSave($convId, $confirmedData, $intent);
 
         return $this->json([
             'success' => $result['success'],
@@ -166,7 +187,7 @@ final class agent_AgentController extends Controller
         $promptHash = $request->input('prompt_hash');
 
         if ($promptHash) {
-            $this->service->clearCache($promptHash);
+            $this->getService()->clearCache($promptHash);
             return $this->json([
                 'success' => true,
                 'message' => 'Caché invalidada para el prompt especificado',

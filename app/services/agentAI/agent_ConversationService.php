@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\AgentAI;
 
+use Exception;
 use ValkeyClient;
 
 /**
@@ -11,20 +12,38 @@ use ValkeyClient;
  */
 final class AgentConversationService
 {
-    private ValkeyClient $valkey;
+    private ?ValkeyClient $valkey;
     private AgentPromptBuilder $promptBuilder;
     private AgentResponseValidator $validator;
 
     public function __construct()
     {
-        $this->valkey = new ValkeyClient();
-        $this->valkey->connect(
-            config('valkey')['host'],
-            (int)config('valkey')['port']
-        );
+        $valkeyConfig = config('valkey');
 
-        if ($password = config('valkey')['password']) {
-            $this->valkey->auth($password);
+        // Si Valkey está deshabilitado, no conectar
+        if (!($valkeyConfig['enabled'] ?? true)) {
+            $this->valkey = null;
+            $this->promptBuilder = new AgentPromptBuilder();
+            $this->validator = new AgentResponseValidator();
+            return;
+        }
+
+        $this->valkey = new ValkeyClient();
+
+        try {
+            $this->valkey->connect(
+                $valkeyConfig['host'],
+                (int)$valkeyConfig['port'],
+                2.0  // timeout de 2 segundos
+            );
+
+            if ($password = $valkeyConfig['password']) {
+                $this->valkey->auth($password);
+            }
+        } catch (Exception $e) {
+            // Si Valkey no está disponible, continuar sin caché
+            $this->valkey = null;
+            error_log("Valkey connection failed: " . $e->getMessage());
         }
 
         $this->promptBuilder = new AgentPromptBuilder();
@@ -86,6 +105,10 @@ final class AgentConversationService
      */
     public function getActiveSession(int $userId, int $tenantId): ?array
     {
+        if (!$this->valkey) {
+            return null;
+        }
+
         $key = $this->getSessionKey($userId, $tenantId);
         $session = $this->valkey->hGetAll($key);
 
@@ -110,6 +133,10 @@ final class AgentConversationService
      */
     public function saveSession(int $userId, int $tenantId, array $sessionData): void
     {
+        if (!$this->valkey) {
+            return;
+        }
+
         $key = $this->getSessionKey($userId, $tenantId);
         $this->valkey->hMSet($key, $sessionData);
         $this->valkey->expire($key, 1800);
@@ -120,6 +147,10 @@ final class AgentConversationService
      */
     public function invalidateSession(int $userId, int $tenantId): void
     {
+        if (!$this->valkey) {
+            return;
+        }
+
         $key = $this->getSessionKey($userId, $tenantId);
         $this->valkey->del($key);
     }

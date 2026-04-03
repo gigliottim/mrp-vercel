@@ -23,7 +23,8 @@ return [
      */
     'local' => [
         'endpoint' => env('AGENT_AI_LOCAL_ENDPOINT', 'http://localhost:11434/v1/chat/completions'),
-        'model' => env('AGENT_AI_LOCAL_MODEL', 'qwen2.5:1.5b'),
+        /**    'model' => env('AGENT_AI_LOCAL_MODEL', 'qwen2.5:1.5b'), */
+        'model' => env('AGENT_AI_LOCAL_MODEL', 'qwen3.5:0.8b'),
         'timeout' => 30, // segundos
     ],
 

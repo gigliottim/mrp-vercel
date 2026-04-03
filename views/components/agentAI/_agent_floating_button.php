@@ -33,7 +33,8 @@ use App\Core\View\View;
                 </svg>
                 <div>
                     <strong>Agente AI</strong>
-                    <span class="agent-status online">En línea</span>
+                    <span class="agent-status" x-show="!isOffline">En línea</span>
+                    <span class="agent-status offline" x-show="isOffline">Fuera de línea</span>
                 </div>
             </div>
             <div class="agent-float-header-actions">
@@ -70,19 +71,24 @@ use App\Core\View\View;
         </div>
 
         <!-- Área de input -->
-        <div class="agent-float-input-area">
+        <div class="agent-float-input-area" x-show="!isOffline">
             <textarea
                 x-model="userInput"
                 @keydown.enter.exact.prevent="sendMessage"
                 placeholder="Escribe tu mensaje..."
-                :disabled="isLoading"></textarea>
-            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim()">
+                :disabled="isLoading || isOffline"></textarea>
+            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline">
                 <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
                 <span x-show="isLoading">...</span>
             </button>
+        </div>
+
+        <!-- Mensaje de estado offline -->
+        <div class="agent-float-offline-message" x-show="isOffline">
+            <p>El agente está fuera de línea. Verifica la configuración.</p>
         </div>
     </div>
 </div>
@@ -196,6 +202,10 @@ use App\Core\View\View;
 
     .agent-status.online {
         color: #a7f3d0;
+    }
+
+    .agent-status.offline {
+        color: #fca5a5;
     }
 
     .agent-float-header-actions {
@@ -370,6 +380,16 @@ use App\Core\View\View;
         cursor: not-allowed;
     }
 
+    /* Mensaje de estado offline */
+    .agent-float-offline-message {
+        padding: 16px;
+        text-align: center;
+        background: #fff3cd;
+        border-top: 1px solid #ffeeba;
+        color: #856404;
+        font-size: 12px;
+    }
+
     /* Responsive */
     @media (max-width: 480px) {
         .agent-floating-btn {
@@ -440,10 +460,12 @@ use App\Core\View\View;
             messages: [],
             suggestions: [],
             isLoading: false,
+            isOffline: false,
             conversationId: null,
             currentIntent: null,
 
             init() {
+                this.checkConfiguration();
                 this.loadSuggestions();
 
                 // Escuchar eventos personalizados para abrir el chat
@@ -455,6 +477,21 @@ use App\Core\View\View;
                 window.addEventListener('minimizeAgentChat', () => {
                     this.isMinimized = true;
                 });
+            },
+
+            async checkConfiguration() {
+                try {
+                    const response = await fetch('/api/v1/agent/config');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.isOffline = !data.isOnline;
+                    }
+                } catch (error) {
+                    console.error('Error checking configuration:', error);
+                    // Si falla la verificación, asumir que está offline
+                    this.isOffline = true;
+                }
             },
 
             toggleChat() {
@@ -515,6 +552,11 @@ use App\Core\View\View;
             },
 
             async sendMessage() {
+                if (this.isOffline) {
+                    console.warn('Chat offline - No se puede enviar mensaje');
+                    return;
+                }
+
                 if (!this.userInput.trim() || this.isLoading) return;
 
                 const message = this.userInput.trim();
@@ -611,9 +653,13 @@ use App\Core\View\View;
     function selectFloatSuggestion(intent, label) {
         const chat = document.getElementById('agent-floating-btn');
         if (chat) {
-            chat.agentFloating().userInput = label;
-            chat.agentFloating().currentIntent = intent;
-            chat.agentFloating().sendMessage();
+            // Acceder al componente Alpine.js usando Alpine.$data
+            const alpineComponent = Alpine.$data(chat);
+            if (alpineComponent) {
+                alpineComponent.userInput = label;
+                alpineComponent.currentIntent = intent;
+                alpineComponent.sendMessage();
+            }
         }
     }
 </script>

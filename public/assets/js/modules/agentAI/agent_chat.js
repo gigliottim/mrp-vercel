@@ -253,6 +253,10 @@ function agentChat() {
 function selectSuggestion(intent, label) {
   const chat = document.getElementById('agent-chat');
   if (chat) {
-    chat.agentChat().selectSuggestion(intent, label);
+    // Acceder al componente Alpine.js usando Alpine.$data
+    const alpineComponent = Alpine.$data(chat);
+    if (alpineComponent) {
+      alpineComponent.selectSuggestion(intent, label);
+    }
   }
 }

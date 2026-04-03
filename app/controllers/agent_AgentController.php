@@ -95,7 +95,8 @@ final class agent_AgentController extends Controller
      */
     public function getSuggestions(Request $request): Response
     {
-        $suggestions = config('agent_ai')['suggestions'];
+        $agentConfig = config('agent_ai', []);
+        $suggestions = $agentConfig['suggestions'] ?? [];
 
         return $this->json([
             'success' => true,

@@ -32,9 +32,9 @@ $router->get('/api/v1/depositos-validaciones/{origenId}/destinos', [DepositosVal
 $router->post('/api/v1/depositos-validaciones/validar', [DepositosValidacionesController::class, 'validarMovimiento']);
 
 // Agente AI API endpoints
-use App\Controllers\agent_AgentController;
+use App\AgenteAI\Backend\Controllers\AgentController;
 
-$router->post('/api/v1/agent/message', [agent_AgentController::class, 'handleMessage']);
-$router->post('/api/v1/agent/confirm', [agent_AgentController::class, 'confirmSave']);
-$router->get('/api/v1/agent/suggestions', [agent_AgentController::class, 'getSuggestions']);
-$router->get('/api/v1/agent/config', [agent_AgentController::class, 'checkConfiguration']);
+$router->post('/api/v1/agent/message', [AgentController::class, 'handleMessage']);
+$router->post('/api/v1/agent/confirm', [AgentController::class, 'confirmSave']);
+$router->get('/api/v1/agent/suggestions', [AgentController::class, 'getSuggestions']);
+$router->get('/api/v1/agent/config', [AgentController::class, 'checkConfiguration']);

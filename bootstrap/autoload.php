@@ -14,6 +14,7 @@ if (file_exists($composerAutoload)) {
 }
 
 spl_autoload_register(static function (string $class): void {
+    // Primary: App\* → app/
     $prefix = 'App\\';
     $baseDir = BASE_PATH . '/app/';
 
@@ -23,6 +24,18 @@ spl_autoload_register(static function (string $class): void {
     }
 
     $relativeClass = substr($class, $len);
+
+    // Map App\AgenteAI\* to agenteAI/backend/
+    if (str_starts_with($relativeClass, 'AgenteAI\\')) {
+        $relativePath = str_replace('\\', '/', substr($relativeClass, strlen('AgenteAI\\'))) . '.php';
+        $file = BASE_PATH . '/agenteAI/backend/' . $relativePath;
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+        return;
+    }
+
     $relativePath = str_replace('\\', '/', $relativeClass) . '.php';
     $file = $baseDir . $relativePath;
 

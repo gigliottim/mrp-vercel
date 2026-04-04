@@ -7,14 +7,16 @@
     <title>Agente AI - MRP</title>
     <link rel="stylesheet" href="/assets/css/modules/agentAI/agent_chat.css">
     <link rel="stylesheet" href="/assets/css/variables.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-    <div id="agent-chat" class="agent-chat-container" x-data="agentChat()" x-init="init()" x-bind:class="isLoading ? 'loading' : ''">
+    <div id="agent-chat" class="agent-chat-container" x-data="agentChat()" x-init="init()" x-bind:class="isLoading ? 'loading' : ''" x-bind:class="isOffline ? 'offline' : ''">
         <!-- Header -->
         <div class="agent-chat-header">
             <h2><i class="bi bi-robot"></i> Agente AI</h2>
-            <p class="agent-status">¿En qué puedo ayudarte hoy?</p>
+            <p class="agent-status" x-show="!isOffline" x-html="getStatusMessage()"></p>
+            <p class="agent-status offline-status" x-show="isOffline"><i class="bi bi-x-octagon"></i> Fuera de línea</p>
         </div>
 
         <!-- Messages History -->
@@ -46,20 +48,26 @@
         </div>
 
         <!-- Input Area -->
-        <div class="agent-input-area">
+        <div class="agent-input-area" x-show="!isOffline">
             <textarea
                 x-model="userInput"
                 @keydown.enter.exact.prevent="sendMessage"
+                @keydown.shift.enter.prevent="addNewLine"
                 placeholder="Escribe tu mensaje..."
                 :disabled="isLoading"></textarea>
             <button class="btn btn-primary" @click="sendMessage" :disabled="isLoading || !userInput.trim()">
-                <i class="bi bi-send" x-show="!isLoading"></i>
-                <span x-show="isLoading">Procesando...</span>
+                <i class="bi bi-send-fill"></i>
             </button>
+        </div>
+
+        <!-- Offline Status Message -->
+        <div class="agent-offline-message" x-show="isOffline">
+            <div class="offline-icon"><i class="bi bi-wifi-off"></i></div>
+            <p>No es posible enviar mensajes. Verifica la configuración de la API o el modelo local.</p>
         </div>
     </div>
 
-    <script src="/assets/js/modules/agentAI/agent_chat.js"></script>
+    <script src="/assets/js/modules/agentAI/agent_chat.js" defer></script>
 </body>
 
 </html>

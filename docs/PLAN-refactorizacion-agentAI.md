@@ -348,15 +348,16 @@ El frontend interactúa con el agente **únicamente** a través de la API REST. 
 
 ### Tareas restantes de baja prioridad
 
-| Tarea | Detalle |
-|-------|---------|
-| Tablas `parte` y `proveedor` | Verificar que los nombres de tablas y columnas coinciden con el schema real |
-| `saveBom()` y `saveMaterial()` | Implementar cuando existan BomService/MaterialService |
-| Copiar JS/CSS externalizados a `public/` | Los archivos en `agenteAI/frontend/` necesitan ser accesibles vía web |
+| Tarea | Estado |
+|-------|--------|
+| ~~Tablas `parte` y `proveedor`~~ | ✅ Verificadas y corregidas (schema real: `partes`+`variantes`, `entidades`, `bom_cabecera`+`bom_detalle`) |
+| ~~`saveBom()` y `saveMaterial()`~~ | ✅ Implementadas con tablas/columnas reales |
+| ~~Copiar JS/CSS a `public/`~~ | ✅ Copiados a `public/agenteAI/frontend/` |
+| ~~Renombrar originales a .bkp~~ | ✅ 23 archivos renombrados |
 
-### Fase 3: ⏳ Completar Stubs (PENDIENTE)
-### Fase 4: ⏳ Testing (PENDIENTE)
-### Fase 5: ⏳ Documentación (PENDIENTE)
+### Fase 3: ✅ Completar Stubs (COMPLETADO)
+### Fase 4: ⏳ Testing (PENDIENTE — requiere VPS)
+### Fase 5: ✅ Documentación actualizada (COMPLETADO)
 
 ---
 

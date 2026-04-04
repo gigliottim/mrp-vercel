@@ -2,6 +2,7 @@
 
 > Todos los archivos del Agente AI centralizados en una única carpeta.
 > **Última actualización:** 4 de abril de 2026
+> **Versión:** 3.1 — Schema real verificado + stubs completados
 
 ---
 
@@ -13,26 +14,24 @@ agenteAI/
 │   ├── controllers/
 │   │   └── AgentController.php        # Controller principal
 │   ├── services/
-│   │   ├── AgentService.php           # Orquestador
+│   │   ├── AgentService.php           # Orquestador (con CRUD real)
 │   │   ├── AiClient.php               # Cliente HTTP (Ollama, DashScope, etc.)
 │   │   ├── PromptBuilder.php          # Constructor de prompts
 │   │   ├── ResponseValidator.php      # Validación de respuestas
 │   │   ├── ConversationService.php    # Gestión de conversaciones
 │   │   └── AgentResponse.php          # DTO de respuesta
 │   ├── repositories/
-│   │   └── ConversationRepository.php # Acceso a Valkey + PostgreSQL
-│   ├── exceptions/
-│   │   └── AgentAiException.php       # Excepción personalizada
-│   ├── config/
-│   │   └── agent_ai.php              # Configuración (referencia)
-│   └── routes/
-│       └── (rutas definidas en routes/api.php y routes/web.php)
+│   │   └── ConversationRepository.php # Valkey (caché) + PostgreSQL (persistencia)
+│   └── exceptions/
+│       └── AgentAiException.php       # Excepción personalizada
 │
 ├── frontend/                    # Código del lado del cliente
 │   ├── js/
-│   │   └── agent_chat.js                # Componente Alpine.js
+│   │   ├── agent_chat.js                # Componente Alpine.js (chat completo)
+│   │   └── agent_floating.js            # Componente Alpine.js (botón flotante)
 │   ├── css/
-│   │   └── agent_chat.css               # Estilos del chat
+│   │   ├── agent_chat.css               # Estilos del chat
+│   │   └── agent_floating.css           # Estilos del botón flotante
 │   └── views/
 │       ├── agent_chat.php               # Vista chat de página completa
 │       └── components/
@@ -48,26 +47,25 @@ agenteAI/
 │       ├── 003_create_agent_ai_logs.sql
 │       └── 004_add_agent_ai_menu_item.sql
 │
-├── docs/                        # Documentación
-│   ├── README.md
-│   └── (más docs en docs/)
-│
-└── tests/                       # Tests específicos del agente
+├── docs/                        # Documentación de referencia
+├── tests/                       # Tests específicos del agente
+└── README.md                    # Este archivo
 ```
 
----
+### Archivos accesibles desde web (public/)
 
-## 🔧 Nomenclatura
-
-| Capa | Namespace | Ruta física |
-|------|-----------|-------------|
-| Controllers | `App\AgenteAI\Backend\Controllers\` | `agenteAI/backend/controllers/` |
-| Services | `App\AgenteAI\Backend\Services\` | `agenteAI/backend/services/` |
-| Repositories | `App\AgenteAI\Backend\Repositories\` | `agenteAI/backend/repositories/` |
-| Exceptions | `App\AgenteAI\Backend\Exceptions\` | `agenteAI/backend/exceptions/` |
-| Frontend JS | (global) | `agenteAI/frontend/js/` |
-| Frontend CSS | (global) | `agenteAI/frontend/css/` |
-| Views | (PHP includes) | `agenteAI/frontend/views/` |
+```
+public/agenteAI/
+└── frontend/
+    ├── js/
+    │   ├── agent_chat.js
+    │   └── agent_floating.js
+    ├── css/
+    │   ├── agent_chat.css
+    │   └── agent_floating.css
+    └── views/
+        └── agent_chat.php        # Copia de referencia
+```
 
 ---
 
@@ -83,6 +81,39 @@ agenteAI/
 
 ---
 
+## 🗃️ Schema Real Verificado
+
+Todas las operaciones de guardado usan las tablas y columnas reales del proyecto MRP:
+
+### savePart() — Crear pieza
+| Tabla | Columnas usadas |
+|-------|----------------|
+| `tipos_partes` | `id`, `codigo` (lookup del tipo de parte) |
+| `grupos_partes` | `id`, `nombre` (lookup del grupo/categoría) |
+| `partes` | `id`, `codigo`, `id_tipo`, `id_grupo`, `detalle`, `activo`, `fecha_creacion` |
+| `variantes` | `id`, `id_parte`, `codigo_variante`, `detalle`, `estado`, `stock_actual`, `fecha_creacion` |
+
+### saveSupplier() — Crear proveedor
+| Tabla | Columnas usadas |
+|-------|----------------|
+| `entidades` | `id`, `razon_social`, `tipo` (= 'PROVEEDOR'), `identificacion_tributaria` (CUIT), `contacto_email`, `contacto_telefono` |
+
+### saveBom() — Crear lista de materiales
+| Tabla | Columnas usadas |
+|-------|----------------|
+| `variantes` | Lookup de `variante_padre_id` y `variante_componente_id` por código |
+| `bom_cabecera` | `id`, `variante_padre_id`, `version`, `activa`, `fecha_efectiva` |
+| `bom_detalle` | `id`, `bom_id`, `variante_componente_id`, `cantidad_necesaria`, `unidad_medida_id` |
+
+### saveMaterial() — Crear materia prima
+| Tabla | Columnas usadas |
+|-------|----------------|
+| `tipos_partes` | Lookup tipo 'materia_prima' |
+| `partes` | Mismo flujo que savePart |
+| `variantes` | Además setea `stock_seguridad` y `atributos` con min_stock |
+
+---
+
 ## 🔒 Seguridad
 
 - **No requiere CSRF**: Los endpoints están protegidos por sesión de usuario
@@ -93,7 +124,7 @@ agenteAI/
 
 ## ⚙️ Configuración
 
-La configuración principal está en `config/agent_ai.php` (archivo raíz del proyecto).
+La configuración activa está en `config/agent_ai.php` (raíz del proyecto).
 La copia en `agenteAI/backend/config/` es de referencia.
 
 ### Variables de entorno (.env)
@@ -111,7 +142,8 @@ AGENT_AI_LOCAL_MODEL=qwen2.5:7b
 
 ## 📝 Historial de Cambios
 
-| Fecha | Cambio |
-|-------|--------|
-| 04/04/2026 | Centralización de archivos en agenteAI/. Fixes: CSRF roto, config local faltante, session no definida |
-| 03/04/2026 | Creación inicial del agente AI |
+| Fecha | Versión | Cambio |
+|-------|---------|--------|
+| 04/04/2026 | 3.1 | Schema real verificado. savePart/saveSupplier/saveBom/saveMaterial implementados con tablas correctas. Stubs completados. |
+| 04/04/2026 | 3.0 | Centralización en `agenteAI/`. Fixes: CSRF roto, config local faltante, session no definida. Autoloader actualizado. |
+| 03/04/2026 | — | Creación inicial del agente AI |

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agente AI - MRP</title>
-    <link rel="stylesheet" href="/agenteAI/frontend/css/agent_chat.css">
+    <link rel="stylesheet" href="/assets/css/modules/agentAI/agent_chat.css">
     <link rel="stylesheet" href="/assets/css/variables.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
@@ -67,7 +67,7 @@
         </div>
     </div>
 
-    <script src="/agenteAI/frontend/js/agent_chat.js" defer></script>
+    <script src="/assets/js/modules/agentAI/agent_chat.js" defer></script>
 </body>
 
 </html>

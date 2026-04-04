@@ -9,6 +9,12 @@ use App\AgenteAI\Backend\Repositories\ConversationRepository;
 /**
  * Servicio Principal del Agente AI
  * Orquesta todos los componentes del agente
+ *
+ * Schema real verificado:
+ * - Partes: tabla `partes` + `variantes`
+ * - Proveedores: tabla `entidades` (tipo='PROVEEDOR')
+ * - BOM: tablas `bom_cabecera` + `bom_detalle`
+ * - Materiales: tabla `variantes` (no hay tabla dedicada)
  */
 final class AgentService
 {
@@ -38,19 +44,11 @@ final class AgentService
      */
     public function processMessage(string $convId, string $userInput): AgentResponse
     {
-        // Obtener historial de conversación (si Valkey está disponible)
         $history = $this->conversationService ? $this->conversationService->getHistory($convId) : [];
-
-        // Detectar intent (si no se especificó)
         $intent = $this->promptBuilder->detectIntent($userInput);
-
-        // Construir mensajes
         $messages = $this->promptBuilder->buildMessages($history, $userInput, $intent);
-
-        // Generar hash del prompt para caché
         $promptHash = $this->generatePromptHash($messages);
 
-        // Verificar caché de Valkey
         $cachedResponse = $this->getCachedResponse($promptHash);
         if ($cachedResponse) {
             $this->logAiCall($convId, $messages, $cachedResponse, true, null, 'cache_hit');
@@ -63,14 +61,10 @@ final class AgentService
             );
         }
 
-        // Llamar a la IA
         $aiResponse = $this->client->chat($messages, $intent);
-
-        // Validar respuesta
         $validationResult = $this->validator->validate($aiResponse, $intent);
 
         if ($validationResult->failed()) {
-            // Si la validación falla, devolver respuesta para aclarar
             $response = new AgentResponse(
                 status: 'clarify',
                 message: $this->buildClarifyMessage($validationResult->errors),
@@ -78,14 +72,10 @@ final class AgentService
                 suggestions: $this->buildSuggestions($aiResponse),
                 conversationId: $convId
             );
-
-            // Guardar log de validación fallida
             $this->logAiCall($convId, $messages, $aiResponse, false, $validationResult->errors);
-
             return $response;
         }
 
-        // Si la validación pasa, guardar en caché y devolver respuesta
         $this->setCachedResponse($promptHash, $aiResponse);
 
         $response = new AgentResponse(
@@ -96,9 +86,7 @@ final class AgentService
             conversationId: $convId
         );
 
-        // Guardar log de validación exitosa
         $this->logAiCall($convId, $messages, $aiResponse, true);
-
         return $response;
     }
 
@@ -117,12 +105,10 @@ final class AgentService
                 default => ['success' => false, 'message' => "Intent no soportado: {$intent}"],
             };
 
-            // Marcar conversación como completada
             if ($this->conversationService) {
                 $this->conversationService->markCompleted($convId);
             }
 
-            // Guardar log
             if ($this->repository) {
                 $this->repository->saveAiLog([
                     'conversation_id' => $convId,
@@ -141,119 +127,226 @@ final class AgentService
         }
     }
 
-    /**
-     * Limpiar caché de Valkey
-     */
     public function clearCache(string $promptHash): void
     {
         $this->invalidateCachedResponse($promptHash);
     }
 
-    // ─── Delegación a servicios de dominio ────────────────────────────
+    // ─── Guardar Parte (tabla: partes + variantes) ────────────────────
 
     private function savePart(array $data): array
     {
-        // Verificar que las tablas existen antes de intentar insertar
-        if (!$this->repository) {
-            return ['success' => false, 'message' => 'Base de datos no disponible'];
-        }
+        $db = $this->getDb();
+        if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
 
-        $stmt = $this->repository->getDb()->prepare(
-            "INSERT INTO parte (codigo, detalle, tipo_codigo, categoria, creado_en)
-             VALUES (?, ?, ?, ?, NOW()) RETURNING id"
+        // 1) Obtener o crear tipo de parte
+        $stmtTipo = $db->prepare("SELECT id FROM tipos_partes WHERE codigo = ?");
+        $stmtTipo->execute([$data['part_type'] ?? 'pieza']);
+        $idTipo = $stmtTipo->fetchColumn() ?: 1;
+
+        // 2) Obtener o crear grupo de partes
+        $stmtGrupo = $db->prepare("SELECT id FROM grupos_partes WHERE nombre = ?");
+        $stmtGrupo->execute([$data['category'] ?? 'General']);
+        $idGrupo = $stmtGrupo->fetchColumn() ?: 1;
+
+        // 3) Insertar parte
+        $stmt = $db->prepare(
+            "INSERT INTO partes (codigo, id_tipo, id_grupo, detalle, activo, fecha_creacion)
+             VALUES (?, ?, ?, ?, true, NOW()) RETURNING id"
         );
         $stmt->execute([
-            $data['code'],
+            strtoupper($data['code']),
+            $idTipo,
+            $idGrupo,
             $data['description'],
-            $data['part_type'] ?? 'pieza',
-            $data['category'] ?? 'otros',
         ]);
-        $id = $stmt->fetchColumn();
+        $parteId = (int) $stmt->fetchColumn();
+
+        // 4) Crear variante por defecto
+        $stmtVar = $db->prepare(
+            "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, stock_actual, fecha_creacion)
+             VALUES (?, ?, ?, 'activa', 0, NOW()) RETURNING id"
+        );
+        $stmtVar->execute([
+            $parteId,
+            strtoupper($data['code']) . '-01',
+            $data['description'],
+        ]);
+        $varianteId = (int) $stmtVar->fetchColumn();
 
         return [
             'success' => true,
-            'message' => "Pieza '{$data['code']}' creada correctamente",
-            'data' => ['id' => (int) $id, 'code' => $data['code']],
+            'message' => "Parte '{$data['code']}' creada (ID: {$parteId}, Variante: {$varianteId})",
+            'data' => ['parte_id' => $parteId, 'variante_id' => $varianteId, 'code' => strtoupper($data['code'])],
         ];
     }
 
-    private function saveBom(array $data): array
-    {
-        if (!$this->repository) {
-            return ['success' => false, 'message' => 'Base de datos no disponible'];
-        }
-
-        // TODO: Implementar con BomService cuando exista
-        return [
-            'success' => true,
-            'message' => "BOM para '{$data['parent_part']}' registrado (implementación pendiente)",
-            'data' => ['parent_part' => $data['parent_part']],
-        ];
-    }
+    // ─── Guardar Proveedor (tabla: entidades, tipo='PROVEEDOR') ──────
 
     private function saveSupplier(array $data): array
     {
-        if (!$this->repository) {
-            return ['success' => false, 'message' => 'Base de datos no disponible'];
-        }
+        $db = $this->getDb();
+        if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
 
-        $stmt = $this->repository->getDb()->prepare(
-            "INSERT INTO proveedor (nombre, cuit, contacto, email, telefono, creado_en)
-             VALUES (?, ?, ?, ?, ?, NOW()) RETURNING id"
+        $stmt = $db->prepare(
+            "INSERT INTO entidades (razon_social, tipo, identificacion_tributaria, contacto_email, contacto_telefono, direccion, created_at, updated_at)
+             VALUES (?, 'PROVEEDOR', ?, ?, ?, '', NOW(), NOW()) RETURNING id"
         );
         $stmt->execute([
             $data['name'],
-            $data['cuit'],
-            $data['contact'] ?? '',
-            $data['email'] ?? '',
-            $data['phone'] ?? '',
+            $data['cuit'] ?? null,
+            $data['email'] ?? null,
+            $data['phone'] ?? null,
         ]);
-        $id = $stmt->fetchColumn();
+        $id = (int) $stmt->fetchColumn();
 
         return [
             'success' => true,
-            'message' => "Proveedor '{$data['name']}' creado correctamente",
-            'data' => ['id' => (int) $id, 'name' => $data['name']],
+            'message' => "Proveedor '{$data['name']}' creado (ID: {$id})",
+            'data' => ['id' => $id, 'name' => $data['name']],
         ];
     }
 
-    private function saveMaterial(array $data): array
+    // ─── Guardar BOM (tablas: bom_cabecera + bom_detalle) ────────────
+
+    private function saveBom(array $data): array
     {
-        if (!$this->repository) {
-            return ['success' => false, 'message' => 'Base de datos no disponible'];
+        $db = $this->getDb();
+        if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
+
+        // Buscar variante padre por código
+        $stmtFind = $db->prepare(
+            "SELECT v.id FROM variantes v
+             INNER JOIN partes p ON p.id = v.id_parte
+             WHERE p.codigo = ? OR v.codigo_variante = ?
+             LIMIT 1"
+        );
+        $stmtFind->execute([$data['parent_part'], $data['parent_part']]);
+        $variantePadreId = $stmtFind->fetchColumn();
+
+        if (!$variantePadreId) {
+            return [
+                'success' => false,
+                'message' => "No se encontró la parte padre '{$data['parent_part']}'. Créela primero.",
+            ];
         }
 
-        // TODO: Implementar con MaterialService cuando exista
+        // Crear cabecera BOM
+        $stmt = $db->prepare(
+            "INSERT INTO bom_cabecera (variante_padre_id, version, activa, fecha_efectiva, created_at, updated_at)
+             VALUES (?, '1.0', true, CURRENT_DATE, NOW(), NOW()) RETURNING id"
+        );
+        $stmt->execute([$variantePadreId]);
+        $bomId = (int) $stmt->fetchColumn();
+
+        // Insertar componentes
+        $components = $data['components'] ?? [];
+        $componentIds = [];
+        foreach ($components as $comp) {
+            // Buscar variante componente
+            $stmtComp = $db->prepare(
+                "SELECT v.id FROM variantes v
+                 INNER JOIN partes p ON p.id = v.id_parte
+                 WHERE p.codigo = ? OR v.codigo_variante = ?
+                 LIMIT 1"
+            );
+            $stmtComp->execute([$comp['code'] ?? $comp['component_code'] ?? '', $comp['code'] ?? $comp['component_code'] ?? '']);
+            $varianteCompId = $stmtComp->fetchColumn();
+
+            if (!$varianteCompId) {
+                continue; // Saltar componente no encontrado
+            }
+
+            $stmtDet = $db->prepare(
+                "INSERT INTO bom_detalle (bom_id, variante_componente_id, cantidad_necesaria, unidad_medida_id, created_at)
+                 VALUES (?, ?, ?, 1, NOW()) RETURNING id"
+            );
+            $stmtDet->execute([
+                $bomId,
+                $varianteCompId,
+                $comp['quantity'] ?? $comp['cantidad'] ?? 1,
+            ]);
+            $componentIds[] = (int) $stmtDet->fetchColumn();
+        }
+
         return [
             'success' => true,
-            'message' => "Material '{$data['code']}' registrado (implementación pendiente)",
-            'data' => ['code' => $data['code']],
+            'message' => "BOM creado para '{$data['parent_part']}' (BOM ID: {$bomId}, componentes: " . count($componentIds) . ")",
+            'data' => ['bom_id' => $bomId, 'parent_part' => $data['parent_part'], 'components_count' => count($componentIds)],
+        ];
+    }
+
+    // ─── Guardar Material (tabla: variantes) ─────────────────────────
+
+    private function saveMaterial(array $data): array
+    {
+        $db = $this->getDb();
+        if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
+
+        // Obtener id_tipo para 'materia prima'
+        $stmtTipo = $db->prepare("SELECT id FROM tipos_partes WHERE codigo IN ('materia_prima','mp','raw_material') LIMIT 1");
+        $stmtTipo->execute([]);
+        $idTipo = $stmtTipo->fetchColumn() ?: 1;
+
+        $stmtGrupo = $db->prepare("SELECT id FROM grupos_partes WHERE nombre = ? OR nombre ILIKE '%material%' LIMIT 1");
+        $stmtGrupo->execute([$data['category'] ?? 'Materiales']);
+        $idGrupo = $stmtGrupo->fetchColumn() ?: 1;
+
+        // Crear parte
+        $stmt = $db->prepare(
+            "INSERT INTO partes (codigo, id_tipo, id_grupo, detalle, activo, fecha_creacion)
+             VALUES (?, ?, ?, ?, true, NOW()) RETURNING id"
+        );
+        $stmt->execute([
+            strtoupper($data['code']),
+            $idTipo,
+            $idGrupo,
+            $data['description'],
+        ]);
+        $parteId = (int) $stmt->fetchColumn();
+
+        // Crear variante con stock mínimo como atributo
+        $minStock = $data['min_stock'] ?? 0;
+        $stmtVar = $db->prepare(
+            "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, stock_actual, stock_seguridad, atributos, fecha_creacion)
+             VALUES (?, ?, ?, 'activa', 0, ?, ?, NOW()) RETURNING id"
+        );
+        $stmtVar->execute([
+            $parteId,
+            strtoupper($data['code']) . '-01',
+            $data['description'],
+            $minStock,
+            json_encode(['min_stock' => (float) $minStock, 'uom' => $data['uom'] ?? 'u']),
+        ]);
+        $varianteId = (int) $stmtVar->fetchColumn();
+
+        return [
+            'success' => true,
+            'message' => "Material '{$data['code']}' creado (ID: {$parteId}, Variante: {$varianteId})",
+            'data' => ['parte_id' => $parteId, 'variante_id' => $varianteId, 'code' => strtoupper($data['code'])],
         ];
     }
 
     // ─── Utilidades internas ──────────────────────────────────────────
 
     /**
-     * Generar hash del prompt
+     * Obtener conexión PDO
      */
+    private function getDb(): ?\PDO
+    {
+        return $this->repository ? $this->repository->getDb() : null;
+    }
+
     private function generatePromptHash(array $messages): string
     {
-        $json = json_encode($messages, JSON_UNESCAPED_UNICODE);
-        return hash('sha256', $json);
+        return hash('sha256', json_encode($messages, JSON_UNESCAPED_UNICODE));
     }
 
-    /**
-     * Obtener respuesta de la caché de Valkey
-     */
     private function getCachedResponse(string $promptHash): ?array
     {
-        if (!$this->repository) return null;
-        return $this->repository->getCachedResponse($promptHash);
+        return $this->repository ? $this->repository->getCachedResponse($promptHash) : null;
     }
 
-    /**
-     * Guardar respuesta en la caché de Valkey
-     */
     private function setCachedResponse(string $promptHash, array $response): void
     {
         if ($this->repository) {
@@ -261,9 +354,6 @@ final class AgentService
         }
     }
 
-    /**
-     * Invalidar respuesta de la caché de Valkey
-     */
     private function invalidateCachedResponse(string $promptHash): void
     {
         if ($this->repository) {
@@ -271,17 +361,11 @@ final class AgentService
         }
     }
 
-    /**
-     * Construir mensaje de aclaración
-     */
     private function buildClarifyMessage(array $errors): string
     {
         return "Faltan datos o hay errores: " . implode(", ", $errors) . ". Por favor, corregí o completá la información.";
     }
 
-    /**
-     * Construir sugerencias
-     */
     private function buildSuggestions(array $data): array
     {
         $suggestions = [];
@@ -294,9 +378,6 @@ final class AgentService
         return $suggestions;
     }
 
-    /**
-     * Guardar log de llamada a IA
-     */
     private function logAiCall(
         string $convId,
         array $messages,

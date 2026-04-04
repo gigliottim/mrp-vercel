@@ -6,36 +6,36 @@ declare(strict_types=1);
  * Configuración del Agente AI para MRP
  *
  * Proveedores disponibles:
- * - 'local': Ollama local (sin costo, requiere Docker)
- * - 'api': DashScope/OpenRouter (API externa, requiere clave)
+ * - 'api': Ollama API (api.ollama.com, requiere clave)
  */
 
 return [
     /**
      * Modo de operación
      * 'local' para Ollama en VPS
-     * 'api' para DashScope/OpenRouter
+     * 'api' para Ollama API (api.ollama.com)
      */
-    'mode' => env('AGENT_AI_MODE', 'local'),
+    'mode' => env('AGENT_AI_MODE', 'api'),
 
     /**
-     * Configuración para modo local (Ollama)
+     * Configuración para modo API (Ollama API)
      */
-    'local' => [
-        'endpoint' => env('AGENT_AI_LOCAL_ENDPOINT', 'http://localhost:11434/v1/chat/completions'),
-        /**    'model' => env('AGENT_AI_LOCAL_MODEL', 'qwen2.5:1.5b'), */
-        'model' => env('AGENT_AI_LOCAL_MODEL', 'qwen3.5:0.8b'),
+    'api' => [
+        'endpoint' => env('AGENT_AI_API_ENDPOINT', 'https://api.ollama.com/v1/chat/completions'),
+        'model' => env('AGENT_AI_API_MODEL', 'qwen3.5:cloud'),
+        'key' => env('AGENT_AI_API_KEY'),
         'timeout' => 30, // segundos
     ],
 
     /**
-     * Configuración para modo API (DashScope/OpenRouter)
+     * Modelos específicos por intent (solo modo API)
      */
-    'api' => [
-        'endpoint' => env('AGENT_AI_API_ENDPOINT', 'https://api.dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'),
-        'model' => env('AGENT_AI_API_MODEL', 'qwen/qwen2.5-1.5b-instruct'),
-        'key' => env('AGENT_AI_API_KEY'),
-        'timeout' => 30, // segundos
+    'models' => [
+        'create_part' => env('AGENT_AI_API_MODEL_PART', 'qwen3.5:cloud'),
+        'create_bom' => env('AGENT_AI_API_MODEL_BOM', 'qwen3.5:cloud'),
+        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER', 'qwen3.5:cloud'),
+        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL', 'qwen3.5:cloud'),
+        'general_query' => env('AGENT_AI_API_MODEL_GENERAL', 'gemini-3-flash-preview:cloud'),
     ],
 
     /**

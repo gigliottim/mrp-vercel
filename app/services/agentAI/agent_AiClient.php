@@ -20,6 +20,7 @@ final class AgentAiClient
     private int $timeout;
     private int $maxRetries;
     private float $delayMs;
+    private array $apiModels;
 
     public function __construct()
     {
@@ -34,6 +35,15 @@ final class AgentAiClient
         $this->timeout = $config['generation']['max_tokens'];
         $this->maxRetries = $config['retry']['max_attempts'];
         $this->delayMs = $config['retry']['delay_ms'];
+
+        // Modelos disponibles en modo API
+        $this->apiModels = $config['models'] ?? [
+            'create_part' => 'qwen3.5:cloud',
+            'create_bom' => 'qwen3.5:cloud',
+            'create_supplier' => 'qwen3.5:cloud',
+            'create_material' => 'qwen3.5:cloud',
+            'general_query' => 'gemini-3-flash-preview:cloud',
+        ];
     }
 
     /**
@@ -76,7 +86,13 @@ final class AgentAiClient
     private function sendRequest(array $messages, string $intent): array
     {
         $endpoint = $this->mode === 'local' ? $this->localEndpoint : $this->apiEndpoint;
-        $model = $this->mode === 'local' ? $this->localModel : $this->apiModel;
+
+        // Usar modelo específico según el intent en modo API
+        if ($this->mode === 'api' && isset($this->apiModels[$intent])) {
+            $model = $this->apiModels[$intent];
+        } else {
+            $model = $this->mode === 'local' ? $this->localModel : $this->apiModel;
+        }
 
         $payload = [
             'model' => $model,

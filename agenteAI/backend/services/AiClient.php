@@ -9,7 +9,7 @@ use Exception;
 /**
  * Cliente HTTP para interactuar con proveedores de IA (Ollama, DashScope, OpenRouter)
  */
-final class AgentAiClient
+final class AiClient
 {
     private string $mode;
     private string $localEndpoint;

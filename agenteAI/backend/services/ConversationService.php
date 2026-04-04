@@ -23,8 +23,8 @@ final class ConversationService
         // Si Valkey está deshabilitado, no conectar
         if (!($valkeyConfig['enabled'] ?? true)) {
             $this->valkey = null;
-            $this->promptBuilder = new AgentPromptBuilder();
-            $this->validator = new AgentResponseValidator();
+            $this->promptBuilder = new PromptBuilder();
+            $this->validator = new ResponseValidator();
             return;
         }
 
@@ -46,8 +46,8 @@ final class ConversationService
             error_log("Valkey connection failed: " . $e->getMessage());
         }
 
-        $this->promptBuilder = new AgentPromptBuilder();
-        $this->validator = new AgentResponseValidator();
+        $this->promptBuilder = new PromptBuilder();
+        $this->validator = new ResponseValidator();
     }
 
     /**

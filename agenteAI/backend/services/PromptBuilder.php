@@ -7,7 +7,7 @@ namespace App\AgenteAI\Backend\Services;
 /**
  * Constructor de Prompts para el Agente AI
  */
-final class AgentPromptBuilder
+final class PromptBuilder
 {
     /**
      * Obtener el system prompt base según el intent

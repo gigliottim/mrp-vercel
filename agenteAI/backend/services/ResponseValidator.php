@@ -7,7 +7,7 @@ namespace App\AgenteAI\Backend\Services;
 /**
  * Validador de respuestas del Agente AI
  */
-final class AgentResponseValidator
+final class ResponseValidator
 {
     /**
      * Validar la respuesta de la IA según el intent

@@ -15,7 +15,7 @@ use App\Core\Support\SessionManager;
 /**
  * Controller para el Agente AI
  */
-final class agent_AgentController extends Controller
+final class AgentController extends Controller
 {
     private ?AgentService $service = null;
     private ?AgentConversationService $conversationService = null;

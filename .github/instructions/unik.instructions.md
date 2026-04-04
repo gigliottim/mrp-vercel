@@ -4,14 +4,23 @@ applyTo: '**'
 # 📐 Estándares de Codificación - Template Universal
 
 > **Documento de Referencia Obligatoria**
-> Última actualización: 4 de febrero de 2026
-> Versión: 2.0
+> Última actualización: 4 de abril de 2026
+> Versión: 3.0
+
+## 📋 Changelog de Versiones
+
+| Versión | Fecha | Cambios |
+|---------|-------|---------|
+| 3.0 | 04/04/2026 | Corrección de errores tipográficos, eliminación de caracteres inválidos, estandarización de rutas, agregadas secciones de seguridad, error handling, logging, performance y testing con ejemplos, reglas de infraestructura (Git obligatorio, sin .env.example), estructura mejorada con bootstrap/, exceptions/, contracts/, factories/, storage/, docker/, errors/, navigation/, feature tests, Request/Response/Cache/Logger en core, controllers api/web separados |
+| 2.0 | 04/02/2026 | Versión anterior |
 
 ---
 
 ## 🎯 Objetivo
 
 Este documento establece los **estándares obligatorios** para mantener el código del proyecto limpio, mantenible y escalable. **TODA nueva funcionalidad o refactorización debe seguir estos lineamientos.**
+
+Este template es **genérico y adaptable** a cualquier proyecto PHP. Ajusta las rutas y nombres según la estructura de tu proyecto, pero mantén los principios intactos.
 
 ---
 
@@ -28,33 +37,98 @@ Si un archivo excede 400 líneas:
 
 ---
 
+## 🔧 Reglas de Infraestructura del Proyecto
+
+### **1. Git Obligatorio desde el Inicio**
+- ✅ **TODO proyecto debe tener `.git` inicializado desde el día 1**
+- ✅ Cada proyecto nuevo empieza con `git init`
+- ✅ El repositorio es local: no se usa GitHub/GitLab como intermediario
+- ✅ El flujo es directo: **PC local → VPS/Docker** vía git pull/clone
+
+```bash
+# Al crear un nuevo proyecto, SIEMPRE ejecutar:
+git init
+git add .
+git commit -m "init: proyecto inicial"
+```
+
+### **2. Archivos de Configuración Directos (SIN plantillas)**
+- ✅ Crear `.env` **directamente** con las credenciales reales
+- ✅ Crear `.gitignore` **directamente**
+- ❌ **NO crear** `.env.example`, `.env.template`, `.env.sample` ni similares
+- ❌ **NO crear** archivos de configuración "plantilla" para que otro los complete
+
+**¿Por qué?** Los proyectos se configuran en la PC del desarrollador y se despliegan **directamente** al VPS/Docker. No hay un proceso de CI/CD que requiera plantillas, ni se pasa por servicios como GitHub donde las credenciales deban ocultarse en ejemplos.
+
+```bash
+# ✅ CORRECTO: Crear .env con valores reales desde el inicio
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=mi_proyecto
+DB_USER=root
+DB_PASS=mi_password_real
+
+# ❌ INCORRECTO: Crear .env.example con placeholders
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=your_database_name    # ← Esto NO se necesita
+DB_USER=your_username          # ← Esto NO se necesita
+DB_PASS=your_password          # ← Esto NO se necesita
+```
+
+### **3. Flujo de Despliegue**
+```
+[PC Local: desarrollo] ──git push──> [VPS: git pull] ──> Docker/Producción
+```
+
+- No hay rama `main` que se mergea desde `develop`
+- No hay PRs ni code reviews externos
+- El `.env` en el VPS se configura **una vez** al desplegar por primera vez
+
+---
+
 ## 🎯 Principios de Diseño
 
 - **Máximo 400-500 líneas por archivo** (límite estricto)
 - **Separación de responsabilidades** (SRP)
 - **Modularidad y reutilización**
-- ** Assets externalizados** (no código inline)
+- **Assets externalizados** (no código inline)
 - **Estructura predecible y escalable**
+- **Inyección de dependencias** sobre instanciación directa
+- **Git obligatorio**: Todo proyecto debe tener `.git` inicializado desde el día 1
+- **Archivos de configuración directos**: Crear `.env`, `.gitignore`, etc. directamente (NO crear `.env.example` ni plantillas similares)
 
 ---
 
 ## 📁 Estructura Completa
 
+> 💡 **Nota:** Esta es una estructura de referencia genérica. Cada proyecto puede adaptar los nombres de carpetas según su stack tecnológico, pero **los principios de separación de responsabilidades y límites de líneas son inmutables**.
+
 ```
 project-root/
 │
 ├── app/                          # 🧠 Backend: lógica de la aplicación
-│  ├── core/                     # 🔌 Kernel, configuración, errores, utilidades globales
-│  │  ├── config.php            # Configuración central (DB, rutas, entorno) [200 líneas]
-│  │  ├── Database.php          # Conexión DB (MySQL/PostgreSQL/SQLite) [200 líneas]
-│  │  ├── Router.php            # Enrutador simple (si no usas framework) [200 líneas]
-│  │  └── helpers.php           # Funciones globales seguras (sanitize, format) [200 líneas]
+│  ├── bootstrap/                 # � Arranque de la aplicación
+│  │  ├── app.php               # Inicialización central [150 líneas]
+│  │  ├── routes.php            # Definición de rutas [200 líneas]
+│  │  └── providers.php         # Registro de servicios [200 líneas]
 │  │
-│  ├── controllers/              # ⚠️ DELGADOS →  Solo orquestan flujo
-│  │  ├── {Entity}Controller.php    # Ej: ItemController.php    # Ej: ItemController.php [300 líneas]
-│  │  ├── {Entity}Controller.php    # Ej: DisplayController.php    # Ej: DisplayController.php [300 líneas]
-│  │  └── ...                       # Un controller por entidad principal
-│  │  # ✅  Solo coordinan (validar input → llamar service → responder)
+│  ├── core/                     # 🔌 Kernel y utilidades globales
+│  │  ├── Database.php          # Conexión DB (MySQL/PostgreSQL/SQLite) [200 líneas]
+│  │  ├── Router.php            # Enrutador (si no usas framework) [200 líneas]
+│  │  ├── Request.php           # Wrapper de $_SERVER/$_REQUEST [150 líneas]
+│  │  ├── Response.php          # Wrapper de respuestas HTTP [200 líneas]
+│  │  ├── Logger.php            # Sistema de logging [200 líneas]
+│  │  ├── Cache.php             # Sistema de caching simple [200 líneas]
+│  │  └── helpers.php           # Funciones globales seguras [200 líneas]
+│  │
+│  ├── controllers/              # ⚡ DELGADOS → Solo orquestan flujo
+│  │  ├── api/                  # Controllers para API REST (si aplica)
+│  │  │  └── {Entity}Controller.php    # Ej: ApiItemController.php [300 líneas]
+│  │  ├── web/                  # Controllers para vistas web
+│  │  │  └── {Entity}Controller.php    # Ej: ItemController.php [300 líneas]
+│  │  └── ...                       # Un controller por entidad + contexto
+│  │  # ✅ Solo coordinan (validar input → llamar service → responder)
 │  │  # ❌ NO contienen lógica de negocio ni queries SQL
 │  │
 │  ├── services/                 # 💼 Lógica de negocio pura
@@ -67,23 +141,23 @@ project-root/
 │  │  # ✅ Contienen reglas de negocio, coordinan repositories
 │  │  # ❌ NO acceden directamente a $_POST/$_GET ni a BD
 │  │
-│  ├── repositories/             # 🗄→ Acceso a datos →  solo queries
+│  ├── repositories/             # �️ Acceso a datos → solo queries
 │  │  ├── {Entity}Repository.php    # Ej: ItemRepository.php [400 líneas]
 │  │  └── ...                       # Un repository por tabla/entidad
-│  │  # ✅  Solo métodos CRUD + queries específicas
+│  │  # ✅ Solo métodos CRUD + queries específicas
 │  │  # ❌ NO contienen lógica de negocio
 │  │
 │  ├── models/                   # 📋 Entidades → propiedades y relaciones básicas
 │  │  ├── {Entity}.php          # Ej: Item.php [300 líneas]
 │  │  └── ...
-│  │  # ✅  Solo propiedades, getters, setters, formatters simples
+│  │  # ✅ Solo propiedades, getters, setters, formatters simples
 │  │  # ❌ NO contienen lógica compleja ni queries
 │  │
 │  ├── validators/               # ✔️ Validaciones complejas
 │  │  ├── {Entity}Validator.php # Ej: ItemValidator.php [300 líneas]
 │  │  └── ...
 │  │  # ✅ Reglas de validación específicas del dominio
-│  │  # ❌ NO modifican datos,  Solo validan
+│  │  # ❌ NO modifican datos, solo validan
 │  │
 │  ├── dto/                      # 📦 Data Transfer Objects
 │  │  ├── {Entity}DTO.php       # Ej: ItemDTO.php [200 líneas]
@@ -91,25 +165,51 @@ project-root/
 │  │  # ▪️ Estructuras para transferir datos entre capas
 │  │  # ▪️ No contienen lógica
 │  │
-│  ├── middleware/               # 🛡→ Interceptores (auth, logging, CORS)
+│  ├── middleware/               # 🛡️ Interceptores (auth, logging, CORS)
 │  │  ├── AuthMiddleware.php    # [400 líneas]
 │  │  ├── CorsMiddleware.php    # [400 líneas]
+│  │  ├── RateLimitMiddleware.php # [200 líneas]
 │  │  └── ...
+│  │
+│  ├── exceptions/               # ❌ Excepciones personalizadas
+│  │  ├── NotFoundException.php     # [50 líneas]
+│  │  ├── UnauthorizedException.php # [50 líneas]
+│  │  ├── ValidationException.php   # [100 líneas]
+│  │  └── ...
+│  │  # ▪️ Excepciones tipadas del dominio
+│  │  # ▪️ NO usar \Exception genérico en capa de negocio
+│  │
+│  ├── contracts/                # 📐 Interfaces y contratos
+│  │  ├── {Entity}RepositoryInterface.php  # [100 líneas]
+│  │  ├── {Entity}ServiceInterface.php     # [100 líneas]
+│  │  └── ...
+│  │  # ▪️ Interfaces para inyección de dependencias
+│  │  # ▪️ Permitir mocking en tests
+│  │
+│  ├── factories/                # 🏭 Fábricas de objetos
+│  │  ├── {Entity}Factory.php   # Creación compleja de entidades [200 líneas]
+│  │  └── ...
+│  │  # ▪️ Centralizan lógica de creación de objetos
+│  │  # ▪️ Útiles para tests y seeds
 │  │
 │  └── helpers/                  # 🔧 Utilidades específicas del proyecto
 │      ├── StringHelper.php      # [300 líneas]
 │      ├── DateHelper.php        # [300 líneas]
+│      ├── FileHelper.php        # [300 líneas]
 │      └── ...
 │
 │
 ├── database/                     # 🛠️ Gestión de base de datos
-│  ├── migrations/               # 🔄  Scripts SQL versionados
+│  ├── migrations/               # 🔄 Scripts SQL versionados
 │  │  ├── 001_initial_schema.sql
 │  │  ├── 002_add_{feature}.sql # Nomenclatura: {número}_{descripción}.sql
 │  │  └── ...
-│  ├── seeds/                    # 🌱 Datos iniciales (opcional)
+│  ├── seeds/                    # 🌱 Datos iniciales / prueba
 │  │  ├── default_users.sql
 │  │  └── sample_data.sql
+│  ├── factories/                # 🏭 Factories para tests (PHP)
+│  │  ├── UserFactory.php
+│  │  └── ...
 │  └── schema/                   # 📐 Diagramas o dumps de referencia
 │      └── schema.sql            # Schema completo actualizado
 │
@@ -147,7 +247,7 @@ project-root/
 │  │  │          ├── items.bundle.min.css
 │  │  │          └── displays.bundle.min.css
 │  │  │
-│  │  ├── js/                   # Java Script modular
+│  │  ├── js/                   # JavaScript modular
 │  │  │  ├── core/             # Utilidades globales [200 líneas c/u]
 │  │  │  │  ├── utils.js
 │  │  │  │  ├── api-client.js
@@ -179,16 +279,17 @@ project-root/
 │  │  └── vendor/               # 📦 Librerías externas (vía CDN o local)
 │  │      ├── bootstrap/
 │  │      ├── bootstrap-icons/
-│  │      ├── jquery/           # ( Solo si es realmente necesario)
-│  │      └── ...
+│  │      └── ...               # ⚠️ Solo librerías frontend, NUNCA PHP
 │  │
 │  └── uploads/                  # 📤 Archivos subidos por usuarios
-│      ├── photos/               # Protegido con .htaccess si es necesario
+│      ├── .gitkeep              # Mantener carpeta en git
+│      ├── .htaccess             # Proteger ejecución de PHP
+│      ├── photos/
 │      ├── documents/
 │      └── temp/                 # Temporal, limpieza automática
 │
 │
-├── views/                        # 🖼️ Plantillas de frontend (PHP puro o templating)
+├── views/                        # 🖼️ Plantillas de presentación (PHP puro o templating)
 │  ├── layouts/                  # 🎭 Plantillas base [200 líneas c/u]
 │  │  ├── admin_layout.php      # Layout para panel administrativo
 │  │  ├── public_layout.php     # Layout para área pública
@@ -216,8 +317,13 @@ project-root/
 │  │      ├── _confirm_modal.php
 │  │      ├── _form_modal.php
 │  │      └── _info_modal.php
-│  │  # │Prefijo con _ para indicar que son parciales
-│  │  # │Reciben parámetros vía variables PHP
+│  │  ├── navigation/
+│  │  │  ├── _sidebar.php
+│  │  │  ├── _breadcrumb.php
+│  │  │  └── _tabs.php
+│  │  # ▪️ Prefijo con _ para indicar que son parciales
+│  │  # ▪️ Reciben parámetros vía variables PHP
+│  │  # ▪️ NO deben acceder a BD ni llamar servicios
 │  │
 │  ├── pages/                    # 📄 Páginas completas (organizadas por contexto)
 │  │  ├── admin/                # Panel administrativo
@@ -251,38 +357,58 @@ project-root/
 │  │  │  ├── forgot-password.php
 │  │  │  └── reset-password.php
 │  │  │
+│  │  ├── errors/               # Páginas de error
+│  │  │  ├── 404.php
+│  │  │  ├── 500.php
+│  │  │  └── 403.php
+│  │  │
 │  │  └── public/               # Área pública [200 líneas c/u]
 │  │      ├── home.php
 │  │      ├── about.php
 │  │      └── contact.php
 │  │
-│  └── partials/                 # ⚠️  Solo para código legacy
+│  └── partials/                 # ⚠️ Solo para código legacy
 │      └── ...                   # 🚨 MIGRAR a components/ cuando se refactorice
-│      # │NO crear nuevos archivos aquí
+│      # ❌ NO crear nuevos archivos aquí
+│
+├── storage/                      # 💾 Almacenamiento de la aplicación
+│  ├── logs/                     # 📝 Logs de la aplicación
+│  │  ├── app.log
+│  │  ├── error.log
+│  │  └── access.log
+│  ├── cache/                    # ⚡ Archivos de cache
+│  │  └── .gitkeep
+│  ├── sessions/                 # 🔒 Sesiones (si no se usan cookies)
+│  │  └── .gitkeep
+│  └── temp/                     # 📁 Temporal del sistema
+│      └── .gitkeep
 │
 │
-├──  Scripts/                      # 🛠│Herramientas de desarrollo
+├── scripts/                      # 🛠️ Herramientas de desarrollo
 │  ├── validate-code-standards.ps1   # Validador automático de líneas/estructura
 │  ├── validate-code-standards.sh    # Versión Unix
 │  ├── db-migrate.php                # Ejecuta migraciones desde CLI
 │  ├── db-rollback.php               # Rollback de migraciones
-│  ├── backup-db.sh                  #  Script de respaldo automático
-│  └── generate-docs.php             # Genera  Documentación automática
+│  ├── backup-db.sh                  # Script de respaldo automático
+│  ├── generate-docs.php             # Genera documentación automática
+│  └── clear-cache.sh                # Limpia cache y logs antiguos
 │
-├── Tests/                        # 🧪 Pruebas automatizadas
-│  ├── unit/                     #  Tests unitarios (PHPUnit)
+├── tests/                        # 🧪 Pruebas automatizadas
+│  ├── unit/                     # Tests unitarios (PHPUnit)
 │  │  ├── services/
 │  │  ├── repositories/
-│  │  └── validators/
-│  ├── integration/              #  Tests de integración
+│  │  ├── validators/
+│  │  └── models/
+│  ├── integration/              # Tests de integración
 │  │  ├── controllers/
 │  │  └── api/
+│  ├── feature/                  # Tests de funcionalidad completa
 │  ├── fixtures/                 # Datos de prueba
-│  │  ├── sample_items.json
+│  │  ├── sample_data.json
 │  │  └── test_users.sql
-│  └── bootstrap.php             # Inicialización de  Tests
+│  └── bootstrap.php             # Inicialización de tests
 │
-├── docs/                         # 📚  Documentación técnica
+├── docs/                         # 📚 Documentación técnica
 │  ├── REFACTORIZACION_[NOMBRE]_[FECHA].md   # Doc de refactorizaciones
 │  ├── RESUMEN_REFACTORIZACIONES_[FECHA].md  # Resumen general
 │  ├── API.md                                # Contratos de endpoints
@@ -291,21 +417,28 @@ project-root/
 │
 ├── .github/                      # 🐙 Configuración GitHub (opcional)
 │  ├── instructions/             # Instrucciones para IA/equipo
-│  │  └── project.instructions.md
-│  └── workflows/                # CI/CD (GitHub Actions)
-│      ├──  Tests.yml
+│  │  └── unik.instructions.md
+│  └── workflows/                # CI/CD (GitHub Actions, si aplica)
+│      ├── tests.yml
 │      └── deploy.yml
 │
-├── config/                       # ⚙️ Archivos de configuración
-│  ├── database.php              # Config específica de BD
+├── config/                       # ⚙️ Archivos de configuración PHP
+│  ├── database.php              # Config específica de BD (opcional si ya está en .env)
 │  ├── mail.php                  # Config de email (opcional)
-│  └── app.php                   # Config general de la app
+│  └── app.php                   # Config general (opcional si ya está en .env)
+│  # ⚠️ NOTA: Si .env cubre toda la configuración, esta carpeta es opcional
 │
-├── .env.example                  # 🔑 Plantilla de variables de entorno
-├── .env                          # 🔐 Variables de entorno reales (NO en repo)
-├── .gitignore                    # Ignorar logs, uploads, .env, node_modules
+├── docker/                       # 🐳 Configuración Docker (si aplica)
+│  ├── Dockerfile
+│  ├── docker-compose.yml
+│  └── nginx/
+│      └── default.conf
+│
+├── .env                          # 🔐 Variables de entorno (configuración directa, sin plantillas)
+├── .gitignore                    # Ignorar storage, vendor, node_modules
 ├── .htaccess                     # Configuración Apache (si aplica)
 ├── composer.json                 # Dependencias PHP (si usas Composer)
+├── composer.lock                 # Versiones congeladas de dependencias
 ├── package.json                  # Dependencias JS (si usas npm/webpack)
 └── README.md                     # Instrucciones de instalación y arquitectura
 ```
@@ -327,12 +460,12 @@ project-root/
 | **Vista Principal** | 200 líneas | 250 | Dividir en includes/componentes |
 | **Componente Vista** | 150 líneas | 180 | Simplificar o dividir |
 | **Layout** | 200 líneas | 250 | Extraer parciales |
-| **Java Script** | 300 líneas | 350 | Modularizar |
+| **JavaScript** | 300 líneas | 350 | Modularizar |
 | **CSS** | 400 líneas | 450 | Dividir por componentes |
 
 ---
 
-## │Reglas de Oro
+## 📜 Reglas de Oro
 
 ### **1. Límite Máximo Estricto**
 - **Máximo absoluto:** 400-500 líneas por archivo
@@ -340,13 +473,13 @@ project-root/
 - Excepciones: **Ninguna**
 
 ### **2. Separación de Responsabilidades**
-- **Controllers:**  Solo coordinan (validar │service → responder)
-- **Services:**  Solo lógica de negocio
-- **Repositories:**  solo queries SQL
-- **Models:**  Solo propiedades y relaciones
-- **Views:**  Solo presentación (sin lógica)
+- **Controllers:** Solo coordinan (validar input → llamar service → responder)
+- **Services:** Solo lógica de negocio
+- **Repositories:** Solo queries SQL
+- **Models:** Solo propiedades y relaciones
+- **Views:** Solo presentación (sin lógica)
 
-### **3.  Assets externalizados**
+### **3. Assets externalizados**
 - **❌ PROHIBIDO:** Código JS/CSS inline en vistas
 - **✅ CORRECTO:** Archivos externos en `public/assets/`
 
@@ -364,11 +497,11 @@ project-root/
 
 #### **Vistas:**
 - Vista principal: `{entity}.php` o `index.php`
-- Parcial/Include: `_{de Scriptive}.php` (con prefijo `_`)
+- Parcial/Include: `_{descriptive}.php` (con prefijo `_`)
 - Layout: `{context}_layout.php`
 - Componente: `_{component}.php`
 
-#### **Java Script:**
+#### **JavaScript:**
 - Module: `{entity}-{purpose}.js` (ej: `item-form-validation.js`)
 - Component: `{component}.js` (ej: `modal.js`)
 - Utility: `{purpose}.js` (ej: `utils.js`)
@@ -393,9 +526,9 @@ class ItemController {
 ### **2. Código Inline**
 ```php
 // ❌ PROHIBIDO
-< Script>
+<script>
     // 500 líneas de JS aquí
-</ Script>
+</script>
 
 <style>
     /* 300 líneas de CSS aquí */
@@ -441,9 +574,9 @@ if ($user->role === 'admin' && $item->status === 'active' && ...) {
    - [ ] Assets (JS/CSS externos)
 
 3. **Validar límites**
-   - [ ] Ejecutar `validate-code-standards.ps1`
-   - [ ]  Ningún archivo excede 400 líneas
-   - [ ]  Tests pasan
+   - [ ] Ejecutar `scripts/validate-code-standards.sh`
+   - [ ] Ningún archivo excede 400 líneas
+   - [ ] Tests pasan
 
 4. **Documentar**
    - [ ] Actualizar README si aplica
@@ -503,7 +636,516 @@ Assets:
 
 ---
 
-## 🏗│Patrones de Arquitectura (Ejemplos de Código)
+## 🔒 Seguridad (Obligatorio)
+
+### **1. SQL Injection**
+- ✅ Usar **siempre** prepared statements (query parameterized)
+- ❌ NUNCA concatenar inputs del usuario en queries SQL
+
+```php
+// ✅ CORRECTO
+$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+$stmt->execute([$email]);
+
+// ❌ PROHIBIDO
+$query = "SELECT * FROM users WHERE email = '" . $_POST['email'] . "'";
+```
+
+### **2. XSS (Cross-Site Scripting)**
+- ✅ Escapar TODA salida HTML con `htmlspecialchars()`
+- ❌ NUNCA imprimir datos del usuario sin sanitizar
+
+```php
+// ✅ CORRECTO
+echo htmlspecialchars($userInput, ENT_QUOTES, 'UTF-8');
+
+// ❌ PROHIBIDO
+echo $_POST['comment'];
+```
+
+### **3. CSRF Protection**
+- ✅ Incluir token CSRF en todos los formularios
+- ✅ Validar token en el backend antes de procesar
+
+```php
+// Generar token
+$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+// Validar token
+if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    throw new \Exception('Invalid CSRF token');
+}
+```
+
+### **4. File Upload Security**
+- ✅ Validar tipo MIME, no solo extensión
+- ✅ Limitar tamaño máximo
+- ✅ Usar nombres de archivo aleatorios
+- ❌ NUNCA permitir ejecución de archivos subidos
+
+```php
+// ✅ CORRECTO
+$finfo = new \finfo(FILEINFO_MIME_TYPE);
+$mime = $finfo->file($file['tmp_name']);
+$allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+
+if (!in_array($mime, $allowed)) {
+    throw new \Exception('Invalid file type');
+}
+
+if ($file['size'] > 10 * 1024 * 1024) { // 10MB
+    throw new \Exception('File too large');
+}
+
+$filename = bin2hex(random_bytes(16)) . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
+```
+
+### **5. Password Hashing**
+- ✅ Usar `password_hash()` con PASSWORD_ARGON2ID
+- ❌ NUNCA usar MD5, SHA1 o texto plano
+
+```php
+// Hashear
+$hash = password_hash($password, PASSWORD_ARGON2ID);
+
+// Verificar
+if (password_verify($password, $hash)) {
+    // OK
+}
+```
+
+---
+
+## ⚠️ Manejo de Errores
+
+### **1. Excepciones Personalizadas**
+```php
+<?php
+namespace App\Exceptions;
+
+class NotFoundException extends \Exception
+{
+    public function __construct(string $entity = 'Resource')
+    {
+        parent::__construct("{$entity} not found", 404);
+    }
+}
+
+class UnauthorizedException extends \Exception
+{
+    public function __construct(string $message = 'Unauthorized')
+    {
+        parent::__construct($message, 401);
+    }
+}
+```
+
+### **2. Error Handler Global**
+```php
+// En core/config.php o similar
+set_exception_handler(function (\Throwable $e) {
+    // Log del error
+    error_log($e->getMessage());
+
+    // Response apropiada según contexto
+    if (isApiRequest()) {
+        http_response_code($e->getCode() ?: 500);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $e->getMessage()]);
+    } else {
+        // Vista de error para usuarios
+        include 'views/pages/error.php';
+    }
+});
+```
+
+### **3. Validación Temprana (Fail Fast)**
+```php
+// ✅ CORRECTO: Validar al inicio, fallar rápido
+public function update(int $id, array $data): bool
+{
+    if ($id <= 0) {
+        throw new \InvalidArgumentException('Invalid ID');
+    }
+
+    if (empty($data)) {
+        throw new \InvalidArgumentException('No data provided');
+    }
+
+    // ... lógica normal
+}
+```
+
+---
+
+## 📝 Logging
+
+### **1. Logger Simple**
+```php
+<?php
+namespace App\Core;
+
+class Logger
+{
+    private const LOG_FILE = __DIR__ . '/../../logs/app.log';
+
+    public static function info(string $message, array $context = []): void
+    {
+        self::log('INFO', $message, $context);
+    }
+
+    public static function error(string $message, array $context = []): void
+    {
+        self::log('ERROR', $message, $context);
+    }
+
+    public static function warning(string $message, array $context = []): void
+    {
+        self::log('WARNING', $message, $context);
+    }
+
+    private static function log(string $level, string $message, array $context = []): void
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $contextStr = empty($context) ? '' : ' ' . json_encode($context);
+        $logLine = "[{$timestamp}] [{$level}] {$message}{$contextStr}" . PHP_EOL;
+
+        file_put_contents(self::LOG_FILE, $logLine, FILE_APPEND | LOCK_EX);
+    }
+}
+```
+
+### **2. Uso**
+```php
+use App\Core\Logger;
+
+// En Services
+Logger::info("User created", ['user_id' => $userId, 'email' => $email]);
+Logger::error("Payment failed", ['order_id' => $orderId, 'reason' => $error]);
+```
+
+### **3. Estructura de Logs**
+```
+logs/
+├── app.log          # Log general
+├── error.log        # Solo errores
+├── access.log       # Requests HTTP
+└── debug.log        # Debug (solo development)
+```
+
+---
+
+## ⚡ Performance (Mejores Prácticas)
+
+### **1. Database: Evitar N+1 Queries**
+```php
+// ❌ PROHIBIDO: N+1 queries
+$items = $itemRepo->findAll();
+foreach ($items as $item) {
+    $category = $categoryRepo->findById($item['category_id']); // Query por cada item
+}
+
+// ✅ CORRECTO: JOIN o eager loading
+$items = $itemRepo->findAllWithCategories(); // Single query con JOIN
+```
+
+### **2. Indexar Columnas de Búsqueda**
+```sql
+-- ✅ Agregar índices en columnas usadas en WHERE, ORDER BY, JOIN
+CREATE INDEX idx_items_status ON items(status);
+CREATE INDEX idx_items_created ON items(created_at);
+CREATE INDEX idx_users_email ON users(email);
+```
+
+### **3. Caching Simple**
+```php
+<?php
+class Cache
+{
+    private static array $store = [];
+
+    public static function remember(string $key, callable $callback, int $ttl = 3600)
+    {
+        if (isset(self::$store[$key]) && self::$store[$key]['expires'] > time()) {
+            return self::$store[$key]['data'];
+        }
+
+        $data = $callback();
+        self::$store[$key] = [
+            'data' => $data,
+            'expires' => time() + $ttl
+        ];
+
+        return $data;
+    }
+}
+
+// Uso
+$categories = Cache::remember('all_categories', fn() => $categoryRepo->findAll(), 3600);
+```
+
+### **4. Paginación Obligatoria**
+```php
+// ✅ CORRECTO: Siempre paginar listados
+public function findAll(int $page = 1, int $perPage = 20, array $filters = []): array
+{
+    $offset = ($page - 1) * $perPage;
+
+    $query = "SELECT * FROM items WHERE 1=1";
+    // ... aplicar filtros ...
+    $query .= " LIMIT {$perPage} OFFSET {$offset}";
+
+    return Database::fetchAll($query);
+}
+```
+
+### **5. Optimizar Assets**
+- ✅ Minificar CSS/JS para producción
+- ✅ Usar lazy loading para imágenes
+- ✅ Comprimir imágenes antes de subir
+- ✅ Usar CDN para archivos estáticos
+
+---
+
+## 🧪 Testing con Ejemplos
+
+### **1. Test Unitario de Service**
+```php
+<?php
+namespace Tests\Unit\Services;
+
+use PHPUnit\Framework\TestCase;
+use App\Services\EntityService;
+
+class EntityServiceTest extends TestCase
+{
+    private EntityService $service;
+
+    protected function setUp(): void
+    {
+        $this->service = new EntityService();
+    }
+
+    public function test_create_valid_entity(): void
+    {
+        $data = [
+            'title' => 'Test Entity',
+            'description' => 'Test Description',
+            'status' => 'active'
+        ];
+
+        $id = $this->service->create($data);
+
+        $this->assertIsInt($id);
+        $this->assertGreaterThan(0, $id);
+    }
+
+    public function test_create_fails_without_title(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service->create(['description' => 'No title']);
+    }
+
+    public function test_find_nonexistent_entity(): void
+    {
+        $result = $this->service->findById(99999);
+        $this->assertNull($result);
+    }
+}
+```
+
+### **2. Test de Integración de Controller**
+```php
+<?php
+namespace Tests\Integration\Controllers;
+
+use PHPUnit\Framework\TestCase;
+
+class EntityControllerTest extends TestCase
+{
+    public function test_get_index_returns_200(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/api/entities';
+
+        ob_start();
+        // Ejecutar router/controller
+        $output = ob_get_clean();
+
+        $this->assertResponseCode(200);
+        $data = json_decode($output, true);
+        $this->assertArrayHasKey('success', $data);
+    }
+}
+```
+
+### **3. Test de Validator**
+```php
+<?php
+namespace Tests\Unit\Validators;
+
+use PHPUnit\Framework\TestCase;
+use App\Validators\EntityValidator;
+
+class EntityValidatorTest extends TestCase
+{
+    private EntityValidator $validator;
+
+    protected function setUp(): void
+    {
+        $this->validator = new EntityValidator();
+    }
+
+    public function test_valid_data_passes(): void
+    {
+        $data = ['title' => 'Valid', 'status' => 'active'];
+        $result = $this->validator->validate($data);
+        $this->assertEquals($data, $result);
+    }
+
+    /**
+     * @dataProvider invalidTitleProvider
+     */
+    public function test_invalid_title_fails(array $data): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->validator->validate($data);
+    }
+
+    public static function invalidTitleProvider(): array
+    {
+        return [
+            'empty title' => [['title' => '']],
+            'too long title' => [['title' => str_repeat('a', 256)]],
+            'missing title' => [[]],
+        ];
+    }
+}
+```
+
+### **4. Coverage Mínimo Requerido**
+| Capa | Coverage Mínimo |
+|------|----------------|
+| Services | 80% |
+| Validators | 90% |
+| Repositories | 70% |
+| Controllers | 60% |
+| Models | 70% |
+
+---
+
+## 🔄 Flujo de Capas (Diagrama)
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    HTTP Request                      │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                   Controller                         │
+│  (Validar input, coordinar, responder)              │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                   Service                            │
+│  (Lógica de negocio, reglas, validaciones)          │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                   Repository                         │
+│  (Queries SQL, acceso a datos)                      │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                   Database                           │
+└─────────────────────────────────────────────────────┘
+```
+
+**Regla:** Cada capa solo comunica con la capa inmediatamente inferior.
+- ❌ Controller → Database (saltar Service/Repository)
+- ❌ View → Service (usar Controller)
+- ✅ Controller → Service → Repository → Database
+
+---
+
+## 🌐 Convenciones de API REST (Si aplica)
+
+### **1. Endpoints**
+```
+GET    /api/{resource}          # Listar (paginado)
+GET    /api/{resource}/{id}     # Obtener uno
+POST   /api/{resource}          # Crear
+PUT    /api/{resource}/{id}     # Actualizar completo
+PATCH  /api/{resource}/{id}     # Actualizar parcial
+DELETE /api/{resource}/{id}     # Eliminar
+```
+
+### **2. Formato de Respuesta**
+```php
+// Success
+{
+    "success": true,
+    "data": { ... },
+    "message": "Operation completed"
+}
+
+// Error
+{
+    "success": false,
+    "error": "Error message",
+    "errors": { "field": "validation error" }  // opcional
+}
+
+// Paginated
+{
+    "success": true,
+    "data": [...],
+    "pagination": {
+        "current_page": 1,
+        "per_page": 20,
+        "total": 100,
+        "last_page": 5
+    }
+}
+```
+
+### **3. HTTP Status Codes**
+| Code | Uso |
+|------|-----|
+| 200 | GET exitoso |
+| 201 | Recurso creado (POST) |
+| 204 | DELETE exitoso sin body |
+| 400 | Request inválido |
+| 401 | No autenticado |
+| 403 | Sin permisos |
+| 404 | Recurso no encontrado |
+| 422 | Error de validación |
+| 500 | Error del servidor |
+
+---
+
+## 🚀 Deployment Checklist
+
+- [ ] ✅ Variables de entorno configuradas (`.env.production`)
+- [ ] ✅ `APP_ENV=production` y `APP_DEBUG=false`
+- [ ] ✅ Migraciones ejecutadas en producción
+- [ ] ✅ Assets minificados (CSS/JS)
+- [ ] ✅ Logs configurados y con permisos
+- [ ] ✅ HTTPS habilitado
+- [ ] ✅ Backups de DB programados
+- [ ] ✅ Rate limiting configurado
+- [ ] ✅ Validación de estándares ejecutada
+- [ ] ✅ Todos los tests pasan
+- [ ] ✅ Documentación de API actualizada
+
+---
+
+## 🏗️ Patrones de Arquitectura (Ejemplos de Código)
 
 ### **1. Controller (Delgado)**
 
@@ -639,9 +1281,9 @@ class EntityRepository
     public function create(array $data): int
     {
         return Database::query(
-            "INSERT INTO entities (title, de Scription, status, created_at)
+            "INSERT INTO entities (title, description, status, created_at)
              VALUES (?, ?, ?, NOW())",
-            [$data['title'], $data['de Scription'], $data['status'] ?? 'active']
+            [$data['title'], $data['description'], $data['status'] ?? 'active']
         );
     }
 
@@ -665,7 +1307,7 @@ class EntityRepository
         }
 
         if (!empty($filters['search'])) {
-            $query .= " AND (title LIKE ? OR de Scription LIKE ?)";
+            $query .= " AND (title LIKE ? OR description LIKE ?)";
             $search = '%' . $filters['search'] . '%';
             $params[] = $search;
             $params[] = $search;
@@ -677,9 +1319,9 @@ class EntityRepository
     public function update(int $id, array $data): bool
     {
         return Database::query(
-            "UPDATE entities SET title = ?, de Scription = ?, status = ?, updated_at = NOW()
+            "UPDATE entities SET title = ?, description = ?, status = ?, updated_at = NOW()
              WHERE id = ?",
-            [$data['title'], $data['de Scription'], $data['status'], $id]
+            [$data['title'], $data['description'], $data['status'], $id]
         ) > 0;
     }
 
@@ -721,12 +1363,12 @@ class Entity
 {
     public int $id;
     public string $title;
-    public ?string $de Scription;
+    public ?string $description;
     public string $status;
     public \DateTime $createdAt;
     public array $attributes = [];
 
-    //  Solo getters, setters y formatters simples
+    // Solo getters, setters y formatters simples
     public function getFormattedDate(): string
     {
         return $this->createdAt->format('d/m/Y H:i');
@@ -742,7 +1384,7 @@ class Entity
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'de Scription' => $this->de Scription,
+            'description' => $this->description,
             'status' => $this->status,
             'created_at' => $this->createdAt->format('Y-m-d H:i:s')
         ];
@@ -774,9 +1416,9 @@ class EntityValidator
             $errors['title'] = 'Title must be less than 255 characters';
         }
 
-        // Validar de Scription
-        if (!empty($data['de Scription']) && strlen($data['de Scription']) > 1000) {
-            $errors['de Scription'] = 'De Scription must be less than 1000 characters';
+        // Validar description
+        if (!empty($data['description']) && strlen($data['description']) > 1000) {
+            $errors['description'] = 'Description must be less than 1000 characters';
         }
 
         // Validar status
@@ -798,9 +1440,9 @@ class EntityValidator
 
 ---
 
-## 🚀  Script de Validación Automática
+## 🚀 Script de Validación Automática
 
-### **PowerShell ( Scripts/validate-code-standards.ps1)**
+### **PowerShell (scripts/validate-code-standards.ps1)**
 
 ```powershell
 # Validar estándares de código
@@ -844,7 +1486,7 @@ if ($violations.Count -eq 0) {
 }
 ```
 
-### **Bash ( Scripts/validate-code-standards.sh)**
+### **Bash (scripts/validate-code-standards.sh)**
 
 ```bash
 #!/bin/bash
@@ -890,12 +1532,12 @@ fi
 
 ```bash
 # PowerShell
-.\ Scripts\validate-code-standards.ps1
-.\ Scripts\validate-code-standards.ps1 -Path "app/services" -MaxLines 450
+.\scripts\validate-code-standards.ps1
+.\scripts\validate-code-standards.ps1 -Path "app/services" -MaxLines 450
 
 # Bash
-./ Scripts/validate-code-standards.sh
-./ Scripts/validate-code-standards.sh app/services
+./scripts/validate-code-standards.sh
+./scripts/validate-code-standards.sh app/services
 ```
 
 ---
@@ -915,7 +1557,7 @@ Copia este template cuando implementes una nueva feature:
   - [ ] Repository
   - [ ] Model
   - [ ] View
-  - [ ] Java Script
+  - [ ] JavaScript
   - [ ] CSS
 - [ ] **Archivos a crear:** (listar)
 - [ ] **Archivos a modificar:** (listar)
@@ -976,7 +1618,7 @@ Assets:
 - [ ] Verificar límites de líneas
 
 **Fase 4: Assets**
-- [ ] Crear Java Script modularizado
+- [ ] Crear JavaScript modularizado
 - [ ] Crear CSS modularizado
 - [ ] Vincular assets en vistas
 - [ ] Verificar límites de líneas
@@ -996,12 +1638,12 @@ Assets:
 ### 5. Validación Final
 
 - [ ] ✅ Ningún archivo excede 400 líneas
-- [ ] │ Código sigue patrones establecidos
+- [ ] ✅ Código sigue patrones establecidos
 - [ ] ✅ Assets externalizados (no inline)
-- [ ] │ Tests pasan
+- [ ] ✅ Tests pasan
 - [ ] ✅ Documentación actualizada
-- [ ] │ Script `validate-code-standards` ejecutado
-- [ ] │ Code review realizado
+- [ ] ✅ Script `validate-code-standards` ejecutado
+- [ ] ✅ Code review realizado
 
 ### 6. Notas Adicionales
 
@@ -1098,7 +1740,7 @@ git add docs/REFACTORIZACION_[NOMBRE]_[FECHA].md
 git commit -m "docs: agregar  Documentación de refactorización [nombre]
 
  Documentación técnica que incluye:
-- Métricas: X,XXX │Y,YYY líneas (-Z%)
+- Métricas: X,XXX / Y,YYY líneas (-Z%)
 - Arquitectura modular con diagramas
 - Descripción de cada módulo
 - Flujo de inicialización
@@ -1115,9 +1757,9 @@ git add docs/RESUMEN_REFACTORIZACIONES_[FECHA].md
 git commit -m "docs: actualizar resumen general con [nombre]
 
 Actualiza métricas totales:
-- Total refactorizado: X,XXX │Y,YYY líneas (N módulos)
-- Promedio por archivo: XXX │YYY líneas
-- Archivos que excedían límites: X │0
+- Total refactorizado: X,XXX / Y,YYY líneas (N módulos)
+- Promedio por archivo: XXX / YYY líneas
+- Archivos que excedían límites: X / 0
 
 Agrega sección de [funcionalidad]:
 - N módulos especializados creados
@@ -1152,10 +1794,10 @@ git status
 
 ### **⚠️ NOTA CRÍTICA:**
 
-│ Los  Commits deben crearse **automáticamente al finalizar refactorización**
-│**No esperar** a que el usuario lo solicite explícitamente
-│Seguir **siempre** la estructura de 4  Commits
-│Usar mensajes de Scriptivos siguiendo **Conventional  Commits**
+- ✅ Los Commits deben crearse **automáticamente al finalizar refactorización**
+- ✅ **No esperar** a que el usuario lo solicite explícitamente
+- ✅ Seguir **siempre** la estructura de 4 Commits
+- ✅ Usar mensajes descriptivos siguiendo **Conventional Commits**
 
 ---
 
@@ -1184,14 +1826,14 @@ Antes de hacer `git commit`, verifica:
 ### **Validar Estándares:**
 ```powershell
 # Windows (PowerShell)
-.\ Scripts\validate-code-standards.ps1
+.\scripts\validate-code-standards.ps1
 
 # Con parámetros personalizados
-.\ Scripts\validate-code-standards.ps1 -Path "app/services" -MaxLines 450
+.\scripts\validate-code-standards.ps1 -Path "app/services" -MaxLines 450
 
 # Unix/Linux/Mac (Bash)
-./ Scripts/validate-code-standards.sh
-./ Scripts/validate-code-standards.sh app/services
+./scripts/validate-code-standards.sh
+./scripts/validate-code-standards.sh app/services
 ```
 
 ### **Ejecutar Tests:**
@@ -1203,25 +1845,25 @@ Antes de hacer `git commit`, verifica:
 ./vendor/bin/phpunit --coverage-html coverage/
 
 # Solo un test específico
-./vendor/bin/phpunit Tests/unit/Services/EntityServiceTest.php
+./vendor/bin/phpunit tests/unit/Services/EntityServiceTest.php
 ```
 
 ### **Migrar Base de Datos:**
 ```bash
 # Ejecutar migración
-php  Scripts/db-migrate.php
+php scripts/db-migrate.php
 
 # Rollback última migración
-php  Scripts/db-rollback.php
+php scripts/db-rollback.php
 
 # Ver status de migraciones
-php  Scripts/db-status.php
+php scripts/db-status.php
 ```
 
 ### **Backup de Base de Datos:**
 ```bash
 # Unix/Linux
-./ Scripts/backup-db.sh
+./scripts/backup-db.sh
 
 # Windows (usando MySQL)
 mysqldump -u root -p database_name > backup_$(date +%Y%m%d).sql
@@ -1238,7 +1880,7 @@ Crear archivo `.git/hooks/pre-commit`:
 echo "🔍 Validando estándares de código..."
 
 # Ejecutar validador
-./ Scripts/validate-code-standards.sh
+./scripts/validate-code-standards.sh
 
 # Si falla, abortar commit
 if [ $? -ne 0 ]; then
@@ -1247,7 +1889,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "│Validación exitosa"
+echo "✅ Validación exitosa"
 exit 0
 ```
 
@@ -1305,6 +1947,9 @@ chmod +x .git/hooks/pre-commit
 
 ## 📄 Estructura de .env (Ejemplo)
 
+> ⚠️ **IMPORTANTE**: Este archivo se crea **directamente con valores reales**, no es una plantilla.
+> Cada entorno (PC local, VPS) tiene su propio `.env` con sus credenciales específicas.
+
 ```env
 # Configuración de Base de Datos
 DB_HOST=localhost
@@ -1341,10 +1986,10 @@ API_KEY_EXTERNAL_SERVICE=your-api-key
 ## 🗂│.gitignore (Ejemplo)
 
 ```gitignore
-# Variables de entorno
-.env
-.env.local
-.env.production
+# Variables de entorno (NO commitear si contiene credenciales sensibles)
+# Nota: En este flujo de trabajo, .env SÍ se incluye en el repo
+# ya que el despliegue es directo PC → VPS sin pasar por GitHub
+# .env
 
 # Dependencias
 /vendor/
@@ -1419,8 +2064,9 @@ desktop.ini
 
 2. **Configurar variables de entorno**
    ```bash
-   cp .env.example .env
-   # Editar .env con tus credenciales
+   # El archivo .env ya existe con valores reales
+   # Solo ajustar si las credenciales del entorno son distintas
+   nano .env
    ```
 
 3. **Instalar dependencias**
@@ -1437,7 +2083,7 @@ desktop.ini
 
 5. **Ejecutar migraciones**
    ```bash
-   php  Scripts/db-migrate.php
+   php scripts/db-migrate.php
    ```
 
 6. **Iniciar servidor**
@@ -1460,32 +2106,32 @@ project/
 ├── public/       # Assets y punto de entrada
 ├── views/        # Plantillas HTML/PHP
 ├── database/     # Migraciones SQL
-├── Tests/        #  Tests automatizados
+├── tests/        # Tests automatizados
 └── docs/         #  Documentación
 ```
 
 ## 🧪 Testing
 
 ```bash
-# Ejecutar todos los  Tests
+# Ejecutar todos los tests
 ./vendor/bin/phpunit
 
 # Con coverage
 ./vendor/bin/phpunit --coverage-html coverage/
 ```
 
-## 🛠│Validar Estándares
+## 🛠️ Validar Estándares
 
 ```bash
-# Validar que  Ningún archivo exceda 400 líneas
-.\ Scripts\validate-code-standards.ps1
+# Validar que ningún archivo exceda 400 líneas
+.\scripts\validate-code-standards.ps1
 ```
 
 ## 📝 Contribuir
 
 1. Fork el proyecto
 2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`)
-3. Sigue los estándares en `estructura-template.md`
+3. Sigue los estándares en este documento
 4. Commit cambios (`git commit -m 'feat: agregar nueva funcionalidad'`)
 5. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 6. Abre un Pull Request
@@ -1506,8 +2152,8 @@ project/
 ---
 
 **Template creado:** 4 de febrero de 2026
-**Última revisión:** 4 de febrero de 2026
-**Versión:** 2.0
+**Última revisión:** 4 de abril de 2026
+**Versión:** 3.0
 **Próxima revisión:** Cada 3 meses o cuando se detecten nuevos anti-patrones
 
 ---

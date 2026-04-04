@@ -32,7 +32,7 @@ final class AgentAiClient
         $this->apiEndpoint = $config['api']['endpoint'];
         $this->apiModel = $config['api']['model'];
         $this->apiKey = $config['api']['key'];
-        $this->timeout = $config['generation']['max_tokens'];
+        $this->timeout = $this->mode === 'local' ? ($config['local']['timeout'] ?? 30) : ($config['api']['timeout'] ?? 30);
         $this->maxRetries = $config['retry']['max_attempts'];
         $this->delayMs = $config['retry']['delay_ms'];
 
@@ -131,10 +131,12 @@ final class AgentAiClient
         $responseTimeMs = (microtime(true) - $startTime) * 1000;
 
         if ($error) {
+            error_log("AgentAiClient cURL Error: $error");
             throw new AgentAiException("cURL Error: $error", 500);
         }
 
         if ($httpCode < 200 || $httpCode >= 300) {
+            error_log("AgentAiClient API Error (HTTP $httpCode): $response");
             throw new AgentAiException(
                 "API Error (HTTP $httpCode): $response",
                 $httpCode

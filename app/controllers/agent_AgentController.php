@@ -78,16 +78,24 @@ final class agent_AgentController extends Controller
         }
 
         // Procesar mensaje
-        $response = $this->getService()->processMessage($convId, $userInput);
+        try {
+            $response = $this->getService()->processMessage($convId, $userInput);
 
-        return $this->json([
-            'success' => true,
-            'conversation_id' => $response->conversationId,
-            'status' => $response->status,
-            'message' => $response->message,
-            'data' => $response->data,
-            'suggestions' => $response->suggestions,
-        ]);
+            return $this->json([
+                'success' => true,
+                'conversation_id' => $response->conversationId,
+                'status' => $response->status,
+                'message' => $response->message,
+                'data' => $response->data,
+                'suggestions' => $response->suggestions,
+            ]);
+        } catch (\Exception $e) {
+            error_log("Error in agent_AgentController::handleMessage: " . $e->getMessage());
+            return $this->json([
+                'success' => false,
+                'message' => 'Error al procesar el mensaje con la IA: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

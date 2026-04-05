@@ -28,9 +28,52 @@ spl_autoload_register(static function (string $class): void {
     // Map App\AgenteAI\* to agenteAI/backend/
     if (str_starts_with($relativeClass, 'AgenteAI\\')) {
         $relativePath = str_replace('\\', '/', substr($relativeClass, strlen('AgenteAI\\'))) . '.php';
-        $file = BASE_PATH . '/agenteAI/backend/' . $relativePath;
+        $baseAgenteAI = rtrim(BASE_PATH, '/') . '/agenteAI/backend/';
+
+        // Direct match first (exact case)
+        $file = $baseAgenteAI . $relativePath;
         if (file_exists($file)) {
             require_once $file;
+            return;
+        }
+
+        // Case-insensitive resolution (Linux filesystem has lowercase dirs)
+        $parts = explode('/', $relativePath);
+        $currentPath = rtrim($baseAgenteAI, '/');
+
+        foreach ($parts as $index => $part) {
+            $isLast = $index === count($parts) - 1;
+
+            // Exact match
+            $candidate = $currentPath . '/' . $part;
+            if (($isLast && is_file($candidate)) || (!$isLast && is_dir($candidate))) {
+                $currentPath = $candidate;
+                continue;
+            }
+
+            // Case-insensitive match
+            if (!is_dir($currentPath)) {
+                return;
+            }
+            $entries = scandir($currentPath);
+            if ($entries === false) {
+                return;
+            }
+            $matched = null;
+            foreach ($entries as $entry) {
+                if (strcasecmp($entry, $part) === 0) {
+                    $matched = $entry;
+                    break;
+                }
+            }
+            if ($matched === null) {
+                return;
+            }
+            $currentPath .= '/' . $matched;
+        }
+
+        if (is_file($currentPath)) {
+            require_once $currentPath;
             return;
         }
         return;

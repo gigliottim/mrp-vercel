@@ -5,46 +5,35 @@ declare(strict_types=1);
 /**
  * Configuración del Agente AI para MRP
  *
- * Proveedores disponibles:
- * - 'api': Ollama API (api.ollama.com, requiere clave)
+ * Proveedor: API compatible con OpenAI (Ollama Cloud, DashScope, OpenRouter, etc.)
+ * Todos los valores sensibles se toman del .env.
  */
 
 return [
     /**
-     * Modo de operación
-     * 'local' para Ollama en VPS
-     * 'api' para Ollama API (api.ollama.com)
+     * Modo de operación (solo API)
      */
-    'mode' => env('AGENT_AI_MODE', 'api'),
+    'mode' => 'api',
 
     /**
-     * Configuración para modo local (Ollama en VPS)
-     */
-    'local' => [
-        'endpoint' => env('AGENT_AI_LOCAL_ENDPOINT', 'http://localhost:11434/api/chat'),
-        'model' => env('AGENT_AI_LOCAL_MODEL', 'qwen2.5:7b'),
-        'timeout' => 30, // segundos
-    ],
-
-    /**
-     * Configuración para modo API (Ollama API)
+     * Conexión API (OpenAI Compatible)
      */
     'api' => [
         'endpoint' => env('AGENT_AI_API_ENDPOINT', 'https://api.ollama.com/v1/chat/completions'),
-        'model' => env('AGENT_AI_API_MODEL', 'qwen3.5:cloud'),
-        'key' => env('AGENT_AI_API_KEY'),
-        'timeout' => 30, // segundos
+        'model'    => env('AGENT_AI_API_MODEL', 'qwen3.5:cloud'),
+        'key'      => env('AGENT_AI_API_KEY'),
+        'timeout'  => 30, // segundos
     ],
 
     /**
-     * Modelos específicos por intent (solo modo API)
+     * Modelos específicos por intent (fallback al modelo general si no se define)
      */
     'models' => [
-        'create_part' => env('AGENT_AI_API_MODEL_PART', 'qwen3.5:cloud'),
-        'create_bom' => env('AGENT_AI_API_MODEL_BOM', 'qwen3.5:cloud'),
+        'create_part'     => env('AGENT_AI_API_MODEL_PART', 'qwen3.5:cloud'),
+        'create_bom'      => env('AGENT_AI_API_MODEL_BOM', 'qwen3.5:cloud'),
         'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER', 'qwen3.5:cloud'),
         'create_material' => env('AGENT_AI_API_MODEL_MATERIAL', 'qwen3.5:cloud'),
-        'general_query' => env('AGENT_AI_API_MODEL_GENERAL', 'gemini-3-flash-preview:cloud'),
+        'general_query'   => env('AGENT_AI_API_MODEL_GENERAL', 'gemini-3-flash-preview:cloud'),
     ],
 
     /**

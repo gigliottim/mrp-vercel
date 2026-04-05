@@ -153,47 +153,32 @@ final class AgentController extends Controller
     public function checkConfiguration(Request $request): Response
     {
         $config = config('agent_ai');
-        $mode = $config['mode'];
+        $apiConfig = $config['api'] ?? [];
 
-        $hasValidConfig = false;
-        $errorMessage = '';
+        $apiEndpoint = $apiConfig['endpoint'] ?? '';
+        $apiModel = $apiConfig['model'] ?? '';
+        $apiKey = $apiConfig['key'] ?? '';
+
+        $configValid = $apiEndpoint && $apiModel && $apiKey;
         $apiResponds = false;
 
-        if ($mode === 'local') {
-            $localEndpoint = $config['local']['endpoint'] ?? '';
-            $localModel = $config['local']['model'] ?? '';
-
-            if ($localEndpoint && $localModel) {
-                $hasValidConfig = true;
-                $apiResponds = $this->testApiEndpoint($localEndpoint, $localModel, null);
-            } else {
-                $errorMessage = 'Configuración local incompleta. Verifica AGENT_AI_LOCAL_ENDPOINT y AGENT_AI_LOCAL_MODEL.';
-            }
-        } elseif ($mode === 'api') {
-            $apiEndpoint = $config['api']['endpoint'] ?? '';
-            $apiModel = $config['api']['model'] ?? '';
-            $apiKey = $config['api']['key'] ?? '';
-
-            if ($apiEndpoint && $apiModel && $apiKey) {
-                $hasValidConfig = true;
-                $apiResponds = $this->testApiEndpoint($apiEndpoint, $apiModel, $apiKey);
-            } else {
-                $errorMessage = 'Configuración API incompleta. Verifica AGENT_AI_API_ENDPOINT, AGENT_AI_API_MODEL y AGENT_AI_API_KEY.';
-            }
-        } else {
-            $errorMessage = 'Modo de configuración inválido. Usa "local" o "api".';
+        if ($configValid) {
+            $apiResponds = $this->testApiEndpoint($apiEndpoint, $apiModel, $apiKey);
         }
 
-        // Solo está online si la config es válida Y la API respondió
-        $isOnline = $hasValidConfig && $apiResponds;
+        $isOnline = $configValid && $apiResponds;
 
         return $this->json([
             'success' => true,
             'isOnline' => $isOnline,
-            'configValid' => $hasValidConfig,
+            'configValid' => $configValid,
             'apiResponds' => $apiResponds,
-            'mode' => $mode,
-            'message' => $isOnline ? 'Configuración válida' : ($errorMessage ?: 'La API no responde. Verificá la conexión y la API key.'),
+            'mode' => 'api',
+            'message' => $isOnline
+                ? 'Configuración válida'
+                : ($configValid
+                    ? 'La API no responde. Verificá la conexión y la API key.'
+                    : 'Configuración API incompleta. Verificá AGENT_AI_API_ENDPOINT, AGENT_AI_API_MODEL y AGENT_AI_API_KEY.'),
         ]);
     }
 

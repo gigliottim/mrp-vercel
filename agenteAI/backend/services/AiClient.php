@@ -7,42 +7,39 @@ namespace App\AgenteAI\Backend\Services;
 use Exception;
 
 /**
- * Cliente HTTP para interactuar con proveedores de IA (Ollama, DashScope, OpenRouter)
+ * Cliente HTTP para interactuar con proveedores de IA
+ * compatibles con la API de OpenAI (Ollama Cloud, DashScope, OpenRouter).
  */
 final class AiClient
 {
-    private string $mode;
-    private string $localEndpoint;
-    private string $localModel;
-    private string $apiEndpoint;
-    private string $apiModel;
+    private string $endpoint;
+    private string $model;
     private ?string $apiKey;
     private int $timeout;
     private int $maxRetries;
     private float $delayMs;
-    private array $apiModels;
+    private array $models;
 
     public function __construct()
     {
         $config = config('agent_ai');
 
-        $this->mode = $config['mode'];
-        $this->localEndpoint = $config['local']['endpoint'];
-        $this->localModel = $config['local']['model'];
-        $this->apiEndpoint = $config['api']['endpoint'];
-        $this->apiModel = $config['api']['model'];
-        $this->apiKey = $config['api']['key'];
-        $this->timeout = $this->mode === 'local' ? ($config['local']['timeout'] ?? 30) : ($config['api']['timeout'] ?? 30);
-        $this->maxRetries = $config['retry']['max_attempts'];
-        $this->delayMs = $config['retry']['delay_ms'];
+        $apiConfig = $config['api'];
+        $this->endpoint = $apiConfig['endpoint'];
+        $this->model = $apiConfig['model'];
+        $this->apiKey = $apiConfig['key'] ?? null;
+        $this->timeout = $apiConfig['timeout'] ?? 30;
 
-        // Modelos disponibles en modo API
-        $this->apiModels = $config['models'] ?? [
-            'create_part' => 'qwen3.5:cloud',
-            'create_bom' => 'qwen3.5:cloud',
+        $this->maxRetries = $config['retry']['max_attempts'] ?? 2;
+        $this->delayMs = $config['retry']['delay_ms'] ?? 500;
+
+        // Modelos disponibles por intent
+        $this->models = $config['models'] ?? [
+            'create_part'     => 'qwen3.5:cloud',
+            'create_bom'      => 'qwen3.5:cloud',
             'create_supplier' => 'qwen3.5:cloud',
             'create_material' => 'qwen3.5:cloud',
-            'general_query' => 'gemini-3-flash-preview:cloud',
+            'general_query'   => 'gemini-3-flash-preview:cloud',
         ];
     }
 
@@ -85,14 +82,8 @@ final class AiClient
      */
     private function sendRequest(array $messages, string $intent): array
     {
-        $endpoint = $this->mode === 'local' ? $this->localEndpoint : $this->apiEndpoint;
-
-        // Usar modelo específico según el intent en modo API
-        if ($this->mode === 'api' && isset($this->apiModels[$intent])) {
-            $model = $this->apiModels[$intent];
-        } else {
-            $model = $this->mode === 'local' ? $this->localModel : $this->apiModel;
-        }
+        // Usar modelo específico según el intent
+        $model = $this->models[$intent] ?? $this->model;
 
         $payload = [
             'model' => $model,
@@ -108,13 +99,13 @@ final class AiClient
             'Accept: application/json',
         ];
 
-        // Agregar auth header si es modo API
-        if ($this->mode === 'api' && $this->apiKey) {
+        // Agregar auth header si hay API key
+        if ($this->apiKey) {
             $headers[] = 'Authorization: Bearer ' . $this->apiKey;
         }
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLOPT_URL, $this->endpoint);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);

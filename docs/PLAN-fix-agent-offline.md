@@ -69,11 +69,47 @@ curl -s https://ollama.com/v1/chat/completions → 200 OK
 
 ---
 
-## 4. Fix Aplicado
+## 4. Causas Raíz Confirmadas
 
-| # | Acción | Herramienta |
-|---|--------|------------|
-| 1 | Test curl desde PC local | Terminal local |
+| # | Causa | Estado | Fix |
+|---|-------|--------|-----|
+| CR-1 | Endpoint incorrecto (`api.ollama.com` → `ollama.com`) | ✅ Confirmada | Hardcodeado en `config/agent_ai.php` |
+| CR-2 | Modelo inexistente (`qwen3.5:cloud` → `qwen3.5:397b`) | ✅ Confirmada | Actualizado en `.env` con defaults en config |
+| CR-3 | `Env::load()` no carga variables para `config/agent_ai.php` | ✅ Confirmada | Endpoint hardcodeado, modelos con defaults |
+
+## 5. Fix Aplicado
+
+| Archivo | Cambio |
+|---------|--------|
+| `config/agent_ai.php` | Endpoint hardcodeado a `https://ollama.com/v1/chat/completions`. Modelos con defaults (`qwen3.5:397b`, `gemini-3-flash-preview`). |
+| `.env` | Actualizado con endpoint correcto y modelos reales. Variables `AGENT_AI_API_MODEL_*` apuntan a modelos que existen. |
+| `agenteAI/backend/services/AiClient.php` | Sin modelos hardcodeados. Lee todo de `config('agent_ai')['models']`. |
+| `agenteAI/backend/controllers/AgentController.php` | `checkConfiguration()` hace test real contra la API. Sin branch de modo local. |
+
+## 6. Resultado Actual
+
+### Endpoint `/api/v1/agent/config`
+```json
+{
+    "success": true,
+    "isOnline": true,
+    "configValid": true,
+    "apiResponds": true,
+    "mode": "api",
+    "message": "Configuración válida"
+}
+```
+
+### Endpoint `/api/v1/agent/suggestions`
+```json
+{"success": true, "suggestions": [4 opciones]}
+```
+
+### Endpoint `/api/v1/agent/message`
+⚠️ Sigue con 500 — requiere fix separado (probablemente sesión Valkey no disponible en producción)
+
+## 7. Orden de Ejecución (histórico)
+
 | 2 | Si funciona local → Test desde VPS | SSH |
 | 3 | Si funciona VPS → Test desde container | `docker compose exec` |
 | 4 | Identificar causa raíz | Analizar response HTTP |

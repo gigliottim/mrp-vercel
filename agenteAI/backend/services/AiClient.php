@@ -19,6 +19,7 @@ final class AiClient
     private int $maxRetries;
     private float $delayMs;
     private array $models;
+    private array $generation;
 
     public function __construct()
     {
@@ -33,14 +34,9 @@ final class AiClient
         $this->maxRetries = $config['retry']['max_attempts'] ?? 2;
         $this->delayMs = $config['retry']['delay_ms'] ?? 500;
 
-        // Modelos disponibles por intent
-        $this->models = $config['models'] ?? [
-            'create_part'     => 'qwen3.5:cloud',
-            'create_bom'      => 'qwen3.5:cloud',
-            'create_supplier' => 'qwen3.5:cloud',
-            'create_material' => 'qwen3.5:cloud',
-            'general_query'   => 'gemini-3-flash-preview:cloud',
-        ];
+        // Modelos por intent — leídos 100% del config (que a su vez lee del .env)
+        $this->models = $config['models'] ?? [];
+        $this->generation = $config['generation'] ?? [];
     }
 
     /**
@@ -88,10 +84,10 @@ final class AiClient
         $payload = [
             'model' => $model,
             'messages' => $messages,
-            'temperature' => config('agent_ai')['generation']['temperature'],
-            'max_tokens' => config('agent_ai')['generation']['max_tokens'],
-            'seed' => config('agent_ai')['generation']['seed'],
-            'num_ctx' => config('agent_ai')['generation']['num_ctx'],
+            'temperature' => $this->generation['temperature'] ?? 0.1,
+            'max_tokens' => $this->generation['max_tokens'] ?? 800,
+            'seed' => $this->generation['seed'] ?? 42,
+            'num_ctx' => $this->generation['num_ctx'] ?? 4096,
         ];
 
         $headers = [

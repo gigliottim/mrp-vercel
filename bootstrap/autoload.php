@@ -25,9 +25,9 @@ spl_autoload_register(static function (string $class): void {
 
     $relativeClass = substr($class, $len);
 
-    // Map App\AgenteAI\* to agenteAI/backend/
-    if (str_starts_with($relativeClass, 'AgenteAI\\')) {
-        $relativePath = str_replace('\\', '/', substr($relativeClass, strlen('AgenteAI\\'))) . '.php';
+    // Map App\AgenteAI\Backend\* to agenteAI/backend/
+    if (str_starts_with($relativeClass, 'AgenteAI\\Backend\\')) {
+        $relativePath = str_replace('\\', '/', substr($relativeClass, strlen('AgenteAI\\Backend\\'))) . '.php';
         $baseAgenteAI = rtrim(BASE_PATH, '/') . '/agenteAI/backend/';
 
         // Direct match first (exact case)

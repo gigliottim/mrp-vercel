@@ -271,7 +271,7 @@ fi
 
 # ── 3. Determinar que incluir en el paquete ───────────────────────────────────
 
-RELEASE_ITEMS=(app bootstrap config database/migrations migrate_database.php public routes views vendor composer.json composer.lock .env)
+RELEASE_ITEMS=(app bootstrap config database/migrations migrate_database.php public routes views vendor composer.json composer.lock .env agenteAI)
 
 LATEST_CHANGED=$(get_latest_commit_changed_files)
 SYNC_VENDOR=1

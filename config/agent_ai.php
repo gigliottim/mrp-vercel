@@ -5,8 +5,13 @@ declare(strict_types=1);
 /**
  * Configuración del Agente AI para MRP
  *
- * Proveedor: API compatible con OpenAI (Ollama Cloud, DashScope, OpenRouter, etc.)
- * Todos los valores sensibles se toman del .env.
+ * Proveedor: Ollama Cloud (API compatible con OpenAI)
+ * Endpoint: https://ollama.com/v1/chat/completions
+ *
+ * Los valores sensibles (API key) se leen del .env vía env()
+ * que usa Env::get() cargado por bootstrap/app.php.
+ * El endpoint y modelo por defecto están hardcodeados porque
+ * solo usamos un proveedor.
  */
 
 return [
@@ -16,11 +21,11 @@ return [
     'mode' => 'api',
 
     /**
-     * Conexión API (OpenAI Compatible)
+     * Conexión API (Ollama Cloud — OpenAI Compatible)
      */
     'api' => [
-        'endpoint' => env('AGENT_AI_API_ENDPOINT'),
-        'model'    => env('AGENT_AI_API_MODEL'),
+        'endpoint' => 'https://ollama.com/v1/chat/completions',
+        'model'    => env('AGENT_AI_API_MODEL', 'qwen3.5:397b'),
         'key'      => env('AGENT_AI_API_KEY'),
         'timeout'  => 30, // segundos
     ],
@@ -29,11 +34,11 @@ return [
      * Modelos específicos por intent
      */
     'models' => [
-        'create_part'     => env('AGENT_AI_API_MODEL_PART'),
-        'create_bom'      => env('AGENT_AI_API_MODEL_BOM'),
-        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER'),
-        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL'),
-        'general_query'   => env('AGENT_AI_API_MODEL_GENERAL'),
+        'create_part'     => env('AGENT_AI_API_MODEL_PART', 'qwen3.5:397b'),
+        'create_bom'      => env('AGENT_AI_API_MODEL_BOM', 'qwen3.5:397b'),
+        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER', 'qwen3.5:397b'),
+        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL', 'qwen3.5:397b'),
+        'general_query'   => env('AGENT_AI_API_MODEL_GENERAL', 'gemini-3-flash-preview'),
     ],
 
     /**

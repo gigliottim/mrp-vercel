@@ -19,21 +19,21 @@ return [
      * Conexión API (OpenAI Compatible)
      */
     'api' => [
-        'endpoint' => env('AGENT_AI_API_ENDPOINT', 'https://api.ollama.com/v1/chat/completions'),
-        'model'    => env('AGENT_AI_API_MODEL', 'qwen3.5:cloud'),
+        'endpoint' => env('AGENT_AI_API_ENDPOINT'),
+        'model'    => env('AGENT_AI_API_MODEL'),
         'key'      => env('AGENT_AI_API_KEY'),
         'timeout'  => 30, // segundos
     ],
 
     /**
-     * Modelos específicos por intent (fallback al modelo general si no se define)
+     * Modelos específicos por intent
      */
     'models' => [
-        'create_part'     => env('AGENT_AI_API_MODEL_PART', 'qwen3.5:cloud'),
-        'create_bom'      => env('AGENT_AI_API_MODEL_BOM', 'qwen3.5:cloud'),
-        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER', 'qwen3.5:cloud'),
-        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL', 'qwen3.5:cloud'),
-        'general_query'   => env('AGENT_AI_API_MODEL_GENERAL', 'gemini-3-flash-preview:cloud'),
+        'create_part'     => env('AGENT_AI_API_MODEL_PART'),
+        'create_bom'      => env('AGENT_AI_API_MODEL_BOM'),
+        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER'),
+        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL'),
+        'general_query'   => env('AGENT_AI_API_MODEL_GENERAL'),
     ],
 
     /**

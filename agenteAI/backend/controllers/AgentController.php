@@ -148,6 +148,7 @@ final class AgentController extends Controller
 
     /**
      * Verificar configuración del agente AI
+     * Realiza un test real contra la API para confirmar que responde.
      */
     public function checkConfiguration(Request $request): Response
     {
@@ -156,25 +157,26 @@ final class AgentController extends Controller
 
         $hasValidConfig = false;
         $errorMessage = '';
+        $apiResponds = false;
 
         if ($mode === 'local') {
-            // Verificar configuración local
-            $localEndpoint = $config['local']['endpoint'];
-            $localModel = $config['local']['model'];
+            $localEndpoint = $config['local']['endpoint'] ?? '';
+            $localModel = $config['local']['model'] ?? '';
 
             if ($localEndpoint && $localModel) {
                 $hasValidConfig = true;
+                $apiResponds = $this->testApiEndpoint($localEndpoint, $localModel, null);
             } else {
                 $errorMessage = 'Configuración local incompleta. Verifica AGENT_AI_LOCAL_ENDPOINT y AGENT_AI_LOCAL_MODEL.';
             }
         } elseif ($mode === 'api') {
-            // Verificar configuración API
-            $apiEndpoint = $config['api']['endpoint'];
-            $apiModel = $config['api']['model'];
-            $apiKey = $config['api']['key'];
+            $apiEndpoint = $config['api']['endpoint'] ?? '';
+            $apiModel = $config['api']['model'] ?? '';
+            $apiKey = $config['api']['key'] ?? '';
 
             if ($apiEndpoint && $apiModel && $apiKey) {
                 $hasValidConfig = true;
+                $apiResponds = $this->testApiEndpoint($apiEndpoint, $apiModel, $apiKey);
             } else {
                 $errorMessage = 'Configuración API incompleta. Verifica AGENT_AI_API_ENDPOINT, AGENT_AI_API_MODEL y AGENT_AI_API_KEY.';
             }
@@ -182,12 +184,59 @@ final class AgentController extends Controller
             $errorMessage = 'Modo de configuración inválido. Usa "local" o "api".';
         }
 
+        // Solo está online si la config es válida Y la API respondió
+        $isOnline = $hasValidConfig && $apiResponds;
+
         return $this->json([
             'success' => true,
-            'isOnline' => $hasValidConfig,
+            'isOnline' => $isOnline,
+            'configValid' => $hasValidConfig,
+            'apiResponds' => $apiResponds,
             'mode' => $mode,
-            'message' => $hasValidConfig ? 'Configuración válida' : $errorMessage,
+            'message' => $isOnline ? 'Configuración válida' : ($errorMessage ?: 'La API no responde. Verificá la conexión y la API key.'),
         ]);
+    }
+
+    /**
+     * Test real contra la API de IA con un prompt mínimo.
+     */
+    private function testApiEndpoint(string $endpoint, string $model, ?string $apiKey): bool
+    {
+        $payload = [
+            'model' => $model,
+            'messages' => [['role' => 'user', 'content' => 'ping']],
+            'max_tokens' => 5,
+            'temperature' => 0.1,
+        ];
+
+        $headers = [
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ];
+
+        if ($apiKey) {
+            $headers[] = 'Authorization: Bearer ' . $apiKey;
+        }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            $data = json_decode($response, true);
+            return isset($data['choices'][0]['message']['content']);
+        }
+
+        return false;
     }
 
     /**

@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 /**
  * Migración de Base de Datos - MRP
- * 
+ *
  * Este archivo ha sido adaptado para funcionar con CakePHP.
- * 
+ *
  * CAMBIOS PRINCIPALES:
  * 1. Se reemplazó el uso de `App\Core\Database\DatabaseManager` por `Cake\Database\Connection`
  * 2. Se mantiene la lógica de multi-tenancy basada en `company_databases` de mrp_auth
  * 3. Se actualizó el path de autoloading para CakePHP
- * 
+ *
  * USO:
  * - `php migrate_database.php` (conexión por defecto)
  * - `php migrate_database.php --connection=mrp_auth` (base de autenticación)
  * - `php migrate_database.php --all-tenants` (aplica a todas las bases de tenants)
  * - `php migrate_database.php --status` (muestra estado sin aplicar)
  * - `php migrate_database.php --dry-run` (muestra lista sin conexión)
- * 
+ *
  * NOTA: Este archivo es una adaptación para migración. En producción con CakePHP,
  * se recomienda usar los Migrations del framework (bin/cake migrations).
  */
@@ -67,14 +67,14 @@ $dbPortOverride = isset($options['db-port']) ? trim((string) $options['db-port']
 // Sobrescribir configuración de host y puerto si se pasan como parámetros
 if ($dbHostOverride !== null && $dbHostOverride !== '') {
     $config = Configure::read('Database');
-    
+
     if (isset($config['default']['host'])) {
         Configure::write('Database.default.host', $dbHostOverride);
     }
     if ($dbPortOverride !== null && $dbPortOverride !== '') {
         Configure::write('Database.default.port', $dbPortOverride);
     }
-    
+
     // Recargar la conexión con la nueva configuración
     ConnectionManager::set('default', [
         'className' => Connection::class,
@@ -99,7 +99,7 @@ function ensureMigrationsTable(Connection $connection): void
 {
     $schemaManager = $connection->getSchemaManager();
     $tables = $schemaManager->listTables();
-    
+
     if (!in_array('schema_migrations', $tables)) {
         $connection->execute("
             CREATE TABLE schema_migrations (
@@ -115,7 +115,7 @@ function getExecutedMigrations(Connection $connection): array
 {
     $stmt = $connection->query('SELECT filename FROM schema_migrations ORDER BY filename ASC');
     $rows = $stmt->fetchAll('assoc');
-    
+
     $executed = [];
     foreach ($rows as $row) {
         $filename = $row['filename'] ?? null;
@@ -123,7 +123,7 @@ function getExecutedMigrations(Connection $connection): array
             $executed[$filename] = true;
         }
     }
-    
+
     return $executed;
 }
 
@@ -242,11 +242,11 @@ function makeTenantConnection(string $host, string $port, string $database, stri
         'sslmode' => 'prefer',
         'encoding' => 'utf8',
     ];
-    
+
     // Crear conexión temporal con ConnectionManager
     $tempName = 'tenant_' . md5($database . time());
     ConnectionManager::set($tempName, $config);
-    
+
     return ConnectionManager::get($tempName);
 }
 
@@ -280,16 +280,16 @@ try {
 
         // Obtener conexión a mrp_auth
         $authConnection = ConnectionManager::get('default');
-        
+
         // Verificar si la tabla company_databases existe
         $schemaManager = $authConnection->getSchemaManager();
         $tables = $schemaManager->listTables();
-        
+
         if (!in_array('company_databases', $tables)) {
             out('Tabla company_databases no encontrada. Asegúrese de ejecutar las migraciones de mrp_auth primero.');
             exit(0);
         }
-        
+
         $stmt = $authConnection->query(
             'SELECT database_name, host, port, username, password_encrypted
              FROM company_databases
@@ -355,7 +355,7 @@ try {
         out("Detalles: " . $e->getMessage());
         exit(1);
     }
-    
+
     ensureMigrationsTable($connection);
 
     $executed = getExecutedMigrations($connection);

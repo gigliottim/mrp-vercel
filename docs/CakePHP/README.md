@@ -272,7 +272,7 @@ class TenantConnection extends Connection
 - **CakePHP 5.3** (PHP 8.5)
 
 ### Base de Datos
-- **PostgreSQL 15** (multi-tenant)
+- **PostgreSQL latest** (multi-tenant)
 
 ### Cache
 - **Valkey** (antes Redis)

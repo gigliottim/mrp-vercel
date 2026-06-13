@@ -10,6 +10,7 @@ use App\AgenteAI\Backend\Services\AgentResponse;
 use App\Core\Controllers\Controller;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
+use App\Core\Auth\TenantContext;
 use App\Core\Support\SessionManager;
 
 /**
@@ -68,6 +69,7 @@ final class AgentController extends Controller
     public function handleMessage(Request $request): Response
     {
         $this->ensureSession();
+        $this->ensureTenantContext();
 
         $convId = $request->input('conversation_id');
         $userInput = trim($request->input('message'));
@@ -145,6 +147,7 @@ final class AgentController extends Controller
     public function confirmSave(Request $request): Response
     {
         $this->ensureSession();
+        $this->ensureTenantContext();
 
         $convId = $request->input('conversation_id');
         $confirmedData = $request->input('data', []);
@@ -309,5 +312,36 @@ final class AgentController extends Controller
         $this->ensureSession();
         $role = $_SESSION['role'] ?? '';
         return in_array($role, ['admin', 'superadmin']);
+    }
+
+    private function ensureTenantContext(): void
+    {
+        if (TenantContext::get() !== null) {
+            return;
+        }
+
+        $this->ensureSession();
+        $tenantId = (int)($_SESSION['tenant_id'] ?? 0);
+        if ($tenantId <= 0) {
+            return;
+        }
+
+        $authDb = \App\Core\Database\DatabaseManager::connection('mrp_auth');
+        $stmt = $authDb->prepare("SELECT * FROM company_databases WHERE company_id = ? AND is_active = true LIMIT 1");
+        $stmt->execute([$tenantId]);
+        $tenant = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($tenant) {
+            TenantContext::set([
+                'id' => $tenantId,
+                'database' => [
+                    'name' => $tenant['database_name'],
+                    'host' => $tenant['database_host'] ?? null,
+                    'port' => $tenant['database_port'] ?? null,
+                    'username' => $tenant['database_username'] ?? null,
+                    'password' => $tenant['database_password'] ?? null,
+                ],
+            ]);
+        }
     }
 }

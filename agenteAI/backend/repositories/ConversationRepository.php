@@ -6,6 +6,7 @@ namespace App\AgenteAI\Backend\Repositories;
 
 use Exception;
 use PDO;
+use App\Core\Auth\TenantContext;
 use App\Core\Database\DatabaseManager;
 use App\Core\Database\ValkeyClient;
 
@@ -50,11 +51,40 @@ final class ConversationRepository
 
         // --- PostgreSQL (persistencia) ---
         try {
-            $this->db = DatabaseManager::connection('tenant');
+            $this->db = $this->resolveTenantConnection();
         } catch (Exception $e) {
             $this->db = null;
             error_log("Database connection failed in ConversationRepository: " . $e->getMessage());
         }
+    }
+
+    private function resolveTenantConnection(): ?PDO
+    {
+        $tenant = TenantContext::get();
+        if ($tenant === null || empty($tenant['database']['name'])) {
+            return DatabaseManager::connection('tenant');
+        }
+
+        $baseConfig = config('database.connections.tenant');
+        $overrides = $tenant['database'];
+        $connectionName = 'tenant_' . $overrides['name'];
+
+        $existingConnections = config('database.connections', []);
+        if (!isset($existingConnections[$connectionName])) {
+            $existingConnections[$connectionName] = [
+                'driver' => $baseConfig['driver'] ?? 'pgsql',
+                'host' => $overrides['host'] ?? $baseConfig['host'] ?? '127.0.0.1',
+                'port' => $overrides['port'] ?? $baseConfig['port'] ?? '5432',
+                'database' => $overrides['name'] ?? $baseConfig['database'],
+                'username' => $overrides['username'] ?? $baseConfig['username'],
+                'password' => $overrides['password'] ?? $baseConfig['password'],
+                'charset' => $baseConfig['charset'] ?? 'utf8',
+                'options' => $baseConfig['options'] ?? [],
+            ];
+            \App\Core\Config\Config::set('database.connections', $existingConnections);
+        }
+
+        return DatabaseManager::connection($connectionName);
     }
 
     /**

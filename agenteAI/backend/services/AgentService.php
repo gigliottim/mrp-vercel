@@ -142,12 +142,16 @@ final class AgentService
                 $this->conversationService->markCompleted($convId);
             }
 
-            if ($this->repository) {
-                $this->repository->saveAiLog([
-                    'conversation_id' => $convId,
-                    'validation_result' => $result['success'] ? 'saved' : 'save_failed',
-                    'provider' => 'domain_service',
-                ]);
+            try {
+                if ($this->repository) {
+                    $this->repository->saveAiLog([
+                        'conversation_id' => $convId,
+                        'validation_result' => $result['success'] ? 'saved' : 'save_failed',
+                        'provider' => 'domain_service',
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                error_log("AgentService::confirmAndSave - saveAiLog failed (non-critical): " . $e->getMessage());
             }
 
             return $result;

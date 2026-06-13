@@ -323,13 +323,16 @@ final class AgentController extends Controller
 
         $this->ensureSession();
         $tenantId = (int)($_SESSION['tenant_id'] ?? 0);
+        error_log("AgentController::ensureTenantContext - tenantId from session: {$tenantId}");
         if ($tenantId <= 0) {
+            error_log("AgentController::ensureTenantContext - No tenant_id in session, available keys: " . implode(', ', array_keys($_SESSION)));
             return;
         }
 
         try {
             $authDb = DatabaseManager::connection('mrp_auth');
         } catch (\Throwable $e) {
+            error_log("AgentController::ensureTenantContext - mrp_auth connection failed: " . $e->getMessage());
             $authDb = DatabaseManager::connection();
         }
 
@@ -349,6 +352,7 @@ final class AgentController extends Controller
                 ],
             ];
             TenantContext::set($tenantData);
+            error_log("AgentController::ensureTenantContext - Set tenant: " . json_encode($tenantData));
 
             $baseConfig = config('database.connections.tenant');
             $overrides = $tenantData['database'];
@@ -367,7 +371,10 @@ final class AgentController extends Controller
                     'options' => $baseConfig['options'] ?? [],
                 ];
                 \App\Core\Config\Config::set('database.connections', $existingConnections);
+                error_log("AgentController::ensureTenantContext - Registered connection: {$connectionName}");
             }
+        } else {
+            error_log("AgentController::ensureTenantContext - No tenant found for id: {$tenantId}");
         }
     }
 }

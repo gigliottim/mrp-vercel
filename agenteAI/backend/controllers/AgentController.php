@@ -91,7 +91,24 @@ final class AgentController extends Controller
 
         // Procesar mensaje
         try {
-            $response = $this->getService()->processMessage($convId, $userInput);
+            $service = $this->getService();
+
+            // Guardar el intent en el estado de conversación si viene del frontend
+            if ($intent) {
+                $conversationService = $this->getConversationService();
+                if ($conversationService) {
+                    $currentState = $conversationService->getState($convId);
+                    if (empty($currentState)) {
+                        $conversationService->saveState($convId, [
+                            'intent' => $intent,
+                            'data' => [],
+                            'step' => 0,
+                        ]);
+                    }
+                }
+            }
+
+            $response = $service->processMessage($convId, $userInput);
 
             return $this->json([
                 'success' => true,

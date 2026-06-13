@@ -21,6 +21,7 @@ final class ConversationRepository
     private ?PDO $db;
     private string $prefix;
     private bool $enabled;
+    private ?string $resolvedConnectionName = null;
 
     public function __construct()
     {
@@ -89,9 +90,19 @@ final class ConversationRepository
 
     /**
      * Obtener la conexión PDO (para uso interno del agente)
+     * Resuelve la conexión tenant dinámicamente si TenantContext fue establecido
+     * después de la construcción del repositorio.
      */
     public function getDb(): ?PDO
     {
+        $tenant = TenantContext::get();
+        if ($tenant !== null && !empty($tenant['database']['name'])) {
+            $connectionName = 'tenant_' . $tenant['database']['name'];
+            if ($this->resolvedConnectionName !== $connectionName) {
+                $this->db = $this->resolveTenantConnection();
+                $this->resolvedConnectionName = $connectionName;
+            }
+        }
         return $this->db;
     }
 

@@ -12,6 +12,7 @@ function agentFloating() {
         isOffline: false,
         conversationId: null,
         currentIntent: null,
+        guidedState: null,
 
         init() {
             this.checkConfiguration();
@@ -127,13 +128,16 @@ function agentFloating() {
                     body: JSON.stringify({
                         message: message,
                         conversation_id: this.conversationId,
-                        intent: this.currentIntent
+                        intent: this.currentIntent,
+                        guided_state: this.guidedState
                     })
                 });
 
                 const data = await response.json();
+
                 if (data.success) {
                     this.conversationId = data.conversation_id;
+                    this.guidedState = data.guided_state || null;
                     this.addMessage('assistant', data.message);
                     if (data.suggestions && data.suggestions.length > 0) {
                         this.renderSuggestions(data.suggestions);

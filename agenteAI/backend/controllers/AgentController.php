@@ -72,6 +72,7 @@ final class AgentController extends Controller
         $convId = $request->input('conversation_id');
         $userInput = trim($request->input('message'));
         $intent = $request->input('intent', '');
+        $guidedState = $request->input('guided_state', []);
         $userId = $this->getCurrentUserId();
         $tenantId = $this->getCurrentTenantId();
 
@@ -84,31 +85,40 @@ final class AgentController extends Controller
             if ($conversationService) {
                 $convId = $conversationService->startConversation($userId, $tenantId, $intent);
             } else {
-                // Si Valkey no está disponible, generar un ID temporal
                 $convId = 'temp_' . uniqid();
+            }
+        }
+
+        // Restaurar estado guiado desde el frontend (si viene)
+        $conversationService = $this->getConversationService();
+        if ($conversationService) {
+            $currentState = $conversationService->getState($convId);
+            if (empty($currentState) && !empty($guidedState)) {
+                $conversationService->saveState($convId, $guidedState);
+            }
+        }
+
+        // Guardar el intent en el estado si es el primer mensaje guiado
+        if ($intent) {
+            if ($conversationService) {
+                $currentState = $conversationService->getState($convId);
+                if (empty($currentState)) {
+                    $conversationService->saveState($convId, [
+                        'intent' => $intent,
+                        'data' => [],
+                        'step' => 0,
+                    ]);
+                }
             }
         }
 
         // Procesar mensaje
         try {
             $service = $this->getService();
-
-            // Guardar el intent en el estado de conversación si viene del frontend
-            if ($intent) {
-                $conversationService = $this->getConversationService();
-                if ($conversationService) {
-                    $currentState = $conversationService->getState($convId);
-                    if (empty($currentState)) {
-                        $conversationService->saveState($convId, [
-                            'intent' => $intent,
-                            'data' => [],
-                            'step' => 0,
-                        ]);
-                    }
-                }
-            }
-
             $response = $service->processMessage($convId, $userInput);
+
+            // Obtener el estado actualizado para enviar al frontend
+            $updatedState = $conversationService ? $conversationService->getState($convId) : null;
 
             return $this->json([
                 'success' => true,
@@ -117,6 +127,7 @@ final class AgentController extends Controller
                 'message' => $response->message,
                 'data' => $response->data,
                 'suggestions' => $response->suggestions,
+                'guided_state' => $updatedState,
             ]);
         } catch (\Exception $e) {
             error_log("Error in agent_AgentController::handleMessage: " . $e->getMessage());

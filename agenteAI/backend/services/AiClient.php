@@ -141,11 +141,10 @@ final class AiClient
 
         // Extraer el contenido de la respuesta
         if (isset($data['choices'][0]['message']['content'])) {
-            $content = $data['choices'][0]['message']['content'];
+            $content = trim($data['choices'][0]['message']['content']);
 
-            // Intentar decodificar el JSON del contenido
-            $jsonContent = json_decode($content, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($jsonContent)) {
+            $jsonContent = $this->extractJson($content);
+            if (is_array($jsonContent)) {
                 return $jsonContent;
             }
 
@@ -158,5 +157,33 @@ final class AiClient
         }
 
         throw new AgentAiException("Invalid response format from AI", 500);
+    }
+
+    /**
+     * Extraer un JSON valido de un texto, quitando posible markdown o texto extra.
+     */
+    private function extractJson(string $content): ?array
+    {
+        $content = trim($content);
+
+        // Quitar bloque markdown ```json ... ```
+        if (preg_match('/^```(?:json)?\s*(.+?)\s*```$/s', $content, $matches)) {
+            $content = $matches[1];
+        }
+
+        // Buscar primer JSON object { ... } o array [ ... ]
+        $jsonContent = json_decode($content, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($jsonContent)) {
+            return $jsonContent;
+        }
+
+        if (preg_match('/(\{.*\}|\[.*\])/s', $content, $matches)) {
+            $jsonContent = json_decode($matches[1], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($jsonContent)) {
+                return $jsonContent;
+            }
+        }
+
+        return null;
     }
 }

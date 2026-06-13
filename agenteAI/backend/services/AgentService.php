@@ -62,14 +62,14 @@ final class AgentService
         }
 
         $aiResponse = $this->client->chat($messages, $intent);
-        $validationResult = $this->validator->validate($aiResponse, $intent);
+        $validationResult = $this->validator->validate($aiResponse['data'] ?? [], $intent);
 
         if ($validationResult->failed()) {
             $response = new AgentResponse(
                 status: 'clarify',
-                message: $this->buildClarifyMessage($validationResult->errors),
-                data: $aiResponse,
-                suggestions: $this->buildSuggestions($aiResponse),
+                message: $aiResponse['message'] ?? $this->buildClarifyMessage($validationResult->errors),
+                data: $aiResponse['data'] ?? null,
+                suggestions: $aiResponse['suggestions'] ?? $this->buildSuggestions($aiResponse['data'] ?? []),
                 conversationId: $convId
             );
             $this->logAiCall($convId, $messages, $aiResponse, false, $validationResult->errors);
@@ -363,6 +363,9 @@ final class AgentService
 
     private function buildClarifyMessage(array $errors): string
     {
+        if (empty($errors)) {
+            return 'Faltan algunos datos. Por favor, completá la información solicitada.';
+        }
         return "Faltan datos o hay errores: " . implode(", ", $errors) . ". Por favor, corregí o completá la información.";
     }
 
@@ -374,6 +377,9 @@ final class AgentService
         }
         if (isset($data['description'])) {
             $suggestions[] = "¿La descripción es correcta: {$data['description']}?";
+        }
+        if (isset($data['uom']) && $data['uom'] === '') {
+            $suggestions[] = "Indicá la unidad de medida (u, kg, m, l, g)";
         }
         return $suggestions;
     }

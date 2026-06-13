@@ -12,12 +12,25 @@ namespace App\Core\Database;
  */
 class ValkeyClient
 {
-    private \ValkeyClient $client;
+    private ?\ValkeyClient $client = null;
     private bool $connected = false;
 
     public function __construct()
     {
+        if (!class_exists(\ValkeyClient::class)) {
+            error_log('ValkeyClient: extensión \ValkeyClient no disponible en este entorno.');
+            $this->connected = false;
+            return;
+        }
+
         $this->client = new \ValkeyClient();
+    }
+
+    private function ensureClient(): void
+    {
+        if ($this->client === null) {
+            throw new \RuntimeException('La extensión \ValkeyClient no está disponible.');
+        }
     }
 
     /**
@@ -26,6 +39,7 @@ class ValkeyClient
     public function connect(string $host, int $port, float $timeout): bool
     {
         try {
+            $this->ensureClient();
             $this->client->connect($host, $port, $timeout);
             $this->connected = true;
             return true;
@@ -40,6 +54,7 @@ class ValkeyClient
      */
     public function auth(string $password): bool
     {
+        $this->ensureClient();
         return $this->client->auth($password);
     }
 
@@ -48,6 +63,7 @@ class ValkeyClient
      */
     public function ping(): string
     {
+        $this->ensureClient();
         return $this->client->ping();
     }
 
@@ -56,6 +72,7 @@ class ValkeyClient
      */
     public function get(string $key): ?string
     {
+        $this->ensureClient();
         return $this->client->get($key);
     }
 
@@ -64,6 +81,7 @@ class ValkeyClient
      */
     public function setex(string $key, int $ttl, string $value): bool
     {
+        $this->ensureClient();
         return $this->client->setex($key, $ttl, $value);
     }
 
@@ -72,6 +90,7 @@ class ValkeyClient
      */
     public function set(string $key, string $value): bool
     {
+        $this->ensureClient();
         return $this->client->set($key, $value);
     }
 
@@ -80,6 +99,7 @@ class ValkeyClient
      */
     public function del(string $key): int
     {
+        $this->ensureClient();
         return $this->client->del($key);
     }
 
@@ -88,6 +108,7 @@ class ValkeyClient
      */
     public function hGetAll(string $key): array
     {
+        $this->ensureClient();
         return $this->client->hGetAll($key);
     }
 
@@ -96,6 +117,7 @@ class ValkeyClient
      */
     public function hMSet(string $key, array $fieldValues): bool
     {
+        $this->ensureClient();
         return $this->client->hMSet($key, $fieldValues);
     }
 
@@ -104,6 +126,7 @@ class ValkeyClient
      */
     public function hGet(string $key, string $field): ?string
     {
+        $this->ensureClient();
         return $this->client->hGet($key, $field);
     }
 
@@ -112,6 +135,7 @@ class ValkeyClient
      */
     public function expire(string $key, int $ttl): bool
     {
+        $this->ensureClient();
         return $this->client->expire($key, $ttl);
     }
 
@@ -129,6 +153,7 @@ class ValkeyClient
     public function close(): bool
     {
         $this->connected = false;
+        $this->ensureClient();
         return $this->client->close();
     }
 }

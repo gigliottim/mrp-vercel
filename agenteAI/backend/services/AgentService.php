@@ -728,17 +728,21 @@ final class AgentService
     ): void {
         if (!$this->repository) return;
 
-        $config = config('agent_ai', []);
-        $agentConfig = $config['api'] ?? [];
+        try {
+            $config = config('agent_ai', []);
+            $agentConfig = $config['api'] ?? [];
 
-        $this->repository->saveAiLog([
-            'conversation_id' => $convId,
-            'model_used' => $agentConfig['model'] ?? 'unknown',
-            'provider' => $config['mode'] ?? 'unknown',
-            'prompt_hash' => $source === 'cache_hit' ? 'cache' : $this->generatePromptHash($messages),
-            'response_time_ms' => null,
-            'validation_result' => $source === 'cache_hit' ? 'cache_hit' : ($isValid ? 'valid' : 'invalid'),
-            'tokens_used' => null,
-        ]);
+            $this->repository->saveAiLog([
+                'conversation_id' => $convId,
+                'model_used' => $agentConfig['model'] ?? 'unknown',
+                'provider' => $config['mode'] ?? 'unknown',
+                'prompt_hash' => $source === 'cache_hit' ? 'cache' : $this->generatePromptHash($messages),
+                'response_time_ms' => null,
+                'validation_result' => $source === 'cache_hit' ? 'cache_hit' : ($isValid ? 'valid' : 'invalid'),
+                'tokens_used' => null,
+            ]);
+        } catch (\Throwable $e) {
+            error_log("AgentService::logAiCall failed (non-critical): " . $e->getMessage());
+        }
     }
 }

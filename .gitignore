@@ -1,0 +1,11 @@
+ssh/id_ed25519
+ssh/*.pem
+vendor/
+node_modules/
+.env
+.env.docker
+*.log
+storage/logs/
+storage/cache/
+temp.txt
+app-release.zip

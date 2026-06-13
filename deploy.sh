@@ -13,11 +13,14 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # ── Parametros (sobreescribibles via variables de entorno o argumentos) ───────
 HOSTNAME="${DEPLOY_HOST:-181.13.244.35}"
 PORT="${DEPLOY_PORT:-5073}"
 USERNAME="${DEPLOY_USER:-root}"
-PASSWORD="${DEPLOY_PASS:-w(6C%QnZC7EQPZ}"
+PASSWORD="${DEPLOY_PASS:-}"
+SSH_KEY="${DEPLOY_SSH_KEY:-$SCRIPT_DIR/ssh/id_ed25519}"
 REMOTE_PATH="${DEPLOY_REMOTE_PATH:-/opt/mrp}"
 
 while [[ $# -gt 0 ]]; do
@@ -30,8 +33,6 @@ while [[ $# -gt 0 ]]; do
     *) echo "[DEPLOY][ERROR] Argumento desconocido: $1" >&2; exit 1 ;;
   esac
 done
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_PATH="$SCRIPT_DIR/config/app.php"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 ENV_DOCKER_FILE="$SCRIPT_DIR/.env.docker"
@@ -44,6 +45,7 @@ export _DEPLOY_SSH_HOST="$HOSTNAME"
 export _DEPLOY_SSH_PORT="$PORT"
 export _DEPLOY_SSH_USER="$USERNAME"
 export _DEPLOY_SSH_PASS="$PASSWORD"
+export _DEPLOY_SSH_KEY="$SSH_KEY"
 
 cleanup() {
   [[ -f "$RELEASE_ZIP" ]] && rm -f "$RELEASE_ZIP"
@@ -57,18 +59,21 @@ error() { echo "[DEPLOY][ERROR] $*" >&2; exit 1; }
 
 assert_file_exists() { [[ -e "$1" ]] || error "No existe el archivo/directorio requerido: $1"; }
 
-# ── Backend SSH: sshpass nativo o Python/paramiko como fallback ───────────────
-if command -v sshpass >/dev/null 2>&1; then
+# ── Backend SSH: clave SSH nativa (preferido), sshpass o Python/paramiko como fallback ──
+if [[ -f "$SSH_KEY" ]]; then
+  SSH_BACKEND="key"
+  step "Backend SSH: usando clave SSH ($SSH_KEY)"
+elif command -v sshpass >/dev/null 2>&1 && [[ -n "$PASSWORD" ]]; then
   SSH_BACKEND="sshpass"
-elif python3 -c "import paramiko" 2>/dev/null; then
+  step "Backend SSH: usando sshpass + password"
+elif python3 -c "import paramiko" 2>/dev/null && [[ -n "$PASSWORD" ]]; then
   SSH_BACKEND="paramiko"
   step "Backend SSH: usando Python/paramiko (sshpass no disponible)"
 else
-  error "Se requiere sshpass (apt install sshpass) o Python3+paramiko (pip3 install paramiko)"
+  error "Se requiere clave SSH en ssh/id_ed25519, o sshpass/paramiko + password"
 fi
 
 _py_ssh_exec() {
-  # Ejecuta un comando remoto via paramiko. Si se le pasa --stdin-file <path>, envia ese archivo como stdin.
   local stdin_file=""
   if [[ "$1" == "--stdin-file" ]]; then stdin_file="$2"; shift 2; fi
   local remote_cmd="$*"
@@ -78,11 +83,19 @@ host     = os.environ['_DEPLOY_SSH_HOST']
 port     = int(os.environ['_DEPLOY_SSH_PORT'])
 user     = os.environ['_DEPLOY_SSH_USER']
 password = os.environ['_DEPLOY_SSH_PASS']
+ssh_key  = os.environ.get('_DEPLOY_SSH_KEY', '')
 remote_cmd  = sys.argv[1]
 stdin_file  = sys.argv[2] if len(sys.argv) > 2 else ''
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect(host, port=port, username=user, password=password, timeout=30)
+connect_kwargs = dict(hostname=host, port=port, username=user, timeout=30,
+                       allow_agent=False, look_for_keys=False,
+                       disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})
+if ssh_key and os.path.isfile(ssh_key):
+    connect_kwargs['key_filename'] = ssh_key
+elif password:
+    connect_kwargs['password'] = password
+client.connect(**connect_kwargs)
 stdin, stdout, stderr = client.exec_command(remote_cmd, get_pty=False)
 if stdin_file:
     with open(stdin_file, 'rb') as f:
@@ -112,12 +125,19 @@ host     = os.environ['_DEPLOY_SSH_HOST']
 port     = int(os.environ['_DEPLOY_SSH_PORT'])
 user     = os.environ['_DEPLOY_SSH_USER']
 password = os.environ['_DEPLOY_SSH_PASS']
+ssh_key  = os.environ.get('_DEPLOY_SSH_KEY', '')
 src, dest = sys.argv[1], sys.argv[2]
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect(host, port=port, username=user, password=password, timeout=30)
+connect_kwargs = dict(hostname=host, port=port, username=user, timeout=30,
+                       allow_agent=False, look_for_keys=False,
+                       disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})
+if ssh_key and os.path.isfile(ssh_key):
+    connect_kwargs['key_filename'] = ssh_key
+elif password:
+    connect_kwargs['password'] = password
+client.connect(**connect_kwargs)
 sftp = client.open_sftp()
-# Crear directorio destino si hace falta
 import posixpath
 dest_dir = posixpath.dirname(dest)
 try: sftp.stat(dest_dir)
@@ -138,7 +158,9 @@ PYEOF
 
 # Interfaz publica: ssh_cmd y scp_upload delegando al backend activo
 ssh_cmd() {
-  if [[ "$SSH_BACKEND" == "sshpass" ]]; then
+  if [[ "$SSH_BACKEND" == "key" ]]; then
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$SSH_KEY" -p "$PORT" "$USERNAME@$HOSTNAME" "$@"
+  elif [[ "$SSH_BACKEND" == "sshpass" ]]; then
     SSHPASS="$PASSWORD" sshpass -e ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "$PORT" "$USERNAME@$HOSTNAME" "$@"
   else
     _py_ssh_exec "$@"
@@ -146,9 +168,10 @@ ssh_cmd() {
 }
 
 ssh_pipe() {
-  # Ejecuta comando remoto enviando un archivo local como stdin (equivalente a ssh ... 'bash -s' < file)
   local stdin_file="$1"; shift
-  if [[ "$SSH_BACKEND" == "sshpass" ]]; then
+  if [[ "$SSH_BACKEND" == "key" ]]; then
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$SSH_KEY" -p "$PORT" "$USERNAME@$HOSTNAME" "$@" < "$stdin_file"
+  elif [[ "$SSH_BACKEND" == "sshpass" ]]; then
     SSHPASS="$PASSWORD" sshpass -e ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "$PORT" "$USERNAME@$HOSTNAME" "$@" < "$stdin_file"
   else
     _py_ssh_exec --stdin-file "$stdin_file" "$@"
@@ -156,7 +179,9 @@ ssh_pipe() {
 }
 
 scp_upload() {
-  if [[ "$SSH_BACKEND" == "sshpass" ]]; then
+  if [[ "$SSH_BACKEND" == "key" ]]; then
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$SSH_KEY" -P "$PORT" "$1" "$USERNAME@$HOSTNAME:$2"
+  elif [[ "$SSH_BACKEND" == "sshpass" ]]; then
     SSHPASS="$PASSWORD" sshpass -e scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P "$PORT" "$1" "$USERNAME@$HOSTNAME:$2"
   else
     _py_scp_put "$1" "$2"

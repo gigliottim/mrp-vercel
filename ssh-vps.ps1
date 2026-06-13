@@ -10,7 +10,8 @@ param(
     [string]$HostName = "181.13.244.35",
     [int]$Port = 5073,
     [string]$UserName = "root",
-    [string]$Password = "w(6C%QnZC7EQPZ",
+    [string]$Password = "",
+    [string]$SshKeyPath = "$PSScriptRoot\ssh\id_ed25519",
     [string]$Command = "",
     [int]$TimeoutSeconds = 120
 )
@@ -86,10 +87,18 @@ function Invoke-InteractiveShell {
 
 
 Ensure-PoshSsh
-$credential = Resolve-Credential -UserName $UserName -Password $Password
 
-Write-Step "Conectando a $UserName@${HostName}:$Port ..."
-$session = New-SSHSession -ComputerName $HostName -Port $Port -Credential $credential -AcceptKey
+if (Test-Path $SshKeyPath) {
+    Write-Step "Conectando a $UserName@${HostName}:$Port usando clave SSH ($SshKeyPath)..."
+    $session = New-SSHSession -ComputerName $HostName -Port $Port -Credential (New-Object System.Management.Automation.PSCredential ($UserName, (New-Object System.Security.SecureString))) -KeyFile $SshKeyPath -AcceptKey
+} elseif (-not [string]::IsNullOrWhiteSpace($Password)) {
+    $credential = Resolve-Credential -UserName $UserName -Password $Password
+    Write-Step "Conectando a $UserName@${HostName}:$Port usando password..."
+    $session = New-SSHSession -ComputerName $HostName -Port $Port -Credential $credential -AcceptKey
+} else {
+    Write-Error "No se encontró la clave SSH en $SshKeyPath ni se proporcionó password."
+    exit 1
+}
 
 try {
     $sessionId = $session.SessionId

@@ -10,6 +10,7 @@ use App\AgenteAI\Backend\Services\AgentResponse;
 use App\Core\Controllers\Controller;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
+use App\Core\Auth\AuthManager;
 use App\Core\Auth\TenantContext;
 use App\Core\Database\DatabaseManager;
 use App\Core\Support\SessionManager;
@@ -293,7 +294,7 @@ final class AgentController extends Controller
     private function getCurrentUserId(): int
     {
         $this->ensureSession();
-        return (int)($_SESSION['user_id'] ?? 0);
+        return (int)($_SESSION['auth']['user']['id'] ?? 0);
     }
 
     /**
@@ -302,7 +303,7 @@ final class AgentController extends Controller
     private function getCurrentTenantId(): int
     {
         $this->ensureSession();
-        return (int)($_SESSION['tenant_id'] ?? 0);
+        return (int)($_SESSION['auth']['tenant']['id'] ?? 0);
     }
 
     /**
@@ -321,18 +322,41 @@ final class AgentController extends Controller
             return;
         }
 
+        $tenantData = AuthManager::tenant();
+
+        if ($tenantData !== null && !empty($tenantData['database']['name'])) {
+            TenantContext::set($tenantData);
+
+            $baseConfig = config('database.connections.tenant');
+            $overrides = $tenantData['database'];
+            $connectionName = 'tenant_' . $overrides['name'];
+
+            $existingConnections = config('database.connections', []);
+            if (!isset($existingConnections[$connectionName])) {
+                $existingConnections[$connectionName] = [
+                    'driver' => $baseConfig['driver'] ?? 'pgsql',
+                    'host' => $overrides['host'] ?? $baseConfig['host'] ?? '127.0.0.1',
+                    'port' => $overrides['port'] ?? $baseConfig['port'] ?? '5432',
+                    'database' => $overrides['name'] ?? $baseConfig['database'],
+                    'username' => $overrides['username'] ?? $baseConfig['username'],
+                    'password' => $overrides['password'] ?? $baseConfig['password'],
+                    'charset' => $baseConfig['charset'] ?? 'utf8',
+                    'options' => $baseConfig['options'] ?? [],
+                ];
+                \App\Core\Config\Config::set('database.connections', $existingConnections);
+            }
+            return;
+        }
+
         $this->ensureSession();
-        $tenantId = (int)($_SESSION['tenant_id'] ?? 0);
-        error_log("AgentController::ensureTenantContext - tenantId from session: {$tenantId}");
+        $tenantId = (int)($_SESSION['auth']['tenant']['id'] ?? 0);
         if ($tenantId <= 0) {
-            error_log("AgentController::ensureTenantContext - No tenant_id in session, available keys: " . implode(', ', array_keys($_SESSION)));
             return;
         }
 
         try {
             $authDb = DatabaseManager::connection('mrp_auth');
         } catch (\Throwable $e) {
-            error_log("AgentController::ensureTenantContext - mrp_auth connection failed: " . $e->getMessage());
             $authDb = DatabaseManager::connection();
         }
 
@@ -352,7 +376,6 @@ final class AgentController extends Controller
                 ],
             ];
             TenantContext::set($tenantData);
-            error_log("AgentController::ensureTenantContext - Set tenant: " . json_encode($tenantData));
 
             $baseConfig = config('database.connections.tenant');
             $overrides = $tenantData['database'];
@@ -371,10 +394,7 @@ final class AgentController extends Controller
                     'options' => $baseConfig['options'] ?? [],
                 ];
                 \App\Core\Config\Config::set('database.connections', $existingConnections);
-                error_log("AgentController::ensureTenantContext - Registered connection: {$connectionName}");
             }
-        } else {
-            error_log("AgentController::ensureTenantContext - No tenant found for id: {$tenantId}");
         }
     }
 }

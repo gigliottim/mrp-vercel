@@ -45,34 +45,27 @@ final class ConversationRepository
                 }
             } catch (Exception $e) {
                 $this->valkey = null;
-                error_log("Valkey connection failed: " . $e->getMessage());
             }
             $this->prefix = $valkeyConfig['prefix'] ?? 'mrp:agent:';
         }
 
         // --- PostgreSQL (persistencia) ---
-        try {
-            $this->db = $this->resolveTenantConnection();
-        } catch (Exception $e) {
-            $this->db = null;
-            error_log("Database connection failed in ConversationRepository: " . $e->getMessage());
-        }
+        // Defer connection resolution to getDb() so it uses TenantContext
+        // which may be set after this constructor runs (by AgentController::ensureTenantContext)
+        $this->db = null;
     }
 
     private function resolveTenantConnection(): ?PDO
     {
         $tenant = TenantContext::get();
-        error_log("ConversationRepository::resolveTenantConnection - tenant: " . ($tenant ? json_encode($tenant) : 'NULL'));
 
         if ($tenant === null || empty($tenant['database']['name'])) {
-            error_log("ConversationRepository::resolveTenantConnection - falling back to 'tenant' connection");
             return DatabaseManager::connection('tenant');
         }
 
         $baseConfig = config('database.connections.tenant');
         $overrides = $tenant['database'];
         $connectionName = 'tenant_' . $overrides['name'];
-        error_log("ConversationRepository::resolveTenantConnection - connectionName: {$connectionName}, dbname: {$overrides['name']}");
 
         $existingConnections = config('database.connections', []);
         if (!isset($existingConnections[$connectionName])) {
@@ -87,7 +80,6 @@ final class ConversationRepository
                 'options' => $baseConfig['options'] ?? [],
             ];
             \App\Core\Config\Config::set('database.connections', $existingConnections);
-            error_log("ConversationRepository::resolveTenantConnection - registered new connection: {$connectionName}");
         }
 
         return DatabaseManager::connection($connectionName);
@@ -95,19 +87,32 @@ final class ConversationRepository
 
     /**
      * Obtener la conexión PDO (para uso interno del agente)
-     * Resuelve la conexión tenant dinámicamente si TenantContext fue establecido
-     * después de la construcción del repositorio.
+     * Resuelve la conexión tenant dinámicamente, ya que TenantContext
+     * se establece después de la construcción del repositorio.
      */
     public function getDb(): ?PDO
     {
         $tenant = TenantContext::get();
+
         if ($tenant !== null && !empty($tenant['database']['name'])) {
             $connectionName = 'tenant_' . $tenant['database']['name'];
             if ($this->resolvedConnectionName !== $connectionName) {
+                try {
+                    $this->db = $this->resolveTenantConnection();
+                    $this->resolvedConnectionName = $connectionName;
+                } catch (\Throwable $e) {
+                    $this->db = null;
+                }
+            }
+        } elseif ($this->db === null && $this->resolvedConnectionName === null) {
+            try {
                 $this->db = $this->resolveTenantConnection();
-                $this->resolvedConnectionName = $connectionName;
+                $this->resolvedConnectionName = '_tenant_fallback';
+            } catch (\Throwable $e) {
+                $this->db = null;
             }
         }
+
         return $this->db;
     }
 
@@ -118,9 +123,10 @@ final class ConversationRepository
      */
     public function create(array $data): ?int
     {
-        if (!$this->db) return null;
+        $db = $this->getDb();
+        if (!$db) return null;
 
-        $stmt = $this->db->prepare(
+        $stmt = $db->prepare(
             "INSERT INTO agent_conversations (tenant_id, user_id, intent, status, metadata, created_at)
              VALUES (?, ?, ?, 'active', ?, NOW()) RETURNING id"
         );
@@ -138,9 +144,10 @@ final class ConversationRepository
      */
     public function findById(int $id): ?array
     {
-        if (!$this->db) return null;
+        $db = $this->getDb();
+        if (!$db) return null;
 
-        $stmt = $this->db->prepare("SELECT * FROM agent_conversations WHERE id = ?");
+        $stmt = $db->prepare("SELECT * FROM agent_conversations WHERE id = ?");
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
@@ -151,9 +158,10 @@ final class ConversationRepository
      */
     public function findByUserAndTenant(int $userId, int $tenantId): ?array
     {
-        if (!$this->db) return null;
+        $db = $this->getDb();
+        if (!$db) return null;
 
-        $stmt = $this->db->prepare(
+        $stmt = $db->prepare(
             "SELECT * FROM agent_conversations WHERE user_id = ? AND tenant_id = ? AND status = 'active'
              ORDER BY created_at DESC LIMIT 1"
         );
@@ -167,7 +175,8 @@ final class ConversationRepository
      */
     public function update(int $id, array $data): bool
     {
-        if (!$this->db) return false;
+        $db = $this->getDb();
+        if (!$db) return false;
 
         $sets = [];
         $values = [];
@@ -184,7 +193,7 @@ final class ConversationRepository
         $values[] = $id;
 
         $sql = "UPDATE agent_conversations SET " . implode(', ', $sets) . " WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         return $stmt->execute($values);
     }
 
@@ -193,8 +202,9 @@ final class ConversationRepository
      */
     public function delete(int $id): bool
     {
-        if (!$this->db) return false;
-        $stmt = $this->db->prepare("DELETE FROM agent_conversations WHERE id = ?");
+        $db = $this->getDb();
+        if (!$db) return false;
+        $stmt = $db->prepare("DELETE FROM agent_conversations WHERE id = ?");
         return $stmt->execute([$id]);
     }
 
@@ -203,9 +213,10 @@ final class ConversationRepository
      */
     public function saveMessage(array $data): ?int
     {
-        if (!$this->db) return null;
+        $db = $this->getDb();
+        if (!$db) return null;
 
-        $stmt = $this->db->prepare(
+        $stmt = $db->prepare(
             "INSERT INTO agent_messages (conversation_id, role, content, metadata, created_at)
              VALUES (?, ?, ?, ?, NOW()) RETURNING id"
         );
@@ -223,9 +234,10 @@ final class ConversationRepository
      */
     public function getMessagesByConversation(string $convId): array
     {
-        if (!$this->db) return [];
+        $db = $this->getDb();
+        if (!$db) return [];
 
-        $stmt = $this->db->prepare(
+        $stmt = $db->prepare(
             "SELECT * FROM agent_messages WHERE conversation_id = ? ORDER BY created_at ASC"
         );
         $stmt->execute([$convId]);
@@ -237,9 +249,10 @@ final class ConversationRepository
      */
     public function saveAiLog(array $data): ?int
     {
-        if (!$this->db) return null;
+        $db = $this->getDb();
+        if (!$db) return null;
 
-        $stmt = $this->db->prepare(
+        $stmt = $db->prepare(
             "INSERT INTO agent_ai_logs (conversation_id, model_used, provider, prompt_hash, response_time_ms, validation_result, tokens_used, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) RETURNING id"
         );

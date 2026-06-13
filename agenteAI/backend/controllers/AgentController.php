@@ -11,6 +11,7 @@ use App\Core\Controllers\Controller;
 use App\Core\Http\Request;
 use App\Core\Http\Response;
 use App\Core\Auth\TenantContext;
+use App\Core\Database\DatabaseManager;
 use App\Core\Support\SessionManager;
 
 /**
@@ -326,13 +327,18 @@ final class AgentController extends Controller
             return;
         }
 
-        $authDb = \App\Core\Database\DatabaseManager::connection('mrp_auth');
+        try {
+            $authDb = DatabaseManager::connection('mrp_auth');
+        } catch (\Throwable $e) {
+            $authDb = DatabaseManager::connection();
+        }
+
         $stmt = $authDb->prepare("SELECT * FROM company_databases WHERE company_id = ? AND is_active = true LIMIT 1");
         $stmt->execute([$tenantId]);
         $tenant = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($tenant) {
-            TenantContext::set([
+        if ($tenant && !empty($tenant['database_name'])) {
+            $tenantData = [
                 'id' => $tenantId,
                 'database' => [
                     'name' => $tenant['database_name'],
@@ -341,7 +347,27 @@ final class AgentController extends Controller
                     'username' => $tenant['database_username'] ?? null,
                     'password' => $tenant['database_password'] ?? null,
                 ],
-            ]);
+            ];
+            TenantContext::set($tenantData);
+
+            $baseConfig = config('database.connections.tenant');
+            $overrides = $tenantData['database'];
+            $connectionName = 'tenant_' . $overrides['name'];
+
+            $existingConnections = config('database.connections', []);
+            if (!isset($existingConnections[$connectionName])) {
+                $existingConnections[$connectionName] = [
+                    'driver' => $baseConfig['driver'] ?? 'pgsql',
+                    'host' => $overrides['host'] ?? $baseConfig['host'] ?? '127.0.0.1',
+                    'port' => $overrides['port'] ?? $baseConfig['port'] ?? '5432',
+                    'database' => $overrides['name'] ?? $baseConfig['database'],
+                    'username' => $overrides['username'] ?? $baseConfig['username'],
+                    'password' => $overrides['password'] ?? $baseConfig['password'],
+                    'charset' => $baseConfig['charset'] ?? 'utf8',
+                    'options' => $baseConfig['options'] ?? [],
+                ];
+                \App\Core\Config\Config::set('database.connections', $existingConnections);
+            }
         }
     }
 }

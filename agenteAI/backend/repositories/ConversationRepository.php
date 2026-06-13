@@ -62,13 +62,17 @@ final class ConversationRepository
     private function resolveTenantConnection(): ?PDO
     {
         $tenant = TenantContext::get();
+        error_log("ConversationRepository::resolveTenantConnection - tenant: " . ($tenant ? json_encode($tenant) : 'NULL'));
+
         if ($tenant === null || empty($tenant['database']['name'])) {
+            error_log("ConversationRepository::resolveTenantConnection - falling back to 'tenant' connection");
             return DatabaseManager::connection('tenant');
         }
 
         $baseConfig = config('database.connections.tenant');
         $overrides = $tenant['database'];
         $connectionName = 'tenant_' . $overrides['name'];
+        error_log("ConversationRepository::resolveTenantConnection - connectionName: {$connectionName}, dbname: {$overrides['name']}");
 
         $existingConnections = config('database.connections', []);
         if (!isset($existingConnections[$connectionName])) {
@@ -83,6 +87,7 @@ final class ConversationRepository
                 'options' => $baseConfig['options'] ?? [],
             ];
             \App\Core\Config\Config::set('database.connections', $existingConnections);
+            error_log("ConversationRepository::resolveTenantConnection - registered new connection: {$connectionName}");
         }
 
         return DatabaseManager::connection($connectionName);

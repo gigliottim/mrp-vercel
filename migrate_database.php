@@ -21,6 +21,7 @@ if (empty($sqlFiles)) {
 
 sort($sqlFiles);
 
+define('BASE_PATH', __DIR__);
 require __DIR__ . '/bootstrap/autoload.php';
 \App\Core\Env::load(__DIR__ . '/.env');
 \App\Core\Config\Config::load(__DIR__ . '/config');

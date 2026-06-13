@@ -190,4 +190,44 @@ final class ConversationService
         // Aquí iría la lógica para actualizar el estado de la conversación
         // Usando el AgentConversationRepository
     }
+
+    // --- Estado en memoria (fallback cuando no hay Valkey ni DB) ---
+
+    private static array $stateCache = [];
+
+    public function getState(string $convId): array
+    {
+        if ($this->valkey) {
+            $key = "mrp:agent:guided:{$convId}";
+            $cached = $this->valkey->get($key);
+            if ($cached) {
+                $data = json_decode($cached, true);
+                if (is_array($data)) {
+                    return $data;
+                }
+            }
+        }
+
+        return self::$stateCache[$convId] ?? [];
+    }
+
+    public function saveState(string $convId, array $state): void
+    {
+        if ($this->valkey) {
+            $key = "mrp:agent:guided:{$convId}";
+            $this->valkey->setex($key, 1800, json_encode($state));
+        }
+
+        self::$stateCache[$convId] = $state;
+    }
+
+    public function clearState(string $convId): void
+    {
+        if ($this->valkey) {
+            $key = "mrp:agent:guided:{$convId}";
+            $this->valkey->del($key);
+        }
+
+        unset(self::$stateCache[$convId]);
+    }
 }

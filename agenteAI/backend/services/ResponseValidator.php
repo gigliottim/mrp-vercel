@@ -46,7 +46,7 @@ final class ResponseValidator
             $errors[] = "El email debe tener un formato válido";
         }
 
-        if (isset($data['min_stock']) && !$this->validateRegex($data['min_stock'], $validationConfig['positive_number'] ?? '')) {
+        if (isset($data['min_stock']) && !$this->validateRegex((string) $data['min_stock'], $validationConfig['positive_number'] ?? '')) {
             $errors[] = "El stock mínimo debe ser un número positivo";
         }
 

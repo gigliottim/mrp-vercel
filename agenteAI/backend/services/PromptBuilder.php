@@ -55,30 +55,129 @@ final class PromptBuilder
     }
 
     /**
-     * Detectar intent por palabras clave
+     * Detectar intent por palabras clave, incluyendo labels exactos de sugerencias
      */
     public function detectIntent(string $userInput): string
     {
-        $input = mb_strtolower($userInput);
+        $input = mb_strtolower(trim($userInput));
 
-        // Palabras clave para cada intent
-        $keywords = [
-            'create_part' => ['pieza', 'parte', 'nueva', 'crear', 'agregar', 'código', 'descripción'],
-            'create_bom' => ['bom', 'lista', 'materiales', 'componentes', 'armar', 'padre'],
-            'create_supplier' => ['proveedor', 'proveedora', 'empresa', 'cuit', 'contacto'],
-            'create_material' => ['material', 'materia prima', 'base', 'stock', 'mínimo'],
+        // Mapeo de frases exactas de las sugerencias del frontend
+        $labels = [
+            'create_part' => [
+                'crear nueva pieza',
+                'nueva pieza',
+                'crear pieza',
+                'pieza',
+                'parte',
+                'nueva parte',
+                'crear parte',
+                'crear nueva parte',
+            ],
+            'create_bom' => [
+                'armar lista de materiales (bom)',
+                'bom',
+                'lista de materiales',
+                'materiales',
+                'componentes',
+                'armar bom',
+                'nueva bom',
+            ],
+            'create_supplier' => [
+                'registrar proveedor',
+                'proveedor',
+                'nuevo proveedor',
+                'empresa',
+                'registrar empresa',
+            ],
+            'create_material' => [
+                'registrar materia prima',
+                'materia prima',
+                'material',
+                'nuevo material',
+                'registrar material',
+            ],
         ];
 
-        // Buscar coincidencias
-        foreach ($keywords as $intent => $words) {
-            foreach ($words as $word) {
-                if (strpos($input, $word) !== false) {
+        foreach ($labels as $intent => $phrases) {
+            foreach ($phrases as $phrase) {
+                if (str_contains($input, $phrase)) {
                     return $intent;
                 }
             }
         }
 
-        // Si no hay coincidencias, devolver general_query
         return 'general_query';
+    }
+
+    /**
+     * Determinar el siguiente campo vacío que se le debe preguntar al usuario.
+     *
+     * @return array{field: string, message: string}|null
+     */
+    public function nextMissingField(string $intent, array $data): ?array
+    {
+        $flows = [
+            'create_part' => [
+                ['code', '¿Cuál es el código de la pieza? (máximo 20 caracteres alfanuméricos)'],
+                ['description', '¿Cuál es la descripción de la pieza?'],
+                ['uom', '¿Cuál es la unidad de medida? Usa una de: u, kg, m, l, g'],
+                ['part_type', '¿Qué tipo de parte es? pieza, materia_prima o producto_terminado'],
+                ['category', '¿A qué categoría pertenece? mecanica, electrica u otros'],
+            ],
+            'create_material' => [
+                ['code', '¿Cuál es el código del material? (máximo 20 caracteres alfanuméricos)'],
+                ['description', '¿Cuál es la descripción del material?'],
+                ['uom', '¿Cuál es la unidad de medida? Usa una de: u, kg, m, l, g'],
+                ['min_stock', '¿Cuál es el stock mínimo? (número positivo)'],
+            ],
+            'create_supplier' => [
+                ['name', '¿Cuál es el nombre o razón social del proveedor?'],
+                ['cuit', '¿Cuál es el CUIT? Formato: XX-XXXXXXXX-X'],
+                ['contact', '¿Cuál es el nombre del contacto?'],
+                ['email', '¿Cuál es el email de contacto?'],
+                ['phone', '¿Cuál es el teléfono de contacto?'],
+            ],
+            'create_bom' => [
+                ['parent_part', '¿Cuál es el código de la pieza padre?'],
+                ['components', '¿Cuál es el primer componente? Indicá código, cantidad y unidad de medida.'],
+            ],
+        ];
+
+        $flow = $flows[$intent] ?? null;
+        if (!$flow) {
+            return null;
+        }
+
+        foreach ($flow as [$field, $message]) {
+            if (!isset($data[$field]) || $data[$field] === '' || $data[$field] === null) {
+                return ['field' => $field, 'message' => $message];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Construir un mensaje de guía paso a paso basado en el campo faltante.
+     */
+    public function buildStepByStepMessage(string $intent, array $data): array
+    {
+        $next = $this->nextMissingField($intent, $data);
+
+        if ($next === null) {
+            return [
+                'status' => 'preview',
+                'message' => 'Datos completos. ¿Confirmamos y guardamos?',
+                'data' => $data,
+                'suggestions' => ['Confirmar y guardar', 'Corregir'],
+            ];
+        }
+
+        return [
+            'status' => 'clarify',
+            'message' => $next['message'],
+            'data' => $data,
+            'suggestions' => [],
+        ];
     }
 }

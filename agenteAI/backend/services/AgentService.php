@@ -41,11 +41,44 @@ final class AgentService
 
     /**
      * Procesar un mensaje del usuario
+     *
+     * Para intents guiados (create_part, create_material, create_supplier, create_bom),
+     * el servicio mantiene estado en la conversación y guía al usuario campo por campo.
+     * Cuando todos los campos requeridos están completos y validados, guarda automáticamente.
      */
     public function processMessage(string $convId, string $userInput): AgentResponse
     {
         $history = $this->conversationService ? $this->conversationService->getHistory($convId) : [];
-        $intent = $this->promptBuilder->detectIntent($userInput);
+
+        // Recuperar estado previo de la conversación (si existe)
+        $session = $this->getConversationState($convId);
+        $intent = $session['intent'] ?? '';
+
+        if ($intent === '') {
+            $intent = $this->promptBuilder->detectIntent($userInput);
+        }
+
+        // Si es la primera interacción y el input coincide con una sugerencia rápida,
+        // iniciamos la guía paso a paso sin llamar a la IA innecesariamente.
+        if (($session['step'] ?? 0) === 0 && $this->isGuidedIntent($intent)) {
+            $this->saveConversationState($convId, ['intent' => $intent, 'data' => [], 'step' => 1]);
+            $welcome = $this->promptBuilder->buildStepByStepMessage($intent, []);
+            $this->logAiCall($convId, [], $welcome, true, null, 'guided_welcome');
+            return new AgentResponse(
+                status: 'clarify',
+                message: $welcome['message'],
+                data: [],
+                suggestions: $welcome['suggestions'],
+                conversationId: $convId
+            );
+        }
+
+        // Continuación de una conversación guiada
+        if ($this->isGuidedIntent($intent)) {
+            return $this->processGuidedStep($convId, $userInput, $intent, $session['data'] ?? [], (int)($session['step'] ?? 1));
+        }
+
+        // Flujo general (consultas no guiadas)
         $messages = $this->promptBuilder->buildMessages($history, $userInput, $intent);
         $promptHash = $this->generatePromptHash($messages);
 
@@ -130,6 +163,307 @@ final class AgentService
     public function clearCache(string $promptHash): void
     {
         $this->invalidateCachedResponse($promptHash);
+    }
+
+    // ─── Conversaciones guiadas paso a paso ───────────────────────────
+
+    /**
+     * Determina si un intent debe seguir el flujo guiado campo por campo.
+     */
+    private function isGuidedIntent(string $intent): bool
+    {
+        return in_array($intent, ['create_part', 'create_material', 'create_supplier', 'create_bom'], true);
+    }
+
+    /**
+     * Procesar un paso de una conversación guiada.
+     */
+    private function processGuidedStep(
+        string $convId,
+        string $userInput,
+        string $intent,
+        array $collectedData,
+        int $step
+    ): AgentResponse {
+        // Extraer el campo actual del paso
+        $next = $this->promptBuilder->nextMissingField($intent, $collectedData);
+
+        if ($next !== null) {
+            $field = $next['field'];
+            $value = $this->extractFieldValue($field, $userInput, $intent);
+
+            if ($value === null) {
+                // No se pudo interpretar el valor: repetir la pregunta con ayuda
+                $help = $this->buildFieldHelp($field, $intent);
+                return new AgentResponse(
+                    status: 'clarify',
+                    message: "No entendí bien ese dato. {$help}",
+                    data: $collectedData,
+                    suggestions: $this->buildFieldSuggestions($field, $intent),
+                    conversationId: $convId
+                );
+            }
+
+            $collectedData[$field] = $value;
+        }
+
+        // Verificar si ahora están todos los datos
+        $validationResult = $this->validator->validate($collectedData, $intent);
+
+        if ($validationResult->failed()) {
+            $next = $this->promptBuilder->nextMissingField($intent, $collectedData);
+            $message = $next !== null
+                ? $next['message']
+                : $this->buildClarifyMessage($validationResult->errors);
+
+            $suggestions = [];
+            if ($next !== null) {
+                $suggestions = $this->buildFieldSuggestions($next['field'], $intent);
+            }
+            if (empty($suggestions)) {
+                $suggestions = $this->buildSuggestions($collectedData);
+            }
+
+            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+
+            $this->logAiCall($convId, [], [
+                'status' => 'clarify',
+                'message' => $message,
+                'data' => $collectedData,
+                'suggestions' => $suggestions,
+            ], false, $validationResult->errors, 'guided_step');
+
+            return new AgentResponse(
+                status: 'clarify',
+                message: $message,
+                data: $collectedData,
+                suggestions: $suggestions,
+                conversationId: $convId
+            );
+        }
+
+        // Datos completos y válidos: guardar automáticamente
+        $saveResult = $this->confirmAndSave($convId, $validationResult->data, $intent);
+
+        if ($saveResult['success']) {
+            $this->clearConversationState($convId);
+
+            $this->logAiCall($convId, [], [
+                'status' => 'saved',
+                'message' => $saveResult['message'],
+                'data' => $saveResult['data'] ?? null,
+                'suggestions' => [],
+            ], true, null, 'guided_auto_save');
+
+            return new AgentResponse(
+                status: 'saved',
+                message: $saveResult['message'],
+                data: $saveResult['data'] ?? null,
+                suggestions: ['Crear otra pieza', 'Volver al menú'],
+                conversationId: $convId
+            );
+        }
+
+        // Falló el guardado: permitir corrección
+        return new AgentResponse(
+            status: 'clarify',
+            message: "No pude guardar: {$saveResult['message']}. ¿Querés corregir algún dato?",
+            data: $collectedData,
+            suggestions: ['Reintentar', 'Cancelar'],
+            conversationId: $convId
+        );
+    }
+
+    /**
+     * Extraer el valor de un campo específico desde el texto del usuario.
+     * Para campos complejos (components/BOM) delega al parser especializado.
+     */
+    private function extractFieldValue(string $field, string $userInput, string $intent): mixed
+    {
+        $userInput = trim($userInput);
+
+        return match ($field) {
+            'code', 'parent_part' => $this->extractCode($userInput),
+            'description' => $userInput,
+            'name' => $userInput,
+            'contact' => $userInput,
+            'uom' => $this->extractUom($userInput),
+            'part_type' => $this->extractPartType($userInput),
+            'category' => $this->extractCategory($userInput),
+            'min_stock' => $this->extractPositiveNumber($userInput),
+            'cuit' => $this->extractCuit($userInput),
+            'email' => $this->extractEmail($userInput),
+            'phone' => $userInput,
+            'components' => $this->extractComponent($userInput),
+            default => $userInput,
+        };
+    }
+
+    private function extractCode(string $input): ?string
+    {
+        if (preg_match('/\b([A-Za-z0-9\-]{1,20})\b/', trim($input), $m)) {
+            return strtoupper($m[1]);
+        }
+        return trim($input) !== '' ? strtoupper(substr(trim($input), 0, 20)) : null;
+    }
+
+    private function extractUom(string $input): ?string
+    {
+        $valid = ['u', 'kg', 'm', 'l', 'g'];
+        $lower = mb_strtolower(trim($input));
+        foreach ($valid as $uom) {
+            if (str_contains($lower, $uom)) {
+                return $uom;
+            }
+        }
+        return null;
+    }
+
+    private function extractPartType(string $input): ?string
+    {
+        $map = [
+            'pieza' => 'pieza',
+            'materia_prima' => 'materia_prima',
+            'materia prima' => 'materia_prima',
+            'mp' => 'materia_prima',
+            'producto terminado' => 'producto_terminado',
+            'producto_terminado' => 'producto_terminado',
+            'producto' => 'producto_terminado',
+        ];
+        $lower = mb_strtolower(trim($input));
+        foreach ($map as $key => $value) {
+            if (str_contains($lower, $key)) {
+                return $value;
+            }
+        }
+        return null;
+    }
+
+    private function extractCategory(string $input): ?string
+    {
+        $map = [
+            'mecanica' => 'mecanica',
+            'mecánica' => 'mecanica',
+            'electrica' => 'electrica',
+            'eléctrica' => 'electrica',
+            'otros' => 'otros',
+            'otro' => 'otros',
+        ];
+        $lower = mb_strtolower(trim($input));
+        foreach ($map as $key => $value) {
+            if (str_contains($lower, $key)) {
+                return $value;
+            }
+        }
+        return null;
+    }
+
+    private function extractPositiveNumber(string $input): ?float
+    {
+        if (preg_match('/[0-9]+(?:\.[0-9]+)?/', str_replace(',', '.', $input), $m)) {
+            return (float) $m[0];
+        }
+        return null;
+    }
+
+    private function extractCuit(string $input): ?string
+    {
+        if (preg_match('/\b(\d{2}-\d{8}-\d{1})\b/', $input, $m)) {
+            return $m[1];
+        }
+        return null;
+    }
+
+    private function extractEmail(string $input): ?string
+    {
+        if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $input, $m)) {
+            return $m[0];
+        }
+        return null;
+    }
+
+    private function extractComponent(string $input): ?array
+    {
+        // Formato esperado: "codigo cantidad uom" o "codigo, cantidad, uom"
+        if (preg_match('/^([A-Za-z0-9\-]+)\s*[,\s]+([0-9]+(?:\.[0-9]+)?)\s*[,\s]+(u|kg|m|l|g)$/i', trim($input), $m)) {
+            return [
+                ['code' => strtoupper($m[1]), 'quantity' => (float) $m[2], 'uom' => mb_strtolower($m[3])]
+            ];
+        }
+        // Formato simple "codigo"
+        if (preg_match('/^([A-Za-z0-9\-]+)$/', trim($input), $m)) {
+            return [['code' => strtoupper($m[1]), 'quantity' => 1, 'uom' => 'u']];
+        }
+        return null;
+    }
+
+    private function buildFieldHelp(string $field, string $intent): string
+    {
+        $helps = [
+            'code' => 'Indicá el código, por ejemplo: P-001.',
+            'description' => 'Indicá una breve descripción.',
+            'uom' => 'Indicá la unidad de medida: u, kg, m, l o g.',
+            'part_type' => 'Indicá el tipo: pieza, materia_prima o producto_terminado.',
+            'category' => 'Indicá la categoría: mecanica, electrica u otros.',
+            'min_stock' => 'Indicá el stock mínimo como número.',
+            'name' => 'Indicá el nombre o razón social.',
+            'cuit' => 'Indicá el CUIT con formato XX-XXXXXXXX-X.',
+            'contact' => 'Indicá el nombre del contacto.',
+            'email' => 'Indicá un email válido.',
+            'phone' => 'Indicá el teléfono.',
+            'parent_part' => 'Indicá el código de la pieza padre.',
+            'components' => 'Indicá el componente: código cantidad uom (ej: P-002 2 u).',
+        ];
+        return $helps[$field] ?? 'Intentá de nuevo con un valor válido.';
+    }
+
+    private function buildFieldSuggestions(string $field, string $intent): array
+    {
+        $map = [
+            'uom' => [
+                ['label' => 'u', 'value' => 'u'],
+                ['label' => 'kg', 'value' => 'kg'],
+                ['label' => 'm', 'value' => 'm'],
+                ['label' => 'l', 'value' => 'l'],
+                ['label' => 'g', 'value' => 'g'],
+            ],
+            'part_type' => [
+                ['label' => 'Pieza', 'value' => 'pieza'],
+                ['label' => 'Materia prima', 'value' => 'materia_prima'],
+                ['label' => 'Producto terminado', 'value' => 'producto_terminado'],
+            ],
+            'category' => [
+                ['label' => 'Mecánica', 'value' => 'mecanica'],
+                ['label' => 'Eléctrica', 'value' => 'electrica'],
+                ['label' => 'Otros', 'value' => 'otros'],
+            ],
+        ];
+
+        return $map[$field] ?? [];
+    }
+
+    private function getConversationState(string $convId): array
+    {
+        if (!$this->conversationService) {
+            return [];
+        }
+        return $this->conversationService->getState($convId);
+    }
+
+    private function saveConversationState(string $convId, array $state): void
+    {
+        if (!$this->conversationService) {
+            return;
+        }
+        $this->conversationService->saveState($convId, $state);
+    }
+
+    private function clearConversationState(string $convId): void
+    {
+        if (!$this->conversationService) {
+            return;
+        }
+        $this->conversationService->clearState($convId);
     }
 
     // ─── Guardar Parte (tabla: partes + variantes) ────────────────────

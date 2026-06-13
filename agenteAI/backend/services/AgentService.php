@@ -473,15 +473,25 @@ final class AgentService
         $db = $this->getDb();
         if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
 
-        // 1) Obtener o crear tipo de parte
-        $stmtTipo = $db->prepare("SELECT id FROM tipos_partes WHERE codigo = ?");
-        $stmtTipo->execute([$data['part_type'] ?? 'pieza']);
-        $idTipo = $stmtTipo->fetchColumn() ?: 1;
+        // 1) Obtener tipo de parte (con fallback si la tabla no existe)
+        $idTipo = 1;
+        try {
+            $stmtTipo = $db->prepare("SELECT id FROM tipos_partes WHERE codigo = ?");
+            $stmtTipo->execute([$data['part_type'] ?? 'pieza']);
+            $idTipo = (int)($stmtTipo->fetchColumn() ?: 1);
+        } catch (\Throwable $e) {
+            error_log("AgentService::savePart - tipos_partes lookup failed: " . $e->getMessage());
+        }
 
-        // 2) Obtener o crear grupo de partes
-        $stmtGrupo = $db->prepare("SELECT id FROM grupos_partes WHERE nombre = ?");
-        $stmtGrupo->execute([$data['category'] ?? 'General']);
-        $idGrupo = $stmtGrupo->fetchColumn() ?: 1;
+        // 2) Obtener grupo de partes (con fallback si la tabla no existe)
+        $idGrupo = 1;
+        try {
+            $stmtGrupo = $db->prepare("SELECT id FROM grupos_partes WHERE nombre = ?");
+            $stmtGrupo->execute([$data['category'] ?? 'General']);
+            $idGrupo = (int)($stmtGrupo->fetchColumn() ?: 1);
+        } catch (\Throwable $e) {
+            error_log("AgentService::savePart - grupos_partes lookup failed: " . $e->getMessage());
+        }
 
         // 3) Insertar parte
         $stmt = $db->prepare(

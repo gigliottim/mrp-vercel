@@ -17,8 +17,8 @@ function agentFloating() {
         umTypeChips: null,
         STORAGE_KEY: 'luchi_chat_state',
 
-        init() {
-            this.checkConfiguration();
+        async init() {
+            await this.checkConfiguration();
             this.restoreState();
 
             window.addEventListener('openAgentChat', () => {
@@ -121,18 +121,11 @@ function agentFloating() {
                 const response = await fetch('/api/v1/agent/config');
                 const data = await response.json();
                 if (data.success) {
-                    const wasOffline = this.isOffline;
                     this.isOffline = !data.isOnline;
-                    if (wasOffline !== this.isOffline) {
-                        this.loadSuggestions();
-                    }
                 }
             } catch (error) {
                 console.error('Error checking configuration:', error);
-                if (!this.isOffline) {
-                    this.isOffline = true;
-                    this.loadSuggestions();
-                }
+                this.isOffline = true;
             }
         },
 
@@ -165,11 +158,13 @@ function agentFloating() {
 
         async loadSuggestions() {
             try {
-                const offlineParam = this.isOffline ? '?offline=1' : '';
-                const response = await fetch('/api/v1/agent/suggestions' + offlineParam);
+                const response = await fetch('/api/v1/agent/suggestions');
                 const data = await response.json();
                 if (data.success) {
-                    this.suggestions = data.suggestions;
+                    const allSuggestions = data.suggestions || [];
+                    this.suggestions = this.isOffline
+                        ? allSuggestions.filter(s => s.offline_safe)
+                        : allSuggestions;
                     this.renderSuggestions();
                 }
             } catch (error) {

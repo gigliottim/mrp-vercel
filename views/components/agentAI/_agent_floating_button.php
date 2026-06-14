@@ -101,4 +101,4 @@ use App\Core\View\View;
 
 <!-- CSS y JS externalizados del botón flotante -->
 <link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=50.1.0">
-<script src="/agenteAI/frontend/js/agent_floating.js?v=51.0.0" defer></script>
+<script src="/agenteAI/frontend/js/agent_floating.js?v=52.0.0" defer></script>

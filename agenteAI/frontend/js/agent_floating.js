@@ -17,8 +17,8 @@ function agentFloating() {
         umTypeChips: null,
         STORAGE_KEY: 'luchi_chat_state',
 
-        init() {
-            this.checkConfiguration();
+        async init() {
+            await this.checkConfiguration();
             this.restoreState();
 
             window.addEventListener('openAgentChat', () => {
@@ -161,7 +161,10 @@ function agentFloating() {
                 const response = await fetch('/api/v1/agent/suggestions');
                 const data = await response.json();
                 if (data.success) {
-                    this.suggestions = data.suggestions;
+                    const allSuggestions = data.suggestions || [];
+                    this.suggestions = this.isOffline
+                        ? allSuggestions.filter(s => s.offline_safe)
+                        : allSuggestions;
                     this.renderSuggestions();
                 }
             } catch (error) {
@@ -306,7 +309,8 @@ function agentFloating() {
         },
 
         async sendMessage() {
-            if (this.isOffline || this.isLoading) return;
+            const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+            if ((this.isOffline && !isGuidedIntent && !this.guidedState) || this.isLoading) return;
             if (!this.userInput.trim() && !this.guidedState) return;
 
             const message = this.userInput.trim() || '(omitir)';

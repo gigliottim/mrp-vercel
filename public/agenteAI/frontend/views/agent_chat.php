@@ -63,7 +63,7 @@
         <!-- Offline Status Message -->
         <div class="agent-offline-message" x-show="isOffline">
             <div class="offline-icon"><i class="bi bi-wifi-off"></i></div>
-            <p>No es posible enviar mensajes. Verifica la configuración de la API o el modelo local.</p>
+            <p>El agente está fuera de línea. Las opciones rápidas siguen disponibles.</p>
         </div>
     </div>
 

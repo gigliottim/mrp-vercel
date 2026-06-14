@@ -25,31 +25,25 @@ function agentChat() {
         const data = await response.json();
 
         if (data.success) {
-          const wasOffline = this.isOffline;
           this.isOffline = !data.isOnline;
           this.mode = data.mode;
-          if (wasOffline !== this.isOffline) {
-            this.loadSuggestions();
-          }
         }
       } catch (error) {
         console.error('Error checking configuration:', error);
-        // Si falla la verificación, asumir que está offline
-        if (!this.isOffline) {
-          this.isOffline = true;
-          this.loadSuggestions();
-        }
+        this.isOffline = true;
       }
     },
 
     async loadSuggestions() {
       try {
-        const offlineParam = this.isOffline ? '?offline=1' : '';
-        const response = await fetch('/api/v1/agent/suggestions' + offlineParam);
+        const response = await fetch('/api/v1/agent/suggestions');
         const data = await response.json();
 
         if (data.success) {
-          this.suggestions = data.suggestions;
+          const allSuggestions = data.suggestions || [];
+          this.suggestions = this.isOffline
+            ? allSuggestions.filter(s => s.offline_safe)
+            : allSuggestions;
           this.renderSuggestions();
         }
       } catch (error) {

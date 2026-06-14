@@ -188,26 +188,12 @@ final class AgentController extends Controller
 
     /**
      * Obtener sugerencias predefinidas
-     * Si ?offline=1, solo devuelve sugerencias offline_safe (que no requieren IA).
+     * Siempre incluye el flag offline_safe para que el frontend filtre.
      */
     public function getSuggestions(Request $request): Response
     {
         $agentConfig = config('agent_ai', []);
         $suggestions = $agentConfig['suggestions'] ?? [];
-        $offline = $request->query('offline', '0') === '1';
-
-        if ($offline) {
-            $suggestions = array_values(array_filter($suggestions, fn($s) => !empty($s['offline_safe'])));
-            foreach ($suggestions as &$s) {
-                unset($s['offline_safe']);
-            }
-            unset($s);
-        } else {
-            foreach ($suggestions as &$s) {
-                unset($s['offline_safe']);
-            }
-            unset($s);
-        }
 
         return $this->json([
             'success' => true,

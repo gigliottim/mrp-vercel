@@ -667,8 +667,12 @@ final class AgentService
             'tipos_partes' => $this->fetchTiposPartes($db),
             'grupos_partes' => $this->fetchGruposPartes($db),
             'unidades_medida_all' => $this->fetchUnidadesMedida($db),
+            'unidades_medida_tipos' => $this->fetchUnidadesMedidaTipos($db),
             'unidades_medida_longitud' => $this->fetchUnidadesMedidaByTipo($db, 'longitud'),
             'unidades_medida_masa' => $this->fetchUnidadesMedidaByTipo($db, 'masa'),
+            'unidades_medida_volumen' => $this->fetchUnidadesMedidaByTipo($db, 'volumen'),
+            'unidades_medida_superficie' => $this->fetchUnidadesMedidaByTipo($db, 'superficie'),
+            'unidades_medida_unidad' => $this->fetchUnidadesMedidaByTipo($db, 'unidad'),
             'estados_variante' => self::ESTADOS_VARIANTE,
             default => [],
         };
@@ -731,6 +735,35 @@ final class AgentService
                 ['value' => 3, 'label' => 'm - Metro', 'tipo' => 'longitud'],
                 ['value' => 4, 'label' => 'l - Litro', 'tipo' => 'volumen'],
                 ['value' => 5, 'label' => 'g - Gramo', 'tipo' => 'masa'],
+            ];
+        }
+    }
+
+    private function fetchUnidadesMedidaTipos(\PDO $db): array
+    {
+        try {
+            $stmt = $db->query("SELECT DISTINCT tipo FROM unidades_medida WHERE activo = true ORDER BY tipo");
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $labels = [
+                'unidad' => 'Unidad',
+                'masa' => 'Masa',
+                'longitud' => 'Longitud',
+                'volumen' => 'Volumen',
+                'superficie' => 'Superficie',
+            ];
+            return array_map(fn($r) => [
+                'value' => $r['tipo'],
+                'label' => $labels[$r['tipo']] ?? ucfirst($r['tipo']),
+                'lookup' => 'unidades_medida_' . $r['tipo'],
+            ], $rows);
+        } catch (\Throwable $e) {
+            error_log("fetchUnidadesMedidaTipos failed: " . $e->getMessage());
+            return [
+                ['value' => 'unidad', 'label' => 'Unidad', 'lookup' => 'unidades_medida_unidad'],
+                ['value' => 'masa', 'label' => 'Masa', 'lookup' => 'unidades_medida_masa'],
+                ['value' => 'longitud', 'label' => 'Longitud', 'lookup' => 'unidades_medida_longitud'],
+                ['value' => 'volumen', 'label' => 'Volumen', 'lookup' => 'unidades_medida_volumen'],
+                ['value' => 'superficie', 'label' => 'Superficie', 'lookup' => 'unidades_medida_superficie'],
             ];
         }
     }

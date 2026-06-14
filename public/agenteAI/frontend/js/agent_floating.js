@@ -14,10 +14,12 @@ function agentFloating() {
         currentIntent: null,
         guidedState: null,
         lookupCache: {},
+        umTypeChips: null,
+        STORAGE_KEY: 'luchi_chat_state',
 
         init() {
             this.checkConfiguration();
-            this.loadSuggestions();
+            this.restoreState();
 
             window.addEventListener('openAgentChat', () => {
                 this.isMinimized = false;
@@ -26,6 +28,92 @@ function agentFloating() {
             window.addEventListener('minimizeAgentChat', () => {
                 this.isMinimized = true;
             });
+        },
+
+        saveState() {
+            try {
+                const state = {
+                    messages: this.messages,
+                    conversationId: this.conversationId,
+                    currentIntent: this.currentIntent,
+                    guidedState: this.guidedState,
+                    isMinimized: this.isMinimized,
+                };
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {}
+        },
+
+        restoreState() {
+            try {
+                const raw = localStorage.getItem(this.STORAGE_KEY);
+                if (!raw) {
+                    this.loadSuggestions();
+                    return;
+                }
+                const state = JSON.parse(raw);
+                this.messages = state.messages || [];
+                this.conversationId = state.conversationId || null;
+                this.currentIntent = state.currentIntent || null;
+                this.guidedState = state.guidedState || null;
+
+                if (this.messages.length > 0 || this.conversationId) {
+                    this.rebuildMessagesDOM();
+                    if (this.guidedState) {
+                        this.restoreGuidedSuggestions();
+                    } else {
+                        this.loadSuggestions();
+                    }
+                } else {
+                    this.loadSuggestions();
+                }
+            } catch (e) {
+                this.loadSuggestions();
+            }
+        },
+
+        rebuildMessagesDOM() {
+            const container = document.getElementById('agent-float-messages');
+            if (!container) return;
+            container.innerHTML = '';
+            for (const msg of this.messages) {
+                const cls = msg.role === 'user' ? 'user' : (msg.role === 'assistant' ? 'assistant' : 'system');
+                container.innerHTML += `
+                    <div class="agent-float-message agent-float-message-${cls}">
+                        <div class="agent-float-message-content">
+                            <p>${this.escapeHtml(msg.content)}</p>
+                        </div>
+                        <span class="agent-float-timestamp">${msg.timestamp || ''}</span>
+                    </div>`;
+            }
+            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+        },
+
+        async restoreGuidedSuggestions() {
+            if (!this.guidedState || !this.guidedState.intent) return;
+            try {
+                const response = await fetch('/api/v1/agent/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'continuar',
+                        conversation_id: this.conversationId,
+                        intent: this.guidedState.intent,
+                        guided_state: this.guidedState
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.guidedState = data.guided_state || null;
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        const hasLookup = data.suggestions.some(s => s.lookup);
+                        if (hasLookup) {
+                            this.renderSuggestionsWithLookup(data.suggestions, document.getElementById('agent-float-suggestions-grid'));
+                        } else {
+                            this.renderSuggestions(data.suggestions);
+                        }
+                    }
+                }
+            } catch (e) {}
         },
 
         async checkConfiguration() {
@@ -46,14 +134,17 @@ function agentFloating() {
             if (!this.isMinimized) {
                 this.focusInput();
             }
+            this.saveState();
         },
 
         minimizeChat() {
             this.isMinimized = true;
+            this.saveState();
         },
 
         closeChat() {
             this.isMinimized = true;
+            this.saveState();
         },
 
         focusInput() {
@@ -139,7 +230,10 @@ function agentFloating() {
 
             let chips = [];
             for (const s of suggestions) {
-                if (s.lookup) {
+                if (s.lookup === 'unidades_medida_all') {
+                    chips = await this.renderUmTypeChips(grid);
+                    break;
+                } else if (s.lookup) {
                     const items = await this.fetchLookup(s.lookup);
                     chips = items.map(item => `
                         <button class="agent-float-suggestion-chip"
@@ -171,6 +265,44 @@ function agentFloating() {
             }
 
             grid.innerHTML = chips.join('');
+        },
+
+        async renderUmTypeChips(grid) {
+            const types = await this.fetchLookup('unidades_medida_tipos');
+            if (!types || types.length === 0) {
+                return ['<span class="text-muted small">No hay unidades disponibles</span>'];
+            }
+            return types.map(t => `
+                <button class="agent-float-suggestion-chip agent-float-um-type-chip"
+                        data-lookup="${this.escapeHtml(t.lookup)}"
+                        onclick="selectUmType('${this.escapeHtml(t.lookup)}', '${this.escapeHtml(t.label)}')">
+                    <span>${this.escapeHtml(t.label)}</span>
+                </button>
+            `);
+        },
+
+        async selectUmType(lookupType, label) {
+            const grid = document.getElementById('agent-float-suggestions-grid');
+            if (!grid) return;
+
+            grid.innerHTML = `<span class="text-muted small">Cargando ${label}...</span>`;
+
+            const items = await this.fetchLookup(lookupType);
+            const backBtn = `
+                <button class="agent-float-suggestion-chip agent-float-um-back-chip"
+                        onclick="selectUmTypeBack()">
+                    <span>&#8592; Tipos</span>
+                </button>
+            `;
+            const itemChips = items.map(item => `
+                <button class="agent-float-suggestion-chip"
+                        data-value="${this.escapeHtml(String(item.value))}"
+                        onclick="selectFloatFieldOption('${this.escapeHtml(String(item.value))}')">
+                    <span>${this.escapeHtml(item.label)}</span>
+                </button>
+            `);
+
+            grid.innerHTML = backBtn + itemChips.join('');
         },
 
         async sendMessage() {
@@ -211,12 +343,14 @@ function agentFloating() {
                     } else {
                         this.renderSuggestions([]);
                     }
+                    this.saveState();
                 }
             } catch (error) {
                 console.error('Error sending message:', error);
                 this.addMessage('system', 'Error al enviar el mensaje. Por favor, intenta de nuevo.');
             } finally {
                 this.isLoading = false;
+                this.saveState();
             }
         },
 
@@ -244,7 +378,9 @@ function agentFloating() {
             this.currentIntent = null;
             this.guidedState = null;
             this.messages = [];
+            this.umTypeChips = null;
             this.loadSuggestions();
+            this.saveState();
 
             const messagesContainer = document.getElementById('agent-float-messages');
             if (messagesContainer) {
@@ -260,11 +396,8 @@ function agentFloating() {
         },
 
         addMessage(role, content) {
-            this.messages.push({
-                role,
-                content,
-                timestamp: new Date().toLocaleTimeString()
-            });
+            const timestamp = new Date().toLocaleTimeString();
+            this.messages.push({ role, content, timestamp });
 
             const messagesContainer = document.getElementById('agent-float-messages');
             if (!messagesContainer) return;
@@ -276,7 +409,7 @@ function agentFloating() {
                     <div class="agent-float-message-content">
                         <p>${this.escapeHtml(content)}</p>
                     </div>
-                    <span class="agent-float-timestamp">${new Date().toLocaleTimeString()}</span>
+                    <span class="agent-float-timestamp">${timestamp}</span>
                 </div>
             `;
 
@@ -314,6 +447,29 @@ function selectFloatFieldOption(value) {
         if (alpineComponent) {
             alpineComponent.userInput = value;
             alpineComponent.sendMessage();
+        }
+    }
+}
+
+function selectUmType(lookupType, label) {
+    const chat = document.getElementById('agent-floating-btn');
+    if (chat && typeof Alpine !== 'undefined') {
+        const alpineComponent = Alpine.$data(chat);
+        if (alpineComponent) {
+            alpineComponent.selectUmType(lookupType, label);
+        }
+    }
+}
+
+function selectUmTypeBack() {
+    const chat = document.getElementById('agent-floating-btn');
+    if (chat && typeof Alpine !== 'undefined') {
+        const alpineComponent = Alpine.$data(chat);
+        if (alpineComponent) {
+            const grid = document.getElementById('agent-float-suggestions-grid');
+            if (grid) {
+                alpineComponent.renderSuggestionsWithLookup([{lookup: 'unidades_medida_all'}], grid);
+            }
         }
     }
 }

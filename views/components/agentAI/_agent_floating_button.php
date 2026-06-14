@@ -74,20 +74,20 @@ use App\Core\View\View;
         <div class="agent-float-input-area" x-show="!isOffline">
             <textarea
                 x-model="userInput"
-                @keydown.enter.exact.prevent="sendMessage"
+                @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
                 placeholder="Escribe tu mensaje..."
                 :disabled="isLoading || isOffline"></textarea>
-            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline" title="Enviar">
+            <button class="agent-float-send-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline" title="Enviar">
                 <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
                 <span x-show="isLoading">...</span>
             </button>
-            <button class="agent-float-btn agent-float-btn-cancel" @click="cancelConversation" title="Cancelar operación" x-show="guidedState !== null" style="color: #dc3545;">
+            <button class="agent-float-cancel-btn" @click="cancelConversation" title="Cancelar operación" x-show="guidedState !== null">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
         </div>
@@ -100,5 +100,5 @@ use App\Core\View\View;
 </div>
 
 <!-- CSS y JS externalizados del botón flotante -->
-<link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=49.0.0">
-<script src="/agenteAI/frontend/js/agent_floating.js?v=49.0.0" defer></script>
+<link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=49.1.0">
+<script src="/agenteAI/frontend/js/agent_floating.js?v=49.1.0" defer></script>

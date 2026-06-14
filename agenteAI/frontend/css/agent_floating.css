@@ -265,8 +265,10 @@
     box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.2);
 }
 
-.agent-float-input-area button {
-    padding: 0 14px;
+.agent-float-send-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
     background: #25D366;
     color: white;
     border: none;
@@ -274,15 +276,50 @@
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.agent-float-input-area button:hover:not(:disabled) {
+.agent-float-send-btn:hover:not(:disabled) {
     background: #20bd5a;
 }
 
-.agent-float-input-area button:disabled {
+.agent-float-send-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.agent-float-send-btn .icon {
+    width: 18px;
+    height: 18px;
+}
+
+.agent-float-cancel-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.agent-float-cancel-btn:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.agent-float-cancel-btn .icon {
+    width: 18px;
+    height: 18px;
 }
 
 /* Mensaje de estado offline */

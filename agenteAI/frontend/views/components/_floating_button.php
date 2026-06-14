@@ -71,13 +71,13 @@ use App\Core\View\View;
         </div>
 
         <!-- Área de input -->
-        <div class="agent-float-input-area" x-show="!isOffline">
+        <div class="agent-float-input-area" x-show="!isOffline || guidedState !== null">
             <textarea
                 x-model="userInput"
                 @keydown.enter.exact.prevent="sendMessage"
                 placeholder="Escribe tu mensaje..."
-                :disabled="isLoading || isOffline"></textarea>
-            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline">
+                :disabled="isLoading"></textarea>
+            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim()">
                 <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -88,7 +88,7 @@ use App\Core\View\View;
 
         <!-- Mensaje de estado offline -->
         <div class="agent-float-offline-message" x-show="isOffline">
-            <p>El agente está fuera de línea. Verifica la configuración.</p>
+            <p>El agente está fuera de línea. Las opciones rápidas siguen disponibles.</p>
         </div>
     </div>
 </div>
@@ -485,12 +485,19 @@ use App\Core\View\View;
                     const data = await response.json();
 
                     if (data.success) {
+                        const wasOffline = this.isOffline;
                         this.isOffline = !data.isOnline;
+                        if (wasOffline !== this.isOffline) {
+                            this.loadSuggestions();
+                        }
                     }
                 } catch (error) {
                     console.error('Error checking configuration:', error);
                     // Si falla la verificación, asumir que está offline
-                    this.isOffline = true;
+                    if (!this.isOffline) {
+                        this.isOffline = true;
+                        this.loadSuggestions();
+                    }
                 }
             },
 
@@ -523,7 +530,8 @@ use App\Core\View\View;
 
             async loadSuggestions() {
                 try {
-                    const response = await fetch('/api/v1/agent/suggestions');
+                    const offlineParam = this.isOffline ? '?offline=1' : '';
+                    const response = await fetch('/api/v1/agent/suggestions' + offlineParam);
                     const data = await response.json();
 
                     if (data.success) {
@@ -552,7 +560,8 @@ use App\Core\View\View;
             },
 
             async sendMessage() {
-                if (this.isOffline) {
+                const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+                if (this.isOffline && !isGuidedIntent) {
                     console.warn('Chat offline - No se puede enviar mensaje');
                     return;
                 }

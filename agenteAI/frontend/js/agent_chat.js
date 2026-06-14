@@ -25,19 +25,27 @@ function agentChat() {
         const data = await response.json();
 
         if (data.success) {
+          const wasOffline = this.isOffline;
           this.isOffline = !data.isOnline;
           this.mode = data.mode;
+          if (wasOffline !== this.isOffline) {
+            this.loadSuggestions();
+          }
         }
       } catch (error) {
         console.error('Error checking configuration:', error);
         // Si falla la verificación, asumir que está offline
-        this.isOffline = true;
+        if (!this.isOffline) {
+          this.isOffline = true;
+          this.loadSuggestions();
+        }
       }
     },
 
     async loadSuggestions() {
       try {
-        const response = await fetch('/api/v1/agent/suggestions');
+        const offlineParam = this.isOffline ? '?offline=1' : '';
+        const response = await fetch('/api/v1/agent/suggestions' + offlineParam);
         const data = await response.json();
 
         if (data.success) {
@@ -79,7 +87,8 @@ function agentChat() {
     },
 
     async sendMessage() {
-      if (this.isOffline) {
+      const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+      if (this.isOffline && !isGuidedIntent) {
         console.warn('Chat offline - No se puede enviar mensaje');
         return;
       }

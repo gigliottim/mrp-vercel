@@ -48,7 +48,7 @@
         </div>
 
         <!-- Input Area -->
-        <div class="agent-input-area" x-show="!isOffline">
+        <div class="agent-input-area" x-show="!isOffline || currentIntent">
             <textarea
                 x-model="userInput"
                 @keydown.enter.exact.prevent="sendMessage"

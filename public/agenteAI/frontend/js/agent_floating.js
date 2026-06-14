@@ -121,11 +121,18 @@ function agentFloating() {
                 const response = await fetch('/api/v1/agent/config');
                 const data = await response.json();
                 if (data.success) {
+                    const wasOffline = this.isOffline;
                     this.isOffline = !data.isOnline;
+                    if (wasOffline !== this.isOffline) {
+                        this.loadSuggestions();
+                    }
                 }
             } catch (error) {
                 console.error('Error checking configuration:', error);
-                this.isOffline = true;
+                if (!this.isOffline) {
+                    this.isOffline = true;
+                    this.loadSuggestions();
+                }
             }
         },
 
@@ -158,7 +165,8 @@ function agentFloating() {
 
         async loadSuggestions() {
             try {
-                const response = await fetch('/api/v1/agent/suggestions');
+                const offlineParam = this.isOffline ? '?offline=1' : '';
+                const response = await fetch('/api/v1/agent/suggestions' + offlineParam);
                 const data = await response.json();
                 if (data.success) {
                     this.suggestions = data.suggestions;
@@ -306,7 +314,8 @@ function agentFloating() {
         },
 
         async sendMessage() {
-            if (this.isOffline || this.isLoading) return;
+            const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+            if ((this.isOffline && !isGuidedIntent && !this.guidedState) || this.isLoading) return;
             if (!this.userInput.trim() && !this.guidedState) return;
 
             const message = this.userInput.trim() || '(omitir)';

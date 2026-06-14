@@ -71,13 +71,13 @@ use App\Core\View\View;
         </div>
 
         <!-- Área de input -->
-        <div class="agent-float-input-area" x-show="!isOffline">
+        <div class="agent-float-input-area" x-show="!isOffline || guidedState !== null">
             <textarea
                 x-model="userInput"
                 @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
                 placeholder="Escribe tu mensaje..."
-                :disabled="isLoading || isOffline"></textarea>
-            <button class="agent-float-send-btn" @click="sendMessage" :disabled="isLoading || isOffline || (!userInput.trim() && !guidedState)" title="Enviar">
+                :disabled="isLoading"></textarea>
+            <button class="agent-float-send-btn" @click="sendMessage" :disabled="isLoading || (!userInput.trim() && !guidedState)" title="Enviar">
                 <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -94,7 +94,7 @@ use App\Core\View\View;
 
         <!-- Mensaje de estado offline -->
         <div class="agent-float-offline-message" x-show="isOffline">
-            <p>El agente está fuera de línea. Verifica la configuración.</p>
+            <p>El agente está fuera de línea. Las opciones rápidas siguen disponibles.</p>
         </div>
     </div>
 </div>

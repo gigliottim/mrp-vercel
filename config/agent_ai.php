@@ -68,24 +68,28 @@ return [
             'label' => 'Crear nueva pieza',
             'description' => 'Te guío para registrar código, descripción, UOM y materiales',
             'icon' => 'bi-gear',
+            'offline_safe' => true,
         ],
         [
             'intent' => 'create_bom',
             'label' => 'Armar lista de materiales (BOM)',
             'description' => 'Definí la pieza padre y sus componentes de nivel 1',
             'icon' => 'bi-diagram-3',
+            'offline_safe' => true,
         ],
         [
             'intent' => 'create_supplier',
             'label' => 'Registrar proveedor',
             'description' => 'Nombre, CUIT, contacto y condiciones comerciales',
             'icon' => 'bi-truck',
+            'offline_safe' => true,
         ],
         [
             'intent' => 'create_material',
             'label' => 'Registrar materia prima',
             'description' => 'Material base con unidad de medida y stock mínimo',
             'icon' => 'bi-box-seam',
+            'offline_safe' => true,
         ],
     ],
 

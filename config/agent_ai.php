@@ -25,7 +25,7 @@ return [
      */
     'api' => [
         'endpoint' => 'https://ollama.com/v1/chat/completions',
-        'model'    => env('AGENT_AI_API_MODEL', 'qwen3.5:397b'),
+        'model'    => env('AGENT_AI_API_MODEL', 'gemini-3-flash-preview'),
         'key'      => env('AGENT_AI_API_KEY'),
         'timeout'  => 30, // segundos
     ],
@@ -34,10 +34,10 @@ return [
      * Modelos específicos por intent
      */
     'models' => [
-        'create_part'     => env('AGENT_AI_API_MODEL_PART', 'qwen3.5:397b'),
-        'create_bom'      => env('AGENT_AI_API_MODEL_BOM', 'qwen3.5:397b'),
-        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER', 'qwen3.5:397b'),
-        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL', 'qwen3.5:397b'),
+        'create_part'     => env('AGENT_AI_API_MODEL_PART', 'gemini-3-flash-preview'),
+        'create_bom'      => env('AGENT_AI_API_MODEL_BOM', 'gemini-3-flash-preview'),
+        'create_supplier' => env('AGENT_AI_API_MODEL_SUPPLIER', 'gemini-3-flash-preview'),
+        'create_material' => env('AGENT_AI_API_MODEL_MATERIAL', 'gemini-3-flash-preview'),
         'general_query'   => env('AGENT_AI_API_MODEL_GENERAL', 'gemini-3-flash-preview'),
     ],
 

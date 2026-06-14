@@ -13,6 +13,7 @@ function agentFloating() {
         conversationId: null,
         currentIntent: null,
         guidedState: null,
+        lookupCache: {},
 
         init() {
             this.checkConfiguration();
@@ -77,6 +78,23 @@ function agentFloating() {
             }
         },
 
+        async fetchLookup(type) {
+            if (this.lookupCache[type]) {
+                return this.lookupCache[type];
+            }
+            try {
+                const response = await fetch(`/api/v1/agent/lookup/${type}`);
+                const data = await response.json();
+                if (data.success && data.data) {
+                    this.lookupCache[type] = data.data;
+                    return data.data;
+                }
+            } catch (error) {
+                console.error('Error fetching lookup:', error);
+            }
+            return [];
+        },
+
         renderSuggestions(suggestions = null) {
             const grid = document.getElementById('agent-float-suggestions-grid');
             if (!grid) return;
@@ -87,8 +105,14 @@ function agentFloating() {
                 return;
             }
 
+            // Check if any suggestion has a lookup field - fetch asynchronously
+            const hasLookup = data.some(s => s.lookup);
+            if (hasLookup) {
+                this.renderSuggestionsWithLookup(data, grid);
+                return;
+            }
+
             grid.innerHTML = data.map(s => {
-                // Suggestions estructuradas para opciones de campo (value/label)
                 if (s.value !== undefined && s.label !== undefined) {
                     return `
                         <button class="agent-float-suggestion-chip"
@@ -99,7 +123,6 @@ function agentFloating() {
                     `;
                 }
 
-                // Suggestions predefinidas del menú principal (intent/label/icon)
                 const icon = s.icon ? `<i class="${s.icon}"></i>` : `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
                 return `
                     <button class="agent-float-suggestion-chip"
@@ -110,6 +133,45 @@ function agentFloating() {
                     </button>
                 `;
             }).join('');
+        },
+
+        async renderSuggestionsWithLookup(suggestions, grid) {
+            grid.innerHTML = '<span class="text-muted small">Cargando opciones...</span>';
+
+            let chips = [];
+            for (const s of suggestions) {
+                if (s.lookup) {
+                    const items = await this.fetchLookup(s.lookup);
+                    chips = items.map(item => `
+                        <button class="agent-float-suggestion-chip"
+                                data-value="${this.escapeHtml(String(item.value))}"
+                                onclick="selectFloatFieldOption('${this.escapeHtml(String(item.value))}')">
+                            <span>${this.escapeHtml(item.label)}</span>
+                        </button>
+                    `);
+                    break;
+                } else if (s.value !== undefined && s.label !== undefined) {
+                    chips.push(`
+                        <button class="agent-float-suggestion-chip"
+                                data-value="${this.escapeHtml(String(s.value))}"
+                                onclick="selectFloatFieldOption('${this.escapeHtml(String(s.value))}')">
+                            <span>${this.escapeHtml(s.label)}</span>
+                        </button>
+                    `);
+                } else {
+                    const icon = s.icon ? `<i class="${s.icon}"></i>` : `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+                    chips.push(`
+                        <button class="agent-float-suggestion-chip"
+                                data-intent="${s.intent || ''}"
+                                onclick="selectFloatSuggestion('${s.intent || ''}', '${this.escapeHtml(s.label || s)}')">
+                            ${icon}
+                            <span>${this.escapeHtml(s.label || s)}</span>
+                        </button>
+                    `);
+                }
+            }
+
+            grid.innerHTML = chips.join('');
         },
 
         async sendMessage() {
@@ -139,8 +201,17 @@ function agentFloating() {
                     this.conversationId = data.conversation_id;
                     this.guidedState = data.guided_state || null;
                     this.addMessage('assistant', data.message);
+
                     if (data.suggestions && data.suggestions.length > 0) {
-                        this.renderSuggestions(data.suggestions);
+                        // Check for lookup suggestions - need async rendering
+                        const hasLookup = data.suggestions.some(s => s.lookup);
+                        if (hasLookup) {
+                            this.renderSuggestionsWithLookup(data.suggestions, document.getElementById('agent-float-suggestions-grid'));
+                        } else {
+                            this.renderSuggestions(data.suggestions);
+                        }
+                    } else {
+                        this.renderSuggestions([]);
                     }
                 }
             } catch (error) {
@@ -158,7 +229,6 @@ function agentFloating() {
                 timestamp: new Date().toLocaleTimeString()
             });
 
-            // Renderizar mensaje
             const messagesContainer = document.getElementById('agent-float-messages');
             if (!messagesContainer) return;
 
@@ -173,7 +243,6 @@ function agentFloating() {
                 </div>
             `;
 
-            // Scroll al último mensaje
             setTimeout(() => {
                 if (messagesContainer) {
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -189,9 +258,6 @@ function agentFloating() {
     };
 }
 
-/**
- * Función global para seleccionar sugerencia desde chips inline
- */
 function selectFloatSuggestion(intent, label) {
     const chat = document.getElementById('agent-floating-btn');
     if (chat && typeof Alpine !== 'undefined') {
@@ -204,9 +270,6 @@ function selectFloatSuggestion(intent, label) {
     }
 }
 
-/**
- * Función global para seleccionar opción de campo (uom, part_type, category, etc.)
- */
 function selectFloatFieldOption(value) {
     const chat = document.getElementById('agent-floating-btn');
     if (chat && typeof Alpine !== 'undefined') {

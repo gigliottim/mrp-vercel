@@ -180,6 +180,34 @@ final class AgentController extends Controller
     }
 
     /**
+     * Obtener datos de lookup (tipos_partes, grupos_partes, unidades_medida)
+     * para los chips clickeables del flujo guiado.
+     */
+    public function getLookup(Request $request, string $type): Response
+    {
+        $this->ensureSession();
+        $this->ensureTenantContext();
+
+        $validTypes = ['tipos_partes', 'grupos_partes', 'unidades_medida_all'];
+
+        if (!in_array($type, $validTypes, true)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Tipo de lookup no válido',
+            ], 400);
+        }
+
+        $service = $this->getService();
+        $data = $service->getLookupData($type);
+
+        return $this->json([
+            'success' => true,
+            'type' => $type,
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * Verificar configuración del agente AI
      * Realiza un test real contra la API para confirmar que responde.
      */

@@ -108,17 +108,16 @@ return [
      * Validación de respuestas
      */
     'validation' => [
-        'code' => '/^[A-Za-z0-9\-]{1,20}$/',
-        'uom' => '/^(u|kg|m|l|g)$/',
-        'cuit' => '/^[0-9]{2}-[0-9]{8}-[0-9]{1}$/',
+        'code' => '/^[A-Za-z0-9\-]{1,50}$/',
+        'cuit' => '/^[0-9]{2}-?[0-9]{8}-?[0-9]{1}$/',
         'email' => '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
         'positive_number' => '/^[0-9]+(\.[0-9]+)?$/',
 
         'required_fields' => [
-            'create_part' => ['code', 'description', 'uom', 'part_type', 'category'],
+            'create_part' => ['code', 'description', 'id_tipo', 'id_grupo'],
             'create_bom' => ['parent_part', 'components'],
-            'create_supplier' => ['name', 'cuit', 'contact', 'email', 'phone'],
-            'create_material' => ['code', 'description', 'uom', 'min_stock'],
+            'create_supplier' => ['razon_social'],
+            'create_material' => ['code', 'description', 'id_um_compra'],
         ],
     ],
 ];

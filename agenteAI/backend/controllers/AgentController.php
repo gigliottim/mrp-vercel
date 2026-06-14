@@ -188,7 +188,7 @@ final class AgentController extends Controller
         $this->ensureSession();
         $this->ensureTenantContext();
 
-        $validTypes = ['tipos_partes', 'grupos_partes', 'unidades_medida_all'];
+        $validTypes = ['tipos_partes', 'grupos_partes', 'unidades_medida_all', 'unidades_medida_longitud', 'unidades_medida_masa', 'estados_variante'];
 
         if (!in_array($type, $validTypes, true)) {
             return $this->json([

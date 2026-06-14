@@ -77,7 +77,7 @@ use App\Core\View\View;
                 @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
                 placeholder="Escribe tu mensaje..."
                 :disabled="isLoading || isOffline"></textarea>
-            <button class="agent-float-send-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline" title="Enviar">
+            <button class="agent-float-send-btn" @click="sendMessage" :disabled="isLoading || isOffline || (!userInput.trim() && !guidedState)" title="Enviar">
                 <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -101,4 +101,4 @@ use App\Core\View\View;
 
 <!-- CSS y JS externalizados del botón flotante -->
 <link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=50.1.0">
-<script src="/agenteAI/frontend/js/agent_floating.js?v=50.0.0" defer></script>
+<script src="/agenteAI/frontend/js/agent_floating.js?v=51.0.0" defer></script>

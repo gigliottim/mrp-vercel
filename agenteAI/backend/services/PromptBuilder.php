@@ -49,7 +49,7 @@ final class PromptBuilder
         ['field' => 'estado',           'message' => '¿Cuál es el estado de la variante?', 'required' => true, 'lookup' => 'estados_variante'],
         ['field' => 'lote_minimo',      'message' => '¿Cuál es el lote mínimo? (número, default 1)', 'required' => false],
         ['field' => 'punto_pedido',     'message' => '¿Cuál es el punto de pedido? (número, default 0)', 'required' => false],
-        ['field' => 'peso',             'message' => '¿Cuál es el peso unitario? (Enter para omitir)', 'required' => false, 'lookup' => 'unidades_medida_masa'],
+        ['field' => 'peso',             'message' => '¿Cuál es el peso unitario en kg? (Enter para omitir)', 'required' => false],
         ['field' => 'ubicacion_cuerpo',  'message' => '¿Ubicación física - Cuerpo? (Enter para omitir)', 'required' => false],
         ['field' => 'ubicacion_pasillo', 'message' => '¿Ubicación física - Pasillo? (Enter para omitir)', 'required' => false],
         ['field' => 'ubicacion_estante', 'message' => '¿Ubicación física - Estante? (Enter para omitir)', 'required' => false],

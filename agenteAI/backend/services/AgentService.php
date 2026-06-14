@@ -275,14 +275,12 @@ final class AgentService
         int $step,
         array $next
     ): AgentResponse {
-        $field = $next['field'];
         $phase = $collectedData['_phase'] ?? 'parte';
 
-        // Fase: ¿Agregar otra variante?
-        if ($field === 'add_more_variante') {
+        // Fase: Esperando respuesta "¿Otra variante?" — el usuario respondió
+        if ($phase === 'ask_more_variante') {
             $lower = mb_strtolower(trim($userInput));
             if (str_contains($lower, 'si') || str_contains($lower, 'sí') || str_contains($lower, 'otra') || str_contains($lower, 'agregar')) {
-                // Guardar variante actual y empezar otra
                 $collectedData['_current_variante'] = [];
                 $collectedData['_phase'] = 'otra_variante';
                 $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
@@ -298,7 +296,7 @@ final class AgentService
                     conversationId: $convId
                 );
             }
-            // No más variantes: guardar todo
+            // Finalizar: guardar todo
             $collectedData['_phase'] = 'done';
             $validationResult = $this->validator->validate($collectedData, $intent);
             if ($validationResult->failed()) {
@@ -331,12 +329,34 @@ final class AgentService
             );
         }
 
+        $field = $next['field'];
+
         // Fase: campos de variante
         if ($phase === 'variante' || $phase === 'otra_variante') {
             return $this->processVarianteField($convId, $userInput, $intent, $collectedData, $step, $next);
         }
 
         // Fase: campos de parte
+        // Handle skip for optional fields
+        $isSkip = ($userInput === '(omitir)' || trim($userInput) === '');
+        if ($isSkip) {
+            $defaultValue = $this->getDefaultForField($field, $collectedData);
+            if ($defaultValue !== null) {
+                $collectedData[$field] = $defaultValue;
+                $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+                return $this->askNextField($convId, $collectedData);
+            }
+            // Required field — cannot skip
+            $help = $this->buildFieldHelp($field, $intent);
+            return new AgentResponse(
+                status: 'clarify',
+                message: "Este dato es obligatorio. {$help}",
+                data: $collectedData,
+                suggestions: $next['suggestions'] ?? [],
+                conversationId: $convId
+            );
+        }
+
         $value = $this->extractFieldValue($field, $userInput, $intent);
 
         if ($value === null) {
@@ -382,6 +402,49 @@ final class AgentService
     ): AgentResponse {
         $field = $next['field'];
         $current = $collectedData['_current_variante'] ?? [];
+        $isSkip = ($userInput === '(omitir)' || trim($userInput) === '');
+
+        // Handle skip for optional variante fields
+        if ($isSkip && $field !== 'codigo_variante') {
+            $defaultValue = $this->getDefaultForField($field, $collectedData);
+            if ($defaultValue !== null) {
+                $current[$field] = $defaultValue;
+            }
+            // If null, required field — cannot skip
+            if ($defaultValue === null) {
+                $help = $this->buildFieldHelp($field, $intent);
+                return new AgentResponse(
+                    status: 'clarify',
+                    message: "Este dato es obligatorio. {$help}",
+                    data: $collectedData,
+                    suggestions: $next['suggestions'] ?? [],
+                    conversationId: $convId
+                );
+            }
+            $collectedData['_current_variante'] = $current;
+            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+
+            // Check if variante is complete
+            $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
+            if ($nextField === null || ($nextField['field'] ?? '') === 'add_more_variante') {
+                $variantes = $collectedData['variantes'] ?? [];
+                $variantes[] = $current;
+                $collectedData['variantes'] = $variantes;
+                $collectedData['_current_variante'] = [];
+                $collectedData['_phase'] = 'ask_more_variante';
+                $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 2]);
+
+                return new AgentResponse(
+                    status: 'clarify',
+                    message: 'Variante completada. ¿Querés agregar otra variante o finalizar?',
+                    data: $collectedData,
+                    suggestions: [['label' => 'Agregar otra variante', 'value' => 'si'], ['label' => 'Finalizar', 'value' => 'no']],
+                    conversationId: $convId
+                );
+            }
+
+            return $this->askNextField($convId, $collectedData, $intent);
+        }
 
         if ($field === 'codigo_variante') {
             $value = $this->extractCode(trim($userInput));
@@ -448,6 +511,7 @@ final class AgentService
             $variantes[] = $current;
             $collectedData['variantes'] = $variantes;
             $collectedData['_current_variante'] = [];
+            $collectedData['_phase'] = 'ask_more_variante';
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 2]);
 
             return new AgentResponse(
@@ -624,7 +688,24 @@ final class AgentService
         if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $input, $m)) {
             return $m[0];
         }
-        return null;
+         return null;
+    }
+
+    private function getDefaultForField(string $field, array $collectedData): mixed
+    {
+        return match ($field) {
+            'id_um_uso' => $collectedData['id_um_compra'] ?? null,
+            'largo_alto', 'ancho', 'espesor_profundidad', 'peso' => 0,
+            'lote_minimo' => 1,
+            'punto_pedido' => 0,
+            'stock_seguridad' => 0,
+            'detalle_variante' => $collectedData['detalle'] ?? $collectedData['description'] ?? '',
+            'estado' => 'activa',
+            'ubicacion_cuerpo', 'ubicacion_pasillo', 'ubicacion_estante' => '',
+            'identificacion_tributaria', 'contacto_email', 'contacto_telefono', 'direccion' => '',
+            'component_um' => '',
+            default => null,
+        };
     }
 
     private function buildFieldHelp(string $field, string $intent): string

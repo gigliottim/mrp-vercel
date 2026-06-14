@@ -306,9 +306,10 @@ function agentFloating() {
         },
 
         async sendMessage() {
-            if (this.isOffline || !this.userInput.trim() || this.isLoading) return;
+            if (this.isOffline || this.isLoading) return;
+            if (!this.userInput.trim() && !this.guidedState) return;
 
-            const message = this.userInput.trim();
+            const message = this.userInput.trim() || '(omitir)';
             this.userInput = '';
             this.isLoading = true;
 
@@ -351,6 +352,7 @@ function agentFloating() {
             } finally {
                 this.isLoading = false;
                 this.saveState();
+                this.focusInput();
             }
         },
 

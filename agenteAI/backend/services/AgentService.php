@@ -910,17 +910,29 @@ final class AgentService
         $idGrupo = (int) ($data['id_grupo'] ?? 1);
         $idUmCompra = !empty($data['id_um_compra']) ? (int) $data['id_um_compra'] : null;
         $idUmUso = !empty($data['id_um_uso']) ? (int) $data['id_um_uso'] : null;
-        $factorConversion = isset($data['factor_conversion']) ? (float) $data['factor_conversion'] : 1.0;
-        $largoAlto = isset($data['largo_alto']) && $data['largo_alto'] !== '' ? (float) $data['largo_alto'] : null;
-        $ancho = isset($data['ancho']) && $data['ancho'] !== '' ? (float) $data['ancho'] : null;
-        $espesorProfundidad = isset($data['espesor_profundidad']) && $data['espesor_profundidad'] !== '' ? (float) $data['espesor_profundidad'] : null;
+        $factorConversion = isset($data['factor_conversion']) ? (float) $data['factor_conversion'] : null;
+        if ($factorConversion === null && $idUmCompra && $idUmUso && $idUmCompra === $idUmUso) {
+            $factorConversion = 1.0;
+        }
+        $largoAlto = isset($data['largo_alto']) && $data['largo_alto'] !== '' && $data['largo_alto'] !== 0 ? (float) $data['largo_alto'] : null;
+        $ancho = isset($data['ancho']) && $data['ancho'] !== '' && $data['ancho'] !== 0 ? (float) $data['ancho'] : null;
+        $espesorProfundidad = isset($data['espesor_profundidad']) && $data['espesor_profundidad'] !== '' && $data['espesor_profundidad'] !== 0 ? (float) $data['espesor_profundidad'] : null;
+
+        // Default UM for dimensions if not specified
+        $idUmLargoAlto = $this->resolveDefaultUmId($db, 'longitud', 'mm');
+        $idUmAncho = $idUmLargoAlto;
+        $idUmEspesor = $idUmLargoAlto;
+        $superficie = null;
+        $idUmSuperficie = $this->resolveDefaultUmId($db, 'superficie', 'm²');
+        $volumen = null;
+        $idUmVolumen = $this->resolveDefaultUmId($db, 'volumen', 'cm³');
 
         try {
             $db->beginTransaction();
 
             $stmt = $db->prepare(
-                "INSERT INTO partes (codigo, id_tipo, id_grupo, detalle, id_um_compra, id_um_uso, factor_conversion, largo_alto, ancho, espesor_profundidad, activo, fecha_creacion)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW()) RETURNING id"
+                "INSERT INTO partes (codigo, id_tipo, id_grupo, detalle, id_um_compra, id_um_uso, factor_conversion, largo_alto, id_um_largo_alto, ancho, id_um_ancho, espesor_profundidad, id_um_espesor, superficie, id_um_superficie, volumen, id_um_volumen, activo, fecha_creacion)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW()) RETURNING id"
             );
             $stmt->execute([
                 strtoupper($data['codigo'] ?? $data['code'] ?? ''),
@@ -931,8 +943,15 @@ final class AgentService
                 $idUmUso,
                 $factorConversion,
                 $largoAlto,
+                $largoAlto !== null ? $idUmLargoAlto : null,
                 $ancho,
+                $ancho !== null ? $idUmAncho : null,
                 $espesorProfundidad,
+                $espesorProfundidad !== null ? $idUmEspesor : null,
+                $superficie,
+                $superficie !== null ? $idUmSuperficie : null,
+                $volumen,
+                $volumen !== null ? $idUmVolumen : null,
             ]);
             $parteId = (int) $stmt->fetchColumn();
 
@@ -950,13 +969,14 @@ final class AgentService
                 $puntoPedido = isset($var['punto_pedido']) ? (float) $var['punto_pedido'] : 0;
                 $stockSeguridad = isset($var['stock_seguridad']) ? (float) $var['stock_seguridad'] : 0;
                 $peso = isset($var['peso']) && $var['peso'] !== '' ? (float) $var['peso'] : null;
+                $idUmPeso = $peso !== null ? $this->resolveDefaultUmId($db, 'masa', 'kg') : null;
                 $ubicacionCuerpo = $var['ubicacion_cuerpo'] ?? null;
                 $ubicacionPasillo = $var['ubicacion_pasillo'] ?? null;
                 $ubicacionEstante = $var['ubicacion_estante'] ?? null;
 
                 $stmtVar = $db->prepare(
-                    "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, lote_minimo, punto_pedido, stock_seguridad, stock_actual, peso, ubicacion_cuerpo, ubicacion_pasillo, ubicacion_estante, fecha_creacion)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NOW()) RETURNING id"
+                    "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, lote_minimo, punto_pedido, stock_seguridad, stock_actual, peso, id_um_peso, ubicacion_cuerpo, ubicacion_pasillo, ubicacion_estante, fecha_creacion)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, NOW()) RETURNING id"
                 );
                 $stmtVar->execute([
                     $parteId,
@@ -967,6 +987,7 @@ final class AgentService
                     $puntoPedido,
                     $stockSeguridad,
                     $peso,
+                    $idUmPeso,
                     $ubicacionCuerpo,
                     $ubicacionPasillo,
                     $ubicacionEstante,
@@ -1048,10 +1069,11 @@ final class AgentService
                 $puntoPedido = isset($var['punto_pedido']) ? (float) $var['punto_pedido'] : 0;
                 $stockSeguridad = isset($var['stock_seguridad']) ? (float) $var['stock_seguridad'] : 0;
                 $peso = isset($var['peso']) && $var['peso'] !== '' ? (float) $var['peso'] : null;
+                $idUmPeso = $peso !== null ? $this->resolveDefaultUmId($db, 'masa', 'kg') : null;
 
                 $stmtVar = $db->prepare(
-                    "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, lote_minimo, punto_pedido, stock_seguridad, stock_actual, peso, fecha_creacion)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, NOW()) RETURNING id"
+                    "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, lote_minimo, punto_pedido, stock_seguridad, stock_actual, peso, id_um_peso, fecha_creacion)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW()) RETURNING id"
                 );
                 $stmtVar->execute([
                     $parteId,
@@ -1062,6 +1084,7 @@ final class AgentService
                     $puntoPedido,
                     $stockSeguridad,
                     $peso,
+                    $idUmPeso,
                 ]);
                 $varianteIds[] = (int) $stmtVar->fetchColumn();
             }
@@ -1209,6 +1232,24 @@ final class AgentService
         } catch (\Throwable $e) {
             error_log("varianteCodigoExists failed: " . $e->getMessage());
             return false;
+        }
+    }
+
+    private function resolveDefaultUmId(\PDO $db, string $tipo, string $simboloPreferido): ?int
+    {
+        try {
+            $stmt = $db->prepare("SELECT id FROM unidades_medida WHERE tipo = ? AND simbolo = ? AND activo = true LIMIT 1");
+            $stmt->execute([$tipo, $simboloPreferido]);
+            $id = $stmt->fetchColumn();
+            if ($id !== false) return (int) $id;
+
+            $stmt = $db->prepare("SELECT id FROM unidades_medida WHERE tipo = ? AND activo = true ORDER BY id LIMIT 1");
+            $stmt->execute([$tipo]);
+            $id = $stmt->fetchColumn();
+            return $id !== false ? (int) $id : null;
+        } catch (\Throwable $e) {
+            error_log("resolveDefaultUmId failed: " . $e->getMessage());
+            return null;
         }
     }
 

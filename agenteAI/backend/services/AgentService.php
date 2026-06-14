@@ -218,8 +218,13 @@ final class AgentService
             $suggestions = [];
             if ($next !== null) {
                 $suggestions = $next['suggestions'] ?? [];
-                if (empty($suggestions) && ($next['lookup'] ?? null) !== null) {
-                    $suggestions = $this->fetchLookupSuggestions($next['lookup']);
+                $lookup = $next['lookup'] ?? null;
+                if (empty($suggestions) && $lookup !== null) {
+                    if ($lookup === 'unidades_medida_all') {
+                        $suggestions = [['lookup' => 'unidades_medida_all']];
+                    } else {
+                        $suggestions = $this->fetchLookupSuggestions($lookup);
+                    }
                 }
             }
 
@@ -485,8 +490,13 @@ final class AgentService
         }
 
         $suggestions = $nextField['suggestions'] ?? [];
-        if (empty($suggestions) && ($nextField['lookup'] ?? null) !== null) {
-            $suggestions = $this->fetchLookupSuggestions($nextField['lookup']);
+        $lookup = $nextField['lookup'] ?? null;
+        if (empty($suggestions) && $lookup !== null) {
+            if ($lookup === 'unidades_medida_all') {
+                $suggestions = [['lookup' => 'unidades_medida_all']];
+            } else {
+                $suggestions = $this->fetchLookupSuggestions($lookup);
+            }
         }
 
         return new AgentResponse(

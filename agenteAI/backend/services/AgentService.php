@@ -345,6 +345,18 @@ final class AgentService
             );
         }
 
+        // Verificar duplicado de código de parte
+        if ($field === 'codigo' && $this->parteCodigoExists((string) $value)) {
+            $help = $this->buildFieldHelp($field, $intent);
+            return new AgentResponse(
+                status: 'clarify',
+                message: "El código \"{$value}\" ya existe en otra pieza. Por favor, elegí un código diferente. {$help}",
+                data: $collectedData,
+                suggestions: $next['suggestions'] ?? [],
+                conversationId: $convId
+            );
+        }
+
         $collectedData[$field] = $value;
         $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
@@ -397,6 +409,19 @@ final class AgentService
         if ($field === 'codigo_variante') {
             $value = $this->extractCode(trim($userInput));
             if ($value === null) $value = strtoupper(trim($userInput));
+
+            // Verificar duplicado de código de variante
+            if ($this->varianteCodigoExists($value)) {
+                $help = $this->buildFieldHelp($field, $intent);
+                return new AgentResponse(
+                    status: 'clarify',
+                    message: "El código de variante \"{$value}\" ya existe. Por favor, elegí un código diferente. {$help}",
+                    data: $collectedData,
+                    suggestions: [['label' => strtoupper(($collectedData['codigo'] ?? 'P')) . '-' . str_pad((string)(count($collectedData['variantes'] ?? []) + 1), 2, '0', STR_PAD_LEFT), 'value' => strtoupper(($collectedData['codigo'] ?? 'P')) . '-' . str_pad((string)(count($collectedData['variantes'] ?? []) + 1), 2, '0', STR_PAD_LEFT)]],
+                    conversationId: $convId
+                );
+            }
+
             $current['codigo_variante'] = $value;
             $collectedData['_current_variante'] = $current;
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
@@ -1034,6 +1059,36 @@ final class AgentService
     private function getDb(): ?\PDO
     {
         return $this->repository ? $this->repository->getDb() : null;
+    }
+
+    private function parteCodigoExists(string $codigo): bool
+    {
+        $db = $this->getDb();
+        if (!$db) return false;
+
+        try {
+            $stmt = $db->prepare("SELECT 1 FROM partes WHERE codigo = ? LIMIT 1");
+            $stmt->execute([strtoupper($codigo)]);
+            return $stmt->fetchColumn() !== false;
+        } catch (\Throwable $e) {
+            error_log("parteCodigoExists failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function varianteCodigoExists(string $codigoVariante): bool
+    {
+        $db = $this->getDb();
+        if (!$db) return false;
+
+        try {
+            $stmt = $db->prepare("SELECT 1 FROM variantes WHERE codigo_variante = ? LIMIT 1");
+            $stmt->execute([strtoupper($codigoVariante)]);
+            return $stmt->fetchColumn() !== false;
+        } catch (\Throwable $e) {
+            error_log("varianteCodigoExists failed: " . $e->getMessage());
+            return false;
+        }
     }
 
     private function generatePromptHash(array $messages): string

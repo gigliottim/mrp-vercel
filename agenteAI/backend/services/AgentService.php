@@ -360,40 +360,12 @@ final class AgentService
         $collectedData[$field] = $value;
         $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-        // Check if parte fields are done
-        $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
-        if ($nextField === null || ($nextField['field'] ?? '') === 'codigo_variante') {
-            // Parte completa, pasar a variante
-            $collectedData['_phase'] = 'variante';
-            $collectedData['_current_variante'] = [];
-            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 2]);
-
-            $suggestedCode = strtoupper(($collectedData['codigo'] ?? 'P')) . '-01';
-            return new AgentResponse(
-                status: 'clarify',
-                message: "Pieza registrada. Ahora vamos a crear la primer variante. ¿Cuál es el código de la variante? (se sugiere {$suggestedCode})",
-                data: $collectedData,
-                suggestions: [['label' => $suggestedCode, 'value' => $suggestedCode]],
-                conversationId: $convId
-            );
-        }
-
-        $suggestions = $nextField['suggestions'] ?? [];
-        if (empty($suggestions) && ($nextField['lookup'] ?? null) !== null) {
-            $suggestions = $this->fetchLookupSuggestions($nextField['lookup']);
-        }
-
-        return new AgentResponse(
-            status: 'clarify',
-            message: $nextField['message'],
-            data: $collectedData,
-            suggestions: $suggestions,
-            conversationId: $convId
-        );
+        return $this->askNextField($convId, $collectedData);
     }
 
     /**
      * Procesar un campo de variante.
+     * Campos opcionales con Enter vacío reciben valor por defecto.
      */
     private function processVarianteField(
         string $convId,
@@ -412,12 +384,13 @@ final class AgentService
 
             // Verificar duplicado de código de variante
             if ($this->varianteCodigoExists($value)) {
-                $help = $this->buildFieldHelp($field, $intent);
+                $help = $this->buildFieldHelp($field, 'create_part');
+                $suggested = strtoupper(($collectedData['codigo'] ?? 'P')) . '-' . str_pad((string)(count($collectedData['variantes'] ?? []) + 1), 2, '0', STR_PAD_LEFT);
                 return new AgentResponse(
                     status: 'clarify',
                     message: "El código de variante \"{$value}\" ya existe. Por favor, elegí un código diferente. {$help}",
                     data: $collectedData,
-                    suggestions: [['label' => strtoupper(($collectedData['codigo'] ?? 'P')) . '-' . str_pad((string)(count($collectedData['variantes'] ?? []) + 1), 2, '0', STR_PAD_LEFT), 'value' => strtoupper(($collectedData['codigo'] ?? 'P')) . '-' . str_pad((string)(count($collectedData['variantes'] ?? []) + 1), 2, '0', STR_PAD_LEFT)]],
+                    suggestions: [['label' => $suggested, 'value' => $suggested]],
                     conversationId: $convId
                 );
             }
@@ -426,52 +399,46 @@ final class AgentService
             $collectedData['_current_variante'] = $current;
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-            $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
-            $suggestions = $nextField['suggestions'] ?? [];
-            if (empty($suggestions) && ($nextField['lookup'] ?? null) !== null) {
-                $suggestions = $this->fetchLookupSuggestions($nextField['lookup']);
-            }
-
-            return new AgentResponse(
-                status: 'clarify',
-                message: $nextField ? $nextField['message'] : '¿Cuál es la descripción de la variante?',
-                data: $collectedData,
-                suggestions: $suggestions,
-                conversationId: $convId
-            );
+            return $this->askNextField($convId, $collectedData, $intent);
         }
 
         if ($field === 'detalle_variante') {
             $value = trim($userInput);
             if ($value === '') $value = $collectedData['detalle'] ?? $collectedData['description'] ?? '';
             $current['detalle_variante'] = $value;
-            $collectedData['_current_variante'] = $current;
         } elseif ($field === 'estado') {
-            $current['estado'] = trim($userInput);
-            $collectedData['_current_variante'] = $current;
-        } elseif ($field === 'lote_minimo' || $field === 'punto_pedido') {
+            $value = trim($userInput);
+            $current['estado'] = ($value !== '') ? $value : 'activa';
+        } elseif ($field === 'lote_minimo') {
             $value = $this->extractPositiveNumber($userInput);
-            $current[$field] = $value ?? ($field === 'lote_minimo' ? 1 : 0);
-            $collectedData['_current_variante'] = $current;
+            $current['lote_minimo'] = $value ?? 1;
+        } elseif ($field === 'punto_pedido') {
+            $value = $this->extractPositiveNumber($userInput);
+            $current['punto_pedido'] = $value ?? 0;
         } elseif ($field === 'peso') {
             $value = $this->extractPositiveNumber($userInput);
-            $current['peso'] = $value;
-            $collectedData['_current_variante'] = $current;
+            if ($value !== null) {
+                $current['peso'] = $value;
+            }
         } elseif (str_starts_with($field, 'ubicacion_')) {
-            $current[$field] = trim($userInput);
-            $collectedData['_current_variante'] = $current;
+            $value = trim($userInput);
+            if ($value !== '') {
+                $current[$field] = $value;
+            }
         } else {
-            $current[$field] = trim($userInput);
-            $collectedData['_current_variante'] = $current;
+            $value = trim($userInput);
+            if ($value !== '') {
+                $current[$field] = $value;
+            }
         }
 
+        $collectedData['_current_variante'] = $current;
         $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
         // Check if all variante fields are done → push completed variante and ask "add more?"
         $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
 
         if ($nextField === null || ($nextField['field'] ?? '') === 'add_more_variante') {
-            // Variante completa, guardarla en el array
             $variantes = $collectedData['variantes'] ?? [];
             $variantes[] = $current;
             $collectedData['variantes'] = $variantes;
@@ -485,6 +452,36 @@ final class AgentService
                 suggestions: [['label' => 'Agregar otra variante', 'value' => 'si'], ['label' => 'Finalizar', 'value' => 'no']],
                 conversationId: $convId
             );
+        }
+
+        return $this->askNextField($convId, $collectedData);
+    }
+
+    /**
+     * Helper: preguntar el siguiente campo faltante con suggestions y lookup.
+     */
+    private function askNextField(string $convId, array $collectedData, string $intent = ''): AgentResponse
+    {
+        if ($intent === '') {
+            $intent = $collectedData['_intent'] ?? 'create_part';
+        }
+        $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
+
+        if ($nextField === null) {
+            return new AgentResponse(
+                status: 'preview',
+                message: 'Datos completos. ¿Confirmamos y guardamos?',
+                data: $collectedData,
+                suggestions: ['Confirmar y guardar', 'Corregir'],
+                conversationId: $convId
+            );
+        }
+
+        // Transición de parte a variante
+        if (($nextField['field'] ?? '') === 'codigo_variante' && ($collectedData['_phase'] ?? 'parte') === 'parte') {
+            $collectedData['_phase'] = 'variante';
+            $collectedData['_current_variante'] = [];
+            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => ($collectedData['_step'] ?? 0) + 1]);
         }
 
         $suggestions = $nextField['suggestions'] ?? [];
@@ -1133,6 +1130,11 @@ final class AgentService
     {
         if (!$this->conversationService) return;
         $this->conversationService->saveState($convId, $state);
+     }
+
+    public function cancelGuidedConversation(string $convId): void
+    {
+        $this->clearConversationState($convId);
     }
 
     private function clearConversationState(string $convId): void

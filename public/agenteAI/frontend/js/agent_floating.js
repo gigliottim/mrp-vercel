@@ -1,5 +1,5 @@
 /**
- * Agente AI - Botón Flotante (Floating Button)
+ * Luchi - Agente AI (Botón Flotante)
  * Componente Alpine.js independiente del chat de página completa.
  */
 function agentFloating() {
@@ -105,7 +105,6 @@ function agentFloating() {
                 return;
             }
 
-            // Check if any suggestion has a lookup field - fetch asynchronously
             const hasLookup = data.some(s => s.lookup);
             if (hasLookup) {
                 this.renderSuggestionsWithLookup(data, grid);
@@ -203,7 +202,6 @@ function agentFloating() {
                     this.addMessage('assistant', data.message);
 
                     if (data.suggestions && data.suggestions.length > 0) {
-                        // Check for lookup suggestions - need async rendering
                         const hasLookup = data.suggestions.some(s => s.lookup);
                         if (hasLookup) {
                             this.renderSuggestionsWithLookup(data.suggestions, document.getElementById('agent-float-suggestions-grid'));
@@ -219,6 +217,45 @@ function agentFloating() {
                 this.addMessage('system', 'Error al enviar el mensaje. Por favor, intenta de nuevo.');
             } finally {
                 this.isLoading = false;
+            }
+        },
+
+        async cancelConversation() {
+            if (!this.conversationId) {
+                this.resetChat();
+                return;
+            }
+
+            try {
+                await fetch('/api/v1/agent/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversation_id: this.conversationId })
+                });
+            } catch (error) {
+                console.error('Error cancelling conversation:', error);
+            }
+
+            this.resetChat();
+        },
+
+        resetChat() {
+            this.conversationId = null;
+            this.currentIntent = null;
+            this.guidedState = null;
+            this.messages = [];
+            this.loadSuggestions();
+
+            const messagesContainer = document.getElementById('agent-float-messages');
+            if (messagesContainer) {
+                messagesContainer.innerHTML = `
+                    <div class="agent-float-message agent-float-message-system">
+                        <div class="agent-float-message-content">
+                            <p>Operación cancelada. ¿En qué puedo ayudarte?</p>
+                        </div>
+                        <span class="agent-float-timestamp">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                `;
             }
         },
 
@@ -277,6 +314,16 @@ function selectFloatFieldOption(value) {
         if (alpineComponent) {
             alpineComponent.userInput = value;
             alpineComponent.sendMessage();
+        }
+    }
+}
+
+function cancelFloatConversation() {
+    const chat = document.getElementById('agent-floating-btn');
+    if (chat && typeof Alpine !== 'undefined') {
+        const alpineComponent = Alpine.$data(chat);
+        if (alpineComponent) {
+            alpineComponent.cancelConversation();
         }
     }
 }

@@ -32,7 +32,7 @@ use App\Core\View\View;
                     <path d="M9 16h6" />
                 </svg>
                 <div>
-                    <strong>Agente AI</strong>
+                    <strong>Luchi</strong>
                     <span class="agent-status" x-show="!isOffline">En línea</span>
                     <span class="agent-status offline" x-show="isOffline">Fuera de línea</span>
                 </div>
@@ -56,7 +56,7 @@ use App\Core\View\View;
         <div class="agent-float-messages" id="agent-float-messages">
             <div class="agent-float-message agent-float-message-system">
                 <div class="agent-float-message-content">
-                    <p>¡Hola! Soy tu asistente de IA. Puedo ayudarte a crear piezas, BOMs, proveedores y más.</p>
+                    <p>¡Hola! Soy Luchi, tu asistente. Puedo ayudarte a crear piezas, BOMs, proveedores y más.</p>
                 </div>
                 <span class="agent-float-timestamp">Ahora</span>
             </div>
@@ -77,12 +77,18 @@ use App\Core\View\View;
                 @keydown.enter.exact.prevent="sendMessage"
                 placeholder="Escribe tu mensaje..."
                 :disabled="isLoading || isOffline"></textarea>
-            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline">
+            <button class="agent-float-btn" @click="sendMessage" :disabled="isLoading || !userInput.trim() || isOffline" title="Enviar">
                 <svg class="icon" x-show="!isLoading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
                 <span x-show="isLoading">...</span>
+            </button>
+            <button class="agent-float-btn agent-float-btn-cancel" @click="cancelConversation" title="Cancelar operación" x-show="guidedState !== null" style="color: #dc3545;">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
             </button>
         </div>
 
@@ -94,5 +100,5 @@ use App\Core\View\View;
 </div>
 
 <!-- CSS y JS externalizados del botón flotante -->
-<link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=48.0.0">
-<script src="/agenteAI/frontend/js/agent_floating.js?v=48.0.0" defer></script>
+<link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=49.0.0">
+<script src="/agenteAI/frontend/js/agent_floating.js?v=49.0.0" defer></script>

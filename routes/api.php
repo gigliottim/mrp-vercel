@@ -36,6 +36,7 @@ use App\AgenteAI\Backend\Controllers\AgentController;
 
 $router->post('/api/v1/agent/message', [AgentController::class, 'handleMessage']);
 $router->post('/api/v1/agent/confirm', [AgentController::class, 'confirmSave']);
+$router->post('/api/v1/agent/cancel', [AgentController::class, 'cancelConversation']);
 $router->get('/api/v1/agent/suggestions', [AgentController::class, 'getSuggestions']);
 $router->get('/api/v1/agent/lookup/{type}', [AgentController::class, 'getLookup']);
 $router->get('/api/v1/agent/config', [AgentController::class, 'checkConfiguration']);

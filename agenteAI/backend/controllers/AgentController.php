@@ -144,6 +144,27 @@ final class AgentController extends Controller
     }
 
     /**
+     * Cancelar la conversación guiada y volver al menú
+     */
+    public function cancelConversation(Request $request): Response
+    {
+        $this->ensureSession();
+
+        $convId = $request->input('conversation_id');
+
+        if ($convId) {
+            $service = $this->getService();
+            $service->cancelGuidedConversation($convId);
+        }
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Operación cancelada.',
+            'guided_state' => null,
+        ]);
+    }
+
+    /**
      * Confirmar y guardar los datos
      */
     public function confirmSave(Request $request): Response

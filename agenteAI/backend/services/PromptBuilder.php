@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\AgenteAI\Backend\Services;
 
 /**
- * Constructor de Prompts y flujos guiados para el Agente AI.
+ * Constructor de Prompts y flujos guiados para Luchi (Agente AI).
  *
  * Flujos completos alineados con los ABM reales del MRP:
  *
- * Pieza/Material: Parte (codigo, detalle, tipo, grupo, UM compra, UM uso, dimensiones)
- *   → Variante (codigo, detalle, estado, lote min, punto pedido, peso+UM, ubicacion)
+ * Pieza/Material: Parte (codigo, tipo, grupo, detalle, UM compra, UM uso, dimensiones)
+ *   → Variante (codigo, detalle, estado, lote min, punto pedido, peso, ubicacion)
  *   → ¿Otra variante? → (bucle) o Finalizar
  *
  * Proveedor: entidad (razon_social, identificacion_tributaria, contacto_email, contacto_telefono, direccion)
@@ -19,52 +19,48 @@ namespace App\AgenteAI\Backend\Services;
  */
 final class PromptBuilder
 {
-    /**
-     * Fases del flujo guiado para Pieza/Material.
-     * Parte primero, luego Variante (con opción de agregar más variantes).
-     */
     private const PHASE_PARTE = 'parte';
     private const PHASE_VARIANTE = 'variante';
     private const PHASE_OTRA_VARIANTE = 'otra_variante';
 
     private const PARTE_FIELDS = [
-        ['field' => 'codigo',         'message' => '¿Cuál es el código de la pieza? (máx 50 caracteres, ej: P-001)', 'required' => true],
-        ['field' => 'id_tipo',        'message' => '¿Qué tipo de parte es?', 'required' => true, 'lookup' => 'tipos_partes'],
-        ['field' => 'id_grupo',       'message' => '¿A qué grupo pertenece?', 'required' => true, 'lookup' => 'grupos_partes'],
-        ['field' => 'detalle',        'message' => '¿Cuál es la descripción de la pieza?', 'required' => true],
-        ['field' => 'id_um_compra',  'message' => '¿Cuál es la unidad de medida de compra?', 'required' => false, 'lookup' => 'unidades_medida_all'],
-        ['field' => 'id_um_uso',     'message' => '¿Cuál es la unidad de medida de uso en producción?', 'required' => false, 'lookup' => 'unidades_medida_all'],
-        ['field' => 'largo_alto',     'message' => '¿Cuál es el largo/alto? (dejar vacío si no aplica)', 'required' => false, 'lookup' => 'unidades_medida_longitud'],
-        ['field' => 'ancho',          'message' => '¿Cuál es el ancho? (dejar vacío si no aplica)', 'required' => false, 'lookup' => 'unidades_medida_longitud'],
-        ['field' => 'espesor_profundidad', 'message' => '¿Cuál es el espesor/profundidad? (dejar vacío si no aplica)', 'required' => false, 'lookup' => 'unidades_medida_longitud'],
+        ['field' => 'codigo',              'message' => '¿Cuál es el código de la pieza? (máx 50 caracteres, ej: P-001)', 'required' => true],
+        ['field' => 'id_tipo',             'message' => '¿Qué tipo de parte es?', 'required' => true, 'lookup' => 'tipos_partes'],
+        ['field' => 'id_grupo',            'message' => '¿A qué grupo pertenece?', 'required' => true, 'lookup' => 'grupos_partes'],
+        ['field' => 'detalle',             'message' => '¿Cuál es la descripción de la pieza?', 'required' => true],
+        ['field' => 'id_um_compra',        'message' => '¿Cuál es la unidad de medida de compra?', 'required' => true, 'lookup' => 'unidades_medida_all'],
+        ['field' => 'id_um_uso',           'message' => '¿Cuál es la unidad de medida de uso en producción? (Enter para usar la misma que compra)', 'required' => false, 'lookup' => 'unidades_medida_all'],
+        ['field' => 'largo_alto',          'message' => '¿Cuál es el largo/alto en mm? (Enter para omitir)', 'required' => false],
+        ['field' => 'ancho',               'message' => '¿Cuál es el ancho en mm? (Enter para omitir)', 'required' => false],
+        ['field' => 'espesor_profundidad', 'message' => '¿Cuál es el espesor/profundidad en mm? (Enter para omitir)', 'required' => false],
     ];
 
     private const MATERIAL_PARTE_FIELDS = [
-        ['field' => 'codigo',         'message' => '¿Cuál es el código del material? (máx 50 caracteres, ej: MP-001)', 'required' => true],
-        ['field' => 'id_grupo',      'message' => '¿A qué grupo pertenece?', 'required' => true, 'lookup' => 'grupos_partes'],
-        ['field' => 'detalle',        'message' => '¿Cuál es la descripción del material?', 'required' => true],
-        ['field' => 'id_um_compra',  'message' => '¿Cuál es la unidad de medida de compra?', 'required' => true, 'lookup' => 'unidades_medida_all'],
-        ['field' => 'id_um_uso',     'message' => '¿Cuál es la unidad de medida de uso en producción?', 'required' => false, 'lookup' => 'unidades_medida_all'],
+        ['field' => 'codigo',       'message' => '¿Cuál es el código del material? (máx 50 caracteres, ej: MP-001)', 'required' => true],
+        ['field' => 'id_grupo',    'message' => '¿A qué grupo pertenece?', 'required' => true, 'lookup' => 'grupos_partes'],
+        ['field' => 'detalle',     'message' => '¿Cuál es la descripción del material?', 'required' => true],
+        ['field' => 'id_um_compra', 'message' => '¿Cuál es la unidad de medida de compra?', 'required' => true, 'lookup' => 'unidades_medida_all'],
+        ['field' => 'id_um_uso',   'message' => '¿Cuál es la unidad de medida de uso en producción? (Enter para usar la misma que compra)', 'required' => false, 'lookup' => 'unidades_medida_all'],
     ];
 
     private const VARIANTE_FIELDS = [
-        ['field' => 'codigo_variante',   'message' => '¿Cuál es el código de la variante? (se sugiere {suggested_code})', 'required' => true],
-        ['field' => 'detalle_variante',  'message' => '¿Cuál es la descripción de la variante? (Enter para usar la misma que la parte)', 'required' => false],
-        ['field' => 'estado',            'message' => '¿Cuál es el estado de la variante?', 'required' => false, 'lookup' => 'estados_variante'],
+        ['field' => 'codigo_variante',  'message' => '¿Cuál es el código de la variante? (se sugiere {suggested_code})', 'required' => true],
+        ['field' => 'detalle_variante', 'message' => '¿Cuál es la descripción de la variante? (Enter para usar la misma que la parte)', 'required' => false],
+        ['field' => 'estado',           'message' => '¿Cuál es el estado de la variante?', 'required' => true, 'lookup' => 'estados_variante'],
         ['field' => 'lote_minimo',      'message' => '¿Cuál es el lote mínimo? (número, default 1)', 'required' => false],
-        ['field' => 'punto_pedido',      'message' => '¿Cuál es el punto de pedido? (número, default 0)', 'required' => false],
-        ['field' => 'peso',             'message' => '¿Cuál es el peso unitario? (dejar vacío si no aplica)', 'required' => false, 'lookup' => 'unidades_medida_masa'],
-        ['field' => 'ubicacion_cuerpo',  'message' => '¿Ubicación física - Cuerpo? (dejar vacío si no aplica)', 'required' => false],
-        ['field' => 'ubicacion_pasillo',  'message' => '¿Ubicación física - Pasillo? (dejar vacío si no aplica)', 'required' => false],
-        ['field' => 'ubicacion_estante',  'message' => '¿Ubicación física - Estante? (dejar vacío si no aplica)', 'required' => false],
+        ['field' => 'punto_pedido',     'message' => '¿Cuál es el punto de pedido? (número, default 0)', 'required' => false],
+        ['field' => 'peso',             'message' => '¿Cuál es el peso unitario? (Enter para omitir)', 'required' => false, 'lookup' => 'unidades_medida_masa'],
+        ['field' => 'ubicacion_cuerpo',  'message' => '¿Ubicación física - Cuerpo? (Enter para omitir)', 'required' => false],
+        ['field' => 'ubicacion_pasillo', 'message' => '¿Ubicación física - Pasillo? (Enter para omitir)', 'required' => false],
+        ['field' => 'ubicacion_estante', 'message' => '¿Ubicación física - Estante? (Enter para omitir)', 'required' => false],
     ];
 
     private const SUPPLIER_FIELDS = [
         ['field' => 'razon_social',              'message' => '¿Cuál es la razón social del proveedor?', 'required' => true],
-        ['field' => 'identificacion_tributaria', 'message' => '¿Cuál es el CUIT o número de identificación tributaria? (dejar vacío si no tiene)', 'required' => false],
-        ['field' => 'contacto_email',           'message' => '¿Cuál es el email de contacto? (dejar vacío si no tiene)', 'required' => false],
-        ['field' => 'contacto_telefono',         'message' => '¿Cuál es el teléfono de contacto? (dejar vacío si no tiene)', 'required' => false],
-        ['field' => 'direccion',                'message' => '¿Cuál es la dirección? (dejar vacío si no tiene)', 'required' => false],
+        ['field' => 'identificacion_tributaria', 'message' => '¿Cuál es el CUIT o número de identificación tributaria? (Enter para omitir)', 'required' => false],
+        ['field' => 'contacto_email',           'message' => '¿Cuál es el email de contacto? (Enter para omitir)', 'required' => false],
+        ['field' => 'contacto_telefono',         'message' => '¿Cuál es el teléfono de contacto? (Enter para omitir)', 'required' => false],
+        ['field' => 'direccion',                'message' => '¿Cuál es la dirección? (Enter para omitir)', 'required' => false],
     ];
 
     private const BOM_FIELDS = [
@@ -122,8 +118,9 @@ final class PromptBuilder
     }
 
     /**
-     * Determinar el siguiente campo faltante en el flujo guiado.
-     * Soporta fases: parte → variante → otra_variante (bucle).
+     * Determinar el siguiente campo faltante.
+     * Todos los campos se preguntan (incluidos los opcionales).
+     * Los opcionales se marcan con "Enter para omitir" en el mensaje.
      */
     public function nextMissingField(string $intent, array $data): ?array
     {
@@ -147,9 +144,6 @@ final class PromptBuilder
             $fields = ($intent === 'create_material') ? self::MATERIAL_PARTE_FIELDS : self::PARTE_FIELDS;
             foreach ($fields as $f) {
                 if (!isset($data[$f['field']]) || $data[$f['field']] === '' || $data[$f['field']] === null) {
-                    if (!$f['required'] && !$this->hasRequiredFieldsLeft($fields, $data)) {
-                        continue;
-                    }
                     $suggestions = $this->getFieldSuggestions($f);
                     return [
                         'field' => $f['field'],
@@ -159,7 +153,6 @@ final class PromptBuilder
                     ];
                 }
             }
-            // Todos los campos de parte completados, pasar a variante
             return $this->firstVarianteField($data);
         }
 
@@ -171,7 +164,7 @@ final class PromptBuilder
             foreach (self::VARIANTE_FIELDS as $f) {
                 $key = $f['field'];
                 $currentVal = $data['_current_variante'][$key] ?? null;
-                if (($key === 'codigo_variante' || $key === 'detalle_variante') && $currentVal === null) {
+                if ($currentVal === null || $currentVal === '') {
                     $suggestions = $this->getFieldSuggestions($f);
                     if ($key === 'codigo_variante') {
                         $suggested = strtoupper(($data['codigo'] ?? 'P')) . '-' . str_pad((string)($currentVariantIndex + 1), 2, '0', STR_PAD_LEFT);
@@ -184,18 +177,8 @@ final class PromptBuilder
                         'lookup' => $f['lookup'] ?? null,
                     ];
                 }
-                if ($currentVal === null && $f['required']) {
-                    $suggestions = $this->getFieldSuggestions($f);
-                    return [
-                        'field' => $key,
-                        'message' => $prefix . $f['message'],
-                        'suggestions' => $suggestions,
-                        'lookup' => $f['lookup'] ?? null,
-                    ];
-                }
             }
 
-            // Variante completa: preguntar si quiere otra
             return [
                 'field' => 'add_more_variante',
                 'message' => 'Variante completada. ¿Querés agregar otra variante o finalizar?',
@@ -225,9 +208,6 @@ final class PromptBuilder
     {
         foreach ($fields as $f) {
             if (!isset($data[$f['field']]) || $data[$f['field']] === '' || $data[$f['field']] === null) {
-                if (!$f['required'] && !$this->hasRequiredFieldsLeft($fields, $data)) {
-                    continue;
-                }
                 return [
                     'field' => $f['field'],
                     'message' => $f['message'],
@@ -286,16 +266,6 @@ final class PromptBuilder
             'create_bom' => self::BOM_FIELDS,
             default => [],
         };
-    }
-
-    private function hasRequiredFieldsLeft(array $fields, array $data): bool
-    {
-        foreach ($fields as $f) {
-            if (($f['required'] ?? false) && (!isset($data[$f['field']]) || $data[$f['field']] === '' || $data[$f['field']] === null)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private function getFieldSuggestions(array $fieldDef): array

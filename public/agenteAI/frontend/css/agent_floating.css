@@ -50,10 +50,10 @@
 
 /* Contenedor del chat flotante */
 .agent-float-container {
-    width: 350px;
-    max-width: 90vw;
-    height: 500px;
-    max-height: 80vh;
+    width: 380px;
+    max-width: 92vw;
+    height: calc(100vh - 20px);
+    max-height: calc(100vh - 20px);
     background: white;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);

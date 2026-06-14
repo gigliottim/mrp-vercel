@@ -174,6 +174,13 @@ final class AgentService
         array $collectedData,
         int $step
     ): AgentResponse {
+        $phase = $collectedData['_phase'] ?? '';
+
+        // Fase: esperando respuesta "¿Otra variante?" — manejar directamente
+        if (($intent === 'create_part' || $intent === 'create_material') && $phase === 'ask_more_variante') {
+            return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, ['field' => 'add_more_variante']);
+        }
+
         $next = $this->promptBuilder->nextMissingField($intent, $collectedData);
 
         // Flujo especial para BOM
@@ -645,6 +652,7 @@ final class AgentService
             'direccion' => $input,
             'id_tipo', 'id_grupo', 'id_um_compra', 'id_um_uso' => $input,
             'largo_alto', 'ancho', 'espesor_profundidad' => $this->extractPositiveNumber($input),
+            'superficie', 'volumen' => $this->extractPositiveNumber($input),
             'stock_seguridad' => $this->extractPositiveNumber($input),
             'punto_pedido' => $this->extractPositiveNumber($input),
             'lote_minimo' => $this->extractPositiveNumber($input),
@@ -696,6 +704,7 @@ final class AgentService
         return match ($field) {
             'id_um_uso' => $collectedData['id_um_compra'] ?? null,
             'largo_alto', 'ancho', 'espesor_profundidad', 'peso' => 0,
+            'superficie', 'volumen' => $this->calculateDimension($field, $collectedData),
             'lote_minimo' => 1,
             'punto_pedido' => 0,
             'stock_seguridad' => 0,
@@ -706,6 +715,21 @@ final class AgentService
             'component_um' => '',
             default => null,
         };
+    }
+
+    private function calculateDimension(string $field, array $collectedData): ?float
+    {
+        $largo = (float) ($collectedData['largo_alto'] ?? 0);
+        $ancho = (float) ($collectedData['ancho'] ?? 0);
+        $espesor = (float) ($collectedData['espesor_profundidad'] ?? 0);
+
+        if ($field === 'superficie' && $largo > 0 && $ancho > 0) {
+            return round(($largo / 1000) * ($ancho / 1000), 6);
+        }
+        if ($field === 'volumen' && $largo > 0 && $ancho > 0 && $espesor > 0) {
+            return round(($largo / 10) * ($ancho / 10) * ($espesor / 10), 3);
+        }
+        return null;
     }
 
     private function buildFieldHelp(string $field, string $intent): string

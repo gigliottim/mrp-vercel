@@ -30,9 +30,11 @@ final class PromptBuilder
         ['field' => 'detalle',             'message' => '¿Cuál es la descripción de la pieza?', 'required' => true],
         ['field' => 'id_um_compra',        'message' => '¿Cuál es la unidad de medida de compra?', 'required' => true, 'lookup' => 'unidades_medida_all'],
         ['field' => 'id_um_uso',           'message' => '¿Cuál es la unidad de medida de uso en producción? (Enter para usar la misma que compra)', 'required' => false, 'lookup' => 'unidades_medida_all'],
-        ['field' => 'largo_alto',          'message' => '¿Cuál es el largo/alto en mm? (Enter para omitir)', 'required' => false],
-        ['field' => 'ancho',               'message' => '¿Cuál es el ancho en mm? (Enter para omitir)', 'required' => false],
-        ['field' => 'espesor_profundidad', 'message' => '¿Cuál es el espesor/profundidad en mm? (Enter para omitir)', 'required' => false],
+        ['field' => 'largo_alto',          'message' => '¿Cuál es el largo/alto? (en mm, Enter para omitir)', 'required' => false],
+        ['field' => 'ancho',               'message' => '¿Cuál es el ancho? (en mm, Enter para omitir)', 'required' => false],
+        ['field' => 'espesor_profundidad', 'message' => '¿Cuál es el espesor/profundidad? (en mm, Enter para omitir)', 'required' => false],
+        ['field' => 'superficie',          'message' => '¿Cuál es la superficie? (en m², Enter para omitir)', 'required' => false],
+        ['field' => 'volumen',             'message' => '¿Cuál es el volumen? (en cm³ o ml, Enter para omitir)', 'required' => false],
     ];
 
     private const MATERIAL_PARTE_FIELDS = [

@@ -23,7 +23,7 @@
         <div class="agent-messages" id="agent-messages">
             <div class="agent-message agent-message-system">
                 <div class="agent-message-content">
-                    <p>¡Hola! Soy tu asistente de IA. Puedo ayudarte a crear piezas, BOMs, proveedores y más.</p>
+                    <p>¡Hola! Soy tu asistente de IA. Puedo ayudarte a crear partes, BOMs, proveedores y más.</p>
                 </div>
                 <span class="agent-timestamp">Ahora</span>
             </div>

@@ -139,7 +139,7 @@ Crear en `database/migrations/`:
 - Clase `AgentPromptBuilder`
 - `systemPrompt(string $intent): string` — system prompt base según intent
 - `buildMessages(array $history, string $userInput, string $intent): array` — arma el array `messages[]` para la API
-- Intents soportados: `create_part`, `create_bom`, `create_supplier`, `create_material`, `general_query`
+- Intents soportados: `create_part`, `create_bom`, `create_supplier`, `general_query`
 - Los system prompts exigen JSON estructurado plano (sin markdown, sin explicaciones)
 
 ### 2.3 Validador de Respuestas
@@ -343,8 +343,8 @@ Definidas en `config/agent_ai.php` bajo clave `'suggestions'`. Ejemplo:
 'suggestions' => [
     [
         'intent'      => 'create_part',
-        'label'       => 'Crear nueva pieza',
-        'description' => 'Te guío para registrar código, descripción, UOM y materiales',
+        'label'       => 'Crear nueva Parte (Pieza, MP, Conjuntos, PT, MO, etc)',
+        'description' => 'Te guío para registrar código, tipo, grupo, descripción, UOM y variantes',
         'icon'        => 'bi-gear',
     ],
     [
@@ -358,12 +358,6 @@ Definidas en `config/agent_ai.php` bajo clave `'suggestions'`. Ejemplo:
         'label'       => 'Registrar proveedor',
         'description' => 'Nombre, CUIT, contacto y condiciones comerciales',
         'icon'        => 'bi-truck',
-    ],
-    [
-        'intent'      => 'create_material',
-        'label'       => 'Registrar materia prima',
-        'description' => 'Material base con unidad de medida y stock mínimo',
-        'icon'        => 'bi-box-seam',
     ],
 ],
 ```

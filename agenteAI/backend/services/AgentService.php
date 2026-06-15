@@ -125,7 +125,6 @@ final class AgentService
                 'create_part' => $this->savePart($confirmedData),
                 'create_bom' => $this->saveBom($confirmedData),
                 'create_supplier' => $this->saveSupplier($confirmedData),
-                'create_material' => $this->saveMaterial($confirmedData),
                 default => ['success' => false, 'message' => "Intent no soportado: {$intent}"],
             };
 
@@ -164,7 +163,7 @@ final class AgentService
 
     private function isGuidedIntent(string $intent): bool
     {
-        return in_array($intent, ['create_part', 'create_material', 'create_supplier', 'create_bom'], true);
+        return in_array($intent, ['create_part', 'create_supplier', 'create_bom'], true);
     }
 
     private function isLookupField(string $field): bool
@@ -184,7 +183,7 @@ final class AgentService
         $phase = $collectedData['_phase'] ?? '';
 
         // Fase: esperando respuesta "¿Otra variante?" — manejar directamente
-        if (($intent === 'create_part' || $intent === 'create_material') && $phase === 'ask_more_variante') {
+        if ($intent === 'create_part' && $phase === 'ask_more_variante') {
             return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, ['field' => 'add_more_variante'], $fieldValue, $fieldLabel);
         }
 
@@ -196,7 +195,7 @@ final class AgentService
         }
 
         // Flujo especial para Parte+Variante
-        if (($intent === 'create_part' || $intent === 'create_material') && $next !== null) {
+        if ($intent === 'create_part' && $next !== null) {
             return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, $next, $fieldValue, $fieldLabel);
         }
 
@@ -272,7 +271,7 @@ final class AgentService
                 status: 'saved',
                 message: $saveResult['message'],
                 data: $saveResult['data'] ?? null,
-                suggestions: ['Crear otra pieza', 'Volver al menú'],
+                suggestions: ['Crear otra parte', 'Volver al menú'],
                 conversationId: $convId
             );
         }
@@ -341,7 +340,7 @@ final class AgentService
                     status: 'saved',
                     message: $saveResult['message'],
                     data: $saveResult['data'] ?? null,
-                    suggestions: ['Crear otra pieza', 'Volver al menú'],
+                    suggestions: ['Crear otra parte', 'Volver al menú'],
                     conversationId: $convId
                 );
             }
@@ -406,7 +405,7 @@ final class AgentService
             $help = $this->buildFieldHelp($field, $intent);
             return new AgentResponse(
                 status: 'clarify',
-                message: "El código \"{$value}\" ya existe en otra pieza. Por favor, elegí un código diferente. {$help}",
+                message: "El código \"{$value}\" ya existe en otra parte. Por favor, elegí un código diferente. {$help}",
                 data: $collectedData,
                 suggestions: $next['suggestions'] ?? [],
                 conversationId: $convId
@@ -1133,107 +1132,13 @@ final class AgentService
             $code = strtoupper($data['codigo'] ?? $data['code'] ?? '');
             return [
                 'success' => true,
-                'message' => "Pieza '{$code}' creada correctamente con " . count($varianteIds) . " variante(s) (ID: {$parteId})",
+                'message' => "Parte '{$code}' creada correctamente con " . count($varianteIds) . " variante(s) (ID: {$parteId})",
                 'data' => ['parte_id' => $parteId, 'variante_ids' => $varianteIds, 'code' => $code],
             ];
         } catch (\Throwable $e) {
             $db->rollBack();
             error_log("savePart error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error al guardar la pieza: ' . $e->getMessage()];
-        }
-    }
-
-    /**
-     * Guardar Material (misma tabla partes, tipo materia prima)
-     */
-    private function saveMaterial(array $data): array
-    {
-        $db = $this->getDb();
-        if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
-
-        $idGrupo = (int) ($data['id_grupo'] ?? 1);
-        $idUmCompra = !empty($data['id_um_compra']) ? (int) $data['id_um_compra'] : null;
-        $idUmUso = !empty($data['id_um_uso']) ? (int) $data['id_um_uso'] : null;
-        $factorConversion = isset($data['factor_conversion']) ? (float) $data['factor_conversion'] : 1.0;
-
-        $idTipo = 1;
-        try {
-            $stmtTipo = $db->prepare("SELECT id FROM tipos_partes WHERE codigo IN ('MP','materia_prima','raw_material') ORDER BY id LIMIT 1");
-            $stmtTipo->execute();
-            $idTipo = (int) ($stmtTipo->fetchColumn() ?: 1);
-        } catch (\Throwable $e) { /* fallback */ }
-
-        try {
-            $db->beginTransaction();
-
-            $stmt = $db->prepare(
-                "INSERT INTO partes (codigo, id_tipo, id_grupo, detalle, id_um_compra, id_um_uso, factor_conversion, activo, fecha_creacion)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, true, NOW()) RETURNING id"
-            );
-            $stmt->execute([
-                strtoupper($data['codigo'] ?? $data['code'] ?? ''),
-                $idTipo,
-                $idGrupo,
-                $data['detalle'] ?? $data['description'] ?? '',
-                $idUmCompra,
-                $idUmUso,
-                $factorConversion,
-            ]);
-            $parteId = (int) $stmt->fetchColumn();
-
-            $variantes = $data['variantes'] ?? [];
-            if (empty($variantes)) {
-                $stockSeguridad = isset($data['stock_seguridad']) ? (float) $data['stock_seguridad'] : 0;
-                $puntoPedido = isset($data['punto_pedido']) ? (float) $data['punto_pedido'] : 0;
-                $variantes = [[
-                    'codigo_variante' => strtoupper($data['codigo'] ?? $data['code'] ?? 'MP') . '-01',
-                    'detalle_variante' => $data['detalle'] ?? $data['description'] ?? '',
-                    'stock_seguridad' => $stockSeguridad,
-                    'punto_pedido' => $puntoPedido,
-                ]];
-            }
-
-            $varianteIds = [];
-            foreach ($variantes as $var) {
-                $codigoVar = $var['codigo_variante'] ?? strtoupper(($data['codigo'] ?? $data['code'] ?? 'MP')) . '-' . str_pad((string)(count($varianteIds) + 1), 2, '0', STR_PAD_LEFT);
-                $detalleVar = $var['detalle_variante'] ?? $var['detalle'] ?? $data['detalle'] ?? $data['description'] ?? '';
-                $estado = $var['estado'] ?? 'activa';
-                $loteMinimo = isset($var['lote_minimo']) ? (float) $var['lote_minimo'] : 1;
-                $puntoPedido = isset($var['punto_pedido']) ? (float) $var['punto_pedido'] : 0;
-                $stockSeguridad = isset($var['stock_seguridad']) ? (float) $var['stock_seguridad'] : 0;
-                $peso = isset($var['peso']) && $var['peso'] !== '' ? (float) $var['peso'] : null;
-                $idUmPeso = $peso !== null ? $this->resolveDefaultUmId($db, 'masa', 'kg') : null;
-
-                $stmtVar = $db->prepare(
-                    "INSERT INTO variantes (id_parte, codigo_variante, detalle, estado, lote_minimo, punto_pedido, stock_seguridad, stock_actual, peso, id_um_peso, fecha_creacion)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW()) RETURNING id"
-                );
-                $stmtVar->execute([
-                    $parteId,
-                    $codigoVar,
-                    $detalleVar,
-                    $estado,
-                    $loteMinimo,
-                    $puntoPedido,
-                    $stockSeguridad,
-                    $peso,
-                    $idUmPeso,
-                ]);
-                $varianteIds[] = (int) $stmtVar->fetchColumn();
-            }
-
-            $db->commit();
-
-            $code = strtoupper($data['codigo'] ?? $data['code'] ?? '');
-            return [
-                'success' => true,
-                'message' => "Material '{$code}' creado correctamente con " . count($varianteIds) . " variante(s) (ID: {$parteId})",
-                'data' => ['parte_id' => $parteId, 'variante_ids' => $varianteIds, 'code' => $code],
-            ];
-        } catch (\Throwable $e) {
-            $db->rollBack();
-            error_log("saveMaterial error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error al guardar el material: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Error al guardar la parte: ' . $e->getMessage()];
         }
     }
 

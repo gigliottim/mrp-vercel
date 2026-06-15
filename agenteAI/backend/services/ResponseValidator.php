@@ -13,7 +13,6 @@ final class ResponseValidator
         'create_part' => ['codigo', 'id_tipo', 'id_grupo'],
         'create_bom' => ['parent_part', 'components'],
         'create_supplier' => ['razon_social'],
-        'create_material' => ['codigo', 'id_um_compra'],
     ];
 
     public function validate(array $data, string $intent): ValidationResult

@@ -9,7 +9,7 @@ namespace App\AgenteAI\Backend\Services;
  *
  * Flujos completos alineados con los ABM reales del MRP:
  *
- * Pieza/Material: Parte (codigo, tipo, grupo, detalle, UM compra, UM uso, dimensiones)
+ * Parte (Pieza, MP, Conjunto, PT, MO): codigo, tipo, grupo, detalle, UM compra, UM uso, dimensiones
  *   → Variante (codigo, detalle, estado, lote min, punto pedido, peso, ubicacion)
  *   → ¿Otra variante? → (bucle) o Finalizar
  *
@@ -37,13 +37,6 @@ final class PromptBuilder
         ['field' => 'volumen',             'message' => '¿Cuál es el volumen? (en cm³ o ml, Enter para usar el valor calculado)', 'required' => false],
     ];
 
-    private const MATERIAL_PARTE_FIELDS = [
-        ['field' => 'codigo',       'message' => '¿Cuál es el código del material? (máx 50 caracteres, ej: MP-001)', 'required' => true],
-        ['field' => 'id_grupo',    'message' => '¿A qué grupo pertenece?', 'required' => true, 'lookup' => 'grupos_partes'],
-        ['field' => 'detalle',     'message' => '¿Cuál es la descripción del material?', 'required' => true],
-        ['field' => 'id_um_compra', 'message' => '¿Cuál es la unidad de medida de compra?', 'required' => true, 'lookup' => 'unidades_medida_all'],
-        ['field' => 'id_um_uso',   'message' => '¿Cuál es la unidad de medida de uso en producción? (Enter para usar la misma que compra)', 'required' => false, 'lookup' => 'unidades_medida_all'],
-    ];
 
     private const VARIANTE_FIELDS = [
         ['field' => 'codigo_variante',  'message' => '¿Cuál es el código de la variante? (se sugiere {suggested_code})', 'required' => true],
@@ -104,10 +97,9 @@ final class PromptBuilder
     {
         $input = mb_strtolower(trim($userInput));
         $labels = [
-            'create_part' => ['crear nueva pieza', 'nueva pieza', 'crear pieza', 'pieza', 'nueva parte', 'crear parte', 'crear nueva parte'],
+            'create_part' => ['crear nueva parte', 'nueva parte', 'crear parte', 'crear nueva pieza', 'nueva pieza', 'crear pieza', 'pieza', 'registrar materia prima', 'materia prima', 'registrar material', 'material', 'nuevo material', 'conjunto', 'producto terminado', 'mano de obra'],
             'create_bom' => ['armar lista de materiales', 'bom', 'lista de materiales', 'materiales', 'componentes', 'armar bom', 'nueva bom'],
             'create_supplier' => ['registrar proveedor', 'proveedor', 'nuevo proveedor', 'registrar empresa'],
-            'create_material' => ['registrar materia prima', 'materia prima', 'material', 'nuevo material', 'registrar material'],
         ];
         foreach ($labels as $intent => $phrases) {
             foreach ($phrases as $phrase) {
@@ -128,7 +120,7 @@ final class PromptBuilder
     {
         $phase = $data['_phase'] ?? self::PHASE_PARTE;
 
-        if ($intent === 'create_part' || $intent === 'create_material') {
+        if ($intent === 'create_part') {
             return $this->nextMissingParteField($intent, $data, $phase);
         }
         if ($intent === 'create_supplier') {
@@ -143,7 +135,7 @@ final class PromptBuilder
     private function nextMissingParteField(string $intent, array $data, string $phase): ?array
     {
         if ($phase === self::PHASE_PARTE) {
-            $fields = ($intent === 'create_material') ? self::MATERIAL_PARTE_FIELDS : self::PARTE_FIELDS;
+            $fields = self::PARTE_FIELDS;
             foreach ($fields as $f) {
                 if (!isset($data[$f['field']]) || $data[$f['field']] === '' || $data[$f['field']] === null) {
                     $suggestions = $this->getFieldSuggestions($f);
@@ -263,7 +255,6 @@ final class PromptBuilder
     {
         return match ($intent) {
             'create_part' => array_merge(self::PARTE_FIELDS, self::VARIANTE_FIELDS),
-            'create_material' => array_merge(self::MATERIAL_PARTE_FIELDS, self::VARIANTE_FIELDS),
             'create_supplier' => self::SUPPLIER_FIELDS,
             'create_bom' => self::BOM_FIELDS,
             default => [],

@@ -331,7 +331,6 @@ public function handleMessage(Request $request): Response
 | `create_part` | code, description, uom, part_type, category |
 | `create_bom` | parent_part, components |
 | `create_supplier` | name, cuit, contact, email, phone |
-| `create_material` | code, description, uom, min_stock |
 | `general_query` | **ninguno** — no valida campos |
 
 ### Últimos errores en logs (referencia)

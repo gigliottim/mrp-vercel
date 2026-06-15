@@ -81,7 +81,7 @@ function agentChat() {
     },
 
     async sendMessage() {
-      const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+      const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier'].includes(this.currentIntent);
       if (this.isOffline && !isGuidedIntent) {
         console.warn('Chat offline - No se puede enviar mensaje');
         return;
@@ -237,7 +237,7 @@ function agentChat() {
     detectIntent(text) {
       const lowerText = text.toLowerCase();
 
-      if (lowerText.includes('pieza') || lowerText.includes('parte')) {
+      if (lowerText.includes('pieza') || lowerText.includes('parte') || lowerText.includes('materia prima') || lowerText.includes('material') || lowerText.includes('conjunto') || lowerText.includes('producto terminado')) {
         return 'create_part';
       }
       if (lowerText.includes('bom') || lowerText.includes('materiales') || lowerText.includes('componentes')) {
@@ -245,9 +245,6 @@ function agentChat() {
       }
       if (lowerText.includes('proveedor') || lowerText.includes('empresa')) {
         return 'create_supplier';
-      }
-      if (lowerText.includes('material') || lowerText.includes('materia prima')) {
-        return 'create_material';
       }
 
       return 'general_query';

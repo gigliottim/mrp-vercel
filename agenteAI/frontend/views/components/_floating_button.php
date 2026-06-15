@@ -56,7 +56,7 @@ use App\Core\View\View;
         <div class="agent-float-messages" id="agent-float-messages">
             <div class="agent-float-message agent-float-message-system">
                 <div class="agent-float-message-content">
-                    <p>¡Hola! Soy tu asistente de IA. Puedo ayudarte a crear piezas, BOMs, proveedores y más.</p>
+                    <p>¡Hola! Soy tu asistente de IA. Puedo ayudarte a crear partes, BOMs, proveedores y más.</p>
                 </div>
                 <span class="agent-float-timestamp">Ahora</span>
             </div>
@@ -555,7 +555,7 @@ use App\Core\View\View;
             },
 
             async sendMessage() {
-                const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+                const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier'].includes(this.currentIntent);
                 if (this.isOffline && !isGuidedIntent) {
                     console.warn('Chat offline - No se puede enviar mensaje');
                     return;

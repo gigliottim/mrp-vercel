@@ -311,7 +311,7 @@ function agentFloating() {
         },
 
         async sendMessage() {
-            const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier', 'create_material'].includes(this.currentIntent);
+            const isGuidedIntent = this.currentIntent && ['create_part', 'create_bom', 'create_supplier'].includes(this.currentIntent);
             if ((this.isOffline && !isGuidedIntent && !this.guidedState) || this.isLoading) return;
             if (!this.userInput.trim() && !this.guidedState) return;
 

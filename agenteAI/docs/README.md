@@ -85,10 +85,9 @@ GET /agent
 
 ## Intents soportados
 
-- `create_part` - Crear nueva pieza
+- `create_part` - Crear nueva Parte (Pieza, MP, Conjuntos, PT, MO, etc)
 - `create_bom` - Armar lista de materiales (BOM)
 - `create_supplier` - Registrar proveedor
-- `create_material` - Registrar materia prima
 - `general_query` - Preguntas generales
 
 ## Configuración

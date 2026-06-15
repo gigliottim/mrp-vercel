@@ -56,7 +56,7 @@ use App\Core\View\View;
         <div class="agent-float-messages" id="agent-float-messages">
             <div class="agent-float-message agent-float-message-system">
                 <div class="agent-float-message-content">
-                    <p>¡Hola! Soy Luchi, tu asistente. Puedo ayudarte a crear piezas, BOMs, proveedores y más.</p>
+                    <p>¡Hola! Soy Luchi, tu asistente. Puedo ayudarte a crear partes, BOMs, proveedores y más.</p>
                 </div>
                 <span class="agent-float-timestamp">Ahora</span>
             </div>

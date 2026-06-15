@@ -212,9 +212,17 @@ final class AgentController extends Controller
         $this->ensureSession();
         $this->ensureTenantContext();
 
-        $validTypes = ['tipos_partes', 'grupos_partes', 'unidades_medida_all', 'unidades_medida_tipos', 'unidades_medida_longitud', 'unidades_medida_masa', 'unidades_medida_volumen', 'unidades_medida_superficie', 'unidades_medida_unidad', 'estados_variante'];
+        $validPrefixes = ['tipos_partes', 'grupos_partes', 'unidades_medida_', 'estados_variante'];
 
-        if (!in_array($type, $validTypes, true)) {
+        $isValid = false;
+        foreach ($validPrefixes as $prefix) {
+            if ($type === $prefix || str_starts_with($type, $prefix)) {
+                $isValid = true;
+                break;
+            }
+        }
+
+        if (!$isValid) {
             return $this->json([
                 'success' => false,
                 'message' => 'Tipo de lookup no válido',

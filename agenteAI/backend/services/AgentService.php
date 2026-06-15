@@ -894,16 +894,16 @@ final class AgentService
         $db = $this->getDb();
         if (!$db) return [];
 
+        if (str_starts_with($lookupType, 'unidades_medida_') && $lookupType !== 'unidades_medida_all' && $lookupType !== 'unidades_medida_tipos') {
+            $tipo = substr($lookupType, strlen('unidades_medida_'));
+            return $this->fetchUnidadesMedidaByTipo($db, $tipo);
+        }
+
         return match ($lookupType) {
             'tipos_partes' => $this->fetchTiposPartes($db),
             'grupos_partes' => $this->fetchGruposPartes($db),
             'unidades_medida_all' => $this->fetchUnidadesMedida($db),
             'unidades_medida_tipos' => $this->fetchUnidadesMedidaTipos($db),
-            'unidades_medida_longitud' => $this->fetchUnidadesMedidaByTipo($db, 'longitud'),
-            'unidades_medida_masa' => $this->fetchUnidadesMedidaByTipo($db, 'masa'),
-            'unidades_medida_volumen' => $this->fetchUnidadesMedidaByTipo($db, 'volumen'),
-            'unidades_medida_superficie' => $this->fetchUnidadesMedidaByTipo($db, 'superficie'),
-            'unidades_medida_unidad' => $this->fetchUnidadesMedidaByTipo($db, 'unidad'),
             'estados_variante' => self::ESTADOS_VARIANTE,
             default => [],
         };
@@ -981,6 +981,7 @@ final class AgentService
                 'longitud' => 'Longitud',
                 'volumen' => 'Volumen',
                 'superficie' => 'Superficie',
+                'tiempo' => 'Tiempo',
             ];
             return array_map(fn($r) => [
                 'value' => $r['tipo'],
@@ -990,6 +991,7 @@ final class AgentService
         } catch (\Throwable $e) {
             error_log("fetchUnidadesMedidaTipos failed: " . $e->getMessage());
             return [
+                ['value' => 'tiempo', 'label' => 'Tiempo', 'lookup' => 'unidades_medida_tiempo'],
                 ['value' => 'unidad', 'label' => 'Unidad', 'lookup' => 'unidades_medida_unidad'],
                 ['value' => 'masa', 'label' => 'Masa', 'lookup' => 'unidades_medida_masa'],
                 ['value' => 'longitud', 'label' => 'Longitud', 'lookup' => 'unidades_medida_longitud'],

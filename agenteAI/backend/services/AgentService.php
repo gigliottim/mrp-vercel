@@ -248,9 +248,14 @@ final class AgentService
 
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
+            $confirmation = '';
+            if ($field !== 'add_more' && $field !== '') {
+                $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+            }
+
             return new AgentResponse(
                 status: 'clarify',
-                message: $message,
+                message: $confirmation . $message,
                 data: $collectedData,
                 suggestions: $suggestions,
                 conversationId: $convId
@@ -364,8 +369,13 @@ final class AgentService
             $defaultValue = $this->getDefaultForField($field, $collectedData);
             if ($defaultValue !== null) {
                 $collectedData[$field] = $defaultValue;
+                $collectedData = $this->propagateLabels($field, $defaultValue, $collectedData);
                 $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
-                return $this->askNextField($convId, $collectedData);
+
+                $displayValue = $this->getDisplayValue($field, $collectedData);
+                $nextResponse = $this->askNextField($convId, $collectedData);
+                $nextResponse->message = $displayValue . ' ' . $nextResponse->message;
+                return $nextResponse;
             }
             // Required field — cannot skip
             $help = $this->buildFieldHelp($field, $intent);
@@ -409,7 +419,11 @@ final class AgentService
         }
         $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-        return $this->askNextField($convId, $collectedData);
+        $nextResponse = $this->askNextField($convId, $collectedData);
+        if ($fieldLabel !== null && $this->isLookupField($field)) {
+            $nextResponse->message = '✓ ' . $fieldLabel . '. ' . $nextResponse->message;
+        }
+        return $nextResponse;
     }
 
     /**
@@ -436,6 +450,10 @@ final class AgentService
             $defaultValue = $this->getDefaultForField($field, $collectedData);
             if ($defaultValue !== null) {
                 $current[$field] = $defaultValue;
+                $collectedData = $this->propagateLabels($field, $defaultValue, $collectedData);
+                if (isset($collectedData['_label_' . $field])) {
+                    $current['_label_' . $field] = $collectedData['_label_' . $field];
+                }
             }
             // If null, required field — cannot skip
             if ($defaultValue === null) {
@@ -491,10 +509,34 @@ final class AgentService
             }
 
             $current['codigo_variante'] = $value;
-            $collectedData['_current_variante'] = $current;
-            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+        $collectedData['_current_variante'] = $current;
+        $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-            return $this->askNextField($convId, $collectedData, $intent);
+        // Check if all variante fields are done → push completed variante and ask "add more?"
+        $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
+
+        if ($nextField === null || ($nextField['field'] ?? '') === 'add_more_variante') {
+            $variantes = $collectedData['variantes'] ?? [];
+            $variantes[] = $current;
+            $collectedData['variantes'] = $variantes;
+            $collectedData['_current_variante'] = [];
+            $collectedData['_phase'] = 'ask_more_variante';
+            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 2]);
+
+            return new AgentResponse(
+                status: 'clarify',
+                message: 'Variante completada. ¿Querés agregar otra variante o finalizar?',
+                data: $collectedData,
+                suggestions: [['label' => 'Agregar otra variante', 'value' => 'si'], ['label' => 'Finalizar', 'value' => 'no']],
+                conversationId: $convId
+            );
+        }
+
+        $nextResponse = $this->askNextField($convId, $collectedData, $intent);
+        if ($fieldLabel !== null && $this->isLookupField($field)) {
+            $nextResponse->message = '✓ ' . $fieldLabel . '. ' . $nextResponse->message;
+        }
+        return $nextResponse;
         }
 
         if ($field === 'detalle_variante') {
@@ -731,6 +773,39 @@ final class AgentService
             return $m[0];
         }
          return null;
+    }
+
+    private function propagateLabels(string $field, mixed $value, array $collectedData): array
+    {
+        if ($field === 'id_um_uso' && isset($collectedData['_label_id_um_compra'])) {
+            $collectedData['_label_id_um_uso'] = $collectedData['_label_id_um_compra'];
+        }
+        if (($field === 'superficie' || $field === 'volumen') && $value !== null && $value > 0) {
+            $unit = $field === 'superficie' ? 'm²' : 'cm³';
+            $collectedData['_label_' . $field] = number_format((float) $value, 6, ',', '.') . ' ' . $unit;
+        }
+        return $collectedData;
+    }
+
+    private function getDisplayValue(string $field, array $collectedData): string
+    {
+        $label = $collectedData['_label_' . $field] ?? null;
+        if ($label !== null) {
+            return '✓ ' . $label . '.';
+        }
+        $value = $collectedData[$field] ?? null;
+        if ($value !== null) {
+            if ($field === 'superficie') {
+                return '✓ ' . number_format((float) $value, 6, ',', '.') . ' m².';
+            }
+            if ($field === 'volumen') {
+                return '✓ ' . number_format((float) $value, 4, ',', '.') . ' cm³.';
+            }
+            if (is_numeric($value) && !$this->isLookupField($field)) {
+                return '✓ ' . $value . '.';
+            }
+        }
+        return '✓ Valor asignado.';
     }
 
     private function getDefaultForField(string $field, array $collectedData): mixed

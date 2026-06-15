@@ -54,15 +54,9 @@ final class AgentService
         // Primera interacción con intent guiado: iniciar flujo paso a paso
         if (($session['step'] ?? 0) === 0 && $this->isGuidedIntent($intent)) {
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => [], 'step' => 1]);
-            $welcome = $this->promptBuilder->buildStepByStepMessage($intent, []);
-            $this->logAiCall($convId, [], $welcome, true, null, 'guided_welcome');
-            return new AgentResponse(
-                status: 'clarify',
-                message: $welcome['message'],
-                data: [],
-                suggestions: $welcome['suggestions'],
-                conversationId: $convId
-            );
+            $welcomeResponse = $this->askNextField($convId, [], $intent);
+            $this->logAiCall($convId, [], ['message' => $welcomeResponse->message], true, null, 'guided_welcome');
+            return $welcomeResponse;
         }
 
         // Continuación de flujo guiado

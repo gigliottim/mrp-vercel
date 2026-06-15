@@ -6,6 +6,8 @@ function agentFloating() {
     return {
         isMinimized: true,
         userInput: '',
+        fieldValue: null,
+        fieldLabel: null,
         messages: [],
         suggestions: [],
         isLoading: false,
@@ -210,7 +212,7 @@ function agentFloating() {
                     return `
                         <button class="agent-float-suggestion-chip"
                                 data-value="${this.escapeHtml(String(s.value))}"
-                                onclick="selectFloatFieldOption('${this.escapeHtml(String(s.value))}')">
+                                onclick="selectFloatFieldOption('${this.escapeHtml(String(s.value))}', '${this.escapeHtml(s.label)}')">
                             <span>${this.escapeHtml(s.label)}</span>
                         </button>
                     `;
@@ -241,7 +243,7 @@ function agentFloating() {
                     chips = items.map(item => `
                         <button class="agent-float-suggestion-chip"
                                 data-value="${this.escapeHtml(String(item.value))}"
-                                onclick="selectFloatFieldOption('${this.escapeHtml(String(item.value))}')">
+                                onclick="selectFloatFieldOption('${this.escapeHtml(String(item.value))}', '${this.escapeHtml(item.label)}')">
                             <span>${this.escapeHtml(item.label)}</span>
                         </button>
                     `);
@@ -250,7 +252,7 @@ function agentFloating() {
                     chips.push(`
                         <button class="agent-float-suggestion-chip"
                                 data-value="${this.escapeHtml(String(s.value))}"
-                                onclick="selectFloatFieldOption('${this.escapeHtml(String(s.value))}')">
+                                onclick="selectFloatFieldOption('${this.escapeHtml(String(s.value))}', '${this.escapeHtml(s.label)}')">
                             <span>${this.escapeHtml(s.label)}</span>
                         </button>
                     `);
@@ -300,7 +302,7 @@ function agentFloating() {
             const itemChips = items.map(item => `
                 <button class="agent-float-suggestion-chip"
                         data-value="${this.escapeHtml(String(item.value))}"
-                        onclick="selectFloatFieldOption('${this.escapeHtml(String(item.value))}')">
+                        onclick="selectFloatFieldOption('${this.escapeHtml(String(item.value))}', '${this.escapeHtml(item.label)}')">
                     <span>${this.escapeHtml(item.label)}</span>
                 </button>
             `);
@@ -314,21 +316,32 @@ function agentFloating() {
             if (!this.userInput.trim() && !this.guidedState) return;
 
             const message = this.userInput.trim() || '(omitir)';
+            const displayMessage = this.fieldLabel || message;
             this.userInput = '';
             this.isLoading = true;
 
-            this.addMessage('user', message);
+            this.addMessage('user', displayMessage);
 
             try {
+                const payload = {
+                    message: message,
+                    conversation_id: this.conversationId,
+                    intent: this.currentIntent,
+                    guided_state: this.guidedState
+                };
+                if (this.fieldValue !== null) {
+                    payload.field_value = this.fieldValue;
+                }
+                if (this.fieldLabel !== null) {
+                    payload.field_label = this.fieldLabel;
+                }
+                this.fieldValue = null;
+                this.fieldLabel = null;
+
                 const response = await fetch('/api/v1/agent/message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        conversation_id: this.conversationId,
-                        intent: this.currentIntent,
-                        guided_state: this.guidedState
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
@@ -446,12 +459,14 @@ function selectFloatSuggestion(intent, label) {
     }
 }
 
-function selectFloatFieldOption(value) {
+function selectFloatFieldOption(value, label) {
     const chat = document.getElementById('agent-floating-btn');
     if (chat && typeof Alpine !== 'undefined') {
         const alpineComponent = Alpine.$data(chat);
         if (alpineComponent) {
-            alpineComponent.userInput = value;
+            alpineComponent.fieldValue = String(value);
+            alpineComponent.fieldLabel = label || String(value);
+            alpineComponent.userInput = String(value);
             alpineComponent.sendMessage();
         }
     }

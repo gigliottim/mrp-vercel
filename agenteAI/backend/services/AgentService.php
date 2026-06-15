@@ -41,7 +41,7 @@ final class AgentService
     /**
      * Procesar un mensaje del usuario
      */
-    public function processMessage(string $convId, string $userInput): AgentResponse
+    public function processMessage(string $convId, string $userInput, ?string $fieldValue = null, ?string $fieldLabel = null): AgentResponse
     {
         $history = $this->conversationService ? $this->conversationService->getHistory($convId) : [];
         $session = $this->getConversationState($convId);
@@ -67,7 +67,7 @@ final class AgentService
 
         // Continuación de flujo guiado
         if ($this->isGuidedIntent($intent)) {
-            return $this->processGuidedStep($convId, $userInput, $intent, $session['data'] ?? [], (int)($session['step'] ?? 1));
+            return $this->processGuidedStep($convId, $userInput, $intent, $session['data'] ?? [], (int)($session['step'] ?? 1), $fieldValue, $fieldLabel);
         }
 
         // Flujo general (consultas no guiadas) — usa IA
@@ -167,18 +167,25 @@ final class AgentService
         return in_array($intent, ['create_part', 'create_material', 'create_supplier', 'create_bom'], true);
     }
 
+    private function isLookupField(string $field): bool
+    {
+        return in_array($field, ['id_tipo', 'id_grupo', 'id_um_compra', 'id_um_uso', 'estado'], true);
+    }
+
     private function processGuidedStep(
         string $convId,
         string $userInput,
         string $intent,
         array $collectedData,
-        int $step
+        int $step,
+        ?string $fieldValue = null,
+        ?string $fieldLabel = null
     ): AgentResponse {
         $phase = $collectedData['_phase'] ?? '';
 
         // Fase: esperando respuesta "¿Otra variante?" — manejar directamente
         if (($intent === 'create_part' || $intent === 'create_material') && $phase === 'ask_more_variante') {
-            return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, ['field' => 'add_more_variante']);
+            return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, ['field' => 'add_more_variante'], $fieldValue, $fieldLabel);
         }
 
         $next = $this->promptBuilder->nextMissingField($intent, $collectedData);
@@ -190,13 +197,14 @@ final class AgentService
 
         // Flujo especial para Parte+Variante
         if (($intent === 'create_part' || $intent === 'create_material') && $next !== null) {
-            return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, $next);
+            return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, $next, $fieldValue, $fieldLabel);
         }
 
         // Flujo genérico (proveedor, etc.)
         if ($next !== null) {
             $field = $next['field'];
-            $value = $this->extractFieldValue($field, $userInput, $intent);
+            $effectiveInput = ($fieldValue !== null && $this->isLookupField($field)) ? $fieldValue : $userInput;
+            $value = $this->extractFieldValue($field, $effectiveInput, $intent);
 
             if ($value === null && $field !== 'add_more') {
                 $help = $this->buildFieldHelp($field, $intent);
@@ -211,6 +219,9 @@ final class AgentService
 
             if ($field !== 'add_more') {
                 $collectedData[$field] = $value;
+                if ($fieldLabel !== null && $this->isLookupField($field)) {
+                    $collectedData['_label_' . $field] = $fieldLabel;
+                }
             }
         }
 
@@ -280,7 +291,9 @@ final class AgentService
         string $intent,
         array $collectedData,
         int $step,
-        array $next
+        array $next,
+        ?string $fieldValue = null,
+        ?string $fieldLabel = null
     ): AgentResponse {
         $phase = $collectedData['_phase'] ?? 'parte';
 
@@ -340,12 +353,13 @@ final class AgentService
 
         // Fase: campos de variante
         if ($phase === 'variante' || $phase === 'otra_variante') {
-            return $this->processVarianteField($convId, $userInput, $intent, $collectedData, $step, $next);
+            return $this->processVarianteField($convId, $userInput, $intent, $collectedData, $step, $next, $fieldValue, $fieldLabel);
         }
 
         // Fase: campos de parte
-        // Handle skip for optional fields
-        $isSkip = ($userInput === '(omitir)' || trim($userInput) === '');
+        // Use fieldValue for lookup fields, userInput otherwise
+        $effectiveInput = ($fieldValue !== null && $this->isLookupField($field)) ? $fieldValue : $userInput;
+        $isSkip = ($effectiveInput === '(omitir)' || trim($effectiveInput) === '');
         if ($isSkip) {
             $defaultValue = $this->getDefaultForField($field, $collectedData);
             if ($defaultValue !== null) {
@@ -364,7 +378,7 @@ final class AgentService
             );
         }
 
-        $value = $this->extractFieldValue($field, $userInput, $intent);
+        $value = $this->extractFieldValue($field, $effectiveInput, $intent);
 
         if ($value === null) {
             $help = $this->buildFieldHelp($field, $intent);
@@ -390,6 +404,9 @@ final class AgentService
         }
 
         $collectedData[$field] = $value;
+        if ($fieldLabel !== null && $this->isLookupField($field)) {
+            $collectedData['_label_' . $field] = $fieldLabel;
+        }
         $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
         return $this->askNextField($convId, $collectedData);
@@ -405,11 +422,14 @@ final class AgentService
         string $intent,
         array $collectedData,
         int $step,
-        array $next
+        array $next,
+        ?string $fieldValue = null,
+        ?string $fieldLabel = null
     ): AgentResponse {
         $field = $next['field'];
         $current = $collectedData['_current_variante'] ?? [];
-        $isSkip = ($userInput === '(omitir)' || trim($userInput) === '');
+        $effectiveInput = ($fieldValue !== null && $this->isLookupField($field)) ? $fieldValue : $userInput;
+        $isSkip = ($effectiveInput === '(omitir)' || trim($effectiveInput) === '');
 
         // Handle skip for optional variante fields
         if ($isSkip && $field !== 'codigo_variante') {
@@ -478,30 +498,33 @@ final class AgentService
         }
 
         if ($field === 'detalle_variante') {
-            $value = trim($userInput);
+            $value = trim($effectiveInput);
             if ($value === '') $value = $collectedData['detalle'] ?? $collectedData['description'] ?? '';
             $current['detalle_variante'] = $value;
         } elseif ($field === 'estado') {
-            $value = trim($userInput);
+            $value = trim($effectiveInput);
             $current['estado'] = ($value !== '') ? $value : 'activa';
+            if ($fieldLabel !== null) {
+                $current['_label_estado'] = $fieldLabel;
+            }
         } elseif ($field === 'lote_minimo') {
-            $value = $this->extractPositiveNumber($userInput);
+            $value = $this->extractPositiveNumber($effectiveInput);
             $current['lote_minimo'] = $value ?? 1;
         } elseif ($field === 'punto_pedido') {
-            $value = $this->extractPositiveNumber($userInput);
+            $value = $this->extractPositiveNumber($effectiveInput);
             $current['punto_pedido'] = $value ?? 0;
         } elseif ($field === 'peso') {
-            $value = $this->extractPositiveNumber($userInput);
+            $value = $this->extractPositiveNumber($effectiveInput);
             if ($value !== null) {
                 $current['peso'] = $value;
             }
         } elseif (str_starts_with($field, 'ubicacion_')) {
-            $value = trim($userInput);
+            $value = trim($effectiveInput);
             if ($value !== '') {
                 $current[$field] = $value;
             }
         } else {
-            $value = trim($userInput);
+            $value = trim($effectiveInput);
             if ($value !== '') {
                 $current[$field] = $value;
             }

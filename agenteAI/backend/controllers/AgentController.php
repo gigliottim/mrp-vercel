@@ -77,6 +77,8 @@ final class AgentController extends Controller
         $userInput = trim($request->input('message'));
         $intent = $request->input('intent', '');
         $guidedState = $request->input('guided_state', []);
+        $fieldValue = $request->input('field_value');
+        $fieldLabel = $request->input('field_label');
         $userId = $this->getCurrentUserId();
         $tenantId = $this->getCurrentTenantId();
 
@@ -119,7 +121,7 @@ final class AgentController extends Controller
         // Procesar mensaje
         try {
             $service = $this->getService();
-            $response = $service->processMessage($convId, $userInput);
+            $response = $service->processMessage($convId, $userInput, $fieldValue, $fieldLabel);
 
             // Obtener el estado actualizado para enviar al frontend
             $updatedState = $conversationService ? $conversationService->getState($convId) : null;

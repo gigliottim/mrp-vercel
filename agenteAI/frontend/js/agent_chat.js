@@ -160,14 +160,17 @@ function agentChat() {
     renderPreview(data) {
       let html = '<table class="agent-preview-table">';
       for (const [key, value] of Object.entries(data)) {
-        if (key !== 'suggestions' && key !== 'status' && key !== 'message') {
-          html += `
+        if (key.startsWith('_') || key === 'suggestions' || key === 'status' || key === 'message') {
+          continue;
+        }
+        const labelKey = '_label_' + key;
+        const displayValue = data[labelKey] ? data[labelKey] : String(value);
+        html += `
                         <tr>
                             <th>${this.formatKey(key)}</th>
-                            <td>${this.escapeHtml(String(value))}</td>
+                            <td>${this.escapeHtml(displayValue)}</td>
                         </tr>
                     `;
-        }
       }
       html += '</table>';
       return html;

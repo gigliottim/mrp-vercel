@@ -560,6 +560,7 @@ final class AgentService
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => ($collectedData['_step'] ?? 0) + 1]);
         }
 
+        $field = $nextField['field'] ?? '';
         $suggestions = $nextField['suggestions'] ?? [];
         $lookup = $nextField['lookup'] ?? null;
         if (empty($suggestions) && $lookup !== null) {
@@ -570,9 +571,19 @@ final class AgentService
             }
         }
 
+        $message = $nextField['message'];
+        $calculatedValue = $this->calculateDimension($field, $collectedData);
+        if ($calculatedValue !== null && $calculatedValue > 0) {
+            $unit = $field === 'superficie' ? 'm²' : 'cm³';
+            $message .= " (calculado: {$calculatedValue} {$unit})";
+            if (empty($suggestions) || !isset($suggestions[0]['lookup'])) {
+                array_unshift($suggestions, ['label' => (string) $calculatedValue, 'value' => (string) $calculatedValue]);
+            }
+        }
+
         return new AgentResponse(
             status: 'clarify',
-            message: $nextField['message'],
+            message: $message,
             data: $collectedData,
             suggestions: $suggestions,
             conversationId: $convId

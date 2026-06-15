@@ -33,8 +33,8 @@ final class PromptBuilder
         ['field' => 'largo_alto',          'message' => '¿Cuál es el largo/alto? (en mm, Enter para omitir)', 'required' => false],
         ['field' => 'ancho',               'message' => '¿Cuál es el ancho? (en mm, Enter para omitir)', 'required' => false],
         ['field' => 'espesor_profundidad', 'message' => '¿Cuál es el espesor/profundidad? (en mm, Enter para omitir)', 'required' => false],
-        ['field' => 'superficie',          'message' => '¿Cuál es la superficie? (en m², Enter para omitir)', 'required' => false],
-        ['field' => 'volumen',             'message' => '¿Cuál es el volumen? (en cm³ o ml, Enter para omitir)', 'required' => false],
+        ['field' => 'superficie',          'message' => '¿Cuál es la superficie? (en m², Enter para usar el valor calculado)', 'required' => false],
+        ['field' => 'volumen',             'message' => '¿Cuál es el volumen? (en cm³ o ml, Enter para usar el valor calculado)', 'required' => false],
     ];
 
     private const MATERIAL_PARTE_FIELDS = [

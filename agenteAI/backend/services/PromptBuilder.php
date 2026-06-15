@@ -42,8 +42,8 @@ final class PromptBuilder
         ['field' => 'codigo_variante',  'message' => '¿Cuál es el código de la variante? (se sugiere {suggested_code})', 'required' => true],
         ['field' => 'detalle_variante', 'message' => '¿Cuál es la descripción de la variante? (Enter para usar la misma que la parte)', 'required' => false],
         ['field' => 'estado',           'message' => '¿Cuál es el estado de la variante?', 'required' => true, 'lookup' => 'estados_variante'],
-        ['field' => 'lote_minimo',      'message' => '¿Cuál es el lote mínimo? (número, default 1)', 'required' => false],
-        ['field' => 'punto_pedido',     'message' => '¿Cuál es el punto de pedido? (número, default 0)', 'required' => false],
+        ['field' => 'lote_minimo',      'message' => '¿Cuál es el lote mínimo? (en {um}, default 1)', 'required' => false],
+        ['field' => 'punto_pedido',     'message' => '¿Cuál es el punto de pedido? (en {um}, default 0)', 'required' => false],
         ['field' => 'peso',             'message' => '¿Cuál es el peso unitario en kg? (Enter para omitir)', 'required' => false],
         ['field' => 'ubicacion_cuerpo',  'message' => '¿Ubicación física - Cuerpo? (Enter para omitir)', 'required' => false],
         ['field' => 'ubicacion_pasillo', 'message' => '¿Ubicación física - Pasillo? (Enter para omitir)', 'required' => false],
@@ -278,6 +278,11 @@ final class PromptBuilder
         if (str_contains($message, '{tipo}')) {
             $tipo = $data['_label_id_tipo'] ?? $data['id_tipo'] ?? 'parte';
             $message = str_replace('{tipo}', mb_strtolower((string) $tipo), $message);
+        }
+        if (str_contains($message, '{um}')) {
+            $um = $data['_label_id_um_uso'] ?? $data['_label_id_um_compra'] ?? 'unidad';
+            $um = preg_replace('/\s+-\s+.+$/', '', (string) $um);
+            $message = str_replace('{um}', $um, $message);
         }
         return $message;
     }

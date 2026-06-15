@@ -1064,10 +1064,18 @@ final class AgentService
         $idUmLargoAlto = $this->resolveDefaultUmId($db, 'longitud', 'mm');
         $idUmAncho = $idUmLargoAlto;
         $idUmEspesor = $idUmLargoAlto;
-        $superficie = null;
+        $superficie = isset($data['superficie']) && $data['superficie'] !== '' && $data['superficie'] !== 0 && $data['superficie'] !== null ? (float) $data['superficie'] : null;
         $idUmSuperficie = $this->resolveDefaultUmId($db, 'superficie', 'm²');
-        $volumen = null;
+        $volumen = isset($data['volumen']) && $data['volumen'] !== '' && $data['volumen'] !== 0 && $data['volumen'] !== null ? (float) $data['volumen'] : null;
         $idUmVolumen = $this->resolveDefaultUmId($db, 'volumen', 'cm³');
+
+        // Auto-calculate superficie and volumen from dimensions if not provided
+        if ($superficie === null && $largoAlto !== null && $ancho !== null) {
+            $superficie = round(($largoAlto / 1000) * ($ancho / 1000), 6);
+        }
+        if ($volumen === null && $largoAlto !== null && $ancho !== null && $espesorProfundidad !== null) {
+            $volumen = round(($largoAlto / 10) * ($ancho / 10) * ($espesorProfundidad / 10), 3);
+        }
 
         try {
             $db->beginTransaction();

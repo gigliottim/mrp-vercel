@@ -205,7 +205,7 @@ final class AgentService
                     status: 'clarify',
                     message: "No entendí bien ese dato. {$help}",
                     data: $collectedData,
-                    suggestions: $next['suggestions'] ?? [],
+                    suggestions: $this->resolveFieldSuggestions($next),
                     conversationId: $convId
                 );
             }
@@ -228,15 +228,7 @@ final class AgentService
 
             $suggestions = [];
             if ($next !== null) {
-                $suggestions = $next['suggestions'] ?? [];
-                $lookup = $next['lookup'] ?? null;
-                if (empty($suggestions) && $lookup !== null) {
-                    if ($lookup === 'unidades_medida_all') {
-                        $suggestions = [['lookup' => 'unidades_medida_all']];
-                    } else {
-                        $suggestions = $this->fetchLookupSuggestions($lookup);
-                    }
-                }
+                $suggestions = $this->resolveFieldSuggestions($next);
             }
 
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
@@ -382,7 +374,7 @@ final class AgentService
                 status: 'clarify',
                 message: "Este dato es obligatorio. {$help}",
                 data: $collectedData,
-                suggestions: $next['suggestions'] ?? [],
+                suggestions: $this->resolveFieldSuggestions($next),
                 conversationId: $convId
             );
         }
@@ -395,7 +387,7 @@ final class AgentService
                 status: 'clarify',
                 message: "No entendí bien ese dato. {$help}",
                 data: $collectedData,
-                suggestions: $next['suggestions'] ?? [],
+                suggestions: $this->resolveFieldSuggestions($next),
                 conversationId: $convId
             );
         }
@@ -407,7 +399,7 @@ final class AgentService
                 status: 'clarify',
                 message: "El código \"{$value}\" ya existe en otra parte. Por favor, elegí un código diferente. {$help}",
                 data: $collectedData,
-                suggestions: $next['suggestions'] ?? [],
+                suggestions: $this->resolveFieldSuggestions($next),
                 conversationId: $convId
             );
         }
@@ -461,7 +453,7 @@ final class AgentService
                     status: 'clarify',
                     message: "Este dato es obligatorio. {$help}",
                     data: $collectedData,
-                    suggestions: $next['suggestions'] ?? [],
+                    suggestions: $this->resolveFieldSuggestions($next),
                     conversationId: $convId
                 );
             }
@@ -598,6 +590,23 @@ final class AgentService
     }
 
     /**
+     * Helper: resolver sugerencias de lookup para un campo dado.
+     */
+    private function resolveFieldSuggestions(array $nextField): array
+    {
+        $suggestions = $nextField['suggestions'] ?? [];
+        $lookup = $nextField['lookup'] ?? null;
+        if (empty($suggestions) && $lookup !== null) {
+            if ($lookup === 'unidades_medida_all') {
+                $suggestions = [['lookup' => 'unidades_medida_all']];
+            } else {
+                $suggestions = $this->fetchLookupSuggestions($lookup);
+            }
+        }
+        return $suggestions;
+    }
+
+    /**
      * Helper: preguntar el siguiente campo faltante con suggestions y lookup.
      */
     private function askNextField(string $convId, array $collectedData, string $intent = ''): AgentResponse
@@ -625,15 +634,7 @@ final class AgentService
         }
 
         $field = $nextField['field'] ?? '';
-        $suggestions = $nextField['suggestions'] ?? [];
-        $lookup = $nextField['lookup'] ?? null;
-        if (empty($suggestions) && $lookup !== null) {
-            if ($lookup === 'unidades_medida_all') {
-                $suggestions = [['lookup' => 'unidades_medida_all']];
-            } else {
-                $suggestions = $this->fetchLookupSuggestions($lookup);
-            }
-        }
+        $suggestions = $this->resolveFieldSuggestions($nextField);
 
         $message = $nextField['message'];
         $calculatedValue = $this->calculateDimension($field, $collectedData);
@@ -681,7 +682,7 @@ final class AgentService
                 status: 'clarify',
                 message: $nextField['message'] ?? "Indicá el código del primer componente.",
                 data: $collectedData,
-                suggestions: $nextField['suggestions'] ?? [],
+                suggestions: $this->resolveFieldSuggestions($nextField),
                 conversationId: $convId
             );
         }
@@ -705,7 +706,7 @@ final class AgentService
             status: 'clarify',
             message: $next['message'],
             data: $collectedData,
-            suggestions: $next['suggestions'] ?? [],
+            suggestions: $this->resolveFieldSuggestions($next),
             conversationId: $convId
         );
     }

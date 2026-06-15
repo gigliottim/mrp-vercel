@@ -208,7 +208,18 @@ final class PromptBuilder
     private function nextMissingFromFields(array $fields, array $data): ?array
     {
         foreach ($fields as $f) {
-            if (!isset($data[$f['field']]) || $data[$f['field']] === '' || $data[$f['field']] === null) {
+            $isRequired = $f['required'] ?? true;
+            $value = $data[$f['field']] ?? null;
+            $isMissing = !isset($data[$f['field']]) || $value === null;
+            if ($isRequired && ($isMissing || $value === '')) {
+                return [
+                    'field' => $f['field'],
+                    'message' => $f['message'],
+                    'suggestions' => $this->getFieldSuggestions($f),
+                    'lookup' => $f['lookup'] ?? null,
+                ];
+            }
+            if (!$isRequired && $isMissing) {
                 return [
                     'field' => $f['field'],
                     'message' => $f['message'],

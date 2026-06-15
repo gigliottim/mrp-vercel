@@ -193,108 +193,110 @@ final class AgentService
             return $this->processParteVarianteStep($convId, $userInput, $intent, $collectedData, $step, $next, $fieldValue, $fieldLabel);
         }
 
-        // Flujo genérico (proveedor, etc.)
+        // Flujo genérico (entidades, etc.)
         if ($next !== null) {
             $field = $next['field'];
             $effectiveInput = ($fieldValue !== null && $this->isLookupField($field)) ? $fieldValue : $userInput;
-            $value = $this->extractFieldValue($field, $effectiveInput, $intent);
 
-            if ($value === null && $field !== 'add_more') {
-                $help = $this->buildFieldHelp($field, $intent);
-                return new AgentResponse(
-                    status: 'clarify',
-                    message: "No entendí bien ese dato. {$help}",
-                    data: $collectedData,
-                    suggestions: $this->resolveFieldSuggestions($next),
-                    conversationId: $convId
-                );
-            }
+            $isSkip = ($effectiveInput === '(omitir)' || trim($effectiveInput) === '');
 
-            if ($field !== 'add_more') {
-                $collectedData[$field] = $value;
-                if ($fieldLabel !== null && $this->isLookupField($field)) {
-                    $collectedData['_label_' . $field] = $fieldLabel;
+            if ($isSkip && $field !== 'add_more') {
+                $defaultValue = $this->getDefaultForField($field, $collectedData);
+                if ($defaultValue !== null) {
+                    $collectedData[$field] = $defaultValue;
+                    if ($fieldLabel !== null && $this->isLookupField($field)) {
+                        $collectedData['_label_' . $field] = $fieldLabel;
+                    }
+                    $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+
+                    $nextResponse = $this->askNextField($convId, $collectedData, $intent);
+                    $nextResponse->message = '✓ Omitido. ' . $nextResponse->message;
+                    return $nextResponse;
+                }
+
+                $isRequired = $this->isSupplierFieldRequired($field);
+                if ($isRequired) {
+                    $help = $this->buildFieldHelp($field, $intent);
+                    $suggestions = $this->resolveFieldSuggestions($next);
+                    return new AgentResponse(
+                        status: 'clarify',
+                        message: "Este dato es obligatorio. {$help}",
+                        data: $collectedData,
+                        suggestions: $suggestions,
+                        conversationId: $convId
+                    );
+                }
+
+                $collectedData[$field] = '';
+            } else {
+                $value = $this->extractFieldValue($field, $effectiveInput, $intent);
+
+                if ($value === null && $field !== 'add_more') {
+                    $help = $this->buildFieldHelp($field, $intent);
+                    return new AgentResponse(
+                        status: 'clarify',
+                        message: "No entendí bien ese dato. {$help}",
+                        data: $collectedData,
+                        suggestions: $this->resolveFieldSuggestions($next),
+                        conversationId: $convId
+                    );
+                }
+
+                if ($field !== 'add_more') {
+                    $collectedData[$field] = $value;
+                    if ($fieldLabel !== null && $this->isLookupField($field)) {
+                        $collectedData['_label_' . $field] = $fieldLabel;
+                    }
+                }
+
+                if ($field === 'identificacion_tributaria' && $value !== '' && $value !== null && $this->cuitExists((string) $value)) {
+                    $help = $this->buildFieldHelp($field, $intent);
+                    unset($collectedData[$field]);
+                    return new AgentResponse(
+                        status: 'clarify',
+                        message: "El CUIT/CUIL \"{$value}\" ya está registrado en otra entidad. Por favor, ingresá un CUIT/CUIL diferente o dejalo vacío para omitir. {$help}",
+                        data: $collectedData,
+                        suggestions: ['Omitir CUIT/CUIL'],
+                        conversationId: $convId
+                    );
                 }
             }
 
-            if ($field === 'identificacion_tributaria' && $value !== '' && $value !== null && $this->cuitExists((string) $value)) {
-                $help = $this->buildFieldHelp($field, $intent);
-                unset($collectedData[$field]);
+            // Check if there are more fields to ask before validating/saving
+            $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
+            if ($nextField !== null) {
+                // Still have fields to ask — show confirmation and ask next
+                $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+
+                $confirmation = '';
+                if (!$isSkip && $field !== 'add_more' && $field !== '') {
+                    $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+                }
+
+                $suggestions = $this->resolveFieldSuggestions($nextField);
                 return new AgentResponse(
                     status: 'clarify',
-                    message: "El CUIT/CUIL \"{$value}\" ya está registrado en otra entidad. Por favor, ingresá un CUIT/CUIL diferente o dejalo vacío para omitir. {$help}",
+                    message: $confirmation . $nextField['message'],
                     data: $collectedData,
-                    suggestions: ['Omitir CUIT/CUIL'],
+                    suggestions: $suggestions,
                     conversationId: $convId
                 );
             }
         }
 
-        $validationResult = $this->validator->validate($collectedData, $intent);
+        // All fields collected — show preview for confirmation
+        $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-        if ($validationResult->failed()) {
-            $next = $this->promptBuilder->nextMissingField($intent, $collectedData);
-            $message = $next !== null
-                ? $next['message']
-                : $this->buildClarifyMessage($validationResult->errors);
-
-            $suggestions = [];
-            if ($next !== null) {
-                $suggestions = $this->resolveFieldSuggestions($next);
-            }
-
-            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
-
-            $confirmation = '';
-            if ($field !== 'add_more' && $field !== '') {
-                $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
-            }
-
-            return new AgentResponse(
-                status: 'clarify',
-                message: $confirmation . $message,
-                data: $collectedData,
-                suggestions: $suggestions,
-                conversationId: $convId
-            );
-        }
-
-        // Datos completos: guardar
-        $saveResult = $this->confirmAndSave($convId, $validationResult->data, $intent);
-
-        if ($saveResult['success']) {
-            $this->clearConversationState($convId);
-
-            $successSuggestions = match ($intent) {
-                'create_part' => [
-                    ['label' => 'Crear otra parte', 'intent' => 'create_part'],
-                    ['label' => 'Volver al menú'],
-                ],
-                'create_supplier' => [
-                    ['label' => 'Registrar otra entidad', 'intent' => 'create_supplier'],
-                    ['label' => 'Volver al menú'],
-                ],
-                'create_bom' => [
-                    ['label' => 'Crear otro BOM', 'intent' => 'create_bom'],
-                    ['label' => 'Volver al menú'],
-                ],
-                default => [['label' => 'Volver al menú']],
-            };
-
-            return new AgentResponse(
-                status: 'saved',
-                message: $saveResult['message'],
-                data: $saveResult['data'] ?? null,
-                suggestions: $successSuggestions,
-                conversationId: $convId
-            );
+        $confirmation = '';
+        if (isset($field) && $field !== 'add_more' && $field !== '') {
+            $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
         }
 
         return new AgentResponse(
-            status: 'clarify',
-            message: "No pude guardar: {$saveResult['message']}. ¿Querés corregir algún dato?",
+            status: 'preview',
+            message: $confirmation . 'Datos completos. ¿Confirmamos y guardamos?',
             data: $collectedData,
-            suggestions: ['Reintentar', 'Cancelar'],
+            suggestions: ['Confirmar y guardar', 'Corregir'],
             conversationId: $convId
         );
     }
@@ -837,7 +839,19 @@ final class AgentService
             $unit = $field === 'superficie' ? 'm²' : 'cm³';
             $collectedData['_label_' . $field] = number_format((float) $value, 6, ',', '.') . ' ' . $unit;
         }
+
+        if ($field === 'tipo') {
+            $tipoLabels = ['PROVEEDOR' => 'Proveedor', 'CLIENTE' => 'Cliente', 'AMBOS' => 'Ambos'];
+            $collectedData['_label_tipo'] = $tipoLabels[$value] ?? $value;
+        }
+
         return $collectedData;
+    }
+
+    private function isSupplierFieldRequired(string $field): bool
+    {
+        $required = ['tipo', 'razon_social'];
+        return in_array($field, $required, true);
     }
 
     private function getDisplayValue(string $field, array $collectedData): string

@@ -436,6 +436,13 @@ final class AgentService
         $effectiveInput = ($fieldValue !== null && $this->isLookupField($field)) ? $fieldValue : $userInput;
         $isSkip = ($effectiveInput === '(omitir)' || trim($effectiveInput) === '');
 
+        // Handle skip for codigo_variante: use suggested code
+        if ($isSkip && $field === 'codigo_variante') {
+            $suggestedCode = strtoupper(($collectedData['codigo'] ?? 'P')) . '-' . str_pad((string)(count($collectedData['variantes'] ?? []) + 1), 2, '0', STR_PAD_LEFT);
+            $effectiveInput = $suggestedCode;
+            $isSkip = false;
+        }
+
         // Handle skip for optional variante fields
         if ($isSkip && $field !== 'codigo_variante') {
             $defaultValue = $this->getDefaultForField($field, $collectedData);

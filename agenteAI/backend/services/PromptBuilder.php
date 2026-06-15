@@ -24,10 +24,10 @@ final class PromptBuilder
     private const PHASE_OTRA_VARIANTE = 'otra_variante';
 
     private const PARTE_FIELDS = [
-        ['field' => 'codigo',              'message' => '¿Cuál es el código de la pieza? (máx 50 caracteres, ej: P-001)', 'required' => true],
         ['field' => 'id_tipo',             'message' => '¿Qué tipo de parte es?', 'required' => true, 'lookup' => 'tipos_partes'],
+        ['field' => 'codigo',              'message' => '¿Cuál es el código de la {tipo}? (máx 50 caracteres, ej: P-001)', 'required' => true],
         ['field' => 'id_grupo',            'message' => '¿A qué grupo pertenece?', 'required' => true, 'lookup' => 'grupos_partes'],
-        ['field' => 'detalle',             'message' => '¿Cuál es la descripción de la pieza?', 'required' => true],
+        ['field' => 'detalle',             'message' => '¿Cuál es la descripción de la {tipo}?', 'required' => true],
         ['field' => 'id_um_compra',        'message' => '¿Cuál es la unidad de medida de compra?', 'required' => true, 'lookup' => 'unidades_medida_all'],
         ['field' => 'id_um_uso',           'message' => '¿Cuál es la unidad de medida de uso en producción? (Enter para usar la misma que compra)', 'required' => false, 'lookup' => 'unidades_medida_all'],
         ['field' => 'largo_alto',          'message' => '¿Cuál es el largo/alto? (en mm, Enter para omitir)', 'required' => false],
@@ -273,7 +273,11 @@ final class PromptBuilder
     {
         if (str_contains($message, '{suggested_code}')) {
             $suggested = strtoupper(($data['codigo'] ?? 'P')) . '-01';
-            return str_replace('{suggested_code}', $suggested, $message);
+            $message = str_replace('{suggested_code}', $suggested, $message);
+        }
+        if (str_contains($message, '{tipo}')) {
+            $tipo = $data['_label_id_tipo'] ?? $data['id_tipo'] ?? 'parte';
+            $message = str_replace('{tipo}', mb_strtolower((string) $tipo), $message);
         }
         return $message;
     }

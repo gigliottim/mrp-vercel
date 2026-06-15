@@ -843,7 +843,7 @@ final class AgentService
     private function buildFieldHelp(string $field, string $intent): string
     {
         $helps = [
-            'codigo' => 'Indicá el código, por ejemplo: P-001.',
+            'codigo' => 'Indicá el código de la parte, por ejemplo: P-001.',
             'code' => 'Indicá el código, por ejemplo: P-001.',
             'detalle' => 'Indicá una breve descripción.',
             'description' => 'Indicá una breve descripción.',

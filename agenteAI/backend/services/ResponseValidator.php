@@ -12,7 +12,7 @@ final class ResponseValidator
     private const REQUIRED_FIELDS = [
         'create_part' => ['codigo', 'id_tipo', 'id_grupo'],
         'create_bom' => ['parent_part', 'components'],
-        'create_supplier' => ['razon_social'],
+        'create_supplier' => ['tipo', 'razon_social'],
     ];
 
     public function validate(array $data, string $intent): ValidationResult
@@ -93,7 +93,10 @@ final class ResponseValidator
         }
 
         if ($intent === 'create_supplier') {
-            $data['tipo'] = 'PROVEEDOR';
+            $validTypes = ['PROVEEDOR', 'CLIENTE', 'AMBOS'];
+            if (!isset($data['tipo']) || !in_array($data['tipo'], $validTypes, true)) {
+                $data['tipo'] = 'PROVEEDOR';
+            }
         }
 
         if (isset($data['stock_seguridad']) && is_numeric($data['stock_seguridad'])) {

@@ -13,7 +13,7 @@ use App\AgenteAI\Backend\Repositories\ConversationRepository;
  * Tablas reales:
  * - Partes: tabla `partes` (campos: codigo, id_tipo, id_grupo, detalle, id_um_compra, id_um_uso, factor_conversion, activo)
  * - Variantes: tabla `variantes` (campos: id_parte, codigo_variante, detalle, estado, stock_seguridad, punto_pedido)
- * - Proveedores: tabla `entidades` (campos: razon_social, tipo='PROVEEDOR', identificacion_tributaria, contacto_email, contacto_telefono, direccion)
+ * - Entidades: tabla `entidades` (campos: razon_social, tipo [PROVEEDOR/CLIENTE/AMBOS], identificacion_tributaria, contacto_email, contacto_telefono, direccion)
  * - BOM: tablas `bom_cabecera` + `bom_detalle`
  */
 final class AgentService
@@ -162,7 +162,7 @@ final class AgentService
 
     private function isLookupField(string $field): bool
     {
-        return in_array($field, ['id_tipo', 'id_grupo', 'id_um_compra', 'id_um_uso', 'estado'], true);
+        return in_array($field, ['id_tipo', 'id_grupo', 'id_um_compra', 'id_um_uso', 'estado', 'tipo'], true);
     }
 
     private function processGuidedStep(
@@ -216,6 +216,18 @@ final class AgentService
                     $collectedData['_label_' . $field] = $fieldLabel;
                 }
             }
+
+            if ($field === 'identificacion_tributaria' && $value !== '' && $value !== null && $this->cuitExists((string) $value)) {
+                $help = $this->buildFieldHelp($field, $intent);
+                unset($collectedData[$field]);
+                return new AgentResponse(
+                    status: 'clarify',
+                    message: "El CUIT/CUIL \"{$value}\" ya está registrado en otra entidad. Por favor, ingresá un CUIT/CUIL diferente o dejalo vacío para omitir. {$help}",
+                    data: $collectedData,
+                    suggestions: ['Omitir CUIT/CUIL'],
+                    conversationId: $convId
+                );
+            }
         }
 
         $validationResult = $this->validator->validate($collectedData, $intent);
@@ -253,14 +265,27 @@ final class AgentService
         if ($saveResult['success']) {
             $this->clearConversationState($convId);
 
+            $successSuggestions = match ($intent) {
+                'create_part' => [
+                    ['label' => 'Crear otra parte', 'intent' => 'create_part'],
+                    ['label' => 'Volver al menú'],
+                ],
+                'create_supplier' => [
+                    ['label' => 'Registrar otra entidad', 'intent' => 'create_supplier'],
+                    ['label' => 'Volver al menú'],
+                ],
+                'create_bom' => [
+                    ['label' => 'Crear otro BOM', 'intent' => 'create_bom'],
+                    ['label' => 'Volver al menú'],
+                ],
+                default => [['label' => 'Volver al menú']],
+            };
+
             return new AgentResponse(
                 status: 'saved',
                 message: $saveResult['message'],
                 data: $saveResult['data'] ?? null,
-                suggestions: [
-                    ['label' => 'Crear otra parte', 'intent' => 'create_part'],
-                    ['label' => 'Volver al menú'],
-                ],
+                suggestions: $successSuggestions,
                 conversationId: $convId
             );
         }
@@ -733,6 +758,7 @@ final class AgentService
             'contacto_email' => $this->extractEmail($input),
             'contacto_telefono' => $input,
             'direccion' => $input,
+            'tipo' => $this->extractTipoEntidad($input),
             'id_tipo', 'id_grupo', 'id_um_compra', 'id_um_uso' => $input,
             'largo_alto', 'ancho', 'espesor_profundidad' => $this->extractPositiveNumber($input),
             'superficie', 'volumen' => $this->extractPositiveNumber($input),
@@ -782,6 +808,26 @@ final class AgentService
          return null;
     }
 
+    private function extractTipoEntidad(string $input): ?string
+    {
+        $lower = mb_strtolower(trim($input));
+        if (str_contains($lower, 'ambos') || str_contains($lower, 'proveedor y cliente') || str_contains($lower, 'cliente y proveedor')) {
+            return 'AMBOS';
+        }
+        if (str_contains($lower, 'proveedor')) {
+            return 'PROVEEDOR';
+        }
+        if (str_contains($lower, 'cliente')) {
+            return 'CLIENTE';
+        }
+        $valid = ['PROVEEDOR', 'CLIENTE', 'AMBOS'];
+        $upper = strtoupper($lower);
+        if (in_array($upper, $valid, true)) {
+            return $upper;
+        }
+        return null;
+    }
+
     private function propagateLabels(string $field, mixed $value, array $collectedData): array
     {
         if ($field === 'id_um_uso' && isset($collectedData['_label_id_um_compra'])) {
@@ -827,7 +873,7 @@ final class AgentService
             'detalle_variante' => $collectedData['detalle'] ?? $collectedData['description'] ?? '',
             'estado' => 'activa',
             'ubicacion_cuerpo', 'ubicacion_pasillo', 'ubicacion_estante' => '',
-            'identificacion_tributaria', 'contacto_email', 'contacto_telefono', 'direccion' => '',
+            'identificacion_tributaria', 'contacto_email', 'contacto_telefono', 'direccion', 'tipo_entidad' => '',
             'component_um' => '',
             default => null,
         };
@@ -871,11 +917,12 @@ final class AgentService
             'ubicacion_cuerpo' => 'Indicá el cuerpo de ubicación física.',
             'ubicacion_pasillo' => 'Indicá el pasillo de ubicación física.',
             'ubicacion_estante' => 'Indicá el estante de ubicación física.',
-            'razon_social' => 'Indicá la razón social o nombre del proveedor.',
-            'identificacion_tributaria' => 'Indicá el CUIT (formato XX-XXXXXXXX-X) o número de identificación.',
+            'razon_social' => 'Indicá la razón social o nombre de la entidad.',
+            'identificacion_tributaria' => 'Indicá el CUIT/CUIL (formato XX-XXXXXXXX-X) o número de identificación. Si no lo tenés, escribí "omitir".',
             'contacto_email' => 'Indicá un email válido.',
             'contacto_telefono' => 'Indicá el teléfono.',
             'direccion' => 'Indicá la dirección.',
+            'tipo' => 'Seleccioná el tipo de entidad: Proveedor, Cliente o Ambos.',
             'stock_seguridad' => 'Indicá el stock de seguridad como número.',
             'parent_part' => 'Indicá el código de la pieza padre.',
             'component_code' => 'Indicá el código del componente.',
@@ -905,6 +952,7 @@ final class AgentService
             'unidades_medida_all' => $this->fetchUnidadesMedida($db),
             'unidades_medida_tipos' => $this->fetchUnidadesMedidaTipos($db),
             'estados_variante' => self::ESTADOS_VARIANTE,
+            'tipos_entidad' => self::TIPOS_ENTIDAD,
             default => [],
         };
     }
@@ -914,6 +962,12 @@ final class AgentService
         ['value' => 'desarrollo', 'label' => 'En desarrollo'],
         ['value' => 'obsoleta', 'label' => 'Obsoleta'],
         ['value' => 'descontinuada', 'label' => 'Descontinuada'],
+    ];
+
+    private const TIPOS_ENTIDAD = [
+        ['value' => 'PROVEEDOR', 'label' => 'Proveedor'],
+        ['value' => 'CLIENTE', 'label' => 'Cliente'],
+        ['value' => 'AMBOS', 'label' => 'Ambos (Proveedor y Cliente)'],
     ];
 
     private function fetchTiposPartes(\PDO $db): array
@@ -1161,20 +1215,36 @@ final class AgentService
     }
 
     /**
-     * Guardar Proveedor (tabla: entidades, tipo='PROVEEDOR')
+     * Guardar Entidad (tabla: entidades, tipo=PROVEEDOR|CLIENTE|AMBOS)
      */
     private function saveSupplier(array $data): array
     {
         $db = $this->getDb();
         if (!$db) return ['success' => false, 'message' => 'Base de datos no disponible'];
 
+        $tipo = $data['tipo'] ?? 'PROVEEDOR';
+        $tipoLabel = match ($tipo) {
+            'CLIENTE' => 'Cliente',
+            'AMBOS' => 'Proveedor y Cliente',
+            default => 'Proveedor',
+        };
+
+        $cuit = $data['identificacion_tributaria'] ?? null;
+        if ($cuit !== null && $cuit !== '' && $this->cuitExists($cuit)) {
+            return [
+                'success' => false,
+                'message' => "El CUIT/CUIL \"{$cuit}\" ya está registrado en otra entidad.",
+            ];
+        }
+
         $stmt = $db->prepare(
             "INSERT INTO entidades (razon_social, tipo, identificacion_tributaria, contacto_email, contacto_telefono, direccion, created_at, updated_at)
-             VALUES (?, 'PROVEEDOR', ?, ?, ?, ?, NOW(), NOW()) RETURNING id"
+             VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW()) RETURNING id"
         );
         $stmt->execute([
             $data['razon_social'],
-            $data['identificacion_tributaria'] ?? null,
+            $tipo,
+            $cuit,
             $data['contacto_email'] ?? null,
             $data['contacto_telefono'] ?? null,
             $data['direccion'] ?? null,
@@ -1183,8 +1253,8 @@ final class AgentService
 
         return [
             'success' => true,
-            'message' => "Proveedor '{$data['razon_social']}' creado correctamente (ID: {$id})",
-            'data' => ['id' => $id, 'razon_social' => $data['razon_social']],
+            'message' => "{$tipoLabel} '{$data['razon_social']}' creado correctamente (ID: {$id})",
+            'data' => ['id' => $id, 'razon_social' => $data['razon_social'], 'tipo' => $tipo],
         ];
     }
 
@@ -1287,6 +1357,21 @@ final class AgentService
             return $stmt->fetchColumn() !== false;
         } catch (\Throwable $e) {
             error_log("varianteCodigoExists failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function cuitExists(string $cuit): bool
+    {
+        $db = $this->getDb();
+        if (!$db) return false;
+
+        try {
+            $stmt = $db->prepare("SELECT 1 FROM entidades WHERE identificacion_tributaria = ? LIMIT 1");
+            $stmt->execute([$cuit]);
+            return $stmt->fetchColumn() !== false;
+        } catch (\Throwable $e) {
+            error_log("cuitExists failed: " . $e->getMessage());
             return false;
         }
     }

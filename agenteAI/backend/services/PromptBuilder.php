@@ -13,7 +13,7 @@ namespace App\AgenteAI\Backend\Services;
  *   → Variante (codigo, detalle, estado, lote min, punto pedido, peso, ubicacion)
  *   → ¿Otra variante? → (bucle) o Finalizar
  *
- * Proveedor: entidad (razon_social, identificacion_tributaria, contacto_email, contacto_telefono, direccion)
+ * Entidad (Proveedor/Cliente/Ambos): tipo, entidad (razon_social, identificacion_tributaria, contacto_email, contacto_telefono, direccion)
  *
  * BOM: codigo padre, componentes (codigo, cantidad, UM) × N
  */
@@ -50,9 +50,16 @@ final class PromptBuilder
         ['field' => 'ubicacion_estante', 'message' => '¿Ubicación física - Estante? (Enter para omitir)', 'required' => false],
     ];
 
+    private const TIPOS_ENTIDAD = [
+        ['value' => 'PROVEEDOR', 'label' => 'Proveedor'],
+        ['value' => 'CLIENTE', 'label' => 'Cliente'],
+        ['value' => 'AMBOS', 'label' => 'Ambos (Proveedor y Cliente)'],
+    ];
+
     private const SUPPLIER_FIELDS = [
-        ['field' => 'razon_social',              'message' => '¿Cuál es la razón social del proveedor?', 'required' => true],
-        ['field' => 'identificacion_tributaria', 'message' => '¿Cuál es el CUIT o número de identificación tributaria? (Enter para omitir)', 'required' => false],
+        ['field' => 'tipo',                      'message' => '¿Qué tipo de entidad es? Seleccioná una opción:', 'required' => true, 'lookup' => 'tipos_entidad'],
+        ['field' => 'razon_social',              'message' => '¿Cuál es la razón social?', 'required' => true],
+        ['field' => 'identificacion_tributaria', 'message' => '¿Cuál es el CUIT/CUIL? (Enter para omitir)', 'required' => false],
         ['field' => 'contacto_email',           'message' => '¿Cuál es el email de contacto? (Enter para omitir)', 'required' => false],
         ['field' => 'contacto_telefono',         'message' => '¿Cuál es el teléfono de contacto? (Enter para omitir)', 'required' => false],
         ['field' => 'direccion',                'message' => '¿Cuál es la dirección? (Enter para omitir)', 'required' => false],
@@ -99,7 +106,7 @@ final class PromptBuilder
         $labels = [
             'create_part' => ['crear nueva parte', 'nueva parte', 'crear parte', 'crear nueva pieza', 'nueva pieza', 'crear pieza', 'pieza', 'registrar materia prima', 'materia prima', 'registrar material', 'material', 'nuevo material', 'conjunto', 'producto terminado', 'mano de obra'],
             'create_bom' => ['armar lista de materiales', 'bom', 'lista de materiales', 'materiales', 'componentes', 'armar bom', 'nueva bom'],
-            'create_supplier' => ['registrar proveedor', 'proveedor', 'nuevo proveedor', 'registrar empresa'],
+            'create_supplier' => ['registrar proveedor', 'proveedor', 'nuevo proveedor', 'registrar empresa', 'registrar cliente', 'cliente', 'nuevo cliente', 'registrar entidad', 'entidad', 'clientes y proveedores'],
         ];
         foreach ($labels as $intent => $phrases) {
             foreach ($phrases as $phrase) {
@@ -265,6 +272,9 @@ final class PromptBuilder
     {
         if (isset($fieldDef['lookup']) && $fieldDef['lookup'] === 'estados_variante') {
             return self::ESTADOS_VARIANTE;
+        }
+        if (isset($fieldDef['lookup']) && $fieldDef['lookup'] === 'tipos_entidad') {
+            return self::TIPOS_ENTIDAD;
         }
         return [];
     }

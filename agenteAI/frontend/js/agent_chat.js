@@ -246,7 +246,7 @@ function agentChat() {
       if (lowerText.includes('bom') || lowerText.includes('materiales') || lowerText.includes('componentes')) {
         return 'create_bom';
       }
-      if (lowerText.includes('proveedor') || lowerText.includes('empresa')) {
+      if (lowerText.includes('proveedor') || lowerText.includes('cliente') || lowerText.includes('empresa') || lowerText.includes('entidad')) {
         return 'create_supplier';
       }
 

@@ -78,9 +78,9 @@ return [
         ],
         [
             'intent' => 'create_supplier',
-            'label' => 'Registrar proveedor',
-            'description' => 'Nombre, CUIT, contacto y condiciones comerciales',
-            'icon' => 'bi-truck',
+            'label' => 'Registrar Clientes y proveedores',
+            'description' => 'Tipo, razón social, CUIT/CUIL, email, teléfono y dirección',
+            'icon' => 'bi-people',
             'offline_safe' => true,
         ],
     ],
@@ -93,7 +93,7 @@ return [
 
         'create_bom' => "You are an MRP assistant. ALWAYS reply with ONLY a valid JSON object, no text, no markdown, no backticks, no explanations. Strict format: {\"status\":\"clarify\"|\"preview\",\"message\":\"...\",\"data\":{\"parent_part\":\"\",\"components\":[]},\"suggestions\":[\"...\"]}. Ask for parent_part first, then components one by one. status=preview only when all required fields are valid and complete; otherwise status=clarify with the next missing field.",
 
-        'create_supplier' => "You are an MRP assistant. ALWAYS reply with ONLY a valid JSON object, no text, no markdown, no backticks, no explanations. Strict format: {\"status\":\"clarify\"|\"preview\",\"message\":\"...\",\"data\":{\"name\":\"\",\"cuit\":\"\",\"contact\":\"\",\"email\":\"\",\"phone\":\"\"},\"suggestions\":[\"...\"]}. Ask for ONE field at a time in this exact order: 1) name, 2) CUIT (XX-XXXXXXXX-X), 3) contact, 4) email, 5) phone. status=preview only when all required fields are valid and complete; otherwise status=clarify with the next missing field.",
+        'create_supplier' => "You are an MRP assistant. ALWAYS reply with ONLY a valid JSON object, no text, no markdown, no backticks, no explanations. Strict format: {\"status\":\"clarify\"|\"preview\",\"message\":\"...\",\"data\":{\"tipo\":\"\",\"razon_social\":\"\",\"identificacion_tributaria\":\"\",\"contacto_email\":\"\",\"contacto_telefono\":\"\",\"direccion\":\"\"},\"suggestions\":[\"...\"]}. Ask for ONE field at a time in this exact order: 1) tipo (Proveedor, Cliente o Ambos), 2) razon_social, 3) identificacion_tributaria CUIT/CUIL, 4) contacto_email, 5) contacto_telefono, 6) direccion. status=preview only when all required fields are valid and complete; otherwise status=clarify with the next missing field.",
 
         'general_query' => "You are an MRP assistant. ALWAYS reply with ONLY a valid JSON object, no text, no markdown, no backticks, no explanations. Strict format: {\"status\":\"response\",\"message\":\"...\",\"data\":null,\"suggestions\":[\"...\"]}.",
     ],
@@ -110,7 +110,7 @@ return [
         'required_fields' => [
             'create_part' => ['code', 'description', 'id_tipo', 'id_grupo'],
             'create_bom' => ['parent_part', 'components'],
-            'create_supplier' => ['razon_social'],
+            'create_supplier' => ['tipo', 'razon_social'],
         ],
     ],
 ];

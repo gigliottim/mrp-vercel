@@ -189,8 +189,11 @@ function agentChat() {
     },
 
     selectSuggestion(intent, label) {
+      if (intent) {
+        this.conversationId = null;
+      }
       this.userInput = label;
-      this.currentIntent = intent;
+      this.currentIntent = intent || null;
       this.sendMessage();
     },
 

@@ -452,8 +452,12 @@ function selectFloatSuggestion(intent, label) {
     if (chat && typeof Alpine !== 'undefined') {
         const alpineComponent = Alpine.$data(chat);
         if (alpineComponent) {
+            if (intent) {
+                alpineComponent.conversationId = null;
+                alpineComponent.guidedState = null;
+            }
             alpineComponent.userInput = label;
-            alpineComponent.currentIntent = intent;
+            alpineComponent.currentIntent = intent || null;
             alpineComponent.sendMessage();
         }
     }

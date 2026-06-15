@@ -265,7 +265,10 @@ final class AgentService
                 status: 'saved',
                 message: $saveResult['message'],
                 data: $saveResult['data'] ?? null,
-                suggestions: ['Crear otra parte', 'Volver al menú'],
+                suggestions: [
+                    ['label' => 'Crear otra parte', 'intent' => 'create_part'],
+                    ['label' => 'Volver al menú'],
+                ],
                 conversationId: $convId
             );
         }
@@ -334,7 +337,10 @@ final class AgentService
                     status: 'saved',
                     message: $saveResult['message'],
                     data: $saveResult['data'] ?? null,
-                    suggestions: ['Crear otra parte', 'Volver al menú'],
+                    suggestions: [
+                        ['label' => 'Crear otra parte', 'intent' => 'create_part'],
+                        ['label' => 'Volver al menú'],
+                    ],
                     conversationId: $convId
                 );
             }

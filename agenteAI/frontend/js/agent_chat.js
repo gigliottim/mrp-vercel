@@ -55,14 +55,21 @@ function agentChat() {
       const grid = document.getElementById('suggestions-grid');
       if (!grid) return;
 
-      grid.innerHTML = this.suggestions.map(s => `
+      grid.innerHTML = this.suggestions.map(s => {
+        const intent = s.intent || '';
+        const icon = s.icon || 'bi-chat-dots';
+        const onclick = intent
+          ? `selectSuggestion('${intent}', '${s.label}')`
+          : `selectSuggestion('', '${s.label}')`;
+        return `
                 <button class="agent-suggestion-chip"
-                        data-intent="${s.intent}"
-                        onclick="selectSuggestion('${s.intent}', '${s.label}')">
-                    <i class="${s.icon}"></i>
+                        data-intent="${intent}"
+                        onclick="${onclick}">
+                    <i class="${icon}"></i>
                     <span>${s.label}</span>
                 </button>
-            `).join('');
+            `;
+      }).join('');
     },
 
     addNewLine(e) {
@@ -122,13 +129,18 @@ function agentChat() {
             this.renderSuggestions(data.suggestions);
           }
 
+          // Si se guardó, limpiar estado
+          if (data.status === 'saved') {
+            this.previewData = null;
+            this.previewHtml = '';
+          }
+
           // Mostrar preview si hay datos
           if (data.status === 'preview' && data.data) {
             this.previewData = data.data;
             this.previewHtml = this.renderPreview(data.data);
             this.currentIntent = this.currentIntent || this.detectIntent(message);
           } else if (data.status === 'clarify') {
-            // Limpiar preview si se necesita aclaración
             this.previewData = null;
             this.previewHtml = '';
           }
@@ -212,10 +224,17 @@ function agentChat() {
     selectSuggestion(intent, label) {
       if (intent) {
         this.conversationId = null;
+        this.currentIntent = intent;
+        this.userInput = label;
+        this.sendMessage();
+      } else {
+        this.conversationId = null;
+        this.currentIntent = null;
+        this.previewData = null;
+        this.previewHtml = '';
+        this.addMessage('user', label);
+        this.loadSuggestions();
       }
-      this.userInput = label;
-      this.currentIntent = intent || null;
-      this.sendMessage();
     },
 
     async cancelPreview() {

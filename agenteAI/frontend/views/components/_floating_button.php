@@ -628,14 +628,21 @@ use App\Core\View\View;
 
                 const data = suggestions ?? this.suggestions;
 
-                grid.innerHTML = data.map(s => `
-                <button class="agent-float-suggestion-chip"
-                        data-intent="${s.intent || ''}"
-                        onclick="selectFloatSuggestion('${s.intent || ''}', '${s.label || s}')">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    <span>${s.label || s}</span>
-                </button>
-            `).join('');
+                grid.innerHTML = data.map(s => {
+                    const intent = s.intent || '';
+                    const label = s.label || s;
+                    const onclick = intent
+                        ? `selectFloatSuggestion('${intent}', '${label}')`
+                        : `selectFloatSuggestion('', '${label}')`;
+                    return `
+                    <button class="agent-float-suggestion-chip"
+                            data-intent="${intent}"
+                            onclick="${onclick}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span>${label}</span>
+                    </button>
+                `;
+                }).join('');
             },
 
             async sendMessage() {
@@ -675,13 +682,16 @@ use App\Core\View\View;
                         // Agregar respuesta del asistente
                         this.addMessage('assistant', data.message);
 
+                        // Si se guardó, limpiar estado
+                        if (data.status === 'saved') {
+                            this.previewData = null;
+                            this.previewHtml = '';
+                        }
+
                         // Mostrar preview si hay datos
                         if (data.status === 'preview' && data.data) {
                             this.previewData = data.data;
                             this.previewHtml = this.renderPreview(data.data);
-                        } else if (data.status === 'saved') {
-                            this.previewData = null;
-                            this.previewHtml = '';
                         }
 
                         // Mostrar sugerencias si hay
@@ -838,16 +848,23 @@ use App\Core\View\View;
     function selectFloatSuggestion(intent, label) {
         const chat = document.getElementById('agent-floating-btn');
         if (chat) {
-            // Acceder al componente Alpine.js usando Alpine.$data
             const alpineComponent = Alpine.$data(chat);
             if (alpineComponent) {
                 if (intent) {
                     alpineComponent.conversationId = null;
                     alpineComponent.guidedState = null;
+                    alpineComponent.currentIntent = intent;
+                    alpineComponent.userInput = label;
+                    alpineComponent.sendMessage();
+                } else {
+                    alpineComponent.conversationId = null;
+                    alpineComponent.currentIntent = null;
+                    alpineComponent.guidedState = null;
+                    alpineComponent.previewData = null;
+                    alpineComponent.previewHtml = '';
+                    alpineComponent.addMessage('user', label);
+                    alpineComponent.loadSuggestions();
                 }
-                alpineComponent.userInput = label;
-                alpineComponent.currentIntent = intent || null;
-                alpineComponent.sendMessage();
             }
         }
     }

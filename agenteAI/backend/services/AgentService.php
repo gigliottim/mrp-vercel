@@ -247,6 +247,10 @@ final class AgentService
                     if ($fieldLabel !== null && $this->isLookupField($field)) {
                         $collectedData['_label_' . $field] = $fieldLabel;
                     }
+                    if ($field === 'tipo' && $fieldLabel === null) {
+                        $tipoLabels = ['PROVEEDOR' => 'Proveedor', 'CLIENTE' => 'Cliente', 'AMBOS' => 'Ambos (Proveedor y Cliente)'];
+                        $collectedData['_label_tipo'] = $tipoLabels[$value] ?? $value;
+                    }
                 }
 
                 if ($field === 'identificacion_tributaria' && $value !== '' && $value !== null && $this->cuitExists((string) $value)) {
@@ -262,10 +266,9 @@ final class AgentService
                 }
             }
 
-            // Check if there are more fields to ask before validating/saving
+            // Check if there are more fields to ask before saving
             $nextField = $this->promptBuilder->nextMissingField($intent, $collectedData);
             if ($nextField !== null) {
-                // Still have fields to ask — show confirmation and ask next
                 $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
                 $confirmation = '';
@@ -284,19 +287,63 @@ final class AgentService
             }
         }
 
-        // All fields collected — show preview for confirmation
-        $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+        // All fields collected — validate and save directly
+        $validationResult = $this->validator->validate($collectedData, $intent);
 
-        $confirmation = '';
-        if (isset($field) && $field !== 'add_more' && $field !== '') {
-            $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+        if ($validationResult->failed()) {
+            $next = $this->promptBuilder->nextMissingField($intent, $collectedData);
+            $message = $next !== null
+                ? $next['message']
+                : $this->buildClarifyMessage($validationResult->errors);
+
+            $suggestions = [];
+            if ($next !== null) {
+                $suggestions = $this->resolveFieldSuggestions($next);
+            }
+
+            $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
+
+            $confirmation = '';
+            if (isset($field) && $field !== 'add_more' && $field !== '') {
+                $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+            }
+
+            return new AgentResponse(
+                status: 'clarify',
+                message: $confirmation . $message,
+                data: $collectedData,
+                suggestions: $suggestions,
+                conversationId: $convId
+            );
+        }
+
+        $saveResult = $this->confirmAndSave($convId, $validationResult->data, $intent);
+
+        if ($saveResult['success']) {
+            $this->clearConversationState($convId);
+
+            $confirmation = '';
+            if (isset($field) && $field !== 'add_more' && $field !== '') {
+                $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+            }
+
+            return new AgentResponse(
+                status: 'saved',
+                message: $confirmation . $saveResult['message'],
+                data: $saveResult['data'] ?? null,
+                suggestions: [
+                    ['label' => 'Volver al menú'],
+                    ['label' => 'Continuar agregando', 'intent' => 'create_supplier'],
+                ],
+                conversationId: $convId
+            );
         }
 
         return new AgentResponse(
-            status: 'preview',
-            message: $confirmation . 'Revisá los datos ingresados. ¿Confirmamos y guardamos?',
+            status: 'clarify',
+            message: "No pude guardar: {$saveResult['message']}. ¿Querés corregir algún dato?",
             data: $collectedData,
-            suggestions: [],
+            suggestions: ['Reintentar', 'Cancelar'],
             conversationId: $convId
         );
     }

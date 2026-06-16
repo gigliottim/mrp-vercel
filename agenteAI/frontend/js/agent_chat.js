@@ -158,17 +158,38 @@ function agentChat() {
     },
 
     renderPreview(data) {
+      const fieldLabels = {
+        tipo: 'Tipo',
+        razon_social: 'Razón Social',
+        identificacion_tributaria: 'CUIT/CUIL',
+        contacto_email: 'Email',
+        contacto_telefono: 'Teléfono',
+        direccion: 'Dirección',
+        codigo: 'Código',
+        detalle: 'Descripción',
+        id_tipo: 'Tipo de parte',
+        id_grupo: 'Grupo',
+        id_um_compra: 'UM Compra',
+        id_um_uso: 'UM Uso',
+        parent_part: 'Pieza padre',
+        components: 'Componentes',
+      };
+
       let html = '<table class="agent-preview-table">';
       for (const [key, value] of Object.entries(data)) {
         if (key.startsWith('_') || key === 'suggestions' || key === 'status' || key === 'message') {
           continue;
         }
         const labelKey = '_label_' + key;
-        const displayValue = data[labelKey] ? data[labelKey] : String(value);
+        const label = fieldLabels[key] || this.formatKey(key);
+        let displayValue = data[labelKey] ? data[labelKey] : String(value);
+        if (displayValue === '' || displayValue === 'undefined' || displayValue === 'null') {
+          displayValue = '<em style="color:#999">No informado</em>';
+        }
         html += `
                         <tr>
-                            <th>${this.formatKey(key)}</th>
-                            <td>${this.escapeHtml(displayValue)}</td>
+                            <th>${label}</th>
+                            <td>${displayValue}</td>
                         </tr>
                     `;
       }
@@ -197,10 +218,21 @@ function agentChat() {
       this.sendMessage();
     },
 
-    cancelPreview() {
+    async cancelPreview() {
+      try {
+        if (this.conversationId) {
+          await fetch('/api/v1/agent/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversation_id: this.conversationId })
+          });
+        }
+      } catch (e) { /* non-critical */ }
       this.previewData = null;
       this.previewHtml = '';
       this.currentIntent = null;
+      this.conversationId = null;
+      this.loadSuggestions();
     },
 
     async confirmSave() {
@@ -224,10 +256,13 @@ function agentChat() {
         const data = await response.json();
 
         if (data.success) {
-          this.addMessage('system', 'Datos guardados correctamente.');
+          this.addMessage('system', data.message || 'Datos guardados correctamente.');
           this.cancelPreview();
           this.conversationId = null;
           this.currentIntent = null;
+          this.loadSuggestions();
+        } else {
+          this.addMessage('system', data.message || 'Error al guardar los datos.');
         }
       } catch (error) {
         console.error('Error saving data:', error);

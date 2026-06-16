@@ -63,15 +63,25 @@ use App\Core\View\View;
         </div>
 
         <!-- Sugerencias -->
-        <div class="agent-float-suggestions" id="agent-float-suggestions">
+        <div class="agent-float-suggestions" id="agent-float-suggestions" x-show="!previewData">
             <div class="agent-float-suggestions-title">Opciones rápidas:</div>
             <div class="agent-float-suggestions-grid" id="agent-float-suggestions-grid">
                 <!-- Las sugerencias se renderizarán aquí -->
             </div>
         </div>
 
+        <!-- Preview Area -->
+        <div class="agent-float-preview" id="agent-float-preview" x-show="previewData">
+            <h3>Resumen de datos</h3>
+            <div class="agent-float-preview-content" x-html="previewHtml"></div>
+            <div class="agent-float-preview-actions">
+                <button class="agent-float-preview-btn agent-float-preview-btn-cancel" @click="cancelPreview()">Corregir</button>
+                <button class="agent-float-preview-btn agent-float-preview-btn-confirm" @click="confirmSave()">Confirmar</button>
+            </div>
+        </div>
+
         <!-- Área de input -->
-        <div class="agent-float-input-area" x-show="!isOffline || guidedState !== null">
+        <div class="agent-float-input-area" x-show="(!isOffline || guidedState !== null) && !previewData">
             <textarea
                 x-model="userInput"
                 @keydown.enter.exact.prevent="sendMessage"
@@ -447,6 +457,78 @@ use App\Core\View\View;
         width: 14px;
         height: 14px;
     }
+
+    /* Preview Area */
+    .agent-float-preview {
+        padding: 12px 16px;
+        background: #f0f7ff;
+        border-top: 1px solid #b3d4fc;
+        max-height: 50%;
+        overflow-y: auto;
+    }
+
+    .agent-float-preview h3 {
+        font-size: 12px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #0056b3;
+    }
+
+    .agent-float-preview table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .agent-float-preview th {
+        text-align: left;
+        padding: 4px 8px 4px 0;
+        color: #495057;
+        white-space: nowrap;
+        vertical-align: top;
+        font-weight: 500;
+    }
+
+    .agent-float-preview td {
+        padding: 4px 0;
+        color: #212529;
+        word-break: break-word;
+    }
+
+    .agent-float-preview-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .agent-float-preview-btn {
+        padding: 6px 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .agent-float-preview-btn-cancel {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .agent-float-preview-btn-cancel:hover {
+        background: #dee2e6;
+    }
+
+    .agent-float-preview-btn-confirm {
+        background: #25D366;
+        color: white;
+    }
+
+    .agent-float-preview-btn-confirm:hover {
+        background: #20bd5a;
+    }
 </style>
 
 <script>
@@ -463,6 +545,8 @@ use App\Core\View\View;
             isOffline: false,
             conversationId: null,
             currentIntent: null,
+            previewData: null,
+            previewHtml: '',
 
             async init() {
                 await this.checkConfiguration();
@@ -591,9 +675,20 @@ use App\Core\View\View;
                         // Agregar respuesta del asistente
                         this.addMessage('assistant', data.message);
 
+                        // Mostrar preview si hay datos
+                        if (data.status === 'preview' && data.data) {
+                            this.previewData = data.data;
+                            this.previewHtml = this.renderPreview(data.data);
+                        } else if (data.status === 'saved') {
+                            this.previewData = null;
+                            this.previewHtml = '';
+                        }
+
                         // Mostrar sugerencias si hay
                         if (data.suggestions && data.suggestions.length > 0) {
                             this.renderSuggestions(data.suggestions);
+                        } else if (data.status !== 'preview') {
+                            this.loadSuggestions();
                         }
                     }
                 } catch (error) {
@@ -636,6 +731,93 @@ use App\Core\View\View;
                         messagesContainer.scrollTop = messagesContainer.scrollHeight;
                     }
                 }, 100);
+            },
+
+            renderPreview(data) {
+                const fieldLabels = {
+                    tipo: 'Tipo',
+                    razon_social: 'Razón Social',
+                    identificacion_tributaria: 'CUIT/CUIL',
+                    contacto_email: 'Email',
+                    contacto_telefono: 'Teléfono',
+                    direccion: 'Dirección',
+                    codigo: 'Código',
+                    detalle: 'Descripción',
+                    id_tipo: 'Tipo de parte',
+                    id_grupo: 'Grupo',
+                    id_um_compra: 'UM Compra',
+                    id_um_uso: 'UM Uso',
+                    parent_part: 'Pieza padre',
+                    components: 'Componentes',
+                };
+
+                let html = '<table>';
+                for (const [key, value] of Object.entries(data)) {
+                    if (key.startsWith('_') || key === 'suggestions' || key === 'status' || key === 'message') {
+                        continue;
+                    }
+                    const labelKey = '_label_' + key;
+                    const label = fieldLabels[key] || this.formatKey(key);
+                    let displayValue = data[labelKey] ? data[labelKey] : String(value);
+                    if (displayValue === '' || displayValue === 'undefined' || displayValue === 'null') {
+                        displayValue = '<em style="color:#999">No informado</em>';
+                    }
+                    html += `<tr><th>${label}</th><td>${displayValue}</td></tr>`;
+                }
+                html += '</table>';
+                return html;
+            },
+
+            async confirmSave() {
+                if (!this.previewData || !this.currentIntent) return;
+                this.isLoading = true;
+
+                try {
+                    const response = await fetch('/api/v1/agent/confirm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            conversation_id: this.conversationId,
+                            data: this.previewData,
+                            intent: this.currentIntent
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.addMessage('system', data.message || 'Datos guardados correctamente.');
+                        this.previewData = null;
+                        this.previewHtml = '';
+                        this.conversationId = null;
+                        this.currentIntent = null;
+                        this.loadSuggestions();
+                    } else {
+                        this.addMessage('system', data.message || 'Error al guardar los datos.');
+                    }
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                    this.addMessage('system', 'Error al guardar los datos.');
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            async cancelPreview() {
+                try {
+                    if (this.conversationId) {
+                        await fetch('/api/v1/agent/cancel', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ conversation_id: this.conversationId })
+                        });
+                    }
+                } catch (e) { /* non-critical */ }
+                this.previewData = null;
+                this.previewHtml = '';
+                this.currentIntent = null;
+                this.conversationId = null;
+                this.loadSuggestions();
             },
 
             formatKey(key) {

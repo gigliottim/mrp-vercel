@@ -294,9 +294,9 @@ final class AgentService
 
         return new AgentResponse(
             status: 'preview',
-            message: $confirmation . 'Datos completos. ¿Confirmamos y guardamos?',
+            message: $confirmation . 'Revisá los datos ingresados. ¿Confirmamos y guardamos?',
             data: $collectedData,
-            suggestions: ['Confirmar y guardar', 'Corregir'],
+            suggestions: [],
             conversationId: $convId
         );
     }
@@ -653,9 +653,9 @@ final class AgentService
         if ($nextField === null) {
             return new AgentResponse(
                 status: 'preview',
-                message: 'Datos completos. ¿Confirmamos y guardamos?',
+                message: 'Revisá los datos ingresados. ¿Confirmamos y guardamos?',
                 data: $collectedData,
-                suggestions: ['Confirmar y guardar', 'Corregir'],
+                suggestions: [],
                 conversationId: $convId
             );
         }

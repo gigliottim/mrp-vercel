@@ -210,7 +210,7 @@ final class AgentService
                     $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
                     $nextResponse = $this->askNextField($convId, $collectedData, $intent);
-                    $nextResponse->message = '✓ Omitido. ' . $nextResponse->message;
+                    $nextResponse->message = "✓ Omitido.\n\n" . $nextResponse->message;
                     return $nextResponse;
                 }
 
@@ -273,7 +273,7 @@ final class AgentService
 
                 $confirmation = '';
                 if (!$isSkip && $field !== 'add_more' && $field !== '') {
-                    $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+                    $confirmation = $this->getDisplayValue($field, $collectedData) . "\n\n";
                 }
 
                 $suggestions = $this->resolveFieldSuggestions($nextField);
@@ -305,7 +305,7 @@ final class AgentService
 
             $confirmation = '';
             if (isset($field) && $field !== 'add_more' && $field !== '') {
-                $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+                $confirmation = $this->getDisplayValue($field, $collectedData) . "\n\n";
             }
 
             return new AgentResponse(
@@ -324,7 +324,7 @@ final class AgentService
 
             $confirmation = '';
             if (isset($field) && $field !== 'add_more' && $field !== '') {
-                $confirmation = $this->getDisplayValue($field, $collectedData) . ' ';
+                $confirmation = $this->getDisplayValue($field, $collectedData) . "\n\n";
             }
 
             return new AgentResponse(
@@ -439,7 +439,7 @@ final class AgentService
 
                 $displayValue = $this->getDisplayValue($field, $collectedData);
                 $nextResponse = $this->askNextField($convId, $collectedData);
-                $nextResponse->message = $displayValue . ' ' . $nextResponse->message;
+                $nextResponse->message = $displayValue . "\n\n" . $nextResponse->message;
                 return $nextResponse;
             }
             // Required field — cannot skip
@@ -486,7 +486,7 @@ final class AgentService
 
         $nextResponse = $this->askNextField($convId, $collectedData);
         if ($fieldLabel !== null && $this->isLookupField($field)) {
-            $nextResponse->message = '✓ ' . $fieldLabel . '. ' . $nextResponse->message;
+            $nextResponse->message = '✓ ' . $fieldLabel . ".\n\n" . $nextResponse->message;
         }
         return $nextResponse;
     }
@@ -606,7 +606,7 @@ final class AgentService
 
         $nextResponse = $this->askNextField($convId, $collectedData, $intent);
         if ($fieldLabel !== null && $this->isLookupField($field)) {
-            $nextResponse->message = '✓ ' . $fieldLabel . '. ' . $nextResponse->message;
+            $nextResponse->message = '✓ ' . $fieldLabel . ".\n\n" . $nextResponse->message;
         }
         return $nextResponse;
         }

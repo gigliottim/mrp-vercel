@@ -532,6 +532,7 @@ final class PartesVariantesController extends Controller
             'unidadesSuperficie' => $this->unidades->byTipo('superficie'),
             'unidadesVolumen' => $this->unidades->byTipo('volumen'),
             'unidadesMasa' => $this->unidades->byTipo('masa'),
+            'unidadesTodas' => $this->unidades->allActive(500, 0),
             'errors' => [],
             'variantErrors' => [],
             'oldPart' => [],

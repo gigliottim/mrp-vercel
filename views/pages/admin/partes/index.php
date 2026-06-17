@@ -38,12 +38,18 @@ $buildUrl = static function (array $params) use ($search): string {
 
 $totalActivas = 0;
 $totalVariantes = 0;
+$stockBajo = 0;
 foreach ($partItems as $parte) {
     $variantes = $parte['variantes'] ?? [];
     $totalVariantes += count($variantes);
     foreach ($variantes as $v) {
         if (($v['estado'] ?? '') === 'activa') {
             $totalActivas++;
+        }
+        $stock = (float) ($v['stock_actual'] ?? 0);
+        $punto = (float) ($v['punto_pedido'] ?? 0);
+        if ($stock <= $punto && ($v['estado'] ?? '') === 'activa') {
+            $stockBajo++;
         }
     }
 }
@@ -61,6 +67,13 @@ $estadoLabels = [
     'obsoleta' => 'Obsoleta',
     'descontinuada' => 'Descontinuada',
 ];
+
+$unidadesMasa = $unidadesMasa ?? [];
+$unidadesTodas = $unidadesTodas ?? $unidadesMasa;
+$umMap = [];
+foreach ($unidadesTodas as $um) {
+    $umMap[(int) $um['id']] = $um['simbolo'];
+}
 ?>
 <link rel="stylesheet" href="<?= AssetHelper::css('modules/partes/index-v2.css') ?>">
 
@@ -117,11 +130,11 @@ $estadoLabels = [
         <div class="pv-stat-label">Activas</div>
     </div>
     <div class="pv-stat-card">
-        <div class="pv-stat-icon" style="background:rgba(245,158,11,.1);color:#d97706;">
-            <i class="fa-solid fa-file-lines"></i>
+        <div class="pv-stat-icon" style="background:rgba(239,68,68,.1);color:#dc2626;">
+            <i class="fa-solid fa-arrow-down"></i>
         </div>
-        <div class="pv-stat-value"><?= $showAll ? $totalParts : min($currentPerPage, max(0, $totalParts - (($currentPage - 1) * $currentPerPage))) ?></div>
-        <div class="pv-stat-label">En esta página</div>
+        <div class="pv-stat-value"><?= $stockBajo ?></div>
+        <div class="pv-stat-label">Stock bajo</div>
     </div>
 </div>
 
@@ -231,6 +244,7 @@ $estadoLabels = [
                                             $stockValue = $variante['stock_actual'] ?? null;
                                             $pesoValue = $variante['peso'] ?? null;
                                             $pesoUm = $variante['id_um_peso'] ?? null;
+                                            $stockUm = $parte['id_um_uso'] ?? null;
                                             ?>
                                             <tr>
                                                 <td><span class="pv-variant-code"><?= View::escape($variante['codigo_variante']) ?></span></td>
@@ -244,6 +258,12 @@ $estadoLabels = [
                                                 <td>
                                                     <?php if ($stockValue !== null && $stockValue !== ''): ?>
                                                         <span class="pv-stock-value"><?= number_format((float) $stockValue, 0, ',', '.') ?></span>
+                                                        <?php
+                                                        $stockSimbolo = $stockUm ? ($umMap[(int) $stockUm] ?? '') : '';
+                                                        ?>
+                                                        <?php if ($stockSimbolo): ?>
+                                                            <small style="color:var(--pv-text-light);"><?= View::escape($stockSimbolo) ?></small>
+                                                        <?php endif; ?>
                                                     <?php else: ?>
                                                         <span style="color:var(--pv-text-light);">—</span>
                                                     <?php endif; ?>
@@ -251,9 +271,10 @@ $estadoLabels = [
                                                 <td>
                                                     <?php if ($pesoValue !== null && $pesoValue !== '' && (float) $pesoValue > 0): ?>
                                                         <?= number_format((float) $pesoValue, 3, ',', '.') ?>
-                                                        <?php if ($pesoUm): ?>
-                                                            <small style="color:var(--pv-text-light);">kg</small>
-                                                        <?php endif; ?>
+                                                        <?php
+                                                        $pesoSimbolo = $umMap[(int) $pesoUm] ?? 'g';
+                                                        ?>
+                                                        <small style="color:var(--pv-text-light);"><?= View::escape($pesoSimbolo) ?></small>
                                                     <?php else: ?>
                                                         <span style="color:var(--pv-text-light);">—</span>
                                                     <?php endif; ?>

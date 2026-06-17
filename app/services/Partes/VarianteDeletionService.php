@@ -82,6 +82,7 @@ final class VarianteDeletionService
             ];
         }
 
+        $this->deleteEmptyBomHeaders($varianteId);
         $this->variantes->delete($varianteId);
 
         if ($isLastVariant && $forceDeleteParte && $parte !== null) {
@@ -125,10 +126,21 @@ final class VarianteDeletionService
 
     private function isBomParent(int $varianteId): bool
     {
-        $sql = "SELECT COUNT(*) FROM bom_cabecera WHERE variante_padre_id = :variante_id";
+        $sql = "SELECT COUNT(*) FROM bom_cabecera bc
+                INNER JOIN bom_detalle bd ON bd.bom_id = bc.id
+                WHERE bc.variante_padre_id = :variante_id";
         $stmt = $this->connection->prepare($sql);
         $stmt->execute(['variante_id' => $varianteId]);
         return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private function deleteEmptyBomHeaders(int $varianteId): void
+    {
+        $sql = "DELETE FROM bom_cabecera
+                WHERE variante_padre_id = :variante_id
+                AND id NOT IN (SELECT bom_id FROM bom_detalle)";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute(['variante_id' => $varianteId]);
     }
 
     private function getBomParents(int $varianteId): array

@@ -304,4 +304,24 @@ final class Variante extends BaseTenantModel
             'normal' => (int) ($result['normal'] ?? 0),
         ];
     }
+
+    public function getGlobalStats(): array
+    {
+        $sql = "
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN estado = 'activa' THEN 1 ELSE 0 END) as activas,
+                SUM(CASE WHEN estado = 'activa' AND stock_actual <= punto_pedido THEN 1 ELSE 0 END) as stock_bajo
+            FROM variantes
+        ";
+
+        $stmt = $this->connection->query($sql);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'total' => (int) ($result['total'] ?? 0),
+            'activas' => (int) ($result['activas'] ?? 0),
+            'stock_bajo' => (int) ($result['stock_bajo'] ?? 0),
+        ];
+    }
 }

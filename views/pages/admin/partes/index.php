@@ -36,24 +36,10 @@ $buildUrl = static function (array $params) use ($search): string {
     return url('productos/partes?' . http_build_query($query));
 };
 
-$totalActivas = 0;
-$totalVariantes = 0;
-$stockBajo = 0;
-foreach ($partItems as $parte) {
-    $variantes = $parte['variantes'] ?? [];
-    $totalVariantes += count($variantes);
-    foreach ($variantes as $v) {
-        if (($v['estado'] ?? '') === 'activa') {
-            $totalActivas++;
-        }
-        $stock = (float) ($v['stock_actual'] ?? 0);
-        $punto = (float) ($v['punto_pedido'] ?? 0);
-        if ($stock <= $punto && ($v['estado'] ?? '') === 'activa') {
-            $stockBajo++;
-        }
-    }
-}
-$porcentajeActivas = $totalVariantes > 0 ? round(($totalActivas / $totalVariantes) * 100) : 0;
+$totalVariantesGlobal = $totalVariantesGlobal ?? 0;
+$totalActivasGlobal = $totalActivasGlobal ?? 0;
+$totalStockBajoGlobal = $totalStockBajoGlobal ?? 0;
+$porcentajeActivas = $totalVariantesGlobal > 0 ? round(($totalActivasGlobal / $totalVariantesGlobal) * 100) : 0;
 
 $estadoMap = [
     'activa' => 'activa',
@@ -119,7 +105,7 @@ foreach ($unidadesTodas as $um) {
         <div class="pv-stat-icon" style="background:rgba(6,182,212,.1);color:#0891b2;">
             <i class="fa-solid fa-layer-group"></i>
         </div>
-        <div class="pv-stat-value"><?= number_format($totalVariantes) ?></div>
+        <div class="pv-stat-value"><?= number_format($totalVariantesGlobal) ?></div>
         <div class="pv-stat-label">Total Variantes</div>
     </div>
     <div class="pv-stat-card">
@@ -133,7 +119,7 @@ foreach ($unidadesTodas as $um) {
         <div class="pv-stat-icon" style="background:rgba(239,68,68,.1);color:#dc2626;">
             <i class="fa-solid fa-arrow-down"></i>
         </div>
-        <div class="pv-stat-value"><?= $stockBajo ?></div>
+        <div class="pv-stat-value"><?= $totalStockBajoGlobal ?></div>
         <div class="pv-stat-label">Stock bajo</div>
     </div>
 </div>

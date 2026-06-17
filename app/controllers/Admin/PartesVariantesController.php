@@ -522,6 +522,9 @@ final class PartesVariantesController extends Controller
         }
         unset($parteItem);
 
+        // Estadísticas globales de variantes
+        $variantStats = $this->variantes->getGlobalStats();
+
         $defaults = [
             'title' => 'Partes y variantes',
             'parts' => $listing,
@@ -533,6 +536,9 @@ final class PartesVariantesController extends Controller
             'unidadesVolumen' => $this->unidades->byTipo('volumen'),
             'unidadesMasa' => $this->unidades->byTipo('masa'),
             'unidadesTodas' => $this->unidades->allActive(500, 0),
+            'totalVariantesGlobal' => (int) ($variantStats['total'] ?? 0),
+            'totalActivasGlobal' => (int) ($variantStats['activas'] ?? 0),
+            'totalStockBajoGlobal' => (int) ($variantStats['stock_bajo'] ?? 0),
             'errors' => [],
             'variantErrors' => [],
             'oldPart' => [],

@@ -209,7 +209,11 @@ $buildUrl = static function (array $params) use ($search): string {
                                                                     <i class="fa-solid fa-pencil"></i>
                                                                 </a>
                                                                 <button type="button" class="btn btn-outline-danger" title="Eliminar variante"
-                                                                    onclick="confirmDeleteVariante(<?= $parte['id'] ?>, <?= $variante['id'] ?>, '<?= View::escape($variante['codigo_variante']) ?>')">
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#modalDeleteVariante"
+                                                                    data-parte-id="<?= $parte['id'] ?>"
+                                                                    data-variante-id="<?= $variante['id'] ?>"
+                                                                    data-codigo="<?= View::escape($variante['codigo_variante']) ?>">
                                                                     <i class="fa-solid fa-trash"></i>
                                                                 </button>
                                                                 <a href="<?= url('reportes/destino-partes?id_variante=' . $variante['id']) ?>"
@@ -269,6 +273,28 @@ $buildUrl = static function (array $params) use ($search): string {
     <?php endif; ?>
 </div>
 
+<div class="modal fade" id="modalDeleteVariante" tabindex="-1" aria-labelledby="modalDeleteVarianteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-danger" id="modalDeleteVarianteLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Eliminar variante
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <p id="deleteVarianteMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmDeleteVariante">
+                    <i class="fa-solid fa-trash me-1"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .custom-accordion-hover:hover {
         background-color: var(--bs-light) !important;
@@ -278,23 +304,39 @@ $buildUrl = static function (array $params) use ($search): string {
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>" defer></script>
 <script src="<?= AssetHelper::js('partes-search.js') ?>" defer></script>
 <script>
-function confirmDeleteVariante(parteId, varianteId, codigo) {
-    const confirmed = confirm('¿Eliminar la variante "' + codigo + '"?\n\nSi es la única variante de la parte, se eliminará también la parte completa.');
-    if (!confirmed) return;
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
-    const methodField = document.createElement('input');
-    methodField.type = 'hidden';
-    methodField.name = '_method';
-    methodField.value = 'DELETE';
-    form.appendChild(methodField);
-    const forceField = document.createElement('input');
-    forceField.type = 'hidden';
-    forceField.name = 'force_delete_parte';
-    forceField.value = '1';
-    form.appendChild(forceField);
-    document.body.appendChild(form);
-    form.submit();
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('modalDeleteVariante');
+    const msgEl = document.getElementById('deleteVarianteMessage');
+    const btnConfirm = document.getElementById('btnConfirmDeleteVariante');
+    let currentParteId = null;
+    let currentVarianteId = null;
+
+    modalEl.addEventListener('show.bs.modal', (e) => {
+        const trigger = e.relatedTarget;
+        currentParteId = trigger.dataset.parteId;
+        currentVarianteId = trigger.dataset.varianteId;
+        const codigo = trigger.dataset.codigo;
+        msgEl.innerHTML = '¿Está seguro de que desea eliminar la variante <strong>' + codigo + '</strong>?<br><br><small class="text-muted">Si es la única variante de la parte, se eliminará también la parte completa.</small>';
+    });
+
+    btnConfirm.addEventListener('click', () => {
+        if (!currentParteId || !currentVarianteId) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '<?= url('productos/partes/') ?>' + currentParteId + '/variantes/' + currentVarianteId;
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'DELETE';
+        form.appendChild(methodField);
+        const forceField = document.createElement('input');
+        forceField.type = 'hidden';
+        forceField.name = 'force_delete_parte';
+        forceField.value = '1';
+        form.appendChild(forceField);
+        document.body.appendChild(form);
+        bootstrap.Modal.getInstance(modalEl).hide();
+        form.submit();
+    });
+});
 </script>

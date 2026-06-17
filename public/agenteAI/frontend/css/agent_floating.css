@@ -22,6 +22,30 @@
     display: none !important;
 }
 
+.agent-floating-btn.maximized .agent-float-container {
+    width: 100%;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+}
+
+@media (min-width: 768px) {
+    .agent-floating-btn.maximized .agent-float-container {
+        width: calc(100vw - 40px);
+        max-width: 900px;
+        height: calc(100vh - 40px);
+        max-height: calc(100vh - 40px);
+        border-radius: 16px;
+    }
+
+    .agent-floating-btn.maximized {
+        bottom: 20px;
+        right: 20px;
+        align-items: flex-end;
+    }
+}
+
 /* Botón principal toggle */
 .agent-float-toggle {
     width: 60px;

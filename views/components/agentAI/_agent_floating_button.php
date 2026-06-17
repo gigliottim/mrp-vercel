@@ -4,7 +4,7 @@ use App\Core\View\View;
 
 ?>
 <!-- Botón Flotante del Agente AI (Estilo WhatsApp) -->
-<div id="agent-floating-btn" class="agent-floating-btn" x-data="agentFloating()" x-init="init()" x-bind:class="isMinimized ? 'minimized' : ''">
+<div id="agent-floating-btn" class="agent-floating-btn" x-data="agentFloating()" x-init="init()" x-bind:class="{'minimized': isMinimized, 'maximized': isMaximized && !isMinimized}">
     <!-- Botón principal -->
     <button
         class="agent-float-toggle"
@@ -38,6 +38,20 @@ use App\Core\View\View;
                 </div>
             </div>
             <div class="agent-float-header-actions">
+                <button class="agent-float-btn" @click="maximizeChat" :aria-label="isMaximized ? 'Restaurar' : 'Maximizar'" :title="isMaximized ? 'Restaurar' : 'Maximizar'">
+                    <svg class="icon" x-show="!isMaximized" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 3 21 3 21 9" />
+                        <polyline points="9 21 3 21 3 15" />
+                        <line x1="21" y1="3" x2="14" y2="10" />
+                        <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                    <svg class="icon" x-show="isMaximized" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20" />
+                        <polyline points="20 10 14 10 14 4" />
+                        <line x1="14" y1="10" x2="21" y2="3" />
+                        <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                </button>
                 <button class="agent-float-btn" @click="minimizeChat" aria-label="Minimizar">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12" />
@@ -100,5 +114,5 @@ use App\Core\View\View;
 </div>
 
 <!-- CSS y JS externalizados del botón flotante -->
-<link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=50.2.0">
-<script src="/agenteAI/frontend/js/agent_floating.js?v=53.0.0" defer></script>
+<link rel="stylesheet" href="/agenteAI/frontend/css/agent_floating.css?v=51.0.0">
+<script src="/agenteAI/frontend/js/agent_floating.js?v=54.0.0" defer></script>

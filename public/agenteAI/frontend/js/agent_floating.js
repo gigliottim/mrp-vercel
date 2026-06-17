@@ -5,6 +5,7 @@
 function agentFloating() {
     return {
         isMinimized: true,
+        isMaximized: false,
         userInput: '',
         fieldValue: null,
         fieldLabel: null,
@@ -40,6 +41,7 @@ function agentFloating() {
                     currentIntent: this.currentIntent,
                     guidedState: this.guidedState,
                     isMinimized: this.isMinimized,
+                    isMaximized: this.isMaximized,
                 };
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
             } catch (e) {}
@@ -57,6 +59,7 @@ function agentFloating() {
                 this.conversationId = state.conversationId || null;
                 this.currentIntent = state.currentIntent || null;
                 this.guidedState = state.guidedState || null;
+                this.isMaximized = state.isMaximized || false;
 
                 if (this.messages.length > 0 || this.conversationId) {
                     this.rebuildMessagesDOM();
@@ -135,6 +138,8 @@ function agentFloating() {
             this.isMinimized = !this.isMinimized;
             if (!this.isMinimized) {
                 this.focusInput();
+            } else {
+                this.isMaximized = false;
             }
             this.saveState();
         },
@@ -146,6 +151,12 @@ function agentFloating() {
 
         closeChat() {
             this.isMinimized = true;
+            this.isMaximized = false;
+            this.saveState();
+        },
+
+        maximizeChat() {
+            this.isMaximized = !this.isMaximized;
             this.saveState();
         },
 
@@ -452,12 +463,8 @@ function selectFloatSuggestion(intent, label) {
     if (chat && typeof Alpine !== 'undefined') {
         const alpineComponent = Alpine.$data(chat);
         if (alpineComponent) {
-            if (intent) {
-                alpineComponent.conversationId = null;
-                alpineComponent.guidedState = null;
-            }
             alpineComponent.userInput = label;
-            alpineComponent.currentIntent = intent || null;
+            alpineComponent.currentIntent = intent;
             alpineComponent.sendMessage();
         }
     }

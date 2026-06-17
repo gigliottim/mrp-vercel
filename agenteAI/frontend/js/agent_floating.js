@@ -82,11 +82,10 @@ function agentFloating() {
             container.innerHTML = '';
             for (const msg of this.messages) {
                 const cls = msg.role === 'user' ? 'user' : (msg.role === 'assistant' ? 'assistant' : 'system');
-                const formattedContent = this.escapeHtml(msg.content).split('\n\n').map(p => `<p>${p}</p>`).join('');
                 container.innerHTML += `
                     <div class="agent-float-message agent-float-message-${cls}">
                         <div class="agent-float-message-content">
-                            ${formattedContent}
+                            <p>${this.escapeHtml(msg.content)}</p>
                         </div>
                         <span class="agent-float-timestamp">${msg.timestamp || ''}</span>
                     </div>`;
@@ -435,12 +434,10 @@ function agentFloating() {
 
             const messageClass = role === 'user' ? 'user' : (role === 'assistant' ? 'assistant' : 'system');
 
-            const formattedContent = this.escapeHtml(content).split('\n\n').map(p => `<p>${p}</p>`).join('');
-
             messagesContainer.innerHTML += `
                 <div class="agent-float-message agent-float-message-${messageClass}">
                     <div class="agent-float-message-content">
-                        ${formattedContent}
+                        <p>${this.escapeHtml(content)}</p>
                     </div>
                     <span class="agent-float-timestamp">${timestamp}</span>
                 </div>

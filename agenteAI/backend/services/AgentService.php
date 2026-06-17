@@ -210,7 +210,6 @@ final class AgentService
                     $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
                     $nextResponse = $this->askNextField($convId, $collectedData, $intent);
-                    $nextResponse->message = "✓ Omitido.\n\n" . $nextResponse->message;
                     return $nextResponse;
                 }
 
@@ -271,15 +270,10 @@ final class AgentService
             if ($nextField !== null) {
                 $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-                $confirmation = '';
-                if (!$isSkip && $field !== 'add_more' && $field !== '') {
-                    $confirmation = $this->getDisplayValue($field, $collectedData) . "\n\n";
-                }
-
                 $suggestions = $this->resolveFieldSuggestions($nextField);
                 return new AgentResponse(
                     status: 'clarify',
-                    message: $confirmation . $nextField['message'],
+                    message: $nextField['message'],
                     data: $collectedData,
                     suggestions: $suggestions,
                     conversationId: $convId
@@ -303,14 +297,9 @@ final class AgentService
 
             $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-            $confirmation = '';
-            if (isset($field) && $field !== 'add_more' && $field !== '') {
-                $confirmation = $this->getDisplayValue($field, $collectedData) . "\n\n";
-            }
-
             return new AgentResponse(
                 status: 'clarify',
-                message: $confirmation . $message,
+                message: $message,
                 data: $collectedData,
                 suggestions: $suggestions,
                 conversationId: $convId
@@ -322,14 +311,9 @@ final class AgentService
         if ($saveResult['success']) {
             $this->clearConversationState($convId);
 
-            $confirmation = '';
-            if (isset($field) && $field !== 'add_more' && $field !== '') {
-                $confirmation = $this->getDisplayValue($field, $collectedData) . "\n\n";
-            }
-
             return new AgentResponse(
                 status: 'saved',
-                message: $confirmation . $saveResult['message'],
+                message: $saveResult['message'],
                 data: $saveResult['data'] ?? null,
                 suggestions: [
                     ['label' => 'Volver al menú'],
@@ -437,9 +421,7 @@ final class AgentService
                 $collectedData = $this->propagateLabels($field, $defaultValue, $collectedData);
                 $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
-                $displayValue = $this->getDisplayValue($field, $collectedData);
                 $nextResponse = $this->askNextField($convId, $collectedData);
-                $nextResponse->message = $displayValue . "\n\n" . $nextResponse->message;
                 return $nextResponse;
             }
             // Required field — cannot skip
@@ -485,9 +467,6 @@ final class AgentService
         $this->saveConversationState($convId, ['intent' => $intent, 'data' => $collectedData, 'step' => $step + 1]);
 
         $nextResponse = $this->askNextField($convId, $collectedData);
-        if ($fieldLabel !== null && $this->isLookupField($field)) {
-            $nextResponse->message = '✓ ' . $fieldLabel . ".\n\n" . $nextResponse->message;
-        }
         return $nextResponse;
     }
 
@@ -605,9 +584,6 @@ final class AgentService
         }
 
         $nextResponse = $this->askNextField($convId, $collectedData, $intent);
-        if ($fieldLabel !== null && $this->isLookupField($field)) {
-            $nextResponse->message = '✓ ' . $fieldLabel . ".\n\n" . $nextResponse->message;
-        }
         return $nextResponse;
         }
 
@@ -899,27 +875,6 @@ final class AgentService
     {
         $required = ['tipo', 'razon_social'];
         return in_array($field, $required, true);
-    }
-
-    private function getDisplayValue(string $field, array $collectedData): string
-    {
-        $label = $collectedData['_label_' . $field] ?? null;
-        if ($label !== null) {
-            return '✓ ' . $label . '.';
-        }
-        $value = $collectedData[$field] ?? null;
-        if ($value !== null) {
-            if ($field === 'superficie') {
-                return '✓ ' . number_format((float) $value, 6, ',', '.') . ' m².';
-            }
-            if ($field === 'volumen') {
-                return '✓ ' . number_format((float) $value, 4, ',', '.') . ' cm³.';
-            }
-            if (is_numeric($value) && !$this->isLookupField($field)) {
-                return '✓ ' . $value . '.';
-            }
-        }
-        return '✓ Valor asignado.';
     }
 
     private function getDefaultForField(string $field, array $collectedData): mixed

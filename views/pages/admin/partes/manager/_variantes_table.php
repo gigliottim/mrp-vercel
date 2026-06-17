@@ -59,12 +59,9 @@
                             <button
                                 type="button"
                                 class="btn btn-outline-danger"
-                                @click="deleteVariante(variante.id, index)"
-                                :disabled="isVariantFormEnabled || variantes.length <= 1"
-                                :title="isVariantFormEnabled
-                                    ? 'Guarda o cancela el formulario variante antes de eliminar'
-                                    : (variantes.length <= 1 ? 'No se puede eliminar la ultima variante de una parte' : 'Eliminar')"
-                                title="Eliminar">
+                                @click="openDeleteVarianteModal(variante)"
+                                :disabled="isVariantFormEnabled"
+                                :title="isVariantFormEnabled ? 'Guarda o cancela el formulario variante antes de eliminar' : 'Eliminar'">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -73,4 +70,31 @@
             </template>
         </tbody>
     </table>
+</div>
+
+<!-- Modal Eliminar Variante -->
+<div class="modal fade" id="modalDeleteVarianteManager" tabindex="-1" aria-hidden="true"
+     x-data="{ show: false }"
+     @show.bs.modal="show = true"
+     @hidden.bs.modal="show = false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-danger">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Eliminar variante
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <p x-html="deleteVarianteMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" @click="confirmDeleteVariante()" :disabled="loading">
+                    <span x-show="!loading"><i class="fa-solid fa-trash me-1"></i> Eliminar</span>
+                    <span x-show="loading"><i class="fa-solid fa-spinner fa-spin me-1"></i> Eliminando...</span>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

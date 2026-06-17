@@ -25,6 +25,11 @@ function parteManager(initialData) {
     parte: initialData.parte || null,
     variantes: initialData.variantes || [],
 
+    // Modal eliminar variante
+    deleteVarianteTarget: null,
+    deleteVarianteIndex: null,
+    deleteVarianteMessage: '',
+
     // Formularios
     form: {
       id: null,
@@ -699,14 +704,24 @@ function parteManager(initialData) {
       this.isVariantFormEnabled = false;
     },
 
-    async deleteVariante(varianteId, index) {
-      if (this.variantes.length <= 1) {
-        alert('No se puede eliminar la ultima variante de una parte.');
-        return;
+    openDeleteVarianteModal(variante) {
+      this.deleteVarianteTarget = variante;
+      this.deleteVarianteIndex = this.variantes.findIndex(v => v.id === variante.id);
+      const isLast = this.variantes.length <= 1;
+      let msg = '¿Está seguro de que desea eliminar la variante <strong>' + variante.codigo_variante + '</strong>?';
+      if (isLast) {
+        msg += '<br><br><small class="text-muted">Es la única variante de la parte. Al eliminarla se eliminará también la parte completa.</small>';
       }
+      this.deleteVarianteMessage = msg;
+      const modalEl = document.getElementById('modalDeleteVarianteManager');
+      bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    },
 
-      const confirmed = confirm('¿Eliminar esta variante?');
-      if (!confirmed) return;
+    async confirmDeleteVariante() {
+      if (!this.deleteVarianteTarget) return;
+      const varianteId = this.deleteVarianteTarget.id;
+      const index = this.deleteVarianteIndex;
+      const isLast = this.variantes.length <= 1;
 
       this.loading = true;
 
@@ -715,6 +730,7 @@ function parteManager(initialData) {
         const formData = new URLSearchParams();
         formData.append('_method', 'DELETE');
         formData.append('context', 'manager');
+        formData.append('force_delete_parte', '1');
 
         const response = await fetch(url, {
           method: 'POST',
@@ -724,10 +740,16 @@ function parteManager(initialData) {
           body: formData
         });
 
-        if (response.redirected) {
-          window.location.href = response.url;
-        } else if (response.ok) {
-          this.variantes.splice(index, 1);
+        if (response.ok) {
+          const payload = await response.json();
+          const modalEl = document.getElementById('modalDeleteVarianteManager');
+          bootstrap.Modal.getInstance(modalEl)?.hide();
+
+          if (payload.deleted_parte) {
+            window.location.href = `${BASE}/productos/partes/manager`;
+          } else {
+            this.variantes.splice(index, 1);
+          }
         } else {
           let errorMessage = 'Error al eliminar la variante';
           try {
@@ -738,11 +760,11 @@ function parteManager(initialData) {
           } catch (e) {
             // Ignore JSON parse failures and keep default message.
           }
-          alert(errorMessage);
+          this.deleteVarianteMessage = '<i class="fa-solid fa-circle-exclamation text-danger me-2"></i>' + errorMessage;
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Error al eliminar: ' + error.message);
+        this.deleteVarianteMessage = '<i class="fa-solid fa-circle-exclamation text-danger me-2"></i>Error al eliminar: ' + error.message;
       } finally {
         this.loading = false;
       }

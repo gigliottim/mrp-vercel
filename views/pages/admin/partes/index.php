@@ -131,7 +131,7 @@ $buildUrl = static function (array $params) use ($search): string {
                                     <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>"
                                         class="btn btn-sm btn-outline-primary"
                                         title="Editar / Gestionar Parte">
-                                        <i class="fa-solid fa-pen"></i> Editar parte
+                                        <i class="fa-solid fa-pen"></i>
                                     </a>
                                 </div>
                             </div>
@@ -179,11 +179,28 @@ $buildUrl = static function (array $params) use ($search): string {
                                                             </span>
                                                         </td>
                                                         <td class="text-end pe-3">
-                                                            <a href="<?= url("productos/partes/manager/{$parte['id']}/variantes/{$variante['id']}") ?>"
-                                                                class="btn btn-sm btn-light border text-primary"
-                                                                title="Editar variante">
-                                                                <i class="fa-solid fa-pencil"></i>
-                                                            </a>
+                                                            <div class="btn-group btn-group-sm" role="group">
+                                                                <a href="<?= url("productos/partes/manager/{$parte['id']}/variantes/{$variante['id']}") ?>"
+                                                                    class="btn btn-outline-primary"
+                                                                    title="Editar variante">
+                                                                    <i class="fa-solid fa-pencil"></i>
+                                                                </a>
+                                                                <button type="button" class="btn btn-outline-danger" title="Eliminar variante"
+                                                                    onclick="confirmDeleteVariante(<?= $parte['id'] ?>, <?= $variante['id'] ?>, '<?= View::escape($variante['codigo_variante']) ?>')">
+                                                                    <i class="fa-solid fa-trash"></i>
+                                                                </button>
+                                                                <a href="<?= url('reportes/destino-partes?id_variante=' . $variante['id']) ?>"
+                                                                    class="btn btn-outline-secondary"
+                                                                    title="Destino de partes"
+                                                                    target="_blank">
+                                                                    <i class="fa-solid fa-layer-group"></i>
+                                                                </a>
+                                                                <a href="<?= url('productos/maestro?id_variante=' . $variante['id']) ?>"
+                                                                    class="btn btn-outline-primary"
+                                                                    title="Cargar como Maestro">
+                                                                    <i class="fa-solid fa-network-wired"></i>
+                                                                </a>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -237,3 +254,18 @@ $buildUrl = static function (array $params) use ($search): string {
 
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>" defer></script>
 <script src="<?= AssetHelper::js('partes-search.js') ?>" defer></script>
+<script>
+function confirmDeleteVariante(parteId, varianteId, codigo) {
+    if (!confirm('¿Eliminar la variante "' + codigo + '"? Esta acción no se puede deshacer.')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
+    const methodField = document.createElement('input');
+    methodField.type = 'hidden';
+    methodField.name = '_method';
+    methodField.value = 'DELETE';
+    form.appendChild(methodField);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>

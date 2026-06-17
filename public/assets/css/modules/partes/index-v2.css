@@ -42,45 +42,48 @@
     color: #fff;
     margin-bottom: 1.5rem;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .pv-hero::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 300px;
-    height: 300px;
+    top: -80px;
+    right: -40px;
+    width: 260px;
+    height: 260px;
     border-radius: 50%;
     background: rgba(255,255,255,.08);
+    pointer-events: none;
 }
 
 .pv-hero::after {
     content: '';
     position: absolute;
-    bottom: -40%;
-    left: 20%;
-    width: 200px;
-    height: 200px;
+    bottom: -60px;
+    left: 15%;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
     background: rgba(255,255,255,.05);
+    pointer-events: none;
+}
+
+.pv-hero-inner {
+    position: relative;
+    z-index: 1;
 }
 
 .pv-hero h1 {
     font-weight: 800;
     font-size: 1.75rem;
     margin-bottom: .25rem;
-    position: relative;
-    z-index: 1;
 }
 
 .pv-hero p {
     opacity: .85;
     font-size: .9rem;
     margin-bottom: 0;
-    position: relative;
-    z-index: 1;
 }
 
 .pv-hero .pv-hero-kicker {
@@ -366,11 +369,12 @@
 .pv-parte-body {
     max-height: 0;
     overflow: hidden;
-    transition: max-height .4s cubic-bezier(.4,0,.2,1);
+    transition: max-height .35s ease-out;
 }
 
 .pv-parte-card.open .pv-parte-body {
-    max-height: 2000px;
+    max-height: 3000px;
+    transition: max-height .5s ease-in;
 }
 
 .pv-parte-body-inner {
@@ -611,6 +615,10 @@
     text-align: center;
     color: var(--pv-text-light);
     font-size: .875rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
 }
 
 .pv-no-variants i {

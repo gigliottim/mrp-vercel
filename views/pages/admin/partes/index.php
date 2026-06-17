@@ -37,14 +37,10 @@ $buildUrl = static function (array $params) use ($search): string {
 };
 
 $totalActivas = 0;
-$totalSinVariantes = 0;
 $totalVariantes = 0;
 foreach ($partItems as $parte) {
     $variantes = $parte['variantes'] ?? [];
     $totalVariantes += count($variantes);
-    if (empty($variantes)) {
-        $totalSinVariantes++;
-    }
     foreach ($variantes as $v) {
         if (($v['estado'] ?? '') === 'activa') {
             $totalActivas++;
@@ -85,7 +81,7 @@ $estadoLabels = [
 <?php endif; ?>
 
 <div class="pv-hero">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3" style="position:relative;z-index:1;">
+    <div class="pv-hero-inner d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
             <p class="pv-hero-kicker">Productos</p>
             <h1>Partes y Variantes</h1>
@@ -122,10 +118,10 @@ $estadoLabels = [
     </div>
     <div class="pv-stat-card">
         <div class="pv-stat-icon" style="background:rgba(245,158,11,.1);color:#d97706;">
-            <i class="fa-solid fa-triangle-exclamation"></i>
+            <i class="fa-solid fa-file-lines"></i>
         </div>
-        <div class="pv-stat-value"><?= $totalSinVariantes ?></div>
-        <div class="pv-stat-label">Sin variantes</div>
+        <div class="pv-stat-value"><?= $showAll ? $totalParts : min($currentPerPage, max(0, $totalParts - (($currentPage - 1) * $currentPerPage))) ?></div>
+        <div class="pv-stat-label">En esta página</div>
     </div>
 </div>
 
@@ -207,9 +203,13 @@ $estadoLabels = [
                     <div class="pv-parte-body-inner">
                         <?php if (empty($variantes)): ?>
                             <div class="pv-no-variants">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                Esta parte no tiene variantes definidas.
-                                <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>" style="color:var(--pv-primary);font-weight:600;">Crear variante</a>
+                                <div style="display:flex;align-items:center;gap:.75rem;justify-content:center;">
+                                    <i class="fa-solid fa-circle-plus" style="font-size:1.25rem;color:var(--pv-primary);"></i>
+                                    <span>Esta parte aún no tiene variantes registradas.</span>
+                                </div>
+                                <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>" class="btn btn-sm btn-primary mt-2" style="border-radius:var(--pv-radius-sm);">
+                                    <i class="fa-solid fa-plus me-1"></i> Agregar variante
+                                </a>
                             </div>
                         <?php else: ?>
                             <div class="pv-variant-table-responsive">
@@ -219,12 +219,19 @@ $estadoLabels = [
                                             <th>Código Variante</th>
                                             <th>Detalle</th>
                                             <th>Estado</th>
+                                            <th>Stock</th>
+                                            <th>Peso</th>
                                             <th style="text-align:right;">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($variantes as $variante): ?>
                                             <?php $estadoClass = $estadoMap[$variante['estado']] ?? 'activa'; ?>
+                                            <?php
+                                            $stockValue = $variante['stock_actual'] ?? null;
+                                            $pesoValue = $variante['peso'] ?? null;
+                                            $pesoUm = $variante['id_um_peso'] ?? null;
+                                            ?>
                                             <tr>
                                                 <td><span class="pv-variant-code"><?= View::escape($variante['codigo_variante']) ?></span></td>
                                                 <td><?= View::escape($variante['detalle']) ?></td>
@@ -233,6 +240,23 @@ $estadoLabels = [
                                                         <span class="pv-estado-dot"></span>
                                                         <span class="pv-estado-label"><?= $estadoLabels[$variante['estado']] ?? ucfirst($variante['estado']) ?></span>
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    <?php if ($stockValue !== null && $stockValue !== ''): ?>
+                                                        <span class="pv-stock-value"><?= number_format((float) $stockValue, 0, ',', '.') ?></span>
+                                                    <?php else: ?>
+                                                        <span style="color:var(--pv-text-light);">—</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if ($pesoValue !== null && $pesoValue !== '' && (float) $pesoValue > 0): ?>
+                                                        <?= number_format((float) $pesoValue, 3, ',', '.') ?>
+                                                        <?php if ($pesoUm): ?>
+                                                            <small style="color:var(--pv-text-light);">kg</small>
+                                                        <?php endif; ?>
+                                                    <?php else: ?>
+                                                        <span style="color:var(--pv-text-light);">—</span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <div class="pv-variant-actions">

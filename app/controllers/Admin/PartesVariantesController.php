@@ -244,34 +244,13 @@ final class PartesVariantesController extends Controller
             ]);
         }
 
-        $redirectParteId = ($result['deleted_parte'] ?? false) ? '' : '&id_parte=' . $idParte;
-        $_SESSION['form_success'] = $result['message'];
-        return Response::redirect(url('/productos/partes' . ($redirectParteId !== '' ? '?tab=variantes' . $redirectParteId : '')));
-    }
-
-    public function canDeleteVariant(Request $request, $idParte, $id): Response
-    {
-        $idParte = (int) $idParte;
-        $id = (int) $id;
-
-        $variant = $this->variantes->find($id);
-        if ($variant === null || (int) ($variant['id_parte'] ?? 0) !== $idParte) {
-            return Response::json([
-                'status' => 'error',
-                'message' => 'La variante no existe para la parte indicada.',
-            ], 404);
+        if ($result['deleted_parte'] ?? false) {
+            $_SESSION['form_success'] = $result['message'];
+            return Response::redirect(url('/productos/partes'));
         }
 
-        $deletionService = new VarianteDeletionService();
-        $validation = $deletionService->canDelete($id, $idParte);
-
-        return Response::json([
-            'status' => 'ok',
-            'can_delete' => $validation['can_delete'],
-            'errors' => $validation['errors'],
-            'is_last_variant' => $validation['is_last_variant'],
-            'parte_codigo' => $validation['parte']['codigo'] ?? '',
-        ]);
+        $_SESSION['form_success'] = $result['message'];
+        return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
     }
 
     public function manager(Request $request): Response

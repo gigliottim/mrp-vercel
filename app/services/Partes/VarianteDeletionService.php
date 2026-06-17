@@ -4,28 +4,22 @@ declare(strict_types=1);
 
 namespace App\Services\Partes;
 
-use App\Models\Bom;
-use App\Models\Compra;
-use App\Models\MovimientoStock;
-use App\Models\Parte;
 use App\Models\Variante;
+use App\Models\Parte;
 use PDO;
 
 final class VarianteDeletionService
 {
     private Variante $variantes;
     private Parte $partes;
-    private Bom $bom;
     private PDO $connection;
 
     public function __construct(
         ?Variante $variantes = null,
-        ?Parte $partes = null,
-        ?Bom $bom = null
+        ?Parte $partes = null
     ) {
         $this->variantes = $variantes ?? new Variante();
         $this->partes = $partes ?? new Parte();
-        $this->bom = $bom ?? new Bom();
         $this->connection = $this->variantes->getConnection();
     }
 
@@ -88,7 +82,6 @@ final class VarianteDeletionService
             ];
         }
 
-        $this->deleteBomReferences($varianteId);
         $this->variantes->delete($varianteId);
 
         if ($isLastVariant && $forceDeleteParte && $parte !== null) {
@@ -150,14 +143,4 @@ final class VarianteDeletionService
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function deleteBomReferences(int $varianteId): void
-    {
-        $sql = "DELETE FROM bom_detalle WHERE variante_componente_id = :variante_id";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute(['variante_id' => $varianteId]);
-
-        $sql = "DELETE FROM bom_cabecera WHERE variante_padre_id = :variante_id";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute(['variante_id' => $varianteId]);
-    }
 }

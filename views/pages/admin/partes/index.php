@@ -278,57 +278,23 @@ $buildUrl = static function (array $params) use ($search): string {
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>" defer></script>
 <script src="<?= AssetHelper::js('partes-search.js') ?>" defer></script>
 <script>
-async function confirmDeleteVariante(parteId, varianteId, codigo) {
-    try {
-        const response = await fetch('<?= url('api/v1/variantes') ?>/' + parteId + '/' + varianteId + '/can-delete');
-        const data = await response.json();
-
-        if (!data.can_delete) {
-            const errorList = data.errors.map(e => '• ' + e).join('\n');
-            alert('No se puede eliminar la variante "' + codigo + '":\n\n' + errorList);
-            return;
-        }
-
-        if (data.is_last_variant) {
-            const confirmed = confirm(
-                'Esta es la única variante de la parte "' + data.parte_codigo + '".\n' +
-                'Al eliminarla se eliminará también la parte, ya que no puede existir una parte sin variantes.\n\n' +
-                '¿Desea continuar?'
-            );
-            if (!confirmed) return;
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
-            const methodField = document.createElement('input');
-            methodField.type = 'hidden';
-            methodField.name = '_method';
-            methodField.value = 'DELETE';
-            form.appendChild(methodField);
-            const forceField = document.createElement('input');
-            forceField.type = 'hidden';
-            forceField.name = 'force_delete_parte';
-            forceField.value = '1';
-            form.appendChild(forceField);
-            document.body.appendChild(form);
-            form.submit();
-        } else {
-            const confirmed = confirm('¿Eliminar la variante "' + codigo + '"? Esta acción no se puede deshacer.');
-            if (!confirmed) return;
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
-            const methodField = document.createElement('input');
-            methodField.type = 'hidden';
-            methodField.name = '_method';
-            methodField.value = 'DELETE';
-            form.appendChild(methodField);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    } catch (e) {
-        alert('Error al verificar la variante. Intente nuevamente.');
-    }
+function confirmDeleteVariante(parteId, varianteId, codigo) {
+    const confirmed = confirm('¿Eliminar la variante "' + codigo + '"?\n\nSi es la única variante de la parte, se eliminará también la parte completa.');
+    if (!confirmed) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
+    const methodField = document.createElement('input');
+    methodField.type = 'hidden';
+    methodField.name = '_method';
+    methodField.value = 'DELETE';
+    form.appendChild(methodField);
+    const forceField = document.createElement('input');
+    forceField.type = 'hidden';
+    forceField.name = 'force_delete_parte';
+    forceField.value = '1';
+    form.appendChild(forceField);
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>

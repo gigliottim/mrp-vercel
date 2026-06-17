@@ -6,7 +6,6 @@ use App\Controllers\Api\RevertController;
 use App\Controllers\Api\HealthController;
 use App\Controllers\Api\SearchController;
 use App\Controllers\Admin\DepositosValidacionesController;
-use App\Controllers\Admin\PartesVariantesController;
 
 /** @var \App\Core\Routing\Router $router */
 $router->get('/api/v1/health', [HealthController::class, '__invoke']);
@@ -31,9 +30,6 @@ $router->get('/api/v1/bom/variantes/{id}/nivel1', [SearchController::class, 'get
 // Depósitos - Validaciones de movimientos
 $router->get('/api/v1/depositos-validaciones/{origenId}/destinos', [DepositosValidacionesController::class, 'getDestinosPermitidos']);
 $router->post('/api/v1/depositos-validaciones/validar', [DepositosValidacionesController::class, 'validarMovimiento']);
-
-// Variantes - Validaciones de eliminación
-$router->get('/api/v1/variantes/{idParte}/{id}/can-delete', [PartesVariantesController::class, 'canDeleteVariant']);
 
 // Agente AI API endpoints
 use App\AgenteAI\Backend\Controllers\AgentController;

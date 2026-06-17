@@ -705,6 +705,64 @@ function parteManager(initialData) {
         return;
       }
 
+      try {
+        const checkUrl = `${BASE}/api/v1/variantes/${this.form.id}/${varianteId}/can-delete`;
+        const checkResponse = await fetch(checkUrl);
+        const checkData = await checkResponse.json();
+
+        if (!checkData.can_delete) {
+          const errorList = checkData.errors.map(e => '• ' + e).join('\n');
+          alert('No se puede eliminar la variante:\n\n' + errorList);
+          return;
+        }
+
+        if (checkData.is_last_variant) {
+          const confirmed = confirm(
+            'Esta es la única variante de la parte "' + checkData.parte_codigo + '".\n' +
+            'Al eliminarla se eliminará también la parte, ya que no puede existir una parte sin variantes.\n\n' +
+            '¿Desea continuar?'
+          );
+          if (!confirmed) return;
+
+          this.loading = true;
+          const url = `${BASE}/productos/partes/${this.form.id}/variantes/${varianteId}?context=manager`;
+          const formData = new URLSearchParams();
+          formData.append('_method', 'DELETE');
+          formData.append('context', 'manager');
+          formData.append('force_delete_parte', '1');
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+          });
+
+          if (response.redirected) {
+            window.location.href = response.url;
+          } else if (response.ok) {
+            window.location.href = `${BASE}/productos/partes/manager`;
+          } else {
+            let errorMessage = 'Error al eliminar la variante';
+            try {
+              const payload = await response.json();
+              if (payload && payload.message) {
+                errorMessage = payload.message;
+              }
+            } catch (e) {
+              // Ignore JSON parse failures and keep default message.
+            }
+            alert(errorMessage);
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking variant:', error);
+        alert('Error al verificar la variante. Intente nuevamente.');
+        return;
+      }
+
       if (!confirm('¿Eliminar esta variante?')) return;
 
       this.loading = true;

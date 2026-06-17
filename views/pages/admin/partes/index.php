@@ -3,6 +3,13 @@
 use App\Core\View\View;
 use App\Core\Support\AssetHelper;
 
+$formError = $_SESSION['form_error'] ?? null;
+$formSuccess = $_SESSION['form_success'] ?? null;
+$needsParteDeletion = $_SESSION['needs_parte_deletion'] ?? false;
+$deleteVarianteId = $_SESSION['delete_variante_id'] ?? null;
+$deleteParteId = $_SESSION['delete_parte_id'] ?? null;
+unset($_SESSION['form_error'], $_SESSION['form_success'], $_SESSION['needs_parte_deletion'], $_SESSION['delete_variante_id'], $_SESSION['delete_parte_id']);
+
 $parts = $parts ?? ['items' => [], 'total' => 0, 'page' => 1, 'per_page' => 15];
 $search = $search ?? '';
 $currentPerPage = (int) ($parts['per_page'] ?? 15);
@@ -49,6 +56,22 @@ $buildUrl = static function (array $params) use ($search): string {
         </ul>
     </div>
 </section>
+
+<?php if ($formError): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>
+        <?= View::escape($formError) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if ($formSuccess): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i>
+        <?= View::escape($formSuccess) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
 
 <!-- Barra de Búsqueda -->
 <div class="card mb-4 shadow-sm">
@@ -255,17 +278,57 @@ $buildUrl = static function (array $params) use ($search): string {
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>" defer></script>
 <script src="<?= AssetHelper::js('partes-search.js') ?>" defer></script>
 <script>
-function confirmDeleteVariante(parteId, varianteId, codigo) {
-    if (!confirm('¿Eliminar la variante "' + codigo + '"? Esta acción no se puede deshacer.')) return;
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
-    const methodField = document.createElement('input');
-    methodField.type = 'hidden';
-    methodField.name = '_method';
-    methodField.value = 'DELETE';
-    form.appendChild(methodField);
-    document.body.appendChild(form);
-    form.submit();
+async function confirmDeleteVariante(parteId, varianteId, codigo) {
+    try {
+        const response = await fetch('<?= url('api/v1/variantes') ?>/' + parteId + '/' + varianteId + '/can-delete');
+        const data = await response.json();
+
+        if (!data.can_delete) {
+            const errorList = data.errors.map(e => '• ' + e).join('\n');
+            alert('No se puede eliminar la variante "' + codigo + '":\n\n' + errorList);
+            return;
+        }
+
+        if (data.is_last_variant) {
+            const confirmed = confirm(
+                'Esta es la única variante de la parte "' + data.parte_codigo + '".\n' +
+                'Al eliminarla se eliminará también la parte, ya que no puede existir una parte sin variantes.\n\n' +
+                '¿Desea continuar?'
+            );
+            if (!confirmed) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+            const forceField = document.createElement('input');
+            forceField.type = 'hidden';
+            forceField.name = 'force_delete_parte';
+            forceField.value = '1';
+            form.appendChild(forceField);
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            const confirmed = confirm('¿Eliminar la variante "' + codigo + '"? Esta acción no se puede deshacer.');
+            if (!confirmed) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= url('productos/partes/') ?>' + parteId + '/variantes/' + varianteId;
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    } catch (e) {
+        alert('Error al verificar la variante. Intente nuevamente.');
+    }
 }
 </script>

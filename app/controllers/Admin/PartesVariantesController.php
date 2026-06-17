@@ -13,6 +13,7 @@ use App\Models\Parte;
 use App\Models\TipoParte;
 use App\Models\UnidadMedida;
 use App\Models\Variante;
+use App\Services\Partes\VarianteDeletionService;
 use Throwable;
 
 final class PartesVariantesController extends Controller
@@ -202,6 +203,7 @@ final class PartesVariantesController extends Controller
         $idParte = (int) $idParte;
         $id = (int) $id;
         $context = (string) $request->input('context', '');
+        $forceDeleteParte = $request->input('force_delete_parte') === '1';
 
         $variant = $this->variantes->find($id);
         if ($variant === null || (int) ($variant['id_parte'] ?? 0) !== $idParte) {
@@ -215,24 +217,61 @@ final class PartesVariantesController extends Controller
             return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
         }
 
-        if ($this->variantes->countByParteId($idParte) <= 1) {
+        $deletionService = new VarianteDeletionService();
+        $result = $deletionService->delete($id, $idParte, $forceDeleteParte);
+
+        if (!$result['success']) {
             if ($context === 'manager') {
+                $statusCode = isset($result['needs_parte_deletion']) ? 409 : 422;
                 return Response::json([
                     'status' => 'error',
-                    'message' => 'No se puede eliminar la ultima variante de una parte.',
-                ], 409);
+                    'message' => $result['message'],
+                    'needs_parte_deletion' => $result['needs_parte_deletion'] ?? false,
+                ], $statusCode);
             }
 
+            $_SESSION['form_error'] = $result['message'];
+            $_SESSION['needs_parte_deletion'] = $result['needs_parte_deletion'] ?? false;
+            $_SESSION['delete_variante_id'] = $id;
+            $_SESSION['delete_parte_id'] = $idParte;
             return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
         }
 
-        $this->variantes->delete($id);
-
         if ($context === 'manager') {
-            return Response::json(['status' => 'ok']);
+            return Response::json([
+                'status' => 'ok',
+                'deleted_parte' => $result['deleted_parte'] ?? false,
+            ]);
         }
 
-        return Response::redirect(url('/productos/partes?tab=variantes&id_parte=' . $idParte));
+        $redirectParteId = ($result['deleted_parte'] ?? false) ? '' : '&id_parte=' . $idParte;
+        $_SESSION['form_success'] = $result['message'];
+        return Response::redirect(url('/productos/partes' . ($redirectParteId !== '' ? '?tab=variantes' . $redirectParteId : '')));
+    }
+
+    public function canDeleteVariant(Request $request, $idParte, $id): Response
+    {
+        $idParte = (int) $idParte;
+        $id = (int) $id;
+
+        $variant = $this->variantes->find($id);
+        if ($variant === null || (int) ($variant['id_parte'] ?? 0) !== $idParte) {
+            return Response::json([
+                'status' => 'error',
+                'message' => 'La variante no existe para la parte indicada.',
+            ], 404);
+        }
+
+        $deletionService = new VarianteDeletionService();
+        $validation = $deletionService->canDelete($id, $idParte);
+
+        return Response::json([
+            'status' => 'ok',
+            'can_delete' => $validation['can_delete'],
+            'errors' => $validation['errors'],
+            'is_last_variant' => $validation['is_last_variant'],
+            'parte_codigo' => $validation['parte']['codigo'] ?? '',
+        ]);
     }
 
     public function manager(Request $request): Response

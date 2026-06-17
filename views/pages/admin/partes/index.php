@@ -35,55 +35,109 @@ $buildUrl = static function (array $params) use ($search): string {
     }
     return url('productos/partes?' . http_build_query($query));
 };
+
+$totalActivas = 0;
+$totalSinVariantes = 0;
+$totalVariantes = 0;
+foreach ($partItems as $parte) {
+    $variantes = $parte['variantes'] ?? [];
+    $totalVariantes += count($variantes);
+    if (empty($variantes)) {
+        $totalSinVariantes++;
+    }
+    foreach ($variantes as $v) {
+        if (($v['estado'] ?? '') === 'activa') {
+            $totalActivas++;
+        }
+    }
+}
+$porcentajeActivas = $totalVariantes > 0 ? round(($totalActivas / $totalVariantes) * 100) : 0;
+
+$estadoMap = [
+    'activa' => 'activa',
+    'desarrollo' => 'desarrollo',
+    'obsoleta' => 'obsoleta',
+    'descontinuada' => 'descontinuada',
+];
+$estadoLabels = [
+    'activa' => 'Activa',
+    'desarrollo' => 'En desarrollo',
+    'obsoleta' => 'Obsoleta',
+    'descontinuada' => 'Descontinuada',
+];
 ?>
-<section class="mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <p class="text-uppercase text-muted small mb-1">Productos</p>
-            <h1 class="h3 mb-0">Partes y variantes</h1>
-        </div>
-        <ul class="nav nav-pills d-flex gap-2">
-            <li class="nav-item">
-                <a class="btn btn-primary" href="<?= url('productos/partes/manager') ?>">
-                    <i class="fa-solid fa-plus me-1"></i> Nueva Parte / Variante
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="btn btn-outline-secondary" href="<?= url('productos/partes/importar') ?>">
-                    <i class="fa-solid fa-file-import me-1"></i> Importar
-                </a>
-            </li>
-        </ul>
-    </div>
-</section>
+<link rel="stylesheet" href="<?= AssetHelper::css('modules/partes/index-v2.css') ?>">
 
 <?php if ($formError): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fa-solid fa-circle-exclamation me-2"></i>
-        <?= View::escape($formError) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="pv-alert pv-alert-danger" role="alert">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span><?= View::escape($formError) ?></span>
+        <button type="button" class="btn-close ms-auto" style="font-size:.7rem;" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
 
 <?php if ($formSuccess): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fa-solid fa-circle-check me-2"></i>
-        <?= View::escape($formSuccess) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="pv-alert pv-alert-success" role="alert">
+        <i class="fa-solid fa-circle-check"></i>
+        <span><?= View::escape($formSuccess) ?></span>
+        <button type="button" class="btn-close ms-auto" style="font-size:.7rem;" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
 
-<!-- Barra de Búsqueda -->
-<div class="card mb-4 shadow-sm">
-    <div class="card-body">
-        <form method="get" action="<?= url('productos/partes') ?>" id="search-form-partes" data-clear-url="<?= $clearUrl ?>" class="row g-2 align-items-center">
-            <div class="col-sm-8 col-md-9">
-                <div class="input-group">
-                    <span class="input-group-text bg-light text-muted border-end-0">
-                        <i class="fa-solid fa-search"></i>
-                    </span>
+<div class="pv-hero">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3" style="position:relative;z-index:1;">
+        <div>
+            <p class="pv-hero-kicker">Productos</p>
+            <h1>Partes y Variantes</h1>
+            <p>Gestiona las partes del catálogo y sus variantes de producción</p>
+        </div>
+        <div class="pv-hero-actions d-flex gap-2 flex-wrap">
+            <a href="<?= url('productos/partes/importar') ?>" class="btn btn-light"><i class="fa-solid fa-file-import me-1"></i> Importar</a>
+            <a href="<?= url('productos/partes/manager') ?>" class="btn btn-white"><i class="fa-solid fa-plus me-1"></i> Nueva Parte</a>
+        </div>
+    </div>
+</div>
+
+<div class="pv-stats-row pv-fade-in">
+    <div class="pv-stat-card">
+        <div class="pv-stat-icon" style="background:rgba(79,70,229,.1);color:var(--pv-primary);">
+            <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        <div class="pv-stat-value"><?= number_format($totalParts) ?></div>
+        <div class="pv-stat-label">Total Partes</div>
+    </div>
+    <div class="pv-stat-card">
+        <div class="pv-stat-icon" style="background:rgba(6,182,212,.1);color:#0891b2;">
+            <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="pv-stat-value"><?= number_format($totalVariantes) ?></div>
+        <div class="pv-stat-label">Total Variantes</div>
+    </div>
+    <div class="pv-stat-card">
+        <div class="pv-stat-icon" style="background:rgba(34,197,94,.1);color:#16a34a;">
+            <i class="fa-solid fa-check-circle"></i>
+        </div>
+        <div class="pv-stat-value"><?= $porcentajeActivas ?>%</div>
+        <div class="pv-stat-label">Activas</div>
+    </div>
+    <div class="pv-stat-card">
+        <div class="pv-stat-icon" style="background:rgba(245,158,11,.1);color:#d97706;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="pv-stat-value"><?= $totalSinVariantes ?></div>
+        <div class="pv-stat-label">Sin variantes</div>
+    </div>
+</div>
+
+<div class="pv-search-card pv-fade-in">
+    <form method="get" action="<?= url('productos/partes') ?>" id="search-form-partes" data-clear-url="<?= $clearUrl ?>">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-8">
+                <p class="pv-section-label">Buscar parte o variante</p>
+                <div class="pv-search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text"
-                        class="form-control border-start-0 ps-0"
+                        class="pv-search-input"
                         id="search-input-partes"
                         name="q"
                         value="<?= View::escape($search) ?>"
@@ -92,202 +146,165 @@ $buildUrl = static function (array $params) use ($search): string {
                         autocomplete="off" />
                 </div>
             </div>
-            <div class="col-sm-4 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">Buscar</button>
-                <?php if ($search !== ''): ?>
-                    <button type="button" id="clear-search-partes" class="btn btn-outline-secondary" title="Limpiar búsqueda">
-                        <i class="fa-solid fa-xmark"></i>
+            <div class="col-lg-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1" style="border-radius:var(--pv-radius-sm);">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Buscar
                     </button>
-                <?php endif; ?>
+                    <?php if ($search !== ''): ?>
+                        <button type="button" id="clear-search-partes" class="btn btn-outline-secondary" title="Limpiar búsqueda" style="border-radius:var(--pv-radius-sm);">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    <?php endif; ?>
+                </div>
             </div>
-            <?php if ($currentPerPage > 0): ?>
-                <input type="hidden" name="per_page" value="<?= $currentPerPage ?>">
-            <?php endif; ?>
-        </form>
-    </div>
+        </div>
+        <?php if ($currentPerPage > 0): ?>
+            <input type="hidden" name="per_page" value="<?= $currentPerPage ?>">
+        <?php endif; ?>
+    </form>
 </div>
 
-<!-- Listado Acordeón -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body p-0">
-        <?php if (empty($partItems)): ?>
-            <div class="p-5 text-center text-muted">
-                <i class="fa-solid fa-inbox fs-1 mb-3 opacity-50"></i>
-                <p class="mb-0">No se encontraron partes<?= $search !== '' ? ' para su búsqueda' : '' ?>.</p>
-            </div>
-        <?php else: ?>
-            <div class="accordion accordion-flush" id="accordionPartesList">
-                <?php foreach ($partItems as $index => $parte): ?>
-                    <?php
-                    $variantes = $parte['variantes'] ?? [];
-                    $collapseId = 'collapse_parte_' . $parte['id'];
-                    $headingId = 'heading_parte_' . $parte['id'];
-                    ?>
-                    <div class="accordion-item border-bottom">
-                        <!-- HEADER: Datos de la Parte -->
-                        <h2 class="accordion-header" id="<?= $headingId ?>">
-                            <div class="d-flex align-items-center w-100 px-3 py-2 custom-accordion-hover">
-                                <button class="accordion-button collapsed flex-grow-1 p-2 bg-transparent shadow-none"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#<?= $collapseId ?>"
-                                    aria-expanded="false"
-                                    aria-controls="<?= $collapseId ?>">
-                                    <div class="d-flex flex-wrap w-100 justify-content-between align-items-center me-3">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <span class="fw-bold fs-5 text-dark"><?= View::escape($parte['codigo']) ?></span>
-                                            <span class="text-secondary border-start ps-3 fs-6"><?= View::escape($parte['detalle']) ?></span>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-3">
-                                            <?php if ($parte['grupo_nombre']): ?>
-                                                <span class="badge bg-light text-dark border"><i class="fa-solid fa-layer-group text-muted me-1"></i> <?= View::escape($parte['grupo_nombre']) ?></span>
-                                            <?php endif; ?>
-                                            <?php if ($parte['tipo_nombre']): ?>
-                                                <span class="badge bg-info text-dark bg-opacity-10 border border-info"><i class="fa-solid fa-tag text-info me-1"></i> <?= View::escape($parte['tipo_nombre']) ?></span>
-                                            <?php endif; ?>
-                                            <span class="badge bg-secondary rounded-pill"><?= count($variantes) ?> variante<?= count($variantes) !== 1 ? 's' : '' ?></span>
-                                        </div>
-                                    </div>
-                                </button>
-                                <!-- Acciones de la PARTE -->
-                                <div class="ms-2">
-                                    <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>"
-                                        class="btn btn-sm btn-outline-primary"
-                                        title="Editar / Gestionar Parte">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </h2>
-
-                        <!-- BODY: Tabla de Variante(s) -->
-                        <div id="<?= $collapseId ?>"
-                            class="accordion-collapse collapse bg-light"
-                            aria-labelledby="<?= $headingId ?>"
-                            data-bs-parent="#accordionPartesList">
-                            <div class="accordion-body p-3">
-                                <?php if (empty($variantes)): ?>
-                                    <div class="alert alert-warning mb-0 py-2">
-                                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Esta parte no tiene variantes definidas.
-                                        <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>" class="alert-link ms-2">Crear variante</a>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="table-responsive bg-white rounded border">
-                                        <table class="table table-hover table-sm align-middle mb-0">
-                                            <thead class="table-light text-secondary">
-                                                <tr>
-                                                    <th class="ps-3 py-2">Código Variante</th>
-                                                    <th>Detalle</th>
-                                                    <th>Estado</th>
-                                                    <th class="text-end pe-3">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($variantes as $variante) : ?>
-                                                    <?php
-                                                    $estadoColors = [
-                                                        'activa' => 'success',
-                                                        'desarrollo' => 'info',
-                                                        'obsoleta' => 'warning',
-                                                        'descontinuada' => 'danger'
-                                                    ];
-                                                    $color = $estadoColors[$variante['estado']] ?? 'secondary';
-                                                    ?>
-                                                    <tr>
-                                                        <td class="ps-3 py-2 fw-medium"><?= View::escape($variante['codigo_variante']) ?></td>
-                                                        <td><?= View::escape($variante['detalle']) ?></td>
-                                                        <td>
-                                                            <span class="badge bg-<?= $color ?> bg-opacity-10 text-<?= $color ?> border border-<?= $color ?>">
-                                                                <?= ucfirst($variante['estado']) ?>
-                                                            </span>
-                                                        </td>
-                                                        <td class="text-end pe-3">
-                                                            <div class="btn-group btn-group-sm" role="group">
-                                                                <a href="<?= url("productos/partes/manager/{$parte['id']}/variantes/{$variante['id']}") ?>"
-                                                                    class="btn btn-outline-primary"
-                                                                    title="Editar variante">
-                                                                    <i class="fa-solid fa-pencil"></i>
-                                                                </a>
-                                                                <button type="button" class="btn btn-outline-danger" title="Eliminar variante"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#modalDeleteVariante"
-                                                                    data-parte-id="<?= $parte['id'] ?>"
-                                                                    data-variante-id="<?= $variante['id'] ?>"
-                                                                    data-codigo="<?= View::escape($variante['codigo_variante']) ?>">
-                                                                    <i class="fa-solid fa-trash"></i>
-                                                                </button>
-                                                                <a href="<?= url('reportes/destino-partes?id_variante=' . $variante['id']) ?>"
-                                                                    class="btn btn-outline-secondary"
-                                                                    title="Destino de partes"
-                                                                    target="_blank">
-                                                                    <i class="fa-solid fa-layer-group"></i>
-                                                                </a>
-                                                                <a href="<?= url('productos/maestro?id_variante=' . $variante['id']) ?>"
-                                                                    class="btn btn-outline-primary"
-                                                                    title="Cargar como Maestro">
-                                                                    <i class="fa-solid fa-network-wired"></i>
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Paginación -->
-    <?php if (!$showAll && $totalPages > 1): ?>
-        <div class="card-footer bg-white pt-3 pb-2 border-top">
-            <nav aria-label="Navegación de partes">
-                <ul class="pagination pagination-sm justify-content-center mb-0">
-                    <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
-                        <a class="page-link" href="<?= $buildUrl(['page' => $prevPage, 'per_page' => $perPage]) ?>">
-                            <i class="fa-solid fa-chevron-left text-xs"></i> Prev
-                        </a>
-                    </li>
-                    <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                        <?php if ($p === 1 || $p === $totalPages || abs($currentPage - $p) <= 2): ?>
-                            <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
-                                <a class="page-link" href="<?= $buildUrl(['page' => $p, 'per_page' => $perPage]) ?>"><?= $p ?></a>
-                            </li>
-                        <?php elseif (abs($currentPage - $p) === 3): ?>
-                            <li class="page-item disabled"><span class="page-link px-2">...</span></li>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-                    <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
-                        <a class="page-link" href="<?= $buildUrl(['page' => $nextPage, 'per_page' => $perPage]) ?>">
-                            Next <i class="fa-solid fa-chevron-right text-xs"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+<div id="partesList" class="pv-fade-in">
+    <?php if (empty($partItems)): ?>
+        <div class="pv-empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <h3>Sin resultados</h3>
+            <p>No se encontraron partes<?= $search !== '' ? ' para su búsqueda' : '' ?>.</p>
         </div>
+    <?php else: ?>
+        <?php foreach ($partItems as $index => $parte): ?>
+            <?php
+            $variantes = $parte['variantes'] ?? [];
+            $cardId = 'parte_card_' . $parte['id'];
+            ?>
+            <div class="pv-parte-card" id="<?= $cardId ?>">
+                <div class="pv-parte-header" onclick="pvToggleCard('<?= $cardId ?>')">
+                    <div class="pv-parte-info">
+                        <span class="pv-parte-code"><?= View::escape($parte['codigo']) ?></span>
+                        <span class="pv-parte-detail"><?= View::escape($parte['detalle']) ?></span>
+                    </div>
+                    <div class="pv-parte-meta">
+                        <?php if ($parte['grupo_nombre']): ?>
+                            <span class="pv-badge pv-badge-group"><i class="fa-solid fa-layer-group" style="font-size:.65rem;"></i> <?= View::escape($parte['grupo_nombre']) ?></span>
+                        <?php endif; ?>
+                        <?php if ($parte['tipo_nombre']): ?>
+                            <span class="pv-badge pv-badge-type"><?= View::escape($parte['tipo_codigo'] ?? substr($parte['tipo_nombre'], 0, 2)) ?></span>
+                        <?php endif; ?>
+                        <span class="pv-badge pv-badge-variants"><i class="fa-solid fa-layer-group" style="font-size:.6rem;"></i> <?= count($variantes) ?> variante<?= count($variantes) !== 1 ? 's' : '' ?></span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>"
+                            class="pv-action-btn"
+                            title="Editar / Gestionar Parte"
+                            onclick="event.stopPropagation();">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                        <div class="pv-chevron"><i class="fa-solid fa-chevron-down"></i></div>
+                    </div>
+                </div>
+                <div class="pv-parte-body">
+                    <div class="pv-parte-body-inner">
+                        <?php if (empty($variantes)): ?>
+                            <div class="pv-no-variants">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                Esta parte no tiene variantes definidas.
+                                <a href="<?= url('productos/partes/manager/' . $parte['id']) ?>" style="color:var(--pv-primary);font-weight:600;">Crear variante</a>
+                            </div>
+                        <?php else: ?>
+                            <div class="pv-variant-table-responsive">
+                                <table class="pv-variant-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Código Variante</th>
+                                            <th>Detalle</th>
+                                            <th>Estado</th>
+                                            <th style="text-align:right;">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($variantes as $variante): ?>
+                                            <?php $estadoClass = $estadoMap[$variante['estado']] ?? 'activa'; ?>
+                                            <tr>
+                                                <td><span class="pv-variant-code"><?= View::escape($variante['codigo_variante']) ?></span></td>
+                                                <td><?= View::escape($variante['detalle']) ?></td>
+                                                <td>
+                                                    <span class="pv-estado-<?= $estadoClass ?>">
+                                                        <span class="pv-estado-dot"></span>
+                                                        <span class="pv-estado-label"><?= $estadoLabels[$variante['estado']] ?? ucfirst($variante['estado']) ?></span>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="pv-variant-actions">
+                                                        <a href="<?= url("productos/partes/manager/{$parte['id']}/variantes/{$variante['id']}") ?>"
+                                                            class="pv-action-btn" title="Editar variante">
+                                                            <i class="fa-solid fa-pen"></i>
+                                                        </a>
+                                                        <a href="<?= url('productos/maestro?id_variante=' . $variante['id']) ?>"
+                                                            class="pv-action-btn" title="Cargar como Maestro" target="_blank">
+                                                            <i class="fa-solid fa-network-wired"></i>
+                                                        </a>
+                                                        <a href="<?= url('reportes/destino-partes?id_variante=' . $variante['id']) ?>"
+                                                            class="pv-action-btn" title="Destino de partes" target="_blank">
+                                                            <i class="fa-solid fa-layer-group"></i>
+                                                        </a>
+                                                        <button type="button" class="pv-action-btn danger" title="Eliminar variante"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modalDeleteVariante"
+                                                            data-parte-id="<?= $parte['id'] ?>"
+                                                            data-variante-id="<?= $variante['id'] ?>"
+                                                            data-codigo="<?= View::escape($variante['codigo_variante']) ?>">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
     <?php endif; ?>
 </div>
 
+<?php if (!$showAll && $totalPages > 1): ?>
+    <nav class="pv-pagination" aria-label="Navegación de partes">
+        <a href="<?= $buildUrl(['page' => $prevPage, 'per_page' => $perPage]) ?>"
+           class="pv-pagination-btn <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+            <?php if ($p === 1 || $p === $totalPages || abs($currentPage - $p) <= 2): ?>
+                <a href="<?= $buildUrl(['page' => $p, 'per_page' => $perPage]) ?>"
+                   class="pv-pagination-btn <?= $p === $currentPage ? 'active' : '' ?>"><?= $p ?></a>
+            <?php elseif (abs($currentPage - $p) === 3): ?>
+                <span class="pv-pagination-btn" style="cursor:default;border-color:transparent;">...</span>
+            <?php endif; ?>
+        <?php endfor; ?>
+        <a href="<?= $buildUrl(['page' => $nextPage, 'per_page' => $perPage]) ?>"
+           class="pv-pagination-btn <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </nav>
+<?php endif; ?>
+
 <div class="modal fade" id="modalDeleteVariante" tabindex="-1" aria-labelledby="modalDeleteVarianteLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title text-danger" id="modalDeleteVarianteLabel">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Eliminar variante
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border-radius:var(--pv-radius);border:1px solid var(--pv-border);">
+            <div class="modal-body text-center py-4 px-3">
+                <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;font-size:1.35rem;"></i>
+                </div>
+                <h5 class="fw-bold mb-2" style="font-size:1rem;" id="modalDeleteVarianteLabel">Eliminar variante</h5>
+                <p id="deleteVarianteMessage" class="mb-0" style="font-size:.875rem;color:var(--pv-text-muted);"></p>
             </div>
-            <div class="modal-body pt-0">
-                <p id="deleteVarianteMessage" class="mb-0"></p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmDeleteVariante">
+            <div class="d-flex gap-2 px-3 pb-3 justify-content-center">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:var(--pv-radius-sm);">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-danger" id="btnConfirmDeleteVariante" style="border-radius:var(--pv-radius-sm);">
                     <i class="fa-solid fa-trash me-1"></i> Eliminar
                 </button>
             </div>
@@ -295,15 +312,16 @@ $buildUrl = static function (array $params) use ($search): string {
     </div>
 </div>
 
-<style>
-    .custom-accordion-hover:hover {
-        background-color: var(--bs-light) !important;
-    }
-</style>
-
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>" defer></script>
 <script src="<?= AssetHelper::js('partes-search.js') ?>" defer></script>
 <script>
+function pvToggleCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (card) {
+        card.classList.toggle('open');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const modalEl = document.getElementById('modalDeleteVariante');
     const msgEl = document.getElementById('deleteVarianteMessage');
@@ -316,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentParteId = trigger.dataset.parteId;
         currentVarianteId = trigger.dataset.varianteId;
         const codigo = trigger.dataset.codigo;
-        msgEl.innerHTML = '¿Está seguro de que desea eliminar la variante <strong>' + codigo + '</strong>?<br><br><small class="text-muted">Si es la única variante de la parte, se eliminará también la parte completa.</small>';
+        msgEl.innerHTML = '¿Está seguro de que desea eliminar la variante <strong>' + codigo + '</strong>?<br><br><small style="color:var(--pv-text-light);">Si es la única variante de la parte, se eliminará también la parte completa.</small>';
     });
 
     btnConfirm.addEventListener('click', () => {

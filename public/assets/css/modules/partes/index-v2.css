@@ -42,7 +42,7 @@
     color: #fff;
     margin-bottom: 1.5rem;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .pv-hero::before {

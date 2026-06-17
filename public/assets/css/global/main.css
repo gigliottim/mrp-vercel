@@ -202,6 +202,7 @@ html.sidebar-desktop-hidden .app-sidebar__nav .app-sidebar__nav {
     flex: 1;
     padding: 10px;
     overflow-y: auto;
+    overflow-x: hidden;
     /* Content scrolls independently */
 }
 

@@ -864,17 +864,19 @@ use App\Core\Support\AssetHelper;
 
         // Filtrar tabla
         function filtrarTabla() {
-            const origenId = selectOrigen.value;
+            const origenId = currentFilter.origenId || selectOrigen.value;
             const destinoId = selectDestino.value;
-            if (!movimientosRows.length) return;
-            if (!origenId && !destinoId) { movimientosRows.forEach(row => row.style.display = ''); return; }
+            if (!origenId && !destinoId) {
+                movimientosRows.forEach(row => { if (row.cells.length > 1) row.style.display = ''; });
+                return;
+            }
             movimientosRows.forEach(row => {
                 if (row.cells.length === 1) return;
                 const rowOrigenId = row.dataset.origenId;
                 const rowDestinoId = row.dataset.destinoId;
                 let mostrar = true;
-                if (origenId && rowOrigenId !== origenId) mostrar = false;
-                if (destinoId && rowDestinoId !== destinoId) mostrar = false;
+                if (origenId && rowOrigenId !== String(origenId)) mostrar = false;
+                if (destinoId && rowDestinoId !== String(destinoId)) mostrar = false;
                 row.style.display = mostrar ? '' : 'none';
             });
         }
@@ -1398,28 +1400,33 @@ use App\Core\Support\AssetHelper;
         }
 
         // Filter chips
+        let currentFilter = { origenId: null };
+
         function renderFilterChips() {
             const bar = document.getElementById('filtersBar');
             bar.innerHTML = '<span class="text-muted small fw-semibold me-1">Filtrar:</span>';
 
             const allChip = document.createElement('span');
-            allChip.className = 'mrp-filter-chip active';
+            allChip.className = 'mrp-filter-chip' + (currentFilter.origenId === null ? ' active' : '');
             allChip.innerHTML = '<i class="fa-solid fa-border-all"></i> Todos';
             allChip.addEventListener('click', () => {
-                movimientosRows.forEach(r => r.style.display = '');
+                currentFilter.origenId = null;
+                filtrarTabla();
                 renderFilterChips();
             });
             bar.appendChild(allChip);
 
             tiposDeposito.forEach(td => {
                 const chip = document.createElement('span');
-                chip.className = 'mrp-filter-chip';
+                chip.className = 'mrp-filter-chip' + (currentFilter.origenId == td.id ? ' active' : '');
                 chip.innerHTML = `<i class="fa-solid fa-box fa-xs"></i> ${td.codigo}`;
                 chip.addEventListener('click', () => {
-                    movimientosRows.forEach(row => {
-                        if (row.cells.length === 1) return;
-                        row.style.display = (row.dataset.origenId == td.id) ? '' : 'none';
-                    });
+                    if (currentFilter.origenId == td.id) {
+                        currentFilter.origenId = null;
+                    } else {
+                        currentFilter.origenId = td.id;
+                    }
+                    filtrarTabla();
                     renderFilterChips();
                 });
                 bar.appendChild(chip);

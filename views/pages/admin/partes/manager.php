@@ -52,10 +52,11 @@ $dimensionFields = [
                         <option value="<?= View::escape($tipo['codigo']) ?>"><?= View::escape($tipo['codigo']) ?> — <?= View::escape($tipo['nombre']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <div class="pm-search-wrap">
+                <div class="pm-search-wrap" style="position:relative">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" id="parte-search-input-v3" class="pm-search-input" placeholder="Buscar parte o variante por código o descripción..." autocomplete="off">
                     <button class="pm-search-clear" x-show="document.getElementById('parte-search-input-v3')?.value" @click="document.getElementById('parte-search-input-v3').value=''; document.getElementById('parte-search-results-v3').style.display='none';"><i class="fa-solid fa-xmark"></i></button>
+                    <div id="parte-search-results-v3"></div>
                 </div>
             </div>
         </template>
@@ -73,7 +74,6 @@ $dimensionFields = [
             </div>
         </template>
 
-        <div id="parte-search-results-v3" style="position:absolute;top:100%;left:0;right:0;z-index:1050;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none;"></div>
     </div>
 
     <div class="pm-shell">

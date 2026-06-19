@@ -261,7 +261,7 @@ final class SearchController extends Controller
 
             $items = array_map(static fn(array $b) => [
                 'id'                => (int) $b['id'],
-                'version'           => (int) $b['version'],
+                'version'           => $b['version'],
                 'activa'            => (bool) $b['activa'],
                 'parte_codigo'      => (string) ($b['parte_codigo'] ?? ''),
                 'variante_codigo'   => (string) ($b['variante_codigo'] ?? ''),

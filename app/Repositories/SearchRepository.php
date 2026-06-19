@@ -69,6 +69,11 @@ final class SearchRepository
             }
         }
 
+        // Filtrar solo variantes con BOM activa
+        if (!empty($filters['has_bom'])) {
+            $whereClauses[] = "EXISTS (SELECT 1 FROM bom_cabecera bc WHERE CAST(bc.variante_padre_id AS INTEGER) = v.id AND bc.activa = TRUE)";
+        }
+
         $whereClause = implode(' AND ', $whereClauses);
 
         $sql = "SELECT

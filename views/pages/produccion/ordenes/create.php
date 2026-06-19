@@ -48,14 +48,14 @@ use App\Core\Support\AssetHelper;
                             <div class="col-12">
                                 <label for="search-variante-input" class="form-label">
                                     <i class="fa-solid fa-magnifying-glass me-1"></i>
-                                    Producto / Variante *
+                                    Producto / Variante con BOM *
                                 </label>
                                 <div class="position-relative">
                                     <div class="input-group">
                                         <input type="text"
                                             class="form-control form-control-lg"
                                             id="search-variante-input"
-                                            placeholder="Escriba al menos 2 caracteres para buscar producto o variante..."
+                                            placeholder="Solo se muestran productos con BOM activa..."
                                             autocomplete="off">
                                         <button type="button" class="btn btn-outline-primary d-none" id="btn-cambiar-variante">
                                             <i class="fa-solid fa-rotate me-1"></i> Cambiar
@@ -65,10 +65,9 @@ use App\Core\Support\AssetHelper;
                                 </div>
                                 <small class="text-muted d-block mt-1">
                                     <i class="fa-solid fa-info-circle me-1"></i>
-                                    Los resultados incluyen productos y variantes. Seleccione uno para continuar.
+                                    Solo se listan productos que tienen una BOM definida. Seleccione uno para cargar sus BOMs.
                                 </small>
-                                <!-- Campo oculto para validación -->
-                                <input type="hidden" id="variante_id" name="variante_id" x-model="varianteId" @change="cargarBoms" required>
+                                <input type="hidden" id="variante_id" name="variante_id" x-model="varianteId" required>
                             </div>
 
                             <!-- BOM -->
@@ -78,7 +77,7 @@ use App\Core\Support\AssetHelper;
                                     x-model="bomId" :disabled="!varianteId" required>
                                     <option value="">Seleccione BOM...</option>
                                     <template x-for="bom in boms" :key="bom.id">
-                                        <option :value="bom.id" x-text="bom.parte_codigo + ' - ' + bom.variante_codigo + ' (v' + bom.version + ')' + (bom.activa ? '' : ' [Inactiva]')"></option>
+                                        <option :value="bom.id" x-text="bom.parte_detalle + ' (' + bom.variante_codigo + ') v' + bom.version + (bom.activa ? '' : ' [Inactiva]')"></option>
                                     </template>
                                 </select>
                             </div>
@@ -145,6 +144,17 @@ use App\Core\Support\AssetHelper;
             bomId: '',
             boms: [],
 
+            init() {
+                this.$watch('varianteId', (newVal) => {
+                    if (newVal) {
+                        this.cargarBoms();
+                    } else {
+                        this.boms = [];
+                        this.bomId = '';
+                    }
+                });
+            },
+
             async cargarBoms() {
                 if (!this.varianteId) {
                     this.boms = [];
@@ -156,6 +166,9 @@ use App\Core\Support\AssetHelper;
                     const response = await fetch(`/api/v1/bom/variantes/${this.varianteId}`);
                     const data = await response.json();
                     this.boms = data.boms ?? [];
+                    if (this.boms.length === 1) {
+                        this.bomId = this.boms[0].id;
+                    }
                 } catch (error) {
                     console.error('Error cargando BOMs:', error);
                     this.boms = [];
@@ -164,7 +177,6 @@ use App\Core\Support\AssetHelper;
         };
     }
 
-    // Cargar productos/variantes
     document.addEventListener('DOMContentLoaded', async function() {
         const searchInput = document.getElementById('search-variante-input');
         const searchResults = document.getElementById('search-variante-results');
@@ -188,6 +200,7 @@ use App\Core\Support\AssetHelper;
             debounceDelay: 300,
             maxResults: 20,
             format: 'detailed',
+            filters: { has_bom: true },
             onSelect: (item) => {
                 const selectedLabel = buildSearchSelectionLabel(item);
 
@@ -202,23 +215,16 @@ use App\Core\Support\AssetHelper;
                 inputVarianteHidden.value = item.id;
                 inputVarianteHidden.dispatchEvent(new Event('input', {
                     bubbles: true
-                })); // Para Alpine x-model
-                inputVarianteHidden.dispatchEvent(new Event('change', {
-                    bubbles: true
-                })); // Para invocar cargarBoms
+                }));
             },
             onError: (error) => {
                 console.error('[SearchClient Error]', error);
-                // Optional: Mostrar toast/notificación al usuario
             }
         });
 
         btnCambiar.addEventListener('click', () => {
             inputVarianteHidden.value = '';
             inputVarianteHidden.dispatchEvent(new Event('input', {
-                bubbles: true
-            })); // Para Alpine x-model
-            inputVarianteHidden.dispatchEvent(new Event('change', {
                 bubbles: true
             }));
 
@@ -235,7 +241,6 @@ use App\Core\Support\AssetHelper;
             }, 50);
         });
 
-        // Configuración inicial
         searchInput.disabled = false;
     });
 </script>

@@ -43,13 +43,14 @@ final class OrdenProduccion extends BaseTenantModel
         $stmt = $this->connection->prepare('
             SELECT
                 op.*,
-                v.codigo_variante,
+                v.codigo_variante as variante_codigo,
                 v.detalle as variante_nombre,
                 v.id_parte,
                 p.codigo as parte_codigo,
-                p.detalle as parte_detalle,
+                p.detalle as producto_nombre,
                 b.id as bom_id_ref,
                 b.version as bom_version,
+                COALESCE(p.detalle || \' (\' || v.codigo_variante || \')\', p.detalle) as bom_nombre,
                 u.username as usuario_nombre
             FROM ordenes_produccion op
             LEFT JOIN variantes v ON v.id = op.variante_id

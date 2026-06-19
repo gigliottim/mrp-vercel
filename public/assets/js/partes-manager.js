@@ -171,7 +171,7 @@ function parteManager(initialData) {
       this.variantes = [];
       this.mode = 'create';
       this.isEditing = false;
-      this.isPartFormReadOnly = false;
+      this.isPartFormReadOnly = true;
       this.isVariantFormEnabled = false;
       this.editingVariantId = null;
       this.editingVariant = null;

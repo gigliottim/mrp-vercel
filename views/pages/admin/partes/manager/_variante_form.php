@@ -35,7 +35,7 @@ $variantStates = [
             <button type="button" class="pm-btn pm-btn-primary" @click="enableNewVariante()" x-show="form.id&&!isVariantFormEnabled"><i class="fa-solid fa-plus"></i> Nueva</button>
             <a class="pm-btn pm-btn-warning" x-show="mode==='view'&&form.id&&variantForm&&variantForm.id&&!isVariantFormEnabled" :href="'<?= url('productos/partes/manager') ?>/' + form.id + '/variantes/' + variantForm.id + '/editar'"><i class="fa-solid fa-pen"></i> Editar</a>
             <button type="submit" class="pm-btn" :class="variantForm.id?'pm-btn-success':'pm-btn-primary'" :disabled="loading" x-show="isVariantFormEnabled"><i class="fa-solid fa-check"></i> <span x-text="variantForm.id?'Actualizar':'Agregar'"></span></button>
-            <button type="button" class="pm-btn pm-btn-outline" @click="cancelEditVariante()" x-show="isVariantFormEnabled"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" class="pm-btn pm-btn-danger" @click="cancelEditVariante()" x-show="isVariantFormEnabled"><i class="fa-solid fa-xmark"></i> Cancelar</button>
         </div>
     </div>
 </form>

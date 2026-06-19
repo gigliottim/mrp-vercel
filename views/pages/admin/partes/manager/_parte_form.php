@@ -38,7 +38,7 @@ use App\Core\View\View;
         <div class="ms-auto d-flex gap-1">
             <a class="pm-btn pm-btn-warning" x-show="isPartFormReadOnly && form.id" :href="'<?= url('productos/partes/manager') ?>/' + form.id + '/editar'"><i class="fa-solid fa-pen"></i> Editar</a>
             <button type="button" class="pm-btn pm-btn-primary" @click="resetForm()" x-show="mode==='view'||(mode==='create'&&isPartFormReadOnly)"><i class="fa-solid fa-plus"></i> Nueva</button>
-            <button type="button" class="pm-btn pm-btn-outline" @click="resetForm()" x-show="!isPartFormReadOnly&&isEditing"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" class="pm-btn pm-btn-danger" @click="resetForm()" x-show="mode==='create'&&!isPartFormReadOnly"><i class="fa-solid fa-xmark"></i> Cancelar</button>
             <button type="submit" class="pm-btn" :class="isEditing?'pm-btn-success':'pm-btn-primary'" :disabled="loading" x-show="!isPartFormReadOnly"><i class="fa-solid" :class="isEditing?'fa-save':'fa-plus'"></i> <span x-text="isEditing?'Actualizar':'Crear'"></span></button>
         </div>
     </div>

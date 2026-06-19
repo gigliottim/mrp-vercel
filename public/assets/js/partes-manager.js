@@ -171,7 +171,7 @@ function parteManager(initialData) {
       this.variantes = [];
       this.mode = 'create';
       this.isEditing = false;
-      this.isPartFormReadOnly = true;
+      this.isPartFormReadOnly = false;
       this.isVariantFormEnabled = false;
       this.editingVariantId = null;
       this.editingVariant = null;
@@ -191,6 +191,49 @@ function parteManager(initialData) {
 
       // No redirigir, mantener la página actual
       // Para evitar recargas innecesarias, simplemente actualizar el estado
+      const managerUrl = new URL(`${BASE}/productos/partes/manager`, window.location.origin);
+      if (window.location.pathname !== managerUrl.pathname) {
+        window.history.pushState({}, '', managerUrl.href);
+      }
+    },
+
+    cancelCreate() {
+      this.form = {
+        id: null,
+        codigo: '',
+        id_tipo: '',
+        id_grupo: '',
+        id_um_compra: '',
+        id_um_uso: '',
+        factor_conversion: null,
+        detalle: '',
+        largo_alto: null,
+        id_um_largo_alto: '',
+        ancho: null,
+        id_um_ancho: '',
+        espesor_profundidad: null,
+        id_um_espesor: '',
+        superficie: null,
+        id_um_superficie: '',
+        volumen: null,
+        id_um_volumen: '',
+        activo: true
+      };
+      this.parte = null;
+      this.variantes = [];
+      this.mode = 'create';
+      this.isEditing = false;
+      this.isPartFormReadOnly = true;
+      this.isVariantFormEnabled = false;
+      this.editingVariantId = null;
+      this.editingVariant = null;
+      this.resetVariantForm();
+
+      const searchInput = document.getElementById('parte-search-input');
+      if (searchInput) searchInput.value = '';
+      const searchResults = document.getElementById('parte-search-results');
+      if (searchResults) searchResults.style.display = 'none';
+
       const managerUrl = new URL(`${BASE}/productos/partes/manager`, window.location.origin);
       if (window.location.pathname !== managerUrl.pathname) {
         window.history.pushState({}, '', managerUrl.href);

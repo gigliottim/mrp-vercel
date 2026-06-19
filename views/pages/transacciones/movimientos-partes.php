@@ -172,17 +172,32 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 <input type="text" class="form-control" id="venta_no" name="venta_no" placeholder="N/A">
                             </div>
                             <div class="col-md-4">
-                                <label for="proveedor_cliente" class="form-label">Prov./Cliente</label>
-                                <select class="form-select" id="proveedor_cliente" name="proveedor_cliente">
-                                    <option value="">Seleccionar</option>
-                                    <?php if (isset($entidades)): ?>
-                                        <?php foreach ($entidades as $entidad): ?>
-                                    <option value="<?= View::escape($entidad['id']) ?>">
-                                        <?= View::escape($entidad['razon_social']) ?> (<?= View::escape($entidad['tipo']) ?>)
-                                    </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
+                                <label for="search-entidad-input" class="form-label">
+                                    <i class="fa-solid fa-building me-1"></i>Prov./Cliente
+                                </label>
+                                <div class="mrp-search-wrapper">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                                        <input type="text" class="form-control" id="search-entidad-input" placeholder="Buscar proveedor o cliente..." autocomplete="off">
+                                        <button type="button" class="btn btn-mrp btn-mrp-outline d-none" id="btn-cambiar-entidad">
+                                            <i class="fa-solid fa-rotate me-1"></i> Cambiar
+                                        </button>
+                                    </div>
+                                    <div class="mrp-search-results" id="search-entidad-results"></div>
+                                </div>
+                                <input type="hidden" id="proveedor_cliente" name="proveedor_cliente" value="">
+                                <small class="text-muted d-block mt-1" id="entidadInfo">
+                                    <i class="fa-solid fa-info-circle me-1"></i>Ingrese al menos 1 caracter para buscar.
+                                </small>
+                                <div class="d-none mt-1 p-2 bg-light rounded-3" id="entidadSelectedDetail">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-check-circle text-success"></i>
+                                        <div>
+                                            <strong id="entidadSelectedNombre" class="text-primary"></strong>
+                                            <span id="entidadSelectedTipo" class="badge bg-secondary ms-1" style="font-size:.65rem"></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -217,19 +232,20 @@ $unidadesMedida = $unidadesMedida ?? [];
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label for="proveedor_compra" class="form-label">Proveedor *</label>
-                                <select class="form-select" id="proveedor_compra" name="proveedor_cliente">
-                                    <option value="">Seleccionar proveedor</option>
-                                    <?php if (isset($entidades)): ?>
-                                        <?php foreach ($entidades as $entidad): ?>
-                                            <?php if (($entidad['tipo'] ?? '') === 'PROVEEDOR'): ?>
-                                    <option value="<?= View::escape($entidad['id']) ?>">
-                                        <?= View::escape($entidad['razon_social']) ?>
-                                    </option>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
+                                <label for="search-entidad-compra-input" class="form-label">
+                                    <i class="fa-solid fa-building me-1"></i>Proveedor *
+                                </label>
+                                <div class="mrp-search-wrapper">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                                        <input type="text" class="form-control" id="search-entidad-compra-input" placeholder="Buscar proveedor..." autocomplete="off">
+                                        <button type="button" class="btn btn-mrp btn-mrp-outline d-none" id="btn-cambiar-entidad-compra">
+                                            <i class="fa-solid fa-rotate me-1"></i> Cambiar
+                                        </button>
+                                    </div>
+                                    <div class="mrp-search-results" id="search-entidad-compra-results"></div>
+                                </div>
+                                <input type="hidden" id="proveedor_compra" value="">
                             </div>
                             <div class="col-md-3">
                                 <label for="moneda" class="form-label">Moneda</label>
@@ -649,6 +665,7 @@ use App\Core\Support\AssetHelper;
         const tiposDeposito = <?= json_encode($tiposDeposito) ?>;
         const destinosPorOrigen = <?= json_encode($destinosPorOrigen) ?>;
         const unidadesMedida = <?= json_encode($unidadesMedida) ?>;
+        const entidades = <?= json_encode($entidades ?? []) ?>;
 
         // Elementos del DOM
         const selectOrigen = document.getElementById('deposito_origen');
@@ -670,6 +687,18 @@ use App\Core\Support\AssetHelper;
         const searchResults = document.getElementById('search-parte-results');
         const flowVisual = document.getElementById('flowVisual');
         const parteSelectedDetail = document.getElementById('parteSelectedDetail');
+
+        // Elementos de b&uacute;squeda de Entidad
+        const searchEntidadInput = document.getElementById('search-entidad-input');
+        const searchEntidadResults = document.getElementById('search-entidad-results');
+        const btnCambiarEntidad = document.getElementById('btn-cambiar-entidad');
+        const entidadSelectedDetail = document.getElementById('entidadSelectedDetail');
+        const searchEntidadCompraInput = document.getElementById('search-entidad-compra-input');
+        const searchEntidadCompraResults = document.getElementById('search-entidad-compra-results');
+        const btnCambiarEntidadCompra = document.getElementById('btn-cambiar-entidad-compra');
+
+        let entidadSeleccionada = null;
+        let entidadCompraSeleccionada = null;
 
         // Elementos de Compra
         const fieldsCompra = document.querySelectorAll('.field-compra');
@@ -1012,6 +1041,129 @@ use App\Core\Support\AssetHelper;
             });
         }
 
+        // ========== Entidad Search (Prov./Cliente) ==========
+        function setupEntidadSearch(inputEl, resultsEl, changeBtnEl, filterTipo, hiddenFieldId, onSelectCallback) {
+            if (!inputEl || !resultsEl) return { setValue: function(){}, clearValue: function(){} };
+            let debounceTimer = null;
+
+            function searchEntidades(query, soloProveedores) {
+                const q = query.toLowerCase();
+                return entidades.filter(e => {
+                    const matchTipo = soloProveedores ? (e.tipo === 'PROVEEDOR') : true;
+                    const matchText = e.razon_social.toLowerCase().includes(q) || (e.tipo || '').toLowerCase().includes(q);
+                    return matchTipo && matchText;
+                });
+            }
+
+            function renderEntidadResults(results) {
+                resultsEl.innerHTML = '';
+                if (!results.length) {
+                    resultsEl.innerHTML = '<div style="text-align:center;padding:1rem .5rem;color:#94a3b8;font-size:.82rem;"><i class="fa-solid fa-building" style="font-size:1.2rem;opacity:.4;display:block;margin-bottom:.3rem;"></i>No se encontraron resultados</div>';
+                    resultsEl.classList.add('show');
+                    return;
+                }
+                results.forEach(entidad => {
+                    const tipoColor = entidad.tipo === 'PROVEEDOR' ? '#059669' : '#d97706';
+                    const tipoBg = entidad.tipo === 'PROVEEDOR' ? '#ecfdf5' : '#fffbeb';
+                    const el = document.createElement('div');
+                    el.className = 'mrp-search-item';
+                    el.innerHTML = `
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;align-items:center;gap:.4rem">
+                                <span style="background:${tipoBg};color:${tipoColor};padding:.1em .5em;border-radius:9999px;font-size:.65rem;font-weight:700">${escapeHtml(entidad.tipo || 'N/A')}</span>
+                                <strong style="font-size:.85rem">${escapeHtml(entidad.razon_social)}</strong>
+                            </div>
+                        </div>`;
+                    el.addEventListener('click', () => selectEntidadItem(entidad));
+                    resultsEl.appendChild(el);
+                });
+                resultsEl.classList.add('show');
+            }
+
+            function selectEntidadItem(entidad) {
+                if (onSelectCallback) onSelectCallback(entidad);
+                inputEl.value = entidad.razon_social;
+                document.getElementById(hiddenFieldId).value = entidad.id;
+                inputEl.classList.add('is-locked');
+                inputEl.readOnly = true;
+                resultsEl.classList.remove('show');
+                if (changeBtnEl) changeBtnEl.classList.remove('d-none');
+
+                const detail = document.getElementById('entidadSelectedDetail');
+                if (detail && hiddenFieldId === 'proveedor_cliente') {
+                    document.getElementById('entidadSelectedNombre').textContent = entidad.razon_social;
+                    document.getElementById('entidadSelectedTipo').textContent = entidad.tipo;
+                    detail.classList.remove('d-none');
+                }
+            }
+
+            inputEl.addEventListener('input', function() {
+                const query = this.value.trim();
+                clearTimeout(debounceTimer);
+                if (query.length < 1) { resultsEl.classList.remove('show'); return; }
+                debounceTimer = setTimeout(() => {
+                    const results = searchEntidades(query, filterTipo === 'PROVEEDOR');
+                    renderEntidadResults(results);
+                }, 200);
+            });
+
+            inputEl.addEventListener('focus', function() {
+                if (inputEl.readOnly) return;
+                const query = this.value.trim();
+                if (query.length >= 1 && !inputEl.classList.contains('is-locked')) {
+                    const results = searchEntidades(query, filterTipo === 'PROVEEDOR');
+                    if (results.length) renderEntidadResults(results);
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!inputEl.contains(e.target) && !resultsEl.contains(e.target)) {
+                    resultsEl.classList.remove('show');
+                }
+            });
+
+            if (changeBtnEl) {
+                changeBtnEl.addEventListener('click', function() {
+                    document.getElementById(hiddenFieldId).value = '';
+                    inputEl.value = '';
+                    inputEl.readOnly = false;
+                    inputEl.classList.remove('is-locked');
+                    changeBtnEl.classList.add('d-none');
+                    const detail = document.getElementById('entidadSelectedDetail');
+                    if (detail && hiddenFieldId === 'proveedor_cliente') detail.classList.add('d-none');
+                    inputEl.focus();
+                });
+            }
+
+            return {
+                setValue: function(entidadId) {
+                    const entidad = entidades.find(e => e.id == entidadId);
+                    if (entidad) selectEntidadItem(entidad);
+                },
+                clearValue: function() {
+                    document.getElementById(hiddenFieldId).value = '';
+                    inputEl.value = '';
+                    inputEl.readOnly = false;
+                    inputEl.classList.remove('is-locked');
+                    if (changeBtnEl) changeBtnEl.classList.add('d-none');
+                    const detail = document.getElementById('entidadSelectedDetail');
+                    if (detail && hiddenFieldId === 'proveedor_cliente') detail.classList.add('d-none');
+                }
+            };
+        }
+
+        const entidadStdSearch = setupEntidadSearch(
+            searchEntidadInput, searchEntidadResults, btnCambiarEntidad,
+            null, 'proveedor_cliente',
+            function(entidad) { entidadSeleccionada = entidad; }
+        );
+
+        const entidadCompraSearch = setupEntidadSearch(
+            searchEntidadCompraInput, searchEntidadCompraResults, btnCambiarEntidadCompra,
+            'PROVEEDOR', 'proveedor_compra',
+            function(entidad) { entidadCompraSeleccionada = entidad; }
+        );
+
         // Origen change
         selectOrigen.addEventListener('change', function() {
             const origenId = parseInt(this.value);
@@ -1119,10 +1271,11 @@ use App\Core\Support\AssetHelper;
 
                 const entidadId = button.dataset.idEntidad || '';
                 if (entidadId) {
-                    const entidadSelect = document.getElementById('proveedor_cliente');
-                    if (entidadSelect) entidadSelect.value = entidadId;
-                    const provSelect = document.getElementById('proveedor_compra');
-                    if (provSelect) provSelect.value = entidadId;
+                    if (esCompra()) {
+                        entidadCompraSearch.setValue(entidadId);
+                    } else {
+                        entidadStdSearch.setValue(entidadId);
+                    }
                 }
 
                 const cbteInput = document.getElementById('cbte_compra');
@@ -1160,6 +1313,9 @@ use App\Core\Support\AssetHelper;
                 flowVisual.classList.add('d-none');
                 fieldsCompra.forEach(f => f.classList.add('d-none'));
                 fieldsStd.forEach(f => f.classList.remove('d-none'));
+                // Clear entidad searches
+                if (entidadStdSearch) entidadStdSearch.clearValue();
+                if (entidadCompraSearch) entidadCompraSearch.clearValue();
             });
         });
 
@@ -1311,6 +1467,12 @@ use App\Core\Support\AssetHelper;
 
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
+
+            // Set proveedor_cliente from the appropriate search field
+            if (esCompra()) {
+                data.proveedor_cliente = document.getElementById('proveedor_compra').value || '';
+            }
+            // else: proveedor_cliente already comes from the hidden field in the std section
 
             if (!data.deposito_origen || !data.deposito_destino || !data.cantidad || parseFloat(data.cantidad) <= 0) {
                 showToast('Por favor complete todos los campos requeridos correctamente.', 'error');

@@ -28,6 +28,27 @@ final class Bom extends BaseTenantModel
         return $bom === false ? null : $bom;
     }
 
+    public function getAllByVariante(int $varianteId): array
+    {
+        $sql = "SELECT b.id,
+                       b.version,
+                       b.activa,
+                       b.fecha_efectiva,
+                       p.codigo AS parte_codigo,
+                       v.codigo_variante AS variante_codigo,
+                       v.detalle AS variante_detalle,
+                       p.detalle AS parte_detalle
+                FROM bom_cabecera b
+                INNER JOIN variantes v ON CAST(b.variante_padre_id AS INTEGER) = v.id
+                INNER JOIN partes p ON v.id_parte = p.id
+                WHERE b.variante_padre_id = :variante_id
+                ORDER BY b.activa DESC, b.version DESC";
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute(['variante_id' => $varianteId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getAllActive(): array
     {
         $sql = "SELECT b.*,

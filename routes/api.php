@@ -25,6 +25,7 @@ $router->post('/api/v1/search/tipos-partes', [SearchController::class, 'searchTi
 $router->post('/api/v1/search/centros-trabajo', [SearchController::class, 'searchCentrosTrabajo']);
 
 // BOM API endpoints
+$router->get('/api/v1/bom/variantes/{id}', [SearchController::class, 'getBomsByVariante']);
 $router->get('/api/v1/bom/variantes/{id}/nivel1', [SearchController::class, 'getBomNivel1']);
 
 // Depósitos - Validaciones de movimientos

@@ -78,7 +78,7 @@ use App\Core\Support\AssetHelper;
                                     x-model="bomId" :disabled="!varianteId" required>
                                     <option value="">Seleccione BOM...</option>
                                     <template x-for="bom in boms" :key="bom.id">
-                                        <option :value="bom.id" x-text="bom.nombre + ' (v' + bom.version + ')'"></option>
+                                        <option :value="bom.id" x-text="bom.parte_codigo + ' - ' + bom.variante_codigo + ' (v' + bom.version + ')' + (bom.activa ? '' : ' [Inactiva]')"></option>
                                     </template>
                                 </select>
                             </div>
@@ -153,10 +153,12 @@ use App\Core\Support\AssetHelper;
                 }
 
                 try {
-                    const response = await fetch(`/api/variantes/${this.varianteId}/boms`);
-                    this.boms = await response.json();
+                    const response = await fetch(`/api/v1/bom/variantes/${this.varianteId}`);
+                    const data = await response.json();
+                    this.boms = data.boms ?? [];
                 } catch (error) {
                     console.error('Error cargando BOMs:', error);
+                    this.boms = [];
                 }
             }
         };

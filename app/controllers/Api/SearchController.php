@@ -250,6 +250,32 @@ final class SearchController extends Controller
     }
 
     /**
+     * GET /api/v1/bom/variantes/{id}
+     * Devuelve las BOMs disponibles para una variante (para seleccionar en órdenes).
+     */
+    public function getBomsByVariante(Request $request, int $id): Response
+    {
+        try {
+            $bom = new \App\Models\Bom($this->tenantConnection);
+            $boms = $bom->getAllByVariante($id);
+
+            $items = array_map(static fn(array $b) => [
+                'id'                => (int) $b['id'],
+                'version'           => (int) $b['version'],
+                'activa'            => (bool) $b['activa'],
+                'parte_codigo'      => (string) ($b['parte_codigo'] ?? ''),
+                'variante_codigo'   => (string) ($b['variante_codigo'] ?? ''),
+                'variante_detalle'  => (string) ($b['variante_detalle'] ?? ''),
+                'parte_detalle'     => (string) ($b['parte_detalle'] ?? ''),
+            ], $boms);
+
+            return $this->json(['success' => true, 'boms' => $items]);
+        } catch (\Throwable $e) {
+            return $this->json(['success' => false, 'message' => $e->getMessage(), 'boms' => []], 500);
+        }
+    }
+
+    /**
      * GET /api/v1/bom/variantes/:id/nivel1
      * Devuelve los componentes directos (nivel 1) de la BOM activa de una variante.
      */

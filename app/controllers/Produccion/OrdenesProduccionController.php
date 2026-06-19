@@ -40,8 +40,8 @@ final class OrdenesProduccionController extends Controller
         $term = $request->query['search'] ?? '';
         $estado = $request->query['estado'] ?? null;
         $prioridad = $request->query['prioridad'] ?? null;
-        $fechaDesde = $request->query['fecha_desde'] ?? null;
-        $fechaHasta = $request->query['fecha_hasta'] ?? null;
+        $fechaDesde = !empty($request->query['fecha_desde']) ? $request->query['fecha_desde'] : null;
+        $fechaHasta = !empty($request->query['fecha_hasta']) ? $request->query['fecha_hasta'] : null;
 
         $ordenes = $this->service->search($term, $estado, $prioridad, $fechaDesde, $fechaHasta);
         $dashboard = $this->service->getDashboard();

@@ -7,8 +7,6 @@
 use App\Core\Support\AssetHelper;
 
 ?>
-<link rel="stylesheet" href="<?= AssetHelper::css('modules/SearchClient.css') ?>">
-
 <?php if (isset($_SESSION['flash_error'])): ?>
     <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
         <?= esc($_SESSION['flash_error']) ?>

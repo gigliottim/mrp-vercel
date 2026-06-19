@@ -114,12 +114,12 @@ final class OrdenProduccion extends BaseTenantModel
             $params['prioridad'] = $prioridad;
         }
 
-        if ($fechaDesde !== null) {
+        if ($fechaDesde !== null && $fechaDesde !== '') {
             $sql .= ' AND op.fecha_inicio_programada >= :fecha_desde';
             $params['fecha_desde'] = $fechaDesde;
         }
 
-        if ($fechaHasta !== null) {
+        if ($fechaHasta !== null && $fechaHasta !== '') {
             $sql .= ' AND op.fecha_fin_programada <= :fecha_hasta';
             $params['fecha_hasta'] = $fechaHasta;
         }

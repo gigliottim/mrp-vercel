@@ -4,166 +4,38 @@ use App\Core\View\View;
 
 $variantStates = [
     'activa' => 'Activa',
-    'desarrollo' => 'En desarrollo',
+    'desarrollo' => 'Desarrollo',
     'obsoleta' => 'Obsoleta',
     'descontinuada' => 'Descontinuada',
 ];
 ?>
-<form @submit.prevent="saveVariante()" class="vstack gap-2">
+<form @submit.prevent="saveVariante()">
     <fieldset :disabled="!isVariantFormEnabled">
-        <div class="row g-2 align-items-end">
-            <!-- Fila 1: Datos Básicos -->
-            <div class="col-sm-4 col-xl-3">
-                <label class="form-label small fw-semibold mb-0">Código <span class="text-danger">*</span></label>
-                <input
-                    type="text"
-                    class="form-control form-control-sm"
-                    x-ref="variantCodigo"
-                    x-model="variantForm.codigo_variante"
-                    placeholder=""
-                    required
-                    style="text-transform: uppercase">
-            </div>
-            <div class="col-sm-8 col-xl-9">
-                <label class="form-label small fw-semibold mb-0">Detalle <span class="text-danger">*</span></label>
-                <textarea
-                    class="form-control form-control-sm pm-variant-detail"
-                    x-ref="variantDetalle"
-                    x-model="variantForm.detalle"
-                    rows="1"
-                    @input="adjustVariantDetalleHeight()"
-                    required></textarea>
-            </div>
-
-            <!-- Fila 2: Gestión de Inventario (compacto 2x3 o 3x2) -->
-            <div class="col-sm-6 col-xl-3">
-                <label class="form-label small fw-semibold mb-0">Status</label>
-                <select class="form-select form-select-sm" x-model="variantForm.estado">
-                    <?php foreach ($variantStates as $key => $label) : ?>
-                        <option value="<?= $key ?>"><?= $label ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <label class="form-label small fw-semibold mb-0 text-truncate">Lote Mín.</label>
-                <div class="input-group input-group-sm">
-                    <input
-                        type="number"
-                        class="form-control"
-                        x-model.number="variantForm.lote_minimo"
-                        @blur="normalizeNumberInputValue($event, 'variantForm.lote_minimo')"
-                        :step="numberInputStep"
-                        min="0">
-                    <span class="input-group-text px-2" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <label class="form-label small fw-semibold mb-0 text-truncate">Pedir al</label>
-                <div class="input-group input-group-sm">
-                    <input
-                        type="number"
-                        class="form-control"
-                        x-model.number="variantForm.punto_pedido"
-                        @blur="normalizeNumberInputValue($event, 'variantForm.punto_pedido')"
-                        :step="numberInputStep"
-                        min="0">
-                    <span class="input-group-text px-2" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
-                </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-                <label class="form-label small fw-semibold mb-0">Stock (Calc)</label>
-                <div class="input-group input-group-sm">
-                    <input
-                        type="text"
-                        class="form-control bg-light"
-                        :value="formatNumberForInput(variantForm.stock_actual)"
-                        readonly
-                        disabled>
-                    <span class="input-group-text px-2 bg-light" x-text="getUmUsoSimbolo()" style="font-size: 0.8rem; min-width: 40px; justify-content: center;"></span>
-                </div>
-            </div>
-
-            <!-- Fila 3 y 4: Peso y Ubicación -->
-            <div class="col-sm-6 col-xl-4">
-                <label class="form-label small fw-semibold mb-0">Peso Unit.</label>
-                <div class="input-group input-group-sm">
-                    <input
-                        type="number"
-                        class="form-control px-2"
-                        x-model.number="variantForm.peso"
-                        @blur="normalizeNumberInputValue($event, 'variantForm.peso')"
-                        :step="numberInputStep"
-                        placeholder="0.000">
-                    <select class="form-select px-1" x-model="variantForm.id_um_peso" style="max-width: 65px;">
-                        <option value="">UM</option>
-                        <?php foreach ($unidadesMasa as $unidad) : ?>
-                            <option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-8">
-                <label class="form-label small fw-semibold mb-0">Ubicación Física</label>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text px-2" style="font-size: 0.8rem;">Cuerpo</span>
-                    <input type="text" class="form-control px-2" x-model="variantForm.ubicacion_cuerpo" placeholder="Ej: A">
-
-                    <span class="input-group-text px-2 border-start-0" style="font-size: 0.8rem;">Pasillo</span>
-                    <input type="text" class="form-control px-2" x-model="variantForm.ubicacion_pasillo" placeholder="Ej: 01">
-
-                    <span class="input-group-text px-2 border-start-0" style="font-size: 0.8rem;">Estante</span>
-                    <input type="text" class="form-control px-2" x-model="variantForm.ubicacion_estante" placeholder="Ej: 3">
-                </div>
-            </div>
+        <div class="pm-dlbl"><i class="fa-solid fa-hashtag"></i> Datos Básicos</div>
+        <div class="row g-2">
+            <div class="col-3"><div class="pm-fg"><label>Código <span class="req">*</span></label><input type="text" class="form-control" x-ref="variantCodigo" x-model="variantForm.codigo_variante" placeholder="V01" required style="text-transform:uppercase"></div></div>
+            <div class="col-9"><div class="pm-fg"><label>Detalle <span class="req">*</span></label><textarea class="form-control" x-ref="variantDetalle" x-model="variantForm.detalle" rows="1" @input="adjustVariantDetalleHeight()" required></textarea></div></div>
+        </div>
+        <div class="pm-dlbl"><i class="fa-solid fa-boxes-stacked"></i> Inventario</div>
+        <div class="row g-2">
+            <div class="col-3"><div class="pm-fg"><label>Estado</label><select class="form-select" x-model="variantForm.estado"><?php foreach ($variantStates as $key => $label): ?><option value="<?= $key ?>"><?= $label ?></option><?php endforeach; ?></select></div></div>
+            <div class="col-3"><div class="pm-fg"><label>Lote Mín.</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="variantForm.lote_minimo" @blur="normalizeNumberInputValue($event,'variantForm.lote_minimo')" :step="numberInputStep" min="0"><span class="input-group-text" x-text="getUmUsoSimbolo()" style="width:38px;justify-content:center;font-size:.62rem"></span></div></div></div>
+            <div class="col-3"><div class="pm-fg"><label>Pedir al</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="variantForm.punto_pedido" @blur="normalizeNumberInputValue($event,'variantForm.punto_pedido')" :step="numberInputStep" min="0"><span class="input-group-text" x-text="getUmUsoSimbolo()" style="width:38px;justify-content:center;font-size:.62rem"></span></div></div></div>
+            <div class="col-3"><div class="pm-fg"><label>Stock (Calc)</label><input type="text" class="form-control" :value="formatNumberForInput(variantForm.stock_actual)" readonly disabled style="background:#f1f5f9;color:#64748b"></div></div>
+        </div>
+        <div class="pm-dlbl"><i class="fa-solid fa-weight-hanging"></i> Peso y Ubicación</div>
+        <div class="row g-2">
+            <div class="col-4"><div class="pm-fg"><label>Peso Unit.</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="variantForm.peso" @blur="normalizeNumberInputValue($event,'variantForm.peso')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model="variantForm.id_um_peso"><option value="">UM</option><?php foreach ($unidadesMasa as $unidad): ?><option value="<?= (int) $unidad['id'] ?>"><?= View::escape($unidad['simbolo']) ?></option><?php endforeach; ?></select></div></div></div>
+            <div class="col-8"><div class="pm-fg"><label>Ubicación</label><div class="d-flex gap-1"><div class="pm-dim flex-fill"><span class="input-group-text" style="font-size:.58rem">C</span><input type="text" class="form-control" x-model="variantForm.ubicacion_cuerpo" placeholder="A"></div><div class="pm-dim flex-fill"><span class="input-group-text" style="font-size:.58rem">P</span><input type="text" class="form-control" x-model="variantForm.ubicacion_pasillo" placeholder="01"></div><div class="pm-dim flex-fill"><span class="input-group-text" style="font-size:.58rem">E</span><input type="text" class="form-control" x-model="variantForm.ubicacion_estante" placeholder="3"></div></div></div></div>
         </div>
     </fieldset>
-
-    <!-- Botones -->
-    <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center mt-1 pm-variant-actions">
-        <div class="form-check form-switch mb-0 pm-active-toggle" x-show="isVariantFormEnabled">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                id="variante-activa"
-                :checked="variantForm.estado === 'activa'"
-                @change="variantForm.estado = $event.target.checked ? 'activa' : 'descontinuada'">
-            <label class="form-check-label small fw-semibold" for="variante-activa">Activa</label>
+    <div class="pm-actions" style="background:transparent;border:none;padding:.25rem 0">
+        <div class="pm-switch" x-show="isVariantFormEnabled"><input class="form-check-input" type="checkbox" id="variante-activa-v3" :checked="variantForm.estado==='activa'" @change="variantForm.estado=$event.target.checked?'activa':'descontinuada'"><label for="variante-activa-v3">Activa</label></div>
+        <div class="ms-auto d-flex gap-1">
+            <button type="button" class="pm-btn pm-btn-primary" @click="enableNewVariante()" x-show="form.id&&!isVariantFormEnabled"><i class="fa-solid fa-plus"></i> Nueva</button>
+            <a class="pm-btn pm-btn-warning" x-show="mode==='view'&&form.id&&variantForm&&variantForm.id&&!isVariantFormEnabled" :href="'<?= url('productos/partes/manager') ?>/' + form.id + '/variantes/' + variantForm.id + '/editar'"><i class="fa-solid fa-pen"></i> Editar</a>
+            <button type="submit" class="pm-btn" :class="variantForm.id?'pm-btn-success':'pm-btn-primary'" :disabled="loading" x-show="isVariantFormEnabled"><i class="fa-solid fa-check"></i> <span x-text="variantForm.id?'Actualizar':'Agregar'"></span></button>
+            <button type="button" class="pm-btn pm-btn-outline" @click="cancelEditVariante()" x-show="isVariantFormEnabled"><i class="fa-solid fa-xmark"></i></button>
         </div>
-
-        <button
-            type="button"
-            class="btn btn-sm btn-primary"
-            @click="enableNewVariante()"
-            x-show="form.id && !isVariantFormEnabled">
-            <i class="fa-solid fa-plus me-2"></i>
-            Nueva variante
-        </button>
-
-        <a
-            class="btn btn-sm btn-warning"
-            x-show="mode === 'view' && form.id && variantForm && variantForm.id && !isVariantFormEnabled"
-            :href="'<?= url('productos/partes/manager') ?>/' + form.id + '/variantes/' + variantForm.id + '/editar'">
-            <i class="fa-solid fa-pen me-2"></i>
-            Habilitar edicion
-        </a>
-
-        <button
-            type="submit"
-            class="btn btn-sm"
-            :class="variantForm.id ? 'btn-success' : 'btn-primary'"
-            :disabled="loading"
-            x-show="isVariantFormEnabled">
-            <i class="fa-solid fa-check me-2"></i>
-            <span x-text="variantForm.id ? 'Actualizar' : 'Agregar'"></span>
-        </button>
-        <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            @click="cancelEditVariante()"
-            x-show="isVariantFormEnabled">
-            <i class="fa-solid fa-times me-2"></i>
-            Cancelar
-        </button>
     </div>
 </form>

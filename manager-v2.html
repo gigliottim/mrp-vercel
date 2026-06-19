@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Partes y Variantes - MRP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--pm-primary:#4f46e5;--pm-primary-light:#818cf8;--pm-primary-bg:#eef2ff;--pm-success:#059669;--pm-danger:#dc2626;--pm-warning:#d97706;--pm-info:#0891b2;--pm-nav-h:40px;--pm-radius:8px;--pm-radius-sm:6px;--pm-transition:all .15s ease}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;overflow:hidden}
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f1f5f9;color:#1e293b;font-size:.82rem;line-height:1.4}
+
+        .pm-navbar{height:var(--pm-nav-h);background:linear-gradient(135deg,var(--pm-primary),#6366f1);display:flex;align-items:center;padding:0 1rem;gap:1rem;color:#fff;position:relative;z-index:1040}
+        .pm-navbar .pm-brand{font-weight:700;font-size:.9rem;white-space:nowrap}
+        .pm-navbar .pm-brand i{font-size:1rem}
+        .pm-navbar .pm-sep{color:rgba(255,255,255,.3)}
+        .pm-navbar .pm-ctx{font-size:.78rem;color:rgba(255,255,255,.7)}
+        .pm-nav-pills{display:flex;gap:2px;margin-left:auto}
+        .pm-nav-pills .pm-nav-link{color:rgba(255,255,255,.65);font-weight:500;font-size:.75rem;padding:.22rem .65rem;border-radius:9999px;text-decoration:none;transition:var(--pm-transition);white-space:nowrap}
+        .pm-nav-pills .pm-nav-link:hover,.pm-nav-pills .pm-nav-link.active{color:#fff;background:rgba(255,255,255,.18)}
+
+        /* ─── SEARCH BAR (full width top) ─── */
+        .pm-search-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:.4rem .75rem;display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+        .pm-search-wrap{position:relative;flex:1;min-width:0}
+        .pm-search-wrap>i{position:absolute;left:.65rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:.8rem}
+        .pm-search-input{width:100%;border:1.5px solid #e2e8f0;border-radius:9999px;padding:.35rem .75rem .35rem 2rem;font-size:.82rem;height:34px;outline:none;transition:var(--pm-transition)}
+        .pm-search-input:focus{border-color:var(--pm-primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+        .pm-search-clear{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);color:#94a3b8;background:none;border:none;cursor:pointer;padding:.15rem;border-radius:50%;font-size:.7rem}
+        .pm-search-clear:hover{background:#f1f5f9;color:#475569}
+        .pm-search-select{border:1.5px solid #e2e8f0;border-radius:var(--pm-radius-sm);padding:.3rem .4rem;font-size:.75rem;font-weight:600;color:#64748b;background:#fff;outline:none;min-width:110px;transition:var(--pm-transition)}
+        .pm-search-select:focus{border-color:var(--pm-primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+
+        .pm-sel-banner{display:flex;align-items:center;gap:.6rem;padding:.3rem .6rem;background:var(--pm-primary-bg);border:1px solid rgba(79,70,229,.15);border-radius:var(--pm-radius-sm);flex:1;min-width:0}
+        .pm-sel-icon{width:28px;height:28px;border-radius:6px;background:var(--pm-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0}
+        .pm-sel-info{flex:1;min-width:0}
+        .pm-sel-code{font-weight:700;font-size:.78rem;color:var(--pm-primary)}
+        .pm-sel-det{font-size:.7rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+        /* ─── SHELL ─── */
+        .pm-shell{display:grid;grid-template-columns:260px 1fr;grid-template-rows:1fr;height:calc(100vh - var(--pm-nav-h) - 42px);overflow:hidden}
+
+        /* ─── PANELS ─── */
+        .pm-panel{display:flex;flex-direction:column;overflow:hidden;background:#fff}
+        .pm-panel-left{border-right:1px solid #e2e8f0}
+        .pm-panel-center{background:#f8fafc}
+        .pm-panel-head{padding:.4rem .65rem;border-bottom:1px solid #e2e8f0;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;min-height:36px}
+        .pm-panel-head h6{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin:0}
+        .pm-panel-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:.5rem .65rem}
+        .pm-panel-body::-webkit-scrollbar{width:4px}
+        .pm-panel-body::-webkit-scrollbar-track{background:transparent}
+        .pm-panel-body::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+
+        /* ─── VARIANTE CARD ─── */
+        .pm-var-card{border:1.5px solid #e2e8f0;border-radius:6px;padding:.4rem .5rem;margin-bottom:.3rem;cursor:pointer;transition:var(--pm-transition);position:relative}
+        .pm-var-card:hover{border-color:var(--pm-primary-light);background:#fafbff}
+        .pm-var-card.active{border-color:var(--pm-primary);background:var(--pm-primary-bg);box-shadow:0 0 0 2px rgba(79,70,229,.1)}
+        .pm-var-card .pm-var-code{font-weight:700;font-size:.72rem;color:var(--pm-primary)}
+        .pm-var-card .pm-var-det{font-size:.68rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .pm-var-card .pm-var-meta{display:flex;gap:.3rem;margin-top:.1rem}
+        .pm-var-actions{opacity:0;transition:var(--pm-transition)}
+        .pm-var-card:hover .pm-var-actions{opacity:1}
+        .pm-var-actions .btn{padding:.1rem .25rem;font-size:.6rem}
+
+        .pm-st{display:inline-flex;align-items:center;padding:.08em .4em;border-radius:9999px;font-size:.6rem;font-weight:600}
+        .pm-st-activa{background:#ecfdf5;color:#059669}
+        .pm-st-desarrollo{background:#fffbeb;color:#d97706}
+        .pm-st-obsoleta{background:#f8fafc;color:#64748b}
+        .pm-st-descontinuada{background:#fef2f2;color:#dc2626}
+        .pm-b{display:inline-flex;align-items:center;padding:.08em .35em;border-radius:9999px;font-size:.6rem;font-weight:700}
+        .pm-b-pri{background:var(--pm-primary-bg);color:var(--pm-primary)}
+        .pm-b-suc{background:#ecfdf5;color:#059669}
+        .pm-b-sec{background:#f1f5f9;color:#64748b}
+        .pm-b-inf{background:#ecfeff;color:#0891b2}
+
+        /* ─── FORM SECTIONS ─── */
+        .pm-sec{background:#fff;border-radius:var(--pm-radius);border:1px solid #e2e8f0;margin-bottom:.4rem;overflow:hidden}
+        .pm-sec-head{display:flex;align-items:center;justify-content:space-between;padding:.35rem .6rem;background:linear-gradient(135deg,#fafbff 0%,#f8fafc 100%);border-bottom:1px solid #f1f5f9;cursor:pointer;user-select:none}
+        .pm-sec-head h6{margin:0;font-size:.72rem;font-weight:700;color:#334155}
+        .pm-sec-head h6 i{margin-right:.3rem}
+        .pm-sec-body{padding:.45rem .6rem}
+        .pm-chevron{transition:transform .15s ease;font-size:.6rem;color:#94a3b8}
+
+        .pm-fg{margin-bottom:.4rem}
+        .pm-fg label{font-size:.66rem;font-weight:600;color:#64748b;margin-bottom:.05rem;display:flex;align-items:center;gap:.2rem}
+        .pm-fg label .req{color:var(--pm-danger)}
+        .pm-fg .form-control,.pm-fg .form-select{border-radius:var(--pm-radius-sm);border:1.5px solid #e2e8f0;font-size:.76rem;padding:.25rem .45rem;line-height:1.4;transition:var(--pm-transition)}
+        .pm-fg .form-control:focus,.pm-fg .form-select:focus{border-color:var(--pm-primary);box-shadow:0 0 0 3px rgba(79,70,229,.08)}
+        .pm-fg textarea.form-control{resize:none;min-height:32px}
+
+        .pm-dim{display:flex;gap:0}
+        .pm-dim .form-control{border-radius:var(--pm-radius-sm) 0 0 var(--pm-radius-sm);flex:1;min-width:0}
+        .pm-dim .form-select{border-radius:0 var(--pm-radius-sm) var(--pm-radius-sm) 0;width:60px;flex:0 0 60px;border-left:none;padding:.25rem .15rem;font-size:.68rem}
+        .pm-dim .input-group-text{font-size:.68rem;padding:.25rem .3rem}
+
+        .pm-dlbl{display:flex;align-items:center;gap:.35rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin:.5rem 0 .3rem}
+        .pm-dlbl::after{content:'';flex:1;height:1px;background:#e2e8f0}
+
+        .pm-actions{display:flex;flex-wrap:wrap;gap:.25rem;align-items:center;justify-content:flex-end;padding:.35rem .6rem;border-top:1px solid #f1f5f9;background:#fafbff}
+        .pm-btn{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .55rem;border-radius:var(--pm-radius-sm);font-size:.7rem;font-weight:600;border:1.5px solid transparent;cursor:pointer;transition:var(--pm-transition);text-decoration:none;white-space:nowrap}
+        .pm-btn-primary{background:var(--pm-primary);color:#fff;border-color:var(--pm-primary)}
+        .pm-btn-primary:hover{background:#4338ca;color:#fff;transform:translateY(-1px);box-shadow:0 2px 8px rgba(79,70,229,.3)}
+        .pm-btn-success{background:var(--pm-success);color:#fff;border-color:var(--pm-success)}
+        .pm-btn-success:hover{background:#047857;color:#fff}
+        .pm-btn-outline{background:#fff;color:#64748b;border-color:#e2e8f0}
+        .pm-btn-outline:hover{border-color:#cbd5e1;background:#f8fafc}
+        .pm-btn-warning{background:var(--pm-warning);color:#fff;border-color:var(--pm-warning)}
+        .pm-btn-danger{background:#fff;color:var(--pm-danger);border-color:#fecaca}
+        .pm-btn-danger:hover{background:#fef2f2}
+
+        .pm-switch{display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
+        .pm-switch .form-check-input{width:1.8rem;height:.9rem;cursor:pointer}
+        .pm-switch label{font-size:.7rem;font-weight:600;color:#64748b;cursor:pointer}
+        .pm-factor-box{background:var(--pm-primary-bg);border:1px solid rgba(79,70,229,.15);border-radius:var(--pm-radius-sm);padding:.4rem}
+
+        .pm-empty{text-align:center;padding:1.2rem .5rem;color:#94a3b8}
+        .pm-empty i{font-size:1.8rem;margin-bottom:.4rem;opacity:.4}
+        .pm-empty h6{font-size:.75rem;color:#64748b;margin:0}
+        .pm-empty p{font-size:.68rem;margin:.15rem 0 0}
+
+        @media(max-width:1199.98px){.pm-shell{grid-template-columns:220px 1fr}.pm-panel-left .pm-search-bar{display:none}}
+        @media(max-width:767.98px){.pm-shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}.pm-panel-left{border-right:none;border-bottom:1px solid #e2e8f0;max-height:35vh}}
+
+        @keyframes pmIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+        .pm-in{animation:pmIn .2s ease-out}
+
+        [data-bs-theme="dark"]{--pm-primary-bg:#1e1b4b}
+        [data-bs-theme="dark"] body,[data-bs-theme="dark"] .pm-panel,[data-bs-theme="dark"] .pm-sec{background:#1e293b}
+        [data-bs-theme="dark"] .pm-panel-center{background:#0f172a}
+        [data-bs-theme="dark"] .pm-search-input,[data-bs-theme="dark"] .pm-search-select{background:#1e293b;color:#e2e8f0;border-color:#334155}
+        [data-bs-theme="dark"] .pm-fg .form-control,[data-bs-theme="dark"] .pm-fg .form-select{background:#0f172a;color:#e2e8f0;border-color:#334155}
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="pm-navbar">
+    <span class="pm-brand"><i class="fa-solid fa-cubes me-1"></i>MRP</span>
+    <span class="pm-sep">|</span>
+    <span class="pm-ctx">Productos</span>
+    <div class="pm-nav-pills">
+        <a class="pm-nav-link" href="#"><i class="fa-solid fa-table-list me-1"></i><span class="d-none d-sm-inline">Partes</span></a>
+        <a class="pm-nav-link active" href="#"><i class="fa-solid fa-sliders me-1"></i><span class="d-none d-sm-inline">Manager</span></a>
+        <a class="pm-nav-link" href="#"><i class="fa-solid fa-file-import me-1"></i><span class="d-none d-sm-inline">Importar</span></a>
+    </div>
+</nav>
+<!-- SHELL: wraps search + content -->
+<div x-data="parteManager({parte:{id:68,codigo:'PIE005',id_tipo:2,id_grupo:1,id_um_compra:25,id_um_uso:25,factor_conversion:1,detalle:'BOLSILLO INTERNO - BANDOLERA CLOE',largo_alto:200,id_um_largo_alto:20,ancho:120,id_um_ancho:20,espesor_profundidad:null,id_um_espesor:'',superficie:0.024,id_um_superficie:3,volumen:null,id_um_volumen:'',activo:true},variantes:[{id:127,id_parte:68,codigo_variante:'1',detalle:'CROCCO HOLO',estado:'activa',lote_minimo:1,punto_pedido:0,stock_actual:0,peso:null,id_um_peso:'',ubicacion_cuerpo:'',ubicacion_pasillo:'',ubicacion_estante:''},{id:128,id_parte:68,codigo_variante:'2',detalle:'NEGRO PRAGA',estado:'activa',lote_minimo:1,punto_pedido:0,stock_actual:0,peso:null,id_um_peso:'',ubicacion_cuerpo:'',ubicacion_pasillo:'',ubicacion_estante:''},{id:129,id_parte:68,codigo_variante:'3',detalle:'ROSA MATELASE',estado:'activa',lote_minimo:1,punto_pedido:0,stock_actual:0,peso:null,id_um_peso:'',ubicacion_cuerpo:'',ubicacion_pasillo:'',ubicacion_estante:''}],mode:'view',editingVariantId:null,editingVariant:null})"
+    x-init="init()">
+
+<!-- SEARCH BAR (full width) -->
+<div class="pm-search-bar">
+
+    <!-- When NO parte selected: search + tipo dropdown -->
+    <template x-if="!hasValidParteSelection()">
+        <div class="d-flex align-items-center gap-2 w-100">
+            <select class="pm-search-select" id="tipo-filter-v3" onchange="updateTipoFilterV3(this.value, this)">
+                <option value="">Todos</option>
+                <option value="MP">MP — Materia Prima</option>
+                <option value="PZ">PZ — Piezas</option>
+                <option value="PROD">PROD — Productos</option>
+                <option value="CONJ">CONJ — Conjuntos</option>
+                <option value="S-CONJ">S-CONJ — Sub Conjunto</option>
+                <option value="TER">TER — Terciarizados</option>
+                <option value="MO">MO — Mano de Obra</option>
+            </select>
+            <div class="pm-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="parte-search-input-v3" class="pm-search-input" placeholder="Buscar parte o variante por código o descripción..." autocomplete="off">
+                <button class="pm-search-clear" x-show="document.getElementById('parte-search-input-v3')?.value" @click="document.getElementById('parte-search-input-v3').value=''; document.getElementById('parte-search-results-v3').style.display='none';"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+    </template>
+
+    <!-- When parte selected: banner + change button -->
+    <template x-if="hasValidParteSelection()">
+        <div class="pm-sel-banner">
+            <div class="pm-sel-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="pm-sel-info">
+                <div class="pm-sel-code" x-text="(form.codigo||'N/A')+(form.id?' — ID:'+form.id:'')"></div>
+                <div class="pm-sel-det" x-text="form.detalle||'Sin detalle'"></div>
+            </div>
+            <span class="pm-b pm-b-suc" x-show="form.activo">Activa</span>
+            <span class="pm-b pm-b-sec" x-show="!form.activo">Inactiva</span>
+            <button class="pm-btn pm-btn-outline" style="padding:.2rem .5rem;font-size:.68rem;" @click="resetForm()"><i class="fa-solid fa-arrows-rotate me-1"></i>Cambiar</button>
+        </div>
+    </template>
+
+    <div id="parte-search-results-v3" style="position:absolute;z-index:1050;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none;"></div>
+</div>
+
+<!-- SHELL: 2 columns -->
+<div class="pm-shell">
+
+    <!-- ═══ LEFT PANEL: Variantes ═══ -->
+    <aside class="pm-panel pm-panel-left">
+        <div class="pm-panel-head">
+            <h6><i class="fa-solid fa-layer-group me-1"></i>Variantes</h6>
+            <div class="d-flex align-items-center gap-2">
+                <span class="pm-b pm-b-pri" x-text="variantes.length" x-show="variantes.length > 0"></span>
+                <button class="pm-btn pm-btn-primary" style="padding:.12rem .35rem;font-size:.62rem;" x-show="form.id && !isVariantFormEnabled" @click="enableNewVariante()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+        <div class="pm-panel-body">
+            <template x-if="!isEditing">
+                <div class="pm-empty pm-in">
+                    <i class="fa-solid fa-inbox"></i>
+                    <h6>Variantes</h6>
+                    <p>Busca o crea una parte</p>
+                </div>
+            </template>
+            <template x-if="isEditing && variantes.length > 0">
+                <div>
+                    <template x-for="(variante, idx) in variantes" :key="variante.id || idx">
+                        <div class="pm-var-card" :class="{ 'active': variantForm && variantForm.id === variante.id }" @click="editVariante(variante)">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="pm-var-code" x-text="variante.codigo_variante || '—'"></div>
+                                <div class="pm-var-actions d-flex gap-1">
+                                    <button class="btn btn-sm pm-btn-outline" style="padding:.1rem .25rem;font-size:.6rem;" @click.stop="editVariante(variante)" :disabled="isVariantFormEnabled" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                                    <a class="btn btn-sm pm-btn-outline" style="padding:.1rem .25rem;font-size:.6rem;" :href="'/productos/maestro?id_variante=' + variante.id" title="Maestro" target="_blank"><i class="fa-solid fa-network-wired"></i></a>
+                                    <button class="btn btn-sm pm-btn-danger" style="padding:.1rem .25rem;" @click.stop="openDeleteVarianteModal(variante)" :disabled="isVariantFormEnabled" title="Eliminar"><i class="fa-solid fa-trash" style="font-size:.55rem"></i></button>
+                                </div>
+                            </div>
+                            <div class="pm-var-det" x-text="variante.detalle || 'Sin detalle'"></div>
+                            <div class="pm-var-meta">
+                                <span class="pm-st" :class="{'pm-st-activa':variante.estado==='activa','pm-st-desarrollo':variante.estado==='desarrollo','pm-st-obsoleta':variante.estado==='obsoleta','pm-st-descontinuada':variante.estado==='descontinuada'}" x-text="getEstadoLabel(variante.estado)"></span>
+                                <span class="pm-b pm-b-sec" x-show="variante.stock_actual"><i class="fa-solid fa-box me-1" style="font-size:.5rem"></i><span x-text="formatNumberDisplay(variante.stock_actual,'0')"></span></span>
+                                <span class="pm-b pm-b-sec" x-show="variante.peso"><i class="fa-solid fa-weight-hanging me-1" style="font-size:.5rem"></i><span x-text="formatNumberDisplay(variante.peso,'--')"></span></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template x-if="isEditing && variantes.length === 0">
+                <div class="pm-empty pm-in"><i class="fa-solid fa-inbox"></i><h6>Sin variantes</h6><p>Agrega la primera variante</p></div>
+            </template>
+        </div>
+    </aside>
+
+    <!-- ═══ CENTER PANEL: Parte + Variante Forms ═══ -->
+    <section class="pm-panel pm-panel-center">
+        <div class="pm-panel-body" style="max-width:860px;margin:0 auto;width:100%;">
+
+            <!-- PARTE FORM -->
+            <div class="pm-sec pm-in" id="section-parte">
+                <div class="pm-sec-head" onclick="toggleSection(this)">
+                    <h6><i class="fa-solid fa-box" style="color:var(--pm-primary)"></i> Datos de la Parte
+                        <span class="pm-b pm-b-inf ms-1" x-show="mode==='create' && !isPartFormReadOnly && !form.id">Nueva</span>
+                        <span class="pm-b pm-b-suc ms-1" x-show="mode==='edit' && !isPartFormReadOnly">Editando</span>
+                        <span class="pm-b pm-b-sec ms-1" x-show="isPartFormReadOnly && form.id">Solo lectura</span>
+                    </h6>
+                    <i class="fa-solid fa-chevron-down pm-chevron"></i>
+                </div>
+                <div class="pm-sec-body">
+                    <form @submit.prevent="saveParte()">
+                        <fieldset :disabled="isPartFormReadOnly">
+                            <div class="pm-dlbl"><i class="fa-solid fa-circle-info"></i> General</div>
+                            <div class="row g-2">
+                                <div class="col-4"><div class="pm-fg"><label>Código <span class="req">*</span></label><input type="text" class="form-control" x-model="form.codigo" placeholder="CHAPA-01" required style="text-transform:uppercase"></div></div>
+                                <div class="col-4"><div class="pm-fg"><label>Tipo <span class="req">*</span></label><select class="form-select" x-model.number="form.id_tipo" required><option value="">—</option><option value="1">MP — Materia Prima</option><option value="2">PZ — Piezas</option><option value="3">PROD — Productos</option><option value="4">CONJ — Conjuntos</option><option value="5">S-CONJ — Sub Conjunto</option><option value="6">TER — Terciarizados</option><option value="7">MO — Mano de Obra</option></select></div></div>
+                                <div class="col-4"><div class="pm-fg"><label>Grupo <span class="req">*</span></label><select class="form-select" x-model.number="form.id_grupo" required><option value="">—</option><option value="1">Sin Definir</option></select></div></div>
+                                <div class="col-12"><div class="pm-fg"><label>Detalle <span class="req">*</span></label><textarea class="form-control" x-model="form.detalle" rows="1" placeholder="Descripción de la parte" required></textarea></div></div>
+                            </div>
+                            <div class="pm-dlbl"><i class="fa-solid fa-ruler"></i> Unidades de Medida</div>
+                            <div class="row g-2">
+                                <div class="col-4"><div class="pm-fg"><label>UM Compra</label><select class="form-select" x-model.number="form.id_um_compra"><option value="">—</option><option value="25">Unidades (u)</option><option value="24">Metros (m)</option><option value="29">mL</option><option value="23">Kilogramos (kg)</option><option value="3">m²</option><option value="21">Litros (l)</option><option value="26">Cajas</option><option value="27">Rollos</option><option value="28">Bobinas</option></select></div></div>
+                                <div class="col-4"><div class="pm-fg"><label>UM Uso</label><select class="form-select" x-model.number="form.id_um_uso"><option value="">—</option><option value="25">Unidades (u)</option><option value="24">Metros (m)</option><option value="29">mL</option><option value="23">Kilogramos (kg)</option><option value="3">m²</option><option value="21">Litros (l)</option><option value="26">Cajas</option><option value="27">Rollos</option><option value="28">Bobinas</option></select></div></div>
+                                <div class="col-4" x-show="form.id_um_compra && form.id_um_uso && form.id_um_compra != form.id_um_uso" x-transition>
+                                    <div class="pm-fg"><label class="text-primary">Factor Conv.</label>
+                                        <div class="pm-factor-box"><div class="input-group input-group-sm"><span class="input-group-text" style="font-size:.66rem;background:var(--pm-primary-bg);border-color:rgba(79,70,229,.15)">1 =</span><input type="number" class="form-control" :step="numberInputStep" min="0" x-model.number="form.factor_conversion" @blur="normalizeNumberInputValue($event,'form.factor_conversion')" placeholder="10"><span class="input-group-text" style="font-size:.66rem;background:var(--pm-primary-bg);border-color:rgba(79,70,229,.15)">UM Uso</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pm-dlbl"><i class="fa-solid fa-ruler-combined"></i> Dimensiones
+                                <button type="button" class="pm-btn pm-btn-outline ms-auto" style="padding:.08rem .35rem;font-size:.58rem;" @click.prevent="calculateDimensions()"><i class="fa-solid fa-calculator"></i></button>
+                            </div>
+                            <div class="d-flex g-2" style="gap:.4rem;flex-wrap:nowrap;">
+                                <div style="flex:1;min-width:0"><div class="pm-fg"><label>Largo/Alto</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="form.largo_alto" @blur="normalizeNumberInputValue($event,'form.largo_alto')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model.number="form.id_um_largo_alto"><option value="">UM</option><option value="20">mm</option><option value="5">cm</option><option value="24">m</option><option value="1">in</option></select></div></div></div>
+                                <div style="flex:1;min-width:0"><div class="pm-fg"><label>Ancho</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="form.ancho" @blur="normalizeNumberInputValue($event,'form.ancho')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model.number="form.id_um_ancho"><option value="">UM</option><option value="20">mm</option><option value="5">cm</option><option value="24">m</option><option value="1">in</option></select></div></div></div>
+                                <div style="flex:1;min-width:0"><div class="pm-fg"><label>Espesor</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="form.espesor_profundidad" @blur="normalizeNumberInputValue($event,'form.espesor_profundidad')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model.number="form.id_um_espesor"><option value="">UM</option><option value="20">mm</option><option value="5">cm</option><option value="24">m</option><option value="1">in</option></select></div></div></div>
+                                <div style="flex:1;min-width:0"><div class="pm-fg"><label>Superficie</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="form.superficie" @blur="normalizeNumberInputValue($event,'form.superficie')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model.number="form.id_um_superficie"><option value="">UM</option><option value="3">m²</option><option value="2">cm²</option></select></div></div></div>
+                                <div style="flex:1;min-width:0"><div class="pm-fg"><label>Volumen</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="form.volumen" @blur="normalizeNumberInputValue($event,'form.volumen')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model.number="form.id_um_volumen"><option value="">UM</option><option value="22">ml/cm³</option><option value="8">m³</option><option value="21">l</option></select></div></div></div>
+                            </div>
+                        </fieldset>
+                        <div class="pm-actions">
+                            <div class="pm-switch" x-show="!isPartFormReadOnly"><input class="form-check-input" type="checkbox" x-model="form.activo" id="parte-activa-v2"><label for="parte-activa-v2">Activa</label></div>
+                            <div class="ms-auto d-flex gap-1">
+                                <a class="pm-btn pm-btn-warning" x-show="isPartFormReadOnly && form.id" :href="'/productos/partes/manager/'+form.id+'/editar'"><i class="fa-solid fa-pen"></i> Editar</a>
+                                <button type="button" class="pm-btn pm-btn-primary" @click="resetForm()" x-show="mode==='view'||(mode==='create'&&isPartFormReadOnly)"><i class="fa-solid fa-plus"></i> Nueva</button>
+                                <button type="button" class="pm-btn pm-btn-outline" @click="resetForm()" x-show="!isPartFormReadOnly&&isEditing"><i class="fa-solid fa-xmark"></i></button>
+                                <button type="submit" class="pm-btn" :class="isEditing?'pm-btn-success':'pm-btn-primary'" :disabled="loading" x-show="!isPartFormReadOnly"><i class="fa-solid" :class="isEditing?'fa-save':'fa-plus'"></i> <span x-text="isEditing?'Actualizar':'Crear'"></span></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- VARIANTE FORM -->
+            <div class="pm-sec pm-in" id="section-variante">
+                <div class="pm-sec-head" onclick="toggleSection(this)">
+                    <h6><i class="fa-solid fa-pen-ruler" style="color:var(--pm-success)"></i> Variante
+                        <span class="pm-b pm-b-inf ms-1" x-show="isVariantFormEnabled && variantForm && !variantForm.id">Nueva</span>
+                        <span class="pm-b pm-b-suc ms-1" x-show="isVariantFormEnabled">Editando</span>
+                        <span class="pm-b pm-b-sec ms-1" x-show="mode==='view' && !isVariantFormEnabled && variantForm && variantForm.id">Lectura</span>
+                    </h6>
+                    <i class="fa-solid fa-chevron-down pm-chevron"></i>
+                </div>
+                <div class="pm-sec-body">
+                    <form @submit.prevent="saveVariante()">
+                        <fieldset :disabled="!isVariantFormEnabled">
+                            <div class="pm-dlbl"><i class="fa-solid fa-hashtag"></i> Datos Básicos</div>
+                            <div class="row g-2">
+                                <div class="col-3"><div class="pm-fg"><label>Código <span class="req">*</span></label><input type="text" class="form-control" x-ref="variantCodigo" x-model="variantForm.codigo_variante" placeholder="V01" required style="text-transform:uppercase"></div></div>
+                                <div class="col-9"><div class="pm-fg"><label>Detalle <span class="req">*</span></label><textarea class="form-control" x-ref="variantDetalle" x-model="variantForm.detalle" rows="1" @input="adjustVariantDetalleHeight()" required></textarea></div></div>
+                            </div>
+                            <div class="pm-dlbl"><i class="fa-solid fa-boxes-stacked"></i> Inventario</div>
+                            <div class="row g-2">
+                                <div class="col-3"><div class="pm-fg"><label>Estado</label><select class="form-select" x-model="variantForm.estado"><option value="activa">Activa</option><option value="desarrollo">Desarrollo</option><option value="obsoleta">Obsoleta</option><option value="descontinuada">Descontinuada</option></select></div></div>
+                                <div class="col-3"><div class="pm-fg"><label>Lote Mín.</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="variantForm.lote_minimo" @blur="normalizeNumberInputValue($event,'variantForm.lote_minimo')" :step="numberInputStep" min="0"><span class="input-group-text" x-text="getUmUsoSimbolo()" style="width:38px;justify-content:center;font-size:.62rem"></span></div></div></div>
+                                <div class="col-3"><div class="pm-fg"><label>Pedir al</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="variantForm.punto_pedido" @blur="normalizeNumberInputValue($event,'variantForm.punto_pedido')" :step="numberInputStep" min="0"><span class="input-group-text" x-text="getUmUsoSimbolo()" style="width:38px;justify-content:center;font-size:.62rem"></span></div></div></div>
+                                <div class="col-3"><div class="pm-fg"><label>Stock (Calc)</label><input type="text" class="form-control" :value="formatNumberForInput(variantForm.stock_actual)" readonly disabled style="background:#f1f5f9;color:#64748b"></div></div>
+                            </div>
+                            <div class="pm-dlbl"><i class="fa-solid fa-weight-hanging"></i> Peso y Ubicación</div>
+                            <div class="row g-2">
+                                <div class="col-4"><div class="pm-fg"><label>Peso Unit.</label><div class="pm-dim"><input type="number" class="form-control" x-model.number="variantForm.peso" @blur="normalizeNumberInputValue($event,'variantForm.peso')" :step="numberInputStep" placeholder="0"><select class="form-select" x-model="variantForm.id_um_peso"><option value="">UM</option><option value="23">kg</option><option value="9">g</option><option value="12">lb</option></select></div></div></div>
+                                <div class="col-8"><div class="pm-fg"><label>Ubicación</label><div class="d-flex gap-1"><div class="pm-dim flex-fill"><span class="input-group-text" style="font-size:.58rem">C</span><input type="text" class="form-control" x-model="variantForm.ubicacion_cuerpo" placeholder="A"></div><div class="pm-dim flex-fill"><span class="input-group-text" style="font-size:.58rem">P</span><input type="text" class="form-control" x-model="variantForm.ubicacion_pasillo" placeholder="01"></div><div class="pm-dim flex-fill"><span class="input-group-text" style="font-size:.58rem">E</span><input type="text" class="form-control" x-model="variantForm.ubicacion_estante" placeholder="3"></div></div></div></div>
+                            </div>
+                        </fieldset>
+                        <div class="pm-actions" style="background:transparent;border:none;padding:.25rem 0">
+                            <div class="pm-switch" x-show="isVariantFormEnabled"><input class="form-check-input" type="checkbox" id="variante-activa-v3" :checked="variantForm.estado==='activa'" @change="variantForm.estado=$event.target.checked?'activa':'descontinuada'"><label for="variante-activa-v3">Activa</label></div>
+                            <div class="ms-auto d-flex gap-1">
+                                <button type="button" class="pm-btn pm-btn-primary" @click="enableNewVariante()" x-show="form.id&&!isVariantFormEnabled"><i class="fa-solid fa-plus"></i> Nueva</button>
+                                <a class="pm-btn pm-btn-warning" x-show="mode==='view'&&form.id&&variantForm&&variantForm.id&&!isVariantFormEnabled" :href="'/productos/partes/manager/'+form.id+'/variantes/'+variantForm.id+'/editar'"><i class="fa-solid fa-pen"></i> Editar</a>
+                                <button type="submit" class="pm-btn" :class="variantForm.id?'pm-btn-success':'pm-btn-primary'" :disabled="loading" x-show="isVariantFormEnabled"><i class="fa-solid fa-check"></i> <span x-text="variantForm.id?'Actualizar':'Agregar'"></span></button>
+                                <button type="button" class="pm-btn pm-btn-outline" @click="cancelEditVariante()" x-show="isVariantFormEnabled"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="modalDeleteVarianteManager" tabindex="-1" aria-hidden="true" x-data="{show:false}" @show.bs.modal="show=true" @hidden.bs.modal="show=false">
+    <div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="border-radius:var(--pm-radius);border:none;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)">
+        <div class="modal-header border-0 pb-0"><h6 class="modal-title" style="color:var(--pm-danger);font-weight:700;font-size:.85rem"><i class="fa-solid fa-triangle-exclamation me-2"></i>Eliminar variante</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body pt-0"><p x-html="deleteVarianteMessage" class="mb-0" style="font-size:.82rem"></p></div>
+        <div class="modal-footer border-0 pt-0"><button type="button" class="pm-btn pm-btn-outline" data-bs-dismiss="modal">Cancelar</button><button type="button" class="pm-btn" style="background:var(--pm-danger);color:#fff" @click="confirmDeleteVariante()" :disabled="loading"><span x-show="!loading"><i class="fa-solid fa-trash me-1"></i>Eliminar</span><span x-show="loading"><i class="fa-solid fa-spinner fa-spin me-1"></i>Eliminando...</span></button></div>
+    </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js" defer></script>
+<script>
+window.MRP_BASE_PATH='';
+window.unidadesMasaData=[{id:9,simbolo:'g',tipo:'masa',equivalencia_base:0.001},{id:10,simbolo:'t',tipo:'masa',equivalencia_base:1000},{id:11,simbolo:'oz',tipo:'masa',equivalencia_base:0.0283495},{id:12,simbolo:'lb',tipo:'masa',equivalencia_base:0.453592},{id:23,simbolo:'kg',tipo:'masa',equivalencia_base:1}];
+window.unidadesSuperficieData=[{id:2,simbolo:'cm²',tipo:'superficie',equivalencia_base:0.0001},{id:3,simbolo:'m²',tipo:'superficie',equivalencia_base:1}];
+window.unidadesVolumenData=[{id:6,simbolo:'cl',tipo:'volumen',equivalencia_base:0.00001},{id:7,simbolo:'dl',tipo:'volumen',equivalencia_base:0.0001},{id:21,simbolo:'l',tipo:'volumen',equivalencia_base:0.001},{id:22,simbolo:'ml/cm³',tipo:'volumen',equivalencia_base:0.000001},{id:8,simbolo:'m³',tipo:'volumen',equivalencia_base:1}];
+window.unidadesLongitudData=[{id:1,simbolo:'in',tipo:'longitud',equivalencia_base:0.0254},{id:5,simbolo:'cm',tipo:'longitud',equivalencia_base:0.01},{id:20,simbolo:'mm',tipo:'longitud',equivalencia_base:0.001},{id:24,simbolo:'m',tipo:'longitud',equivalencia_base:1},{id:29,simbolo:'mL',tipo:'longitud',equivalencia_base:1}];
+window.unidadesTodasData=[...window.unidadesMasaData,...window.unidadesSuperficieData,...window.unidadesVolumenData,...window.unidadesLongitudData,{id:25,simbolo:'u',tipo:'unidad',equivalencia_base:1},{id:26,simbolo:'caja',tipo:'unidad',equivalencia_base:1},{id:27,simbolo:'rollo',tipo:'unidad',equivalencia_base:1},{id:28,simbolo:'bobina',tipo:'unidad',equivalencia_base:1}];
+window.appFormattingSettings={decimal_places:4};
+window.appFormatNumber=(v,d)=>Number(v).toFixed(d||4);
+
+function toggleSection(el){const s=el.closest('.pm-sec');if(!s)return;const b=s.querySelector('.pm-sec-body');if(!b)return;b.style.display=b.style.display==='none'?'':'none';el.classList.toggle('fa-chevron-down');el.classList.toggle('fa-chevron-right');}
+
+let currentTipoFilter='';
+function updateTipoFilterV3(tipo,sel){currentTipoFilter=tipo;const si=document.getElementById('parte-search-input-v3');if(si&&si.value.trim().length>=2)si.dispatchEvent(new Event('input'));}
+
+function parteManager(initialData){
+const BASE=(window.MRP_BASE_PATH||'').replace(/\/$/,'');
+return{
+decimalPlaces:4,numberInputStep:'0.0001',
+mode:initialData.mode||'create',isEditing:initialData.mode!=='create',
+editingVariantId:initialData.editingVariantId||null,editingVariant:initialData.editingVariant||null,
+isPartFormReadOnly:initialData.mode==='view',
+isVariantFormEnabled:false,loading:false,
+parte:initialData.parte||null,variantes:initialData.variantes||[],
+deleteVarianteTarget:null,deleteVarianteIndex:null,deleteVarianteMessage:'',
+form:{id:null,codigo:'',id_tipo:'',id_grupo:'',id_um_compra:'',id_um_uso:'',detalle:'',largo_alto:null,id_um_largo_alto:'',ancho:null,id_um_ancho:'',espesor_profundidad:null,id_um_espesor:'',superficie:null,id_um_superficie:'',volumen:null,id_um_volumen:'',factor_conversion:null,activo:true},
+variantForm:{id:null,codigo_variante:'',detalle:'',estado:'activa',lote_minimo:1,punto_pedido:0,stock_actual:0,peso:null,id_um_peso:'',ubicacion_cuerpo:'',ubicacion_pasillo:'',ubicacion_estante:''},
+unidadesMasa:window.unidadesMasaData||[],unidadesTodas:window.unidadesTodasData||[],
+init(){this.decimalPlaces=this._getConfiguredDecimalPlaces();this.numberInputStep=this._buildInputStep(this.decimalPlaces);if(this.parte)this.loadParteData(this.parte);if(this.editingVariant&&this.editingVariant.id)this.loadVarianteIntoForm(this.editingVariant);else if(this.editingVariantId&&this.variantes&&this.variantes.length>0){const v=this.variantes.find(v=>v.id==this.editingVariantId);if(v)this.loadVarianteIntoForm(v);}this.$watch('form.id_um_compra',()=>this.autoCalculateFactorConversion());this.$watch('form.id_um_uso',()=>this.autoCalculateFactorConversion());this.$watch('form.ancho',()=>this.autoCalculateFactorConversion());this.$watch('form.id_um_ancho',()=>this.autoCalculateFactorConversion());this.$nextTick(()=>this.adjustVariantDetalleHeight());},
+hasValidParteSelection(){const id=parseInt(this.form?.id,10);return Number.isInteger(id)&&id>0;},
+loadParteData(p){this.form={id:p.id,codigo:p.codigo||'',id_tipo:parseInt(p.id_tipo)||'',id_grupo:parseInt(p.id_grupo)||'',id_um_compra:p.id_um_compra||'',id_um_uso:p.id_um_uso||'',factor_conversion:this._toNullableNumber(p.factor_conversion),detalle:p.detalle||'',largo_alto:this._toNullableNumber(p.largo_alto),id_um_largo_alto:p.id_um_largo_alto||'',ancho:this._toNullableNumber(p.ancho),id_um_ancho:p.id_um_ancho||'',espesor_profundidad:this._toNullableNumber(p.espesor_profundidad),id_um_espesor:p.id_um_espesor||'',superficie:this._toNullableNumber(p.superficie),id_um_superficie:p.id_um_superficie||'',volumen:this._toNullableNumber(p.volumen),id_um_volumen:p.id_um_volumen||'',activo:p.activo===true||p.activo===1||p.activo==='1'};this.isEditing=true;},
+loadParte(id){if(!id)return;window.location.href=`${BASE}/productos/partes/manager/${id}`;},
+loadVariante(idP,idV){if(!idP||!idV)return;window.location.href=`${BASE}/productos/partes/manager/${idP}/variantes/${idV}`;},
+resetForm(){this.form={id:null,codigo:'',id_tipo:'',id_grupo:'',id_um_compra:'',id_um_uso:'',factor_conversion:null,detalle:'',largo_alto:null,id_um_largo_alto:'',ancho:null,id_um_ancho:'',espesor_profundidad:null,id_um_espesor:'',superficie:null,id_um_superficie:'',volumen:null,id_um_volumen:'',activo:true};this.parte=null;this.variantes=[];this.mode='create';this.isEditing=false;this.isPartFormReadOnly=false;this.isVariantFormEnabled=false;this.editingVariantId=null;this.editingVariant=null;this.resetVariantForm();const si=document.getElementById('parte-search-input-v3');if(si)si.value='';const sr=document.getElementById('parte-search-results-v3');if(sr)sr.style.display='none';const mu=new URL(`${BASE}/productos/partes/manager`,window.location.origin);if(window.location.pathname!==mu.pathname)window.history.pushState({},'',mu.href);},
+_getEquivBase(id,ds){if(!id||!ds||!ds.length)return null;const u=ds.find(u=>String(u.id)===String(id));return u&&u.equivalencia_base?parseFloat(u.equivalencia_base):null;},
+_round(v,d=8){const f=Math.pow(10,d);return Math.round(v*f)/f;},
+_getConfiguredDecimalPlaces(){const c=parseInt(window.appFormattingSettings?.decimal_places,10);return Number.isFinite(c)?Math.max(1,Math.min(10,c)):4;},
+_buildInputStep(d){return Number.isInteger(d)&&d>=1?`0.${'0'.repeat(d-1)}1`:'0.0001';},
+_toNullableNumber(v){if(v===null||v==='')return null;const n=parseFloat(v);return Number.isFinite(n)?this._round(n,this.decimalPlaces):null;},
+_toNumberWithDefault(v,f=0){const n=this._toNullableNumber(v);return n===null?f:n;},
+formatNumberForInput(v){const n=this._toNullableNumber(v);return n===null?'':String(n);},
+formatNumberDisplay(v,f=''){const n=this._toNullableNumber(v);return n===null?f:(typeof window.appFormatNumber==='function'?window.appFormatNumber(n,this.decimalPlaces):String(n));},
+normalizeNumberInputValue(e,mp){const r=e?.target?.value??'';const n=this._toNullableNumber(r);const d=n===null?'':String(n);if(e?.target)e.target.value=d;if(mp?.startsWith('form.'))this.form[mp.slice(5)]=n;if(mp?.startsWith('variantForm.'))this.variantForm[mp.slice(12)]=n;},
+autoCalculateFactorConversion(){const cId=this.form.id_um_compra;const uId=this.form.id_um_uso;if(!cId||!uId||cId===uId)return;const all=[...(window.unidadesLongitudData||[]),...(window.unidadesSuperficieData||[]),...(window.unidadesVolumenData||[]),...(window.unidadesMasaData||[])];const umC=all.find(u=>String(u.id)===String(cId));const umU=all.find(u=>String(u.id)===String(uId));if(!umC||!umU)return;if(umC.tipo!=='longitud'||umU.tipo!=='superficie')return;const a=parseFloat(this.form.ancho)||0;const idA=this.form.id_um_ancho;if(a<=0)return;const eA=this._getEquivBase(idA,window.unidadesLongitudData);if(!eA)return;const fC=this._round(a*eA,this.decimalPlaces);if((parseFloat(this.form.factor_conversion)||0)===0)this.form.factor_conversion=fC;},
+calculateDimensions(){const l=parseFloat(this.form.largo_alto)||0,a=parseFloat(this.form.ancho)||0,e=parseFloat(this.form.espesor_profundidad)||0;const ld=window.unidadesLongitudData||[];const eL=this._getEquivBase(this.form.id_um_largo_alto,ld)??1,eA=this._getEquivBase(this.form.id_um_ancho,ld)??1,eE=this._getEquivBase(this.form.id_um_espesor,ld)??1;const lM=l*eL,aM=a*eA,eM=e*eE;if(l>0&&a>0){this.form.superficie=this._round(lM*aM,this.decimalPlaces);if(!this.form.id_um_superficie&&window.unidadesSuperficieData){const m2=window.unidadesSuperficieData.find(u=>u.simbolo==='m²'||u.simbolo==='mts²');if(m2)this.form.id_um_superficie=m2.id;}}if(l>0&&a>0&&e>0){const v=lM*aM*eM*1e6;this.form.volumen=this._round(v,this.decimalPlaces);if(!this.form.id_um_volumen&&window.unidadesVolumenData){const cm3=window.unidadesVolumenData.find(u=>u.simbolo==='cm³'||u.simbolo.toLowerCase().includes('cm'));if(cm3)this.form.id_um_volumen=cm3.id;}}},
+validateUnidadesMedida(){const f=[{v:'largo_alto',u:'id_um_largo_alto',l:'Largo/Alto'},{v:'ancho',u:'id_um_ancho',l:'Ancho'},{v:'espesor_profundidad',u:'id_um_espesor',l:'Espesor'},{v:'superficie',u:'id_um_superficie',l:'Superficie'},{v:'volumen',u:'id_um_volumen',l:'Volumen'}];const errs=[];f.forEach(x=>{if((parseFloat(this.form[x.v])||0)!==0&&(!this.form[x.u]||this.form[x.u]===''||this.form[x.u]==='UM'))errs.push(x.l);});if(errs.length>0){alert(`Campos sin UM:\n\n${errs.join('\n')}`);return false;}return true;},
+async saveParte(){if(!this.validateUnidadesMedida())return;this.loading=true;try{const url=this.form.id?`${BASE}/productos/partes/manager/${this.form.id}`:BASE+'/productos/partes/manager';const method=this.form.id?'PUT':'POST';const fd=new URLSearchParams();Object.keys(this.form).forEach(k=>{if(k!=='id'){const v=this.form[k];if(k==='activo')fd.append(k,v?'1':'0');else if(v!==null&&v!=='')fd.append(k,v);}});if(method==='PUT')fd.append('_method','PUT');const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json','X-Requested-With':'XMLHttpRequest'},body:fd});if(r.redirected){window.location.href=r.url;}else if(r.ok){const ct=r.headers.get('content-type')||'';if(ct.includes('application/json')){const p=await r.json();if(p.redirect_url){window.location.href=p.redirect_url;return;}if(p.status==='error'){alert(p.message||'Error al guardar');return;}}window.location.reload();}else{let msg='Error al guardar';try{const p=await r.json();if(p&&p.message)msg=p.message;}catch(e){}alert(msg);}}catch(e){console.error(e);alert('Error: '+e.message);}finally{this.loading=false;}},
+enableEdit(){if(this.form.id)window.location.href=`${BASE}/productos/partes/manager/${this.form.id}/editar`;},
+disableEdit(){if(this.form.id)window.location.href=`${BASE}/productos/partes/manager/${this.form.id}`;},
+resetVariantForm(){this.variantForm={id:null,codigo_variante:'',detalle:'',estado:'activa',lote_minimo:1,punto_pedido:0,stock_actual:0,peso:null,id_um_peso:'',ubicacion_cuerpo:'',ubicacion_pasillo:'',ubicacion_estante:''};this.$nextTick(()=>this.adjustVariantDetalleHeight());},
+adjustVariantDetalleHeight(){const el=this.$refs.variantDetalle;if(!el)return;const c=this.$refs.variantCodigo;const min=c?Math.ceil(c.getBoundingClientRect().height):28;el.style.height='auto';el.style.height=Math.max(el.scrollHeight,min)+'px';},
+enableNewVariante(){this.resetVariantForm();this.isVariantFormEnabled=true;},
+async saveVariante(){if(!this.form.id){alert('Primero debes guardar la parte');return;}this.loading=true;try{const url=this.variantForm.id?`${BASE}/productos/partes/${this.form.id}/variantes/${this.variantForm.id}?context=manager`:`${BASE}/productos/partes/${this.form.id}/variantes?context=manager`;const method=this.variantForm.id?'PUT':'POST';const fd=new URLSearchParams();fd.append('id_parte',this.form.id);Object.keys(this.variantForm).forEach(k=>{if(k!=='id'){const v=this.variantForm[k];if(v!==null&&v!=='')fd.append(k,v);}});if(method==='PUT')fd.append('_method','PUT');fd.append('context','manager');const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd});if(r.redirected){window.location.href=r.url;}else if(r.ok){window.location.reload();}else{alert('Error al guardar variante');}}catch(e){console.error(e);alert('Error: '+e.message);}finally{this.loading=false;}},
+editVariante(v){if(this.form.id)window.location.href=`${BASE}/productos/partes/manager/${this.form.id}/variantes/${v.id}/editar`;},
+loadVarianteIntoForm(v){this.variantForm={id:v.id,codigo_variante:v.codigo_variante||'',detalle:v.detalle||'',estado:v.estado||'activa',lote_minimo:this._toNumberWithDefault(v.lote_minimo,1),punto_pedido:this._toNumberWithDefault(v.punto_pedido,0),stock_actual:this._toNumberWithDefault(v.stock_actual,0),peso:this._toNullableNumber(v.peso),id_um_peso:v.id_um_peso||'',ubicacion_cuerpo:v.ubicacion_cuerpo||'',ubicacion_pasillo:v.ubicacion_pasillo||'',ubicacion_estante:v.ubicacion_estante||''};this.$nextTick(()=>this.adjustVariantDetalleHeight());},
+cancelEditVariante(){if(this.variantForm.id&&this.form.id){window.location.href=`${BASE}/productos/partes/manager/${this.form.id}/variantes/${this.variantForm.id}`;return;}this.resetVariantForm();this.isVariantFormEnabled=false;},
+openDeleteVarianteModal(v){this.deleteVarianteTarget=v;this.deleteVarianteIndex=this.variantes.findIndex(x=>x.id===v.id);const isLast=this.variantes.length<=1;let msg='¿Eliminar variante <strong>'+v.codigo_variante+'</strong>?';if(isLast)msg+='<br><small class="text-muted">Es la única variante. Se eliminará también la parte.</small>';this.deleteVarianteMessage=msg;bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDeleteVarianteManager')).show();},
+async confirmDeleteVariante(){if(!this.deleteVarianteTarget)return;const vid=this.deleteVarianteTarget.id;const idx=this.deleteVarianteIndex;this.loading=true;try{const url=`${BASE}/productos/partes/${this.form.id}/variantes/${vid}?context=manager`;const fd=new URLSearchParams();fd.append('_method','DELETE');fd.append('context','manager');fd.append('force_delete_parte','1');const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:fd});if(r.ok){const p=await r.json();const m=document.getElementById('modalDeleteVarianteManager');bootstrap.Modal.getInstance(m)?.hide();if(p.deleted_parte){window.location.href=`${BASE}/productos/partes/manager`;}else{this.variantes.splice(idx,1);}}else{let msg='Error al eliminar';try{const p=await r.json();if(p&&p.message)msg=p.message;}catch(e){}this.deleteVarianteMessage='<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>'+msg;}}catch(e){console.error(e);this.deleteVarianteMessage='<i class="fa-solid fa-circle-exclamation text-danger me-1"></i>Error: '+e.message;}finally{this.loading=false;}},
+getEstadoLabel(e){return{'activa':'Activa','desarrollo':'Desarrollo','obsoleta':'Obsoleta','descontinuada':'Descontinuada'}[e]||e;},
+getPesoUM(id){if(!id||!this.unidadesMasa.length)return'';const u=this.unidadesMasa.find(u=>u.id==id);return u?u.simbolo:'';},
+getUmUsoSimbolo(){const id=this.form.id_um_uso;if(!id||!this.unidadesTodas.length)return'';const u=this.unidadesTodas.find(u=>u.id==id);return u?u.simbolo:'';}
+};}
+</script>
+</div><!-- close x-data wrapper -->
+</body>
+</html>

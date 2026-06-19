@@ -110,15 +110,9 @@ class SearchClient {
    * Evita anchos de 0px cuando el input se inicializa oculto.
    */
   syncResultsWidth() {
-    const inputRect = this.inputElement.getBoundingClientRect();
-    let width = Math.round(inputRect.width);
-
-    if (width <= 0 && this.inputElement.parentElement) {
-      width = Math.round(this.inputElement.parentElement.getBoundingClientRect().width);
-    }
-
-    if (width > 0) {
-      this.resultsContainer.style.width = `${width}px`;
+    const parent = this.resultsContainer.parentElement;
+    if (parent) {
+      this.resultsContainer.style.width = Math.round(parent.getBoundingClientRect().width) + 'px';
     }
   }
 

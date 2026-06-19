@@ -73,7 +73,7 @@ $dimensionFields = [
             </div>
         </template>
 
-        <div id="parte-search-results-v3" style="position:absolute;z-index:1050;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none;"></div>
+        <div id="parte-search-results-v3" style="position:absolute;top:100%;left:0;right:0;z-index:1050;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none;"></div>
     </div>
 
     <div class="pm-shell">

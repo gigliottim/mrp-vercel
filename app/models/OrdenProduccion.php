@@ -52,8 +52,8 @@ final class OrdenProduccion extends BaseTenantModel
                 b.version as bom_version,
                 u.username as usuario_nombre
             FROM ordenes_produccion op
-            INNER JOIN variantes v ON v.id = op.variante_id
-            INNER JOIN partes p ON p.id = v.id_parte
+            LEFT JOIN variantes v ON v.id = op.variante_id
+            LEFT JOIN partes p ON p.id = v.id_parte
             LEFT JOIN bom_cabecera b ON b.id = op.bom_id_utilizada
             LEFT JOIN usuarios u ON u.id = op.usuario_creador
             WHERE op.id = :id
@@ -86,10 +86,12 @@ final class OrdenProduccion extends BaseTenantModel
                 op.prioridad,
                 v.codigo_variante,
                 v.detalle as variante_nombre,
-                p.codigo as parte_codigo
+                p.codigo as parte_codigo,
+                p.detalle as producto_nombre,
+                COALESCE(v.codigo_variante, \'\') as variante_codigo
             FROM ordenes_produccion op
-            INNER JOIN variantes v ON v.id = op.variante_id
-            INNER JOIN partes p ON p.id = v.id_parte
+            LEFT JOIN variantes v ON v.id = op.variante_id
+            LEFT JOIN partes p ON p.id = v.id_parte
             WHERE 1=1
         ';
 
@@ -148,10 +150,12 @@ final class OrdenProduccion extends BaseTenantModel
                 op.*,
                 v.codigo_variante,
                 v.detalle as variante_nombre,
-                p.codigo as parte_codigo
+                p.codigo as parte_codigo,
+                p.detalle as producto_nombre,
+                COALESCE(v.codigo_variante, \'\') as variante_codigo
             FROM ordenes_produccion op
-            INNER JOIN variantes v ON v.id = op.variante_id
-            INNER JOIN partes p ON p.id = v.id_parte
+            LEFT JOIN variantes v ON v.id = op.variante_id
+            LEFT JOIN partes p ON p.id = v.id_parte
             WHERE op.estado = :estado
             ORDER BY op.fecha_inicio_programada DESC
             LIMIT :limit

@@ -77,10 +77,11 @@ final class OrdenesProduccionController extends Controller
      */
     public function store(Request $request): Response
     {
+        $bomIdRaw = $request->input('bom_id_utilizada');
         $data = [
             'numero_orden' => $request->input('numero_orden'),
             'variante_id' => (int)$request->input('variante_id'),
-            'bom_id_utilizada' => (int)$request->input('bom_id_utilizada'),
+            'bom_id_utilizada' => empty($bomIdRaw) ? null : (int)$bomIdRaw,
             'cantidad_planificada' => (float)$request->input('cantidad_planificada'),
             'fecha_inicio_programada' => $request->input('fecha_inicio_programada'),
             'fecha_fin_programada' => $request->input('fecha_fin_programada'),
@@ -97,6 +98,7 @@ final class OrdenesProduccionController extends Controller
             return Response::redirect("/produccion/ordenes/{$ordenId}");
         }
 
+        $_SESSION['flash_error'] = implode(', ', $resultado['errors'] ?? ['Error al crear la orden']);
         return Response::redirect('/produccion/ordenes/create');
     }
 

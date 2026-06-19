@@ -9,6 +9,14 @@ use App\Core\Support\AssetHelper;
 ?>
 <link rel="stylesheet" href="<?= AssetHelper::css('modules/SearchClient.css') ?>">
 
+<?php if (isset($_SESSION['flash_error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+        <?= esc($_SESSION['flash_error']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
+
 <div class="container-fluid py-4" x-data="ordenForm()">
     <div class="row justify-content-center">
         <div class="col-lg-10">

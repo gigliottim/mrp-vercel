@@ -146,12 +146,6 @@ final class OrdenProduccionService
         // BOM requerida
         if (empty($data['bom_id_utilizada'])) {
             $errores[] = 'La lista de materiales es requerida';
-        } else {
-            // Verificar que existe ruta para el BOM
-            $operaciones = $this->rutaRepository->getByBomId((int)$data['bom_id_utilizada']);
-            if (empty($operaciones)) {
-                $errores[] = 'El BOM seleccionado no tiene una ruta de producción definida';
-            }
         }
 
         // Cantidad requerida y positiva

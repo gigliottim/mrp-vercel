@@ -101,7 +101,7 @@ $dimensionFields = [
                                     <div class="pm-var-code" x-text="variante.codigo_variante || '—'"></div>
                                     <div class="pm-var-actions d-flex gap-1">
                                         <button class="btn btn-sm pm-btn-outline" style="padding:.1rem .25rem;font-size:.6rem;" @click.stop="editVariante(variante)" :disabled="isVariantFormEnabled" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                                        <a class="btn btn-sm pm-btn-outline" style="padding:.1rem .25rem;font-size:.6rem;" :href="'<?= url('productos/maestro') ?>?id_variante=' + variante.id" title="Maestro" target="_blank"><i class="fa-solid fa-network-wired"></i></a>
+                                        <a class="btn btn-sm pm-btn-outline" style="padding:.1rem .25rem;font-size:.6rem;" :href="'<?= url('productos/maestro') ?>?id_variante=' + variante.id" @click.stop title="Maestro" target="_blank"><i class="fa-solid fa-network-wired"></i></a>
                                         <button class="btn btn-sm pm-btn-danger" style="padding:.1rem .25rem;" @click.stop="openDeleteVarianteModal(variante)" :disabled="isVariantFormEnabled" title="Eliminar"><i class="fa-solid fa-trash" style="font-size:.55rem"></i></button>
                                     </div>
                                 </div>

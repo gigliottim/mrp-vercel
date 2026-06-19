@@ -10,239 +10,306 @@ $unidadesMedida = $unidadesMedida ?? [];
 <section class="mb-2">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <p class="text-uppercase text-muted small mb-1">Transacciones</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1" style="font-size:.8rem">
+                    <li class="breadcrumb-item"><a href="<?= url('') ?>">MRP</a></li>
+                    <li class="breadcrumb-item"><a href="#">Transacciones</a></li>
+                    <li class="breadcrumb-item active">Movimientos de Partes</li>
+                </ol>
+            </nav>
             <h1 class="h3 mb-0">Movimientos de Partes</h1>
-            <p class="text-muted small mb-0">Registre movimientos de partes entre depósitos</p>
+            <p class="text-muted small mb-0">Registre y administre movimientos de partes entre dep&oacute;sitos</p>
         </div>
     </div>
 </section>
 
+<!-- Stats Row -->
+<div class="row g-2 mb-3" id="statsRow">
+    <div class="col-6 col-md-3">
+        <div class="mrp-stat-card">
+            <div class="stat-icon text-primary"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+            <div class="stat-number" id="statTotal"><?= count($movimientos ?? []) ?></div>
+            <div class="stat-desc">Total Movimientos</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="mrp-stat-card">
+            <div class="stat-icon text-success"><i class="fa-solid fa-truck-ramp-box"></i></div>
+            <div class="stat-number" id="statCompras">0</div>
+            <div class="stat-desc">Compras</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="mrp-stat-card">
+            <div class="stat-icon text-info"><i class="fa-solid fa-warehouse"></i></div>
+            <div class="stat-number" id="statInternos">0</div>
+            <div class="stat-desc">Internos</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="mrp-stat-card">
+            <div class="stat-icon text-warning"><i class="fa-solid fa-truck"></i></div>
+            <div class="stat-number" id="statVentas">0</div>
+            <div class="stat-desc">Salidas</div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3 movimientos-layout">
     <!-- LEFT: Formulario -->
     <div class="col-lg-5 d-flex flex-column">
-        <div class="card flex-fill">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Nuevo Movimiento</h5>
+        <div class="mrp-card flex-fill">
+            <div class="mrp-card-header">
+                <h5 id="formTitle">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span id="formTitleText">Nuevo Movimiento</span>
+                </h5>
+                <span class="badge-counter d-none" id="editingBadge">Editando #<span id="editingId"></span></span>
             </div>
-            <div class="card-body movimientos-form-body">
+            <div class="mrp-card-body mrp-scroll-form">
                 <form id="formMovimiento" method="POST" action="<?= url('transacciones/movimientos-partes') ?>">
                     <input type="hidden" id="movimiento_id" name="movimiento_id" value="">
-                    <!-- Fila 1: Fecha/Hora y Depósitos -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label for="fecha_hora" class="form-label">Fecha/Hora</label>
-                            <div class="input-group">
+
+                    <!-- Section: Fecha y Flujo -->
+                    <div class="mrp-form-section">
+                        <div class="mrp-form-section-title">
+                            <i class="fa-solid fa-calendar-day"></i> Fecha y Flujo
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label for="fecha_hora" class="form-label">Fecha/Hora</label>
                                 <input type="datetime-local"
                                     class="form-control"
                                     id="fecha_hora"
                                     name="fecha_hora"
                                     value="<?= date('Y-m-d\TH:i') ?>"
                                     required>
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fa-solid fa-calendar"></i>
-                                </button>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="deposito_origen" class="form-label">Depósito Origen</label>
-                            <select class="form-select"
-                                id="deposito_origen"
-                                name="deposito_origen"
-                                required>
-                                <option value="">Seleccionar depósito origen</option>
-                                <?php foreach ($tiposDeposito as $tipo) : ?>
+                            <div class="col-md-3">
+                                <label for="deposito_origen" class="form-label">Origen</label>
+                                <select class="form-select" id="deposito_origen" name="deposito_origen" required>
+                                    <option value="">Seleccionar</option>
+                                    <?php foreach ($tiposDeposito as $tipo) : ?>
                                     <option value="<?= View::escape($tipo['id']) ?>"
                                         data-codigo="<?= View::escape($tipo['codigo']) ?>">
                                         <?= View::escape($tipo['codigo']) ?> - <?= View::escape($tipo['nombre']) ?>
                                     </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="deposito_destino" class="form-label">Depósito Destino</label>
-                            <select class="form-select"
-                                id="deposito_destino"
-                                name="deposito_destino"
-                                required
-                                disabled>
-                                <option value="">Primero seleccione origen</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Fila 2: Búsqueda de Parte -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-12">
-                            <label for="search-parte-input" class="form-label">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i>
-                                Buscar Parte
-                            </label>
-                            <div class="position-relative">
-                                <div class="input-group">
-                                    <input type="text"
-                                        class="form-control form-control-lg"
-                                        id="search-parte-input"
-                                        placeholder="Escriba al menos 2 caracteres para buscar parte o variante..."
-                                        autocomplete="off">
-                                    <button type="button" class="btn btn-outline-primary d-none" id="btn-cambiar-parte">
-                                        <i class="fa-solid fa-rotate me-1"></i> Cambiar
-                                    </button>
-                                </div>
-                                <div id="search-parte-results" class="search-results list-group mt-2"></div>
-                            </div>
-                            <small class="text-muted d-block mt-1">
-                                <i class="fa-solid fa-info-circle me-1"></i>
-                                Los resultados incluyen partes y variantes. Seleccione una para continuar.
-                            </small>
-                            <!-- Campo oculto para validación -->
-                            <input type="hidden" id="parte" name="parte" required>
-                        </div>
-                    </div>
-
-                    <!-- Fila 3: Orden No. y Venta No. -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3 field-std">
-                            <label for="orden_no" class="form-label">Orden No.</label>
-                            <input type="text"
-                                class="form-control"
-                                id="orden_no"
-                                name="orden_no"
-                                placeholder="N/A">
-                        </div>
-                        <div class="col-md-3 field-std">
-                            <label for="venta_no" class="form-label">Venta No.</label>
-                            <input type="text"
-                                class="form-control"
-                                id="venta_no"
-                                name="venta_no"
-                                placeholder="N/A">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="cbte" class="form-label">Cbte</label>
-                            <input type="text"
-                                class="form-control"
-                                id="cbte"
-                                name="cbte">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="proveedor_cliente" class="form-label">Proveedor/Cliente</label>
-                            <select class="form-select" id="proveedor_cliente" name="proveedor_cliente">
-                                <option value="">Seleccionar</option>
-                                <?php if (isset($entidades)): ?>
-                                    <?php foreach ($entidades as $entidad): ?>
-                                        <option value="<?= View::escape($entidad['id']) ?>">
-                                            <?= View::escape($entidad['razon_social']) ?> (<?= View::escape($entidad['tipo']) ?>)
-                                        </option>
                                     <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Fila 4: Cantidad, UM e Importe -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label for="cantidad" class="form-label">Cantidad</label>
-                            <input type="number"
-                                class="form-control"
-                                id="cantidad"
-                                name="cantidad"
-                                step="any"
-                                min="0.0001"
-                                required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="um" class="form-label">UM <span class="text-muted small" id="um_tipo_label"></span></label>
-                            <select class="form-select" id="um" name="um" required disabled>
-                                <option value="">Seleccione una parte primero</option>
-                            </select>
-                            <input type="hidden" id="um_compra_id" value="">
-                            <input type="hidden" id="um_uso_id" value="">
-                        </div>
-                        <!-- Campos específicos para Compras (inicialmente ocultos) -->
-                        <div class="col-md-4 field-compra d-none">
-                            <label for="precio_unitario" class="form-label">Precio Unitario (Auto)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number"
-                                    class="form-control"
-                                    id="precio_unitario"
-                                    name="precio_unitario"
-                                    step="0.01"
-                                    min="0"
-                                    disabled>
+                                </select>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end justify-content-center pb-1">
+                                <i class="fa-solid fa-arrow-right text-primary" style="font-size:1.2rem"></i>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="deposito_destino" class="form-label">Destino</label>
+                                <select class="form-select" id="deposito_destino" name="deposito_destino" required disabled>
+                                    <option value="">Seleccione origen</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="col-md-4 field-compra d-none">
-                            <label for="moneda" class="form-label">Moneda</label>
-                            <select class="form-select" id="moneda" name="moneda">
-                                <option value="ARS" selected>ARS - Peso Argentino</option>
-                                <option value="USD">USD - Dólar Estadounidense</option>
-                                <option value="EUR">EUR - Euro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 field-compra d-none">
-                            <label for="cotizacion" class="form-label">Cotización</label>
-                            <input type="number" class="form-control" id="cotizacion" name="cotizacion" value="1" step="0.01">
-                        </div>
-                        <!-- Fin Campos Compras -->
-
-                        <div class="col-md-4 field-compra d-none">
-                            <label for="importe_total" class="form-label">Importe Total $</label>
-                            <input type="number"
-                                class="form-control"
-                                id="importe_total"
-                                name="importe_total"
-                                step="0.01"
-                                min="0">
+                        <!-- Flow visual indicator -->
+                        <div class="mrp-flow-visual d-none" id="flowVisual">
+                            <div class="mrp-flow-step" id="flowOrigen">
+                                <i class="fa-solid fa-box"></i>
+                                <span id="flowOrigenLabel">-</span>
+                            </div>
+                            <i class="fa-solid fa-arrow-right mrp-flow-arrow-icon"></i>
+                            <div class="mrp-flow-step" id="flowDestino">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                                <span id="flowDestinoLabel">-</span>
+                            </div>
+                            <span class="ms-auto" id="flowTypeBadge"></span>
                         </div>
                     </div>
 
-                    <!-- Panel de Información Calculada (Compras) -->
-                    <div id="panel-calculos-compra" class="card bg-light mb-3 d-none field-compra">
-                        <div class="card-body">
-                            <h6 class="card-title text-primary"><i class="fas fa-calculator me-2"></i>Información Calculada</h6>
+                    <!-- Section: Parte -->
+                    <div class="mrp-form-section">
+                        <div class="mrp-form-section-title">
+                            <i class="fa-solid fa-magnifying-glass"></i> Parte / Variante
+                        </div>
+                        <div class="mrp-search-wrapper">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                                <input type="text"
+                                    class="form-control form-control-lg"
+                                    id="search-parte-input"
+                                    placeholder="Escriba al menos 2 caracteres para buscar parte o variante..."
+                                    autocomplete="off"
+                                    disabled>
+                                <button type="button" class="btn btn-mrp btn-mrp-outline d-none" id="btn-cambiar-parte">
+                                    <i class="fa-solid fa-rotate me-1"></i> Cambiar
+                                </button>
+                            </div>
+                            <div id="search-parte-results" class="mrp-search-results"></div>
+                        </div>
+                        <input type="hidden" id="parte" name="parte" required>
+                        <small class="text-muted d-block mt-1" id="parteInfo">
+                            <i class="fa-solid fa-info-circle me-1"></i>Seleccione un dep&oacute;sito destino para habilitar la b&uacute;squeda.
+                        </small>
+                        <div class="d-none mt-2 p-2 bg-light rounded-3" id="parteSelectedDetail">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-check-circle text-success"></i>
+                                <div>
+                                    <strong id="parteSelectedCode" class="text-primary"></strong>
+                                    <span id="parteSelectedVariante" class="text-muted small ms-1"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Referencia (std) -->
+                    <div class="mrp-form-section field-std">
+                        <div class="mrp-form-section-title">
+                            <i class="fa-solid fa-hashtag"></i> Referencia
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="orden_no" class="form-label">Orden No.</label>
+                                <input type="text" class="form-control" id="orden_no" name="orden_no" placeholder="N/A">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="venta_no" class="form-label">Venta No.</label>
+                                <input type="text" class="form-control" id="venta_no" name="venta_no" placeholder="N/A">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="proveedor_cliente" class="form-label">Prov./Cliente</label>
+                                <select class="form-select" id="proveedor_cliente" name="proveedor_cliente">
+                                    <option value="">Seleccionar</option>
+                                    <?php if (isset($entidades)): ?>
+                                        <?php foreach ($entidades as $entidad): ?>
+                                    <option value="<?= View::escape($entidad['id']) ?>">
+                                        <?= View::escape($entidad['razon_social']) ?> (<?= View::escape($entidad['tipo']) ?>)
+                                    </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Cantidad y UM -->
+                    <div class="mrp-form-section">
+                        <div class="mrp-form-section-title">
+                            <i class="fa-solid fa-scale-balanced"></i> Cantidad
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label for="cantidad" class="form-label">Cantidad</label>
+                                <input type="number" class="form-control mrp-qty-input" id="cantidad" name="cantidad" step="any" min="0.0001" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="um" class="form-label">UM <span class="text-muted small" id="um_tipo_label"></span></label>
+                                <select class="form-select" id="um" name="um" required disabled>
+                                    <option value="">Seleccione una parte primero</option>
+                                </select>
+                                <input type="hidden" id="um_compra_id" value="">
+                                <input type="hidden" id="um_uso_id" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Compra (hidden by default) -->
+                    <div class="mrp-form-section field-compra d-none">
+                        <div class="mrp-form-section-title">
+                            <i class="fa-solid fa-cart-shopping"></i> Datos de Compra
+                            <span class="mrp-purchase-tag ms-2"><i class="fa-solid fa-tag"></i> Compra</span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="proveedor_compra" class="form-label">Proveedor *</label>
+                                <select class="form-select" id="proveedor_compra" name="proveedor_cliente">
+                                    <option value="">Seleccionar proveedor</option>
+                                    <?php if (isset($entidades)): ?>
+                                        <?php foreach ($entidades as $entidad): ?>
+                                            <?php if (($entidad['tipo'] ?? '') === 'PROVEEDOR'): ?>
+                                    <option value="<?= View::escape($entidad['id']) ?>">
+                                        <?= View::escape($entidad['razon_social']) ?>
+                                    </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="moneda" class="form-label">Moneda</label>
+                                <select class="form-select" id="moneda" name="moneda">
+                                    <option value="ARS" selected>ARS - Peso Argentino</option>
+                                    <option value="USD">USD - D&oacute;lar Estadounidense</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="cotizacion" class="form-label">Cotizaci&oacute;n</label>
+                                <input type="number" class="form-control" id="cotizacion" name="cotizacion" value="1" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="cbte_compra" class="form-label">Comprobante</label>
+                                <input type="text" class="form-control" id="cbte_compra" name="cbte">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="importe_total" class="form-label">Importe Total *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="importe_total" name="importe_total" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="precio_unitario" class="form-label">Precio Unit. (Auto)</label>
+                                <input type="number" class="form-control" id="precio_unitario" name="precio_unitario" step="0.000001" readonly tabindex="-1">
+                            </div>
+                        </div>
+
+                        <!-- Calculated info panel -->
+                        <div class="mrp-calc-panel" id="panel-calculos-compra">
+                            <h6><i class="fa-solid fa-calculator me-2"></i>Resumen Calculado</h6>
                             <div class="row g-3">
                                 <div class="col-md-3">
-                                    <small class="text-muted d-block">Cantidad (UM Compra)</small>
-                                    <strong id="calc-qty-compra">-</strong>
+                                    <div class="mrp-calc-stat">
+                                        <div class="stat-value" id="calc-qty-compra">-</div>
+                                        <div class="stat-label">Cant. Compra</div>
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <small class="text-muted d-block">Factor Conversión</small>
-                                    <strong id="calc-factor">-</strong>
+                                    <div class="mrp-calc-stat">
+                                        <div class="stat-value" id="calc-factor">-</div>
+                                        <div class="stat-label">Factor Conv.</div>
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <small class="text-muted d-block">Cantidad (UM Uso)</small>
-                                    <strong id="calc-qty-uso" class="text-success">-</strong>
+                                    <div class="mrp-calc-stat">
+                                        <div class="stat-value text-success" id="calc-qty-uso">-</div>
+                                        <div class="stat-label">Cant. Uso (Est.)</div>
+                                    </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <small class="text-muted d-block">Costo Unitario (Base)</small>
-                                    <strong id="calc-costo-base">-</strong>
+                                    <div class="mrp-calc-stat">
+                                        <div class="stat-value" id="calc-costo-base">-</div>
+                                        <div class="stat-label">Costo Unit. Base</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Fila 5: Observaciones -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-12">
-                            <label for="observaciones" class="form-label">Observaciones</label>
-                            <textarea class="form-control"
-                                id="observaciones"
-                                name="observaciones"
-                                rows="3"></textarea>
+                    <!-- Section: Observaciones -->
+                    <div class="mrp-form-section">
+                        <div class="mrp-form-section-title">
+                            <i class="fa-solid fa-message"></i> Observaciones
                         </div>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="2" placeholder="Notas adicionales..."></textarea>
                     </div>
 
-                    <!-- Botones de acción -->
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary" id="btnCancelar">
-                            <i class="fa-solid fa-xmark me-1"></i>
-                            Cancelar
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center gap-2 pt-2">
+                        <button type="button" class="btn btn-mrp btn-mrp-outline" id="btnCancelar">
+                            <i class="fa-solid fa-xmark me-1"></i> Cancelar
                         </button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fa-solid fa-check me-1"></i>
-                            Guardar
+                        <button type="submit" class="btn btn-mrp btn-mrp-success" id="btnSubmit">
+                            <i class="fa-solid fa-check me-1"></i> <span id="btnSubmitText">Guardar Movimiento</span>
                         </button>
                     </div>
                 </form>
@@ -252,25 +319,33 @@ $unidadesMedida = $unidadesMedida ?? [];
 
     <!-- RIGHT: Tabla de movimientos -->
     <div class="col-lg-7 d-flex flex-column">
-        <div class="card flex-fill">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Últimos 10 Movimientos Registrados</h5>
+        <div class="mrp-card flex-fill">
+            <div class="mrp-card-header">
+                <h5>
+                    <i class="fa-solid fa-list-check me-1"></i>
+                    &Uacute;ltimos Movimientos
+                </h5>
+                <span class="badge-counter" id="movCountBadge"><?= count($movimientos ?? []) ?></span>
             </div>
-            <div class="card-body p-0 movimientos-table-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+            <div class="mrp-card-body p-0">
+                <!-- Filter chips -->
+                <div class="px-3 pt-3 pb-2">
+                    <div class="mrp-filters-bar" id="filtersBar">
+                        <span class="text-muted small fw-semibold me-1">Filtrar:</span>
+                    </div>
+                </div>
+                <div class="mrp-table-wrapper">
+                    <table class="mrp-table" id="movimientosTable">
+                        <thead>
                             <tr>
                                 <th>Fecha/Hora</th>
                                 <th>Parte</th>
-                                <th>Orden No.</th>
-                                <th>Venta No.</th>
-                                <th>De</th>
-                                <th>A</th>
+                                <th>Flujo</th>
+                                <th>Orden</th>
                                 <th class="text-end">Cant. Uso</th>
                                 <th class="text-end">Cant. Compra</th>
                                 <th class="text-end">Importe</th>
-                                <th>Acciones</th>
+                                <th class="text-center" style="width:70px">Acci&oacute;n</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -287,6 +362,9 @@ $unidadesMedida = $unidadesMedida ?? [];
 
                                     return $decimalPart === '' ? $integerPart : $integerPart . ',' . $decimalPart;
                                 };
+
+                                $depositosCompra = ['PROVEEDOR', 'PROVEED'];
+                                $depositosCliente = ['CLIENTE', 'VENTA', 'PT'];
                                 ?>
                                 <?php foreach ($movimientos as $mov): ?>
                                     <?php
@@ -300,28 +378,54 @@ $unidadesMedida = $unidadesMedida ?? [];
                                     $cantidadCompra = $cantidadUso / $factorConversion;
                                     $umUso = (string) ($mov['um_uso_simbolo'] ?? '-');
                                     $umCompra = (string) ($mov['um_compra_simbolo'] ?? '-');
+
+                                    $origenCodigo = strtoupper((string) ($mov['origen_codigo'] ?? ''));
+                                    $destinoCodigo = strtoupper((string) ($mov['destino_codigo'] ?? ''));
+                                    $esCompraMov = false;
+                                    $esSalidaMov = false;
+                                    foreach ($depositosCompra as $dc) {
+                                        if (strpos($origenCodigo, $dc) !== false) {
+                                            $esCompraMov = true;
+                                            break;
+                                        }
+                                    }
+                                    foreach ($depositosCliente as $dc) {
+                                        if (strpos($destinoCodigo, $dc) !== false) {
+                                            $esSalidaMov = true;
+                                            break;
+                                        }
+                                    }
                                     ?>
                                     <tr data-origen-id="<?= View::escape($mov['id_tipo_deposito_origen']) ?>"
                                         data-destino-id="<?= View::escape($mov['id_tipo_deposito_destino']) ?>">
-                                        <td><?= View::escape(app_format_datetime($mov['fecha'])) ?></td>
+                                        <td><span class="small"><?= View::escape(app_format_datetime($mov['fecha'])) ?></span></td>
                                         <td>
-                                            <div class="fw-bold"><?= View::escape($mov['parte_codigo']) ?></div>
+                                            <div class="fw-bold" style="font-size:.85rem"><?= View::escape($mov['parte_codigo']) ?></div>
                                             <small class="text-muted"><?= View::escape($mov['codigo_variante']) ?></small>
                                         </td>
-                                        <td><?= View::escape($mov['referencia_id']) ?></td> <!-- Orden No / Ref -->
-                                        <td>-</td> <!-- Venta No -->
                                         <td>
-                                            <span class="badge bg-secondary"><?= View::escape($mov['origen_codigo']) ?></span>
+                                            <div class="d-flex flex-column gap-1">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <span class="deposit-badge origen"><i class="fa-solid fa-box fa-xs"></i> <?= View::escape($mov['origen_codigo']) ?></span>
+                                                    <i class="fa-solid fa-arrow-right fa-xs text-primary"></i>
+                                                    <span class="deposit-badge destino"><i class="fa-solid fa-boxes-stacked fa-xs"></i> <?= View::escape($mov['destino_codigo']) ?></span>
+                                                </div>
+                                                <?php if ($esCompraMov): ?>
+                                                    <span class="mrp-purchase-tag"><i class="fa-solid fa-cart-shopping"></i> Compra</span>
+                                                <?php elseif ($esSalidaMov): ?>
+                                                    <span class="badge bg-warning text-dark" style="font-size:.7rem"><i class="fa-solid fa-truck me-1"></i>Salida</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-info text-dark" style="font-size:.7rem"><i class="fa-solid fa-arrows-rotate me-1"></i>Interno</span>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
-                                        <td>
-                                            <span class="badge bg-primary"><?= View::escape($mov['destino_codigo']) ?></span>
-                                        </td>
-                                        <td class="text-end fw-bold"><?= View::escape($formatCompactQty($cantidadUso) . ' ' . $umUso) ?></td>
-                                        <td class="text-end"><?= View::escape($formatCompactQty($cantidadCompra) . ' ' . $umCompra) ?></td>
-                                        <td class="text-end"><?= $importeMovimiento !== null ? View::escape('$ ' . $formatCompactQty($importeMovimiento)) : '-' ?></td>
-                                        <td>
+                                        <td><?= View::escape($mov['referencia_id'] ?? '-') ?></td>
+                                        <td class="text-end fw-bold" style="font-size:.85rem"><?= View::escape($formatCompactQty($cantidadUso) . ' ' . $umUso) ?></td>
+                                        <td class="text-end" style="font-size:.85rem"><?= View::escape($formatCompactQty($cantidadCompra) . ' ' . $umCompra) ?></td>
+                                        <td class="text-end" style="font-size:.85rem"><?= $importeMovimiento !== null ? View::escape('$ ' . $formatCompactQty($importeMovimiento)) : '<span class="text-muted">-</span>' ?></td>
+                                        <td class="text-center">
                                             <button type="button"
-                                                class="btn btn-sm btn-outline-primary btn-editar-movimiento"
+                                                class="btn btn-sm btn-mrp-outline btn-edit-row btn-editar-movimiento"
                                                 data-id="<?= View::escape($mov['id']) ?>"
                                                 data-fecha="<?= View::escape((string) $mov['fecha']) ?>"
                                                 data-variante-id="<?= View::escape($mov['id_variante']) ?>"
@@ -338,7 +442,8 @@ $unidadesMedida = $unidadesMedida ?? [];
                                                 data-id-entidad="<?= View::escape((string) ($mov['id_entidad'] ?? '')) ?>"
                                                 data-cbte="<?= View::escape((string) ($mov['nro_comprobante'] ?? '')) ?>"
                                                 data-compra-precio-unitario="<?= View::escape((string) ($mov['compra_precio_unitario'] ?? '')) ?>"
-                                                data-observaciones="<?= View::escape((string) ($mov['observaciones'] ?? '')) ?>">
+                                                data-observaciones="<?= View::escape((string) ($mov['observaciones'] ?? '')) ?>"
+                                                title="Editar movimiento">
                                                 <i class="fa-solid fa-pen-to-square me-1"></i>Editar
                                             </button>
                                         </td>
@@ -346,8 +451,11 @@ $unidadesMedida = $unidadesMedida ?? [];
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">
-                                        No hay movimientos registrados
+                                    <td colspan="8" class="text-center text-muted py-5">
+                                        <div class="mrp-empty-state">
+                                            <i class="fa-solid fa-inbox d-block"></i>
+                                            <p>No hay movimientos registrados</p>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -359,70 +467,174 @@ $unidadesMedida = $unidadesMedida ?? [];
     </div>
 </div>
 
+<!-- Toast Container -->
+<div class="mrp-toast-container" id="toastContainer"></div>
+<!-- Modal Container -->
+<div id="modalContainer"></div>
+
 <style>
-    /* Layout: formulario izquierda, tabla derecha */
-    .movimientos-layout {
-        min-height: 0;
+    :root {
+        --mrp-primary: #4f46e5;
+        --mrp-primary-light: #6366f1;
+        --mrp-primary-dark: #3730a3;
+        --mrp-success: #059669;
+        --mrp-success-light: #d1fae5;
+        --mrp-warning: #d97706;
+        --mrp-danger: #dc2626;
+        --mrp-info: #0891b2;
+        --mrp-bg: #f8fafc;
+        --mrp-card-bg: #ffffff;
+        --mrp-border: #e2e8f0;
+        --mrp-text: #1e293b;
+        --mrp-text-muted: #64748b;
+        --mrp-radius: 12px;
+        --mrp-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+        --mrp-shadow-lg: 0 10px 25px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.04);
+        --mrp-transition: all .2s cubic-bezier(.4,0,.2,1);
     }
 
-    .movimientos-layout>div[class*="col"] {
+    [data-bs-theme="dark"] {
+        --mrp-bg: #0f172a;
+        --mrp-card-bg: #1e293b;
+        --mrp-border: #334155;
+        --mrp-text: #f1f5f9;
+        --mrp-text-muted: #94a3b8;
+        --mrp-shadow: 0 1px 3px rgba(0,0,0,.3);
+        --mrp-shadow-lg: 0 10px 25px rgba(0,0,0,.3);
+        --mrp-success-light: #064e3b;
+    }
+
+    .mrp-stat-card {
+        background: var(--mrp-card-bg);
+        border: 1px solid var(--mrp-border);
+        border-radius: 10px;
+        padding: .85rem;
+        text-align: center;
+        transition: var(--mrp-transition);
+    }
+    .mrp-stat-card:hover { transform: translateY(-2px); box-shadow: var(--mrp-shadow); }
+    .mrp-stat-card .stat-icon { font-size: 1.2rem; margin-bottom: .25rem; }
+    .mrp-stat-card .stat-number { font-size: 1.3rem; font-weight: 700; color: var(--mrp-text); }
+    .mrp-stat-card .stat-desc { font-size: .7rem; color: var(--mrp-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+
+    .mrp-card {
+        background: var(--mrp-card-bg);
+        border: 1px solid var(--mrp-border);
+        border-radius: var(--mrp-radius);
+        box-shadow: var(--mrp-shadow);
+        overflow: hidden;
+        transition: var(--mrp-transition);
+    }
+    .mrp-card:hover { box-shadow: var(--mrp-shadow-lg); }
+
+    .mrp-card-header {
+        padding: .85rem 1.25rem;
+        border-bottom: 1px solid var(--mrp-border);
+        background: linear-gradient(135deg, var(--mrp-primary) 0%, var(--mrp-primary-light) 100%);
+        color: #fff;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
     }
+    .mrp-card-header h5 { margin: 0; font-size: .95rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+    .mrp-card-header .badge-counter { background: rgba(255,255,255,.25); color: #fff; font-size: .75rem; padding: .2em .6em; border-radius: 9999px; }
 
-    .movimientos-layout .card {
-        flex: 1;
-        min-height: 0;
+    .mrp-card-body { padding: 1.25rem; }
+
+    .mrp-form-section { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--mrp-border); }
+    .mrp-form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .mrp-form-section-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--mrp-primary); margin-bottom: .75rem; display: flex; align-items: center; gap: .4rem; }
+    .mrp-form-section-title i { font-size: .7rem; opacity: .7; }
+
+    .form-control, .form-select { border-radius: 8px; border-color: var(--mrp-border); font-size: .88rem; transition: var(--mrp-transition); padding: .55rem .85rem; }
+    .form-control:focus, .form-select:focus { border-color: var(--mrp-primary); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+    .form-control.is-locked { background-color: var(--mrp-success-light) !important; border-color: var(--mrp-success) !important; font-weight: 600; }
+
+    .input-group-text { background: var(--mrp-bg); border-color: var(--mrp-border); font-size: .85rem; }
+
+    .mrp-search-wrapper { position: relative; }
+    .mrp-search-results {
+        position: absolute; top: 100%; left: 0; right: 0; z-index: 1050;
+        background: var(--mrp-card-bg); border: 1px solid var(--mrp-border); border-radius: 10px;
+        box-shadow: var(--mrp-shadow-lg); max-height: 340px; overflow-y: auto; display: none; margin-top: 4px;
     }
+    .mrp-search-results.show { display: block; }
 
-    .movimientos-form-body {
-        overflow-y: auto;
-        max-height: calc(100vh - 230px);
-    }
+    .mrp-flow-visual { display: flex; align-items: center; gap: .5rem; padding: .75rem; background: var(--mrp-bg); border-radius: 10px; margin-top: .5rem; }
+    .mrp-flow-step { display: flex; align-items: center; gap: .4rem; padding: .4rem .75rem; background: var(--mrp-card-bg); border: 1px solid var(--mrp-border); border-radius: 8px; font-size: .82rem; font-weight: 600; }
+    .mrp-flow-arrow-icon { color: var(--mrp-primary); font-size: 1.1rem; }
 
-    .movimientos-table-body {
-        overflow-y: auto;
-        max-height: calc(100vh - 230px);
-    }
+    .mrp-purchase-tag { display: inline-flex; align-items: center; gap: .3rem; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; padding: .2rem .6rem; border-radius: 6px; font-size: .75rem; font-weight: 700; }
+    [data-bs-theme="dark"] .mrp-purchase-tag { background: linear-gradient(135deg, #78350f, #92400e); color: #fcd34d; }
 
-    /* Estilos para SearchClient inline */
-    #search-parte-results {
-        position: absolute;
-        z-index: 1050;
-        width: 100%;
-        max-height: 400px;
-        overflow-y: auto;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        display: none;
-    }
+    .mrp-calc-panel { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0; border-radius: 10px; padding: 1rem; }
+    [data-bs-theme="dark"] .mrp-calc-panel { background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); border-color: #059669; }
+    .mrp-calc-panel h6 { color: var(--mrp-success); font-size: .82rem; font-weight: 700; margin-bottom: .75rem; }
+    .mrp-calc-stat .stat-value { font-size: 1rem; font-weight: 700; color: var(--mrp-text); }
+    .mrp-calc-stat .stat-value.text-success { color: var(--mrp-success) !important; }
+    .mrp-calc-stat .stat-label { font-size: .7rem; color: var(--mrp-text-muted); text-transform: uppercase; letter-spacing: .05em; }
 
-    #search-parte-results.show {
-        display: block;
-    }
+    .mrp-table-wrapper { overflow-y: auto; max-height: calc(100vh - 230px); }
+    .mrp-table { width: 100%; font-size: .82rem; margin-bottom: 0; }
+    .mrp-table thead th { position: sticky; top: 0; background: var(--mrp-bg); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--mrp-text-muted); border-bottom: 2px solid var(--mrp-border); padding: .65rem .75rem; white-space: nowrap; z-index: 2; }
+    .mrp-table tbody td { padding: .6rem .75rem; vertical-align: middle; border-bottom: 1px solid var(--mrp-border); }
+    .mrp-table tbody tr { transition: var(--mrp-transition); }
+    .mrp-table tbody tr:hover { background: rgba(79,70,229,.04); }
 
-    #search-parte-results .list-group-item {
-        cursor: pointer;
-        border: none;
-        border-bottom: 1px solid #f0f0f0;
-        transition: background-color 0.15s ease;
-    }
+    .deposit-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2em .55em; border-radius: 6px; font-size: .75rem; font-weight: 600; }
+    .deposit-badge.origen { background: #fef3c7; color: #92400e; }
+    .deposit-badge.destino { background: #dbeafe; color: #1e40af; }
+    [data-bs-theme="dark"] .deposit-badge.origen { background: #78350f; color: #fcd34d; }
+    [data-bs-theme="dark"] .deposit-badge.destino { background: #1e3a5f; color: #93c5fd; }
 
-    #search-parte-results .list-group-item:hover,
-    #search-parte-results .list-group-item.active {
-        background-color: #f8f9fa;
-    }
+    .btn-mrp { border-radius: 8px; font-weight: 600; font-size: .85rem; padding: .5rem 1.2rem; transition: var(--mrp-transition); display: inline-flex; align-items: center; gap: .4rem; }
+    .btn-mrp-success { background: var(--mrp-success); border-color: var(--mrp-success); color: #fff; }
+    .btn-mrp-success:hover { background: #047857; border-color: #047857; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5,150,105,.3); }
+    .btn-mrp-outline { background: transparent; border: 1px solid var(--mrp-border); color: var(--mrp-text-muted); }
+    .btn-mrp-outline:hover { background: var(--mrp-bg); border-color: var(--mrp-primary); color: var(--mrp-primary); }
+    .btn-edit-row { padding: .25rem .55rem; font-size: .78rem; border-radius: 6px; }
 
-    #search-parte-results .list-group-item:last-child {
-        border-bottom: none;
-    }
+    .mrp-empty-state { text-align: center; padding: 3rem 1rem; color: var(--mrp-text-muted); }
+    .mrp-empty-state i { font-size: 2.5rem; opacity: .3; margin-bottom: .75rem; }
 
-    /* Indicador de parte seleccionada */
-    #search-parte-input.parte-seleccionada {
-        background-color: #d1e7dd;
-        border-color: #198754;
+    .mrp-toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
+    .mrp-toast { padding: .85rem 1.2rem; border-radius: 10px; background: var(--mrp-card-bg); border: 1px solid var(--mrp-border); box-shadow: var(--mrp-shadow-lg); display: flex; align-items: center; gap: .6rem; font-size: .88rem; min-width: 300px; animation: slideIn .3s ease; }
+    .mrp-toast.success { border-left: 4px solid var(--mrp-success); }
+    .mrp-toast.error { border-left: 4px solid var(--mrp-danger); }
+    .mrp-toast.warning { border-left: 4px solid var(--mrp-warning); }
+
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+    .mrp-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); z-index: 9998; display: flex; align-items: center; justify-content: center; animation: fadeIn .2s ease; }
+    .mrp-modal { background: var(--mrp-card-bg); border-radius: var(--mrp-radius); box-shadow: var(--mrp-shadow-lg); max-width: 480px; width: 95%; animation: scaleIn .2s ease; }
+    .mrp-modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--mrp-border); display: flex; align-items: center; justify-content: space-between; }
+    .mrp-modal-body { padding: 1.25rem; }
+    .mrp-modal-footer { padding: .75rem 1.25rem; border-top: 1px solid var(--mrp-border); display: flex; justify-content: flex-end; gap: .5rem; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .mrp-filters-bar { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .mrp-filter-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .7rem; border-radius: 9999px; font-size: .78rem; font-weight: 600; cursor: pointer; border: 1px solid var(--mrp-border); background: var(--mrp-card-bg); color: var(--mrp-text-muted); transition: var(--mrp-transition); }
+    .mrp-filter-chip:hover, .mrp-filter-chip.active { background: var(--mrp-primary); border-color: var(--mrp-primary); color: #fff; }
+
+    .mrp-scroll-form { overflow-y: auto; max-height: calc(100vh - 200px); padding-right: .25rem; }
+    .mrp-scroll-form::-webkit-scrollbar { width: 5px; }
+    .mrp-scroll-form::-webkit-scrollbar-track { background: transparent; }
+    .mrp-scroll-form::-webkit-scrollbar-thumb { background: var(--mrp-border); border-radius: 10px; }
+    .mrp-table-wrapper::-webkit-scrollbar { width: 5px; }
+    .mrp-table-wrapper::-webkit-scrollbar-track { background: transparent; }
+    .mrp-table-wrapper::-webkit-scrollbar-thumb { background: var(--mrp-border); border-radius: 10px; }
+
+    .movimientos-layout { min-height: 0; }
+    .movimientos-layout > div[class*="col"] { display: flex; flex-direction: column; }
+    .movimientos-layout .mrp-card { flex: 1; min-height: 0; }
+
+    .mrp-qty-input { font-size: 1.1rem; font-weight: 700; text-align: center; }
+
+    @media (max-width: 991.98px) {
+        .mrp-scroll-form { max-height: none; }
+        .mrp-table-wrapper { max-height: 400px; }
     }
 </style>
 
@@ -433,7 +645,7 @@ use App\Core\Support\AssetHelper;
 <script src="<?= AssetHelper::js('modules/SearchClient.js') ?>"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Datos de configuración desde PHP
+        // Datos de configuraci&oacute;n desde PHP
         const tiposDeposito = <?= json_encode($tiposDeposito) ?>;
         const destinosPorOrigen = <?= json_encode($destinosPorOrigen) ?>;
         const unidadesMedida = <?= json_encode($unidadesMedida) ?>;
@@ -450,57 +662,54 @@ use App\Core\Support\AssetHelper;
         const inputFechaHora = document.getElementById('fecha_hora');
         const inputMovimientoId = document.getElementById('movimiento_id');
         const argentinaTimezone = 'America/Argentina/Buenos_Aires';
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const submitTextCreate = '<i class="fa-solid fa-check me-1"></i> Guardar';
-        const submitTextEdit = '<i class="fa-solid fa-floppy-disk me-1"></i> Actualizar';
+        const submitBtn = document.getElementById('btnSubmit');
+        const submitTextCreate = '<i class="fa-solid fa-check me-1"></i> <span id="btnSubmitText">Guardar Movimiento</span>';
+        const submitTextEdit = '<i class="fa-solid fa-floppy-disk me-1"></i> <span id="btnSubmitText">Actualizar Movimiento</span>';
 
-        function getBuenosAiresNowDateTimeLocal() {
-            const now = new Date();
-            const formatter = new Intl.DateTimeFormat('en-CA', {
-                timeZone: argentinaTimezone,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hourCycle: 'h23'
-            });
-            const parts = formatter.formatToParts(now).reduce((acc, part) => {
-                if (part.type !== 'literal') {
-                    acc[part.type] = part.value;
-                }
-                return acc;
-            }, {});
+        const searchInput = document.getElementById('search-parte-input');
+        const searchResults = document.getElementById('search-parte-results');
+        const flowVisual = document.getElementById('flowVisual');
+        const parteSelectedDetail = document.getElementById('parteSelectedDetail');
 
-            return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-        }
-
-        function syncFechaHoraLimits(resetValue = false) {
-            if (!inputFechaHora) {
-                return;
-            }
-
-            const maxNow = getBuenosAiresNowDateTimeLocal();
-            inputFechaHora.max = maxNow;
-
-            if (resetValue || !inputFechaHora.value || inputFechaHora.value > maxNow) {
-                inputFechaHora.value = maxNow;
-            }
-        }
-
-        // Elementos adicionales para Compras
+        // Elementos de Compra
         const fieldsCompra = document.querySelectorAll('.field-compra');
         const fieldsStd = document.querySelectorAll('.field-std');
         const inputPrecio = document.getElementById('precio_unitario');
         const inputMoneda = document.getElementById('moneda');
         const inputCotizacion = document.getElementById('cotizacion');
-        const panelCalculos = document.getElementById('panel-calculos-compra');
         const inputCantidad = document.getElementById('cantidad');
         const inputImporteTotal = document.getElementById('importe_total');
 
-        // Tabla de movimientos
-        const movimientosTableBody = document.querySelector('table tbody');
+        // Tabla
+        const movimientosTableBody = document.querySelector('#movimientosTable tbody');
         const movimientosRows = movimientosTableBody ? movimientosTableBody.querySelectorAll('tr') : [];
+
+        // Mapa de tipos de dep&oacute;sito
+        const depositosCompra = ['PROVEEDOR', 'PROVEED'];
+        const depositosCliente = ['CLIENTE', 'VENTA', 'PT'];
+
+        function getBuenosAiresNowDateTimeLocal() {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: argentinaTimezone,
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            });
+            const parts = formatter.formatToParts(now).reduce((acc, part) => {
+                if (part.type !== 'literal') { acc[part.type] = part.value; }
+                return acc;
+            }, {});
+            return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+        }
+
+        function syncFechaHoraLimits(resetValue = false) {
+            if (!inputFechaHora) return;
+            const maxNow = getBuenosAiresNowDateTimeLocal();
+            inputFechaHora.max = maxNow;
+            if (resetValue || !inputFechaHora.value || inputFechaHora.value > maxNow) {
+                inputFechaHora.value = maxNow;
+            }
+        }
 
         syncFechaHoraLimits(true);
         setInterval(() => syncFechaHoraLimits(false), 30000);
@@ -510,17 +719,6 @@ use App\Core\Support\AssetHelper;
 
         // Estado de la parte seleccionada
         let parteSeleccionada = null;
-        const searchPlaceholderDefault = 'Escriba al menos 2 caracteres para buscar parte o variante...';
-        const searchPlaceholderWaitDestino = 'Seleccione un Depósito Destino para habilitar la búsqueda...';
-
-        function buildSearchSelectionLabel(item) {
-            const parteCodigo = item.parte_codigo || 'N/A';
-            const parteDetalle = item.parte_detalle || 'Sin detalle';
-            const varianteCodigo = item.codigo_variante || 'N/A';
-            const varianteDetalle = item.detalle || item.variante_detalle || 'Sin detalle';
-
-            return `Parte: ${parteCodigo} - ${parteDetalle} | Variante: ${varianteCodigo} - ${varianteDetalle}`;
-        }
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -530,53 +728,58 @@ use App\Core\Support\AssetHelper;
 
         function setSearchLockedState(isLocked) {
             const hasDestinoSelected = !!selectDestino.value;
-
             if (!hasDestinoSelected) {
                 parteSeleccionada = null;
                 inputParteHidden.value = '';
                 searchInput.value = '';
                 searchInput.readOnly = false;
                 searchInput.disabled = true;
-                searchInput.setAttribute('aria-readonly', 'false');
-                searchInput.setAttribute('aria-disabled', 'true');
-                searchInput.classList.remove('parte-seleccionada');
-                searchInput.placeholder = searchPlaceholderWaitDestino;
-                searchResults.style.display = 'none';
+                searchInput.classList.remove('is-locked');
+                searchInput.placeholder = 'Seleccione un dep&oacute;sito destino para habilitar la b&uacute;squeda...';
+                searchResults.classList.remove('show');
                 if (btnCambiarParte) btnCambiarParte.classList.add('d-none');
+                if (parteSelectedDetail) parteSelectedDetail.classList.add('d-none');
                 actualizarUM();
                 return;
             }
 
-            searchInput.placeholder = searchPlaceholderDefault;
+            searchInput.placeholder = 'Escriba al menos 2 caracteres para buscar parte o variante...';
             searchInput.readOnly = isLocked;
             searchInput.disabled = isLocked;
-            searchInput.setAttribute('aria-readonly', isLocked ? 'true' : 'false');
-            searchInput.setAttribute('aria-disabled', isLocked ? 'true' : 'false');
 
             if (isLocked) {
                 searchInput.blur();
-                searchInput.classList.add('parte-seleccionada');
-                searchResults.style.display = 'none';
+                searchInput.classList.add('is-locked');
+                searchResults.classList.remove('show');
                 if (btnCambiarParte) btnCambiarParte.classList.remove('d-none');
             } else {
-                searchInput.classList.remove('parte-seleccionada');
+                searchInput.classList.remove('is-locked');
                 if (btnCambiarParte) btnCambiarParte.classList.add('d-none');
+                if (parteSelectedDetail) parteSelectedDetail.classList.add('d-none');
             }
         }
 
         function setFormModeEditing(isEditing) {
-            if (!submitBtn) {
-                return;
-            }
+            const formTitle = document.getElementById('formTitleText');
+            const badge = document.getElementById('editingBadge');
+            const editingId = document.getElementById('editingId');
 
-            submitBtn.innerHTML = isEditing ? submitTextEdit : submitTextCreate;
+            if (isEditing) {
+                formTitle.textContent = 'Editar Movimiento';
+                document.querySelector('#formTitle i').className = 'fa-solid fa-pen-to-square';
+                submitBtn.innerHTML = submitTextEdit;
+                badge.classList.remove('d-none');
+                editingId.textContent = inputMovimientoId.value;
+            } else {
+                formTitle.textContent = 'Nuevo Movimiento';
+                document.querySelector('#formTitle i').className = 'fa-solid fa-plus-circle';
+                submitBtn.innerHTML = submitTextCreate;
+                badge.classList.add('d-none');
+            }
         }
 
         function toDateTimeLocalValue(value) {
-            if (!value) {
-                return getBuenosAiresNowDateTimeLocal();
-            }
-
+            if (!value) return getBuenosAiresNowDateTimeLocal();
             return String(value).replace(' ', 'T').slice(0, 16);
         }
 
@@ -585,11 +788,284 @@ use App\Core\Support\AssetHelper;
             return Number.isFinite(n) ? n : fallback;
         }
 
-        function cargarMovimientoParaEdicion(button) {
-            const movimientoId = button.dataset.id;
-            if (!movimientoId) {
+        function esCompra() {
+            const origenId = parseInt(selectOrigen.value);
+            if (!origenId) return false;
+            const origenOption = selectOrigen.options[selectOrigen.selectedIndex];
+            const codigo = origenOption.dataset.codigo || '';
+            return depositosCompra.some(c => codigo.includes(c));
+        }
+
+        function esSalidaCliente() {
+            const destinoId = parseInt(selectDestino.value);
+            if (!destinoId) return false;
+            const destinoOption = selectDestino.options[selectDestino.selectedIndex];
+            const codigo = destinoOption.dataset.codigo || '';
+            return depositosCliente.some(c => codigo.includes(c));
+        }
+
+        function determinarTipoUM() {
+            const origenId = parseInt(selectOrigen.value);
+            const destinoId = parseInt(selectDestino.value);
+            if (!origenId || !destinoId) return null;
+            if (esCompra()) return 'compra';
+            if (esSalidaCliente()) return 'uso';
+            return 'uso';
+        }
+
+        // Flow visual
+        function updateFlowVisual() {
+            const origenId = parseInt(selectOrigen.value);
+            const destinoId = parseInt(selectDestino.value);
+            if (!origenId && !destinoId) { flowVisual.classList.add('d-none'); return; }
+            flowVisual.classList.remove('d-none');
+            const origen = origenId ? tiposDeposito.find(t => t.id == origenId) : null;
+            const destino = destinoId ? tiposDeposito.find(t => t.id == destinoId) : null;
+            document.getElementById('flowOrigenLabel').textContent = origen ? origen.codigo : '---';
+            document.getElementById('flowDestinoLabel').textContent = destino ? destino.codigo : '---';
+            const flowTypeBadge = document.getElementById('flowTypeBadge');
+            if (esCompra()) {
+                flowTypeBadge.innerHTML = '<span class="mrp-purchase-tag"><i class="fa-solid fa-cart-shopping me-1"></i>Compra</span>';
+            } else if (esSalidaCliente()) {
+                flowTypeBadge.innerHTML = '<span class="badge bg-warning text-dark" style="font-size:.75rem"><i class="fa-solid fa-truck me-1"></i>Salida</span>';
+            } else {
+                flowTypeBadge.innerHTML = '<span class="badge bg-info text-dark" style="font-size:.75rem"><i class="fa-solid fa-arrows-rotate me-1"></i>Interno</span>';
+            }
+        }
+
+        // Filtrar tabla
+        function filtrarTabla() {
+            const origenId = selectOrigen.value;
+            const destinoId = selectDestino.value;
+            if (!movimientosRows.length) return;
+            if (!origenId && !destinoId) { movimientosRows.forEach(row => row.style.display = ''); return; }
+            movimientosRows.forEach(row => {
+                if (row.cells.length === 1) return;
+                const rowOrigenId = row.dataset.origenId;
+                const rowDestinoId = row.dataset.destinoId;
+                let mostrar = true;
+                if (origenId && rowOrigenId !== origenId) mostrar = false;
+                if (destinoId && rowDestinoId !== destinoId) mostrar = false;
+                row.style.display = mostrar ? '' : 'none';
+            });
+        }
+
+        // Toggle campos compra
+        function toggleCamposCompra() {
+            const isPurchase = esCompra();
+            fieldsCompra.forEach(field => {
+                if (isPurchase) field.classList.remove('d-none');
+                else field.classList.add('d-none');
+            });
+            fieldsStd.forEach(field => {
+                if (isPurchase) field.classList.add('d-none');
+                else field.classList.remove('d-none');
+            });
+
+            if (isPurchase) {
+                inputPrecio.required = false;
+                inputPrecio.readOnly = true;
+                inputImporteTotal.required = true;
+                actualizarCalculosCompra();
+            } else {
+                inputPrecio.required = false;
+                inputPrecio.value = '';
+                inputImporteTotal.required = false;
+            }
+        }
+
+        function actualizarCalculosCompra() {
+            if (!esCompra() || !parteSeleccionada) return;
+            const cantidad = parseFloat(inputCantidad.value) || 0;
+            const importeTotal = parseFloat(inputImporteTotal.value) || 0;
+            const cotizacion = parseFloat(inputCotizacion.value) || 1;
+            const factor = parteSeleccionada.factor_conversion || 1;
+
+            const precioUnitarioCompra = cantidad > 0 ? (importeTotal / cantidad) : 0;
+            inputPrecio.value = precioUnitarioCompra > 0 ? precioUnitarioCompra.toFixed(6) : '';
+
+            const umText = selectUM.options[selectUM.selectedIndex]?.text || '';
+            document.getElementById('calc-qty-compra').textContent = window.appFormatNumber ? appFormatNumber(cantidad) : cantidad.toLocaleString('es-AR') + ' ' + umText.split(' - ')[0];
+            document.getElementById('calc-factor').textContent = factor;
+
+            const qtyUso = cantidad * factor;
+            document.getElementById('calc-qty-uso').textContent = (window.appFormatNumber ? appFormatNumber(qtyUso) : qtyUso.toLocaleString('es-AR')) + ' (Estimado)';
+
+            const costoBase = qtyUso > 0 ? ((importeTotal * cotizacion) / qtyUso) : 0;
+            document.getElementById('calc-costo-base').textContent = '$ ' + (window.appFormatNumber ? appFormatNumber(costoBase) : costoBase.toLocaleString('es-AR'));
+        }
+
+        // Actualizar UM
+        function actualizarUM() {
+            if (!parteSeleccionada) {
+                selectUM.disabled = true;
+                selectUM.innerHTML = '<option value="">Seleccione una parte primero</option>';
+                umTipoLabel.textContent = '';
                 return;
             }
+
+            const tipoUM = determinarTipoUM();
+            if (!tipoUM) { selectUM.disabled = true; return; }
+
+            const umId = tipoUM === 'compra' ? parteSeleccionada.id_um_compra : parteSeleccionada.id_um_uso;
+            const um = unidadesMedida.find(u => u.id == umId);
+            if (!um) {
+                selectUM.innerHTML = '<option value="">UM no configurada</option>';
+                selectUM.disabled = true;
+                umTipoLabel.textContent = '';
+                return;
+            }
+
+            selectUM.innerHTML = `<option value="${um.id}" selected>${um.simbolo} - ${um.unidad}</option>`;
+            selectUM.disabled = false;
+            umTipoLabel.textContent = tipoUM === 'compra' ? '(UM Compra)' : '(UM Uso)';
+        }
+
+        // SearchClient
+        if (searchInput && searchResults) {
+            setSearchLockedState(false);
+
+            const searchClientInstance = new SearchClient({
+                endpoint: '<?= url('api/v1/search/variantes') ?>',
+                inputElement: searchInput,
+                resultsContainer: searchResults,
+                minChars: 2,
+                debounceDelay: 300,
+                maxResults: 20,
+                format: 'detailed',
+                onSelect: (item) => {
+                    const selectedLabel = `Parte: ${item.parte_codigo || 'N/A'} - ${item.parte_detalle || 'Sin detalle'} | Variante: ${item.codigo_variante || 'N/A'} - ${item.detalle || item.variante_detalle || 'Sin detalle'}`;
+
+                    parteSeleccionada = {
+                        id: item.id,
+                        id_parte: item.id_parte,
+                        codigo: item.codigo_variante || item.parte_codigo,
+                        detalle: item.detalle || item.variante_detalle,
+                        selectedLabel: selectedLabel,
+                        id_um_compra: item.id_um_compra,
+                        id_um_uso: item.id_um_uso,
+                        factor_conversion: item.factor_conversion || 1,
+                        parte_codigo: item.parte_codigo,
+                        parte_detalle: item.parte_detalle,
+                        codigo_variante: item.codigo_variante,
+                        variante_detalle: item.variante_detalle || item.detalle
+                    };
+
+                    searchInput.value = selectedLabel;
+                    setSearchLockedState(true);
+                    inputParteHidden.value = parteSeleccionada.id;
+
+                    if (parteSelectedDetail) {
+                        document.getElementById('parteSelectedCode').textContent = parteSeleccionada.parte_codigo || '';
+                        document.getElementById('parteSelectedVariante').textContent = parteSeleccionada.codigo_variante || '';
+                        parteSelectedDetail.classList.remove('d-none');
+                    }
+
+                    actualizarUM();
+                    if (esCompra()) actualizarCalculosCompra();
+                },
+                customItemRender: (item) => {
+                    const parteCodigo = escapeHtml(item.parte_codigo || 'N/A');
+                    const parteDetalle = escapeHtml(item.parte_detalle || 'Sin detalle');
+                    const varianteCodigo = escapeHtml(item.codigo_variante || 'N/A');
+                    const varianteDetalle = escapeHtml(item.detalle || item.variante_detalle || 'Sin descripci&oacute;n');
+                    const tipoCodigo = escapeHtml(item.tipo_codigo || 'N/A');
+
+                    const tipoColors = { 'MP': '#059669', 'PZ': '#4f46e5', 'PROD': '#d97706', 'CONJ': '#dc2626', 'TER': '#0891b2', 'MO': '#64748b' };
+                    const tipoBgs = { 'MP': '#ecfdf5', 'PZ': '#eef2ff', 'PROD': '#fffbeb', 'CONJ': '#fef2f2', 'TER': '#ecfeff', 'MO': '#f8fafc' };
+                    const tc = tipoColors[tipoCodigo] || '#64748b';
+                    const tb = tipoBgs[tipoCodigo] || '#f1f5f9';
+
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;padding:.6rem .85rem;">
+                            <div style="flex:1;min-width:0">
+                                <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.15rem">
+                                    <span style="background:${tb};color:${tc};padding:.1em .4em;border-radius:9999px;font-size:.6rem;font-weight:700">${tipoCodigo}</span>
+                                    <span style="font-weight:700;color:#4f46e5;font-size:.75rem">${parteCodigo}</span>
+                                    <span style="color:#64748b;font-size:.72rem">|</span>
+                                    <span style="font-weight:600;color:#6366f1;font-size:.75rem">${varianteCodigo}</span>
+                                </div>
+                                <small style="color:#64748b;display:block;font-size:.76rem">${parteDetalle} | ${varianteDetalle}</small>
+                            </div>
+                        </div>`;
+                }
+            });
+
+            searchInput.addEventListener('input', function() {
+                if (parteSeleccionada && this.value !== parteSeleccionada.selectedLabel) {
+                    parteSeleccionada = null;
+                    inputParteHidden.value = '';
+                    setSearchLockedState(false);
+                    actualizarUM();
+                }
+            });
+        }
+
+        if (btnCambiarParte) {
+            btnCambiarParte.addEventListener('click', function() {
+                parteSeleccionada = null;
+                inputParteHidden.value = '';
+                searchInput.value = '';
+                setSearchLockedState(false);
+                actualizarUM();
+                searchInput.focus();
+            });
+        }
+
+        // Origen change
+        selectOrigen.addEventListener('change', function() {
+            const origenId = parseInt(this.value);
+            selectDestino.innerHTML = '<option value="">Seleccione un destino</option>';
+
+            if (!origenId) {
+                selectDestino.disabled = true;
+                updateFlowVisual();
+                return;
+            }
+
+            const destinosPermitidos = destinosPorOrigen[origenId] || [];
+            if (destinosPermitidos.length === 0) {
+                selectDestino.innerHTML = '<option value="">No hay destinos configurados</option>';
+                selectDestino.disabled = true;
+                updateFlowVisual();
+                return;
+            }
+
+            destinosPermitidos.forEach(function(destinoId) {
+                const deposito = tiposDeposito.find(t => t.id == destinoId);
+                if (deposito) {
+                    const option = document.createElement('option');
+                    option.value = deposito.id;
+                    option.textContent = deposito.codigo + ' - ' + deposito.nombre;
+                    option.dataset.codigo = deposito.codigo;
+                    selectDestino.appendChild(option);
+                }
+            });
+
+            selectDestino.disabled = false;
+            actualizarUM();
+            toggleCamposCompra();
+            updateFlowVisual();
+            filtrarTabla();
+        });
+
+        // Destino change
+        selectDestino.addEventListener('change', function() {
+            setSearchLockedState(!!parteSeleccionada);
+            actualizarUM();
+            updateFlowVisual();
+            filtrarTabla();
+        });
+
+        // Listeners para c&aacute;lculos
+        [inputCantidad, inputImporteTotal, inputCotizacion, inputMoneda].forEach(input => {
+            if (input) input.addEventListener('input', actualizarCalculosCompra);
+        });
+
+        // Editar movimiento
+        function cargarMovimientoParaEdicion(button) {
+            const movimientoId = button.dataset.id;
+            if (!movimientoId) return;
 
             const origenId = button.dataset.origenId || '';
             const destinoId = button.dataset.destinoId || '';
@@ -621,12 +1097,22 @@ use App\Core\Support\AssetHelper;
                     selectedLabel: `Parte: ${button.dataset.parteCodigo || ''} - ${button.dataset.parteDetalle || ''} | Variante: ${button.dataset.varianteCodigo || ''} - ${button.dataset.varianteDetalle || ''}`,
                     id_um_compra: button.dataset.idUmCompra || '',
                     id_um_uso: button.dataset.idUmUso || '',
-                    factor_conversion: factorConversion
+                    factor_conversion: factorConversion,
+                    parte_codigo: button.dataset.parteCodigo || '',
+                    parte_detalle: button.dataset.parteDetalle || '',
+                    codigo_variante: button.dataset.varianteCodigo || '',
+                    variante_detalle: button.dataset.varianteDetalle || ''
                 };
 
                 inputParteHidden.value = varianteId;
                 searchInput.value = parteSeleccionada.selectedLabel;
                 setSearchLockedState(true);
+
+                if (parteSelectedDetail) {
+                    document.getElementById('parteSelectedCode').textContent = parteSeleccionada.parte_codigo;
+                    document.getElementById('parteSelectedVariante').textContent = parteSeleccionada.codigo_variante;
+                    parteSelectedDetail.classList.remove('d-none');
+                }
 
                 inputCantidad.value = cantidadForInput > 0 ? cantidadForInput.toFixed(6) : '';
                 inputImporteTotal.value = importeTotalEstimado > 0 ? importeTotalEstimado.toFixed(2) : '';
@@ -634,358 +1120,29 @@ use App\Core\Support\AssetHelper;
                 const entidadId = button.dataset.idEntidad || '';
                 if (entidadId) {
                     const entidadSelect = document.getElementById('proveedor_cliente');
-                    if (entidadSelect) {
-                        entidadSelect.value = entidadId;
-                    }
+                    if (entidadSelect) entidadSelect.value = entidadId;
+                    const provSelect = document.getElementById('proveedor_compra');
+                    if (provSelect) provSelect.value = entidadId;
                 }
 
-                const cbteInput = document.getElementById('cbte');
-                if (cbteInput) {
-                    cbteInput.value = button.dataset.cbte || '';
-                }
+                const cbteInput = document.getElementById('cbte_compra');
+                if (cbteInput) cbteInput.value = button.dataset.cbte || '';
 
                 const observacionesInput = document.getElementById('observaciones');
-                if (observacionesInput) {
-                    observacionesInput.value = button.dataset.observaciones || '';
-                }
+                if (observacionesInput) observacionesInput.value = button.dataset.observaciones || '';
 
                 actualizarUM();
                 toggleCamposCompra();
                 actualizarCalculosCompra();
                 setFormModeEditing(true);
 
-                form.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 120);
         }
 
-        // Mapa de tipos de depósito para determinar si es compra o uso
-        const depositosCompra = ['PROVEEDOR', 'PROVEED'];
-        const depositosCliente = ['CLIENTE', 'VENTA', 'PT'];
-
-        // Función para verificar si es una compra (Origen = Proveedor)
-        function esCompra() {
-            const origenId = parseInt(selectOrigen.value);
-            if (!origenId) return false;
-
-            const origenOption = selectOrigen.options[selectOrigen.selectedIndex];
-            const codigo = origenOption.dataset.codigo || '';
-
-            return depositosCompra.some(c => codigo.includes(c));
-        }
-
-        // Función para filtrar la tabla de movimientos
-        function filtrarTabla() {
-            const origenId = selectOrigen.value;
-            const destinoId = selectDestino.value;
-
-            if (!movimientosRows.length) return;
-
-            // Si no hay filtros, mostrar todo
-            if (!origenId && !destinoId) {
-                movimientosRows.forEach(row => row.style.display = '');
-                return;
-            }
-
-            movimientosRows.forEach(row => {
-                // Si es fila de "no hay datos", ignorar
-                if (row.cells.length === 1) return;
-
-                const rowOrigenId = row.dataset.origenId;
-                const rowDestinoId = row.dataset.destinoId;
-
-                let mostrar = true;
-
-                // Filtrar por origen si está seleccionado
-                if (origenId && rowOrigenId !== origenId) {
-                    mostrar = false;
-                }
-
-                // Filtrar por destino si está seleccionado
-                if (destinoId && rowDestinoId !== destinoId) {
-                    mostrar = false;
-                }
-
-                row.style.display = mostrar ? '' : 'none';
-            });
-        }
-
-        // Función para mostrar/ocultar campos de compra
-        function toggleCamposCompra() {
-            const isPurchase = esCompra();
-
-            // Toggle campos de compra
-            fieldsCompra.forEach(field => {
-                if (isPurchase) {
-                    field.classList.remove('d-none');
-                } else {
-                    field.classList.add('d-none');
-                }
-            });
-
-            // Toggle campos estándar (Orden No, Venta No)
-            fieldsStd.forEach(field => {
-                if (isPurchase) {
-                    field.classList.add('d-none');
-                } else {
-                    field.classList.remove('d-none');
-                }
-            });
-
-            if (isPurchase) {
-                inputPrecio.required = false;
-                inputPrecio.readOnly = true;
-                inputImporteTotal.required = true;
-                actualizarCalculosCompra();
-            } else {
-                inputPrecio.required = false;
-                inputPrecio.value = '';
-                inputImporteTotal.required = false;
-                // Limpiar otros campos compra si se desea
-            }
-        }
-
-        // Función para actualizar cálculos de compra
-        function actualizarCalculosCompra() {
-            if (!esCompra() || !parteSeleccionada) return;
-
-            const cantidad = parseFloat(inputCantidad.value) || 0;
-            const importeTotal = parseFloat(inputImporteTotal.value) || 0;
-            const cotizacion = parseFloat(inputCotizacion.value) || 1;
-            const factor = parteSeleccionada.factor_conversion || 1;
-
-            const precioUnitarioCompra = cantidad > 0 ? (importeTotal / cantidad) : 0;
-            inputPrecio.value = precioUnitarioCompra > 0 ? precioUnitarioCompra.toFixed(6) : '';
-
-            // Actualizar panel informativo
-            document.getElementById('calc-qty-compra').textContent = window.appFormatNumber(cantidad) + ' ' + (selectUM.options[selectUM.selectedIndex]?.text || '');
-
-            document.getElementById('calc-factor').textContent = factor;
-
-            const qtyUso = cantidad * factor;
-            document.getElementById('calc-qty-uso').textContent = window.appFormatNumber(qtyUso) + ' (Estimado)';
-
-            const costoBase = qtyUso > 0 ? ((importeTotal * cotizacion) / qtyUso) : 0;
-            document.getElementById('calc-costo-base').textContent = '$ ' + window.appFormatNumber(costoBase);
-        }
-
-        // Listeners para cálculos
-        [inputCantidad, inputImporteTotal, inputCotizacion, inputMoneda].forEach(input => {
-            if (input) input.addEventListener('input', actualizarCalculosCompra);
-        });
-
-        // Inicializar SearchClient para búsqueda de partes inline
-        const searchInput = document.getElementById('search-parte-input');
-        const searchResults = document.getElementById('search-parte-results');
-
-        if (searchInput && searchResults) {
-            setSearchLockedState(false);
-
-            const searchClientInstance = new SearchClient({
-                endpoint: '<?= url('api/v1/search/variantes') ?>',
-                inputElement: searchInput,
-                resultsContainer: searchResults,
-                minChars: 2,
-                debounceDelay: 300,
-                maxResults: 20,
-                format: 'detailed',
-                // Usar renderizado por defecto actualizado en SearchClient.js
-                onSelect: (item) => {
-                    const selectedLabel = buildSearchSelectionLabel(item);
-
-                    // Guardar la parte seleccionada
-                    parteSeleccionada = {
-                        id: item.id,
-                        id_parte: item.id_parte,
-                        codigo: item.codigo_variante || item.parte_codigo,
-                        detalle: item.detalle || item.variante_detalle,
-                        selectedLabel: selectedLabel,
-                        id_um_compra: item.id_um_compra,
-                        id_um_uso: item.id_um_uso,
-                        factor_conversion: item.factor_conversion || 1 // Asumimos 1 si no viene
-                    };
-
-                    // Actualizar el input visible con el texto de la parte
-                    searchInput.value = selectedLabel;
-                    setSearchLockedState(true);
-
-                    // Actualizar el campo oculto para validación
-                    inputParteHidden.value = parteSeleccionada.id;
-
-                    // Actualizar UM según los depósitos seleccionados
-                    actualizarUM();
-
-                    // Actualizar precios si es compra (quizás traer último precio)
-                    if (esCompra()) {
-                        actualizarCalculosCompra();
-                    }
-                },
-                customItemRender: (item) => {
-                    const parteCodigo = escapeHtml(item.parte_codigo || 'N/A');
-                    const parteDetalle = escapeHtml(item.parte_detalle || 'Sin detalle');
-                    const varianteCodigo = escapeHtml(item.codigo_variante || 'N/A');
-                    const varianteDetalle = escapeHtml(item.detalle || item.variante_detalle || 'Sin descripción');
-                    const tipoCodigo = escapeHtml(item.tipo_codigo || 'N/A');
-
-                    return `
-                        <div class="d-flex justify-content-between align-items-start w-100 p-2">
-                            <div class="flex-grow-1">
-                                <div class="small text-secondary">
-                                    <span class="fw-semibold">Parte:</span>
-                                    <strong class="text-primary">${parteCodigo}</strong>
-                                    <span class="text-muted mx-1">|</span>
-                                    <span class="fw-semibold">Variante:</span>
-                                    <strong class="text-primary">${varianteCodigo}</strong>
-                                </div>
-                                <small class="text-secondary d-block">${parteDetalle} | ${varianteDetalle}</small>
-                            </div>
-                            <span class="badge bg-secondary ms-2 align-self-start">${tipoCodigo}</span>
-                        </div>
-                    `;
-                }
-            });
-
-            // Limpiar selección cuando el usuario empieza a escribir de nuevo
-            searchInput.addEventListener('input', function() {
-                if (parteSeleccionada && this.value !== parteSeleccionada.selectedLabel) {
-                    parteSeleccionada = null;
-                    inputParteHidden.value = '';
-                    setSearchLockedState(false);
-                    actualizarUM();
-                }
-            });
-        }
-
-        if (btnCambiarParte) {
-            btnCambiarParte.addEventListener('click', function() {
-                parteSeleccionada = null;
-                inputParteHidden.value = '';
-                searchInput.value = '';
-                setSearchLockedState(false);
-                actualizarUM();
-                searchInput.focus();
-            });
-        }
-
-        // Evento: cambio en depósito origen
-        selectOrigen.addEventListener('change', function() {
-            const origenId = parseInt(this.value);
-
-            // Limpiar y deshabilitar select de destino
-            selectDestino.innerHTML = '<option value="">Seleccione un destino</option>';
-
-            if (!origenId) {
-                selectDestino.disabled = true;
-                return;
-            }
-
-            // Obtener destinos permitidos para este origen
-            const destinosPermitidos = destinosPorOrigen[origenId] || [];
-
-            if (destinosPermitidos.length === 0) {
-                selectDestino.innerHTML = '<option value="">No hay destinos configurados</option>';
-                selectDestino.disabled = true;
-                return;
-            }
-
-            // Llenar select de destino con opciones permitidas
-            destinosPermitidos.forEach(function(destinoId) {
-                const deposito = tiposDeposito.find(t => t.id == destinoId);
-                if (deposito) {
-                    const option = document.createElement('option');
-                    option.value = deposito.id;
-                    option.textContent = deposito.codigo + ' - ' + deposito.nombre;
-                    option.dataset.codigo = deposito.codigo;
-                    selectDestino.appendChild(option);
-                }
-            });
-
-            selectDestino.disabled = false;
-
-            // Actualizar UM si hay parte seleccionada
-            actualizarUM();
-
-            // Actualizar visibilidad de campos compra
-            toggleCamposCompra();
-
-            // Filtrar tabla
-            filtrarTabla();
-        });
-
-        // Evento: cambio en depósito destino
-        selectDestino.addEventListener('change', function() {
-            setSearchLockedState(!!parteSeleccionada);
-            actualizarUM();
-            // Filtrar tabla
-            filtrarTabla();
-        });
-
-        // Función para determinar si debe usar UM Compra o UM Uso
-        function determinarTipoUM() {
-            const origenId = parseInt(selectOrigen.value);
-            const destinoId = parseInt(selectDestino.value);
-
-            if (!origenId || !destinoId) return null;
-
-            const origen = tiposDeposito.find(t => t.id == origenId);
-            const destino = tiposDeposito.find(t => t.id == destinoId);
-
-            if (!origen || !destino) return null;
-
-            // Si viene de PROVEEDOR → usar UM Compra
-            if (depositosCompra.some(codigo => origen.codigo.includes(codigo))) {
-                return 'compra';
-            }
-
-            // Si va a CLIENTE o PT → usar UM Uso (venta)
-            if (depositosCliente.some(codigo => destino.codigo.includes(codigo))) {
-                return 'uso';
-            }
-
-            // Por defecto, usar UM Uso para movimientos internos
-            return 'uso';
-        }
-
-        // Función para actualizar el select de UM
-        function actualizarUM() {
-            if (!parteSeleccionada) {
-                selectUM.disabled = true;
-                selectUM.innerHTML = '<option value="">Seleccione una parte primero</option>';
-                umTipoLabel.textContent = '';
-                return;
-            }
-
-            const tipoUM = determinarTipoUM();
-
-            if (!tipoUM) {
-                selectUM.disabled = true;
-                return;
-            }
-
-            // Obtener la UM correspondiente
-            const umId = tipoUM === 'compra' ? parteSeleccionada.id_um_compra : parteSeleccionada.id_um_uso;
-            const um = unidadesMedida.find(u => u.id == umId);
-
-            if (!um) {
-                selectUM.innerHTML = '<option value="">UM no configurada</option>';
-                selectUM.disabled = true;
-                umTipoLabel.textContent = '';
-                return;
-            }
-
-            // Configurar el select con la UM correspondiente
-            selectUM.innerHTML = `<option value="${um.id}" selected>${um.simbolo} - ${um.unidad}</option>`;
-            selectUM.disabled = false;
-
-            // Actualizar label
-            umTipoLabel.textContent = tipoUM === 'compra' ? '(UM Compra)' : '(UM Uso)';
-        }
-
-        // Botón cancelar
+        // Bot&oacute;n cancelar
         btnCancelar.addEventListener('click', function() {
-            if (confirm('¿Está seguro que desea cancelar? Se perderán los datos ingresados.')) {
+            showModal('Cancelar', '&iquest;Est&aacute; seguro que desea cancelar? Se perder&aacute;n los datos ingresados.', function() {
                 form.reset();
                 inputMovimientoId.value = '';
                 setFormModeEditing(false);
@@ -999,85 +1156,169 @@ use App\Core\Support\AssetHelper;
                 selectUM.disabled = true;
                 selectUM.innerHTML = '<option value="">Seleccione una parte primero</option>';
                 umTipoLabel.textContent = '';
-            }
+                if (parteSelectedDetail) parteSelectedDetail.classList.add('d-none');
+                flowVisual.classList.add('d-none');
+                fieldsCompra.forEach(f => f.classList.add('d-none'));
+                fieldsStd.forEach(f => f.classList.remove('d-none'));
+            });
         });
 
-        // Procesa parámetros URL al cargar (después de definir listeners)
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `mrp-toast ${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle';
+            const color = type === 'success' ? 'text-success' : type === 'error' ? 'text-danger' : 'text-warning';
+            toast.innerHTML = `<i class="fa-solid ${icon} ${color}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOut .3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Modal
+        function showModal(title, message, onConfirm) {
+            const container = document.getElementById('modalContainer');
+            container.innerHTML = `
+                <div class="mrp-modal-overlay" id="modalOverlay">
+                    <div class="mrp-modal">
+                        <div class="mrp-modal-header">
+                            <h6 class="mb-0 fw-bold">${title}</h6>
+                            <button class="btn-close" id="modalClose"></button>
+                        </div>
+                        <div class="mrp-modal-body">
+                            <p class="mb-0">${message}</p>
+                        </div>
+                        <div class="mrp-modal-footer">
+                            <button class="btn btn-mrp btn-mrp-outline btn-sm" id="modalCancel">Cancelar</button>
+                            <button class="btn btn-mrp btn-mrp-success btn-sm" id="modalConfirm">Confirmar</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('modalClose').addEventListener('click', () => container.innerHTML = '');
+            document.getElementById('modalCancel').addEventListener('click', () => container.innerHTML = '');
+            document.getElementById('modalConfirm').addEventListener('click', () => { container.innerHTML = ''; if (onConfirm) onConfirm(); });
+            document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) container.innerHTML = ''; });
+        }
+
+        // Procesa par&aacute;metros URL
         const urlParams = new URLSearchParams(window.location.search);
         const origenParam = urlParams.get('origen');
         const destinoParam = urlParams.get('destino');
 
         if (origenParam) {
             let found = false;
-            // Buscar coincidencia en selectOrigen
             Array.from(selectOrigen.options).forEach(opt => {
-                const optText = (opt.textContent || '').toUpperCase();
                 const optCode = (opt.dataset.codigo || '').toUpperCase();
                 const param = origenParam.toUpperCase();
-
-                if (opt.value && (optCode.includes(param) || optText.includes(param))) {
+                if (opt.value && optCode.includes(param)) {
                     selectOrigen.value = opt.value;
                     found = true;
                 }
             });
 
             if (found) {
-                // Disparar evento change para cargar destinos
                 selectOrigen.dispatchEvent(new Event('change'));
-
-                // Intentar seleccionar destino después de que se llene el select
                 if (destinoParam) {
                     setTimeout(() => {
                         let destFound = false;
                         const param = destinoParam.toUpperCase();
-
                         Array.from(selectDestino.options).forEach(opt => {
-                            const optText = (opt.textContent || '').toUpperCase();
                             const optCode = (opt.dataset.codigo || '').toUpperCase();
-
-                            if (opt.value && (optCode.includes(param) || optText.includes(param))) {
+                            if (opt.value && optCode.includes(param)) {
                                 selectDestino.value = opt.value;
                                 selectDestino.disabled = false;
                                 destFound = true;
                             }
                         });
-
                         if (destFound) {
                             selectDestino.dispatchEvent(new Event('change'));
                         }
-                    }, 200); // 200ms para asegurar renderizado
+                    }, 200);
                 }
             }
         }
 
-        // Submit del formulario
+        // Filter chips
+        function renderFilterChips() {
+            const bar = document.getElementById('filtersBar');
+            bar.innerHTML = '<span class="text-muted small fw-semibold me-1">Filtrar:</span>';
+
+            const allChip = document.createElement('span');
+            allChip.className = 'mrp-filter-chip active';
+            allChip.innerHTML = '<i class="fa-solid fa-border-all"></i> Todos';
+            allChip.addEventListener('click', () => {
+                movimientosRows.forEach(r => r.style.display = '');
+                renderFilterChips();
+            });
+            bar.appendChild(allChip);
+
+            tiposDeposito.forEach(td => {
+                const chip = document.createElement('span');
+                chip.className = 'mrp-filter-chip';
+                chip.innerHTML = `<i class="fa-solid fa-box fa-xs"></i> ${td.codigo}`;
+                chip.addEventListener('click', () => {
+                    movimientosRows.forEach(row => {
+                        if (row.cells.length === 1) return;
+                        row.style.display = (row.dataset.origenId == td.id) ? '' : 'none';
+                    });
+                    renderFilterChips();
+                });
+                bar.appendChild(chip);
+            });
+        }
+
+        renderFilterChips();
+
+        // Update stats
+        function updateStats() {
+            const total = movimientosRows.length;
+            let compras = 0, ventas = 0;
+            movimientosRows.forEach(row => {
+                if (row.cells.length === 1) return;
+                const origenId = row.dataset.origenId;
+                const destinoId = row.dataset.destinoId;
+                const origen = tiposDeposito.find(t => t.id == origenId);
+                const destino = tiposDeposito.find(t => t.id == destinoId);
+                if (origen && depositosCompra.some(c => origen.codigo.toUpperCase().includes(c))) compras++;
+                if (destino && depositosCliente.some(c => destino.codigo.toUpperCase().includes(c))) ventas++;
+            });
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statCompras').textContent = compras;
+            document.getElementById('statVentas').textContent = ventas;
+            document.getElementById('statInternos').textContent = total - compras - ventas;
+        }
+        updateStats();
+
+        // Submit
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             syncFechaHoraLimits(false);
 
             if (inputFechaHora && inputFechaHora.value > inputFechaHora.max) {
-                alert('La Fecha/Hora no puede ser superior al momento actual de Buenos Aires.');
+                showToast('La Fecha/Hora no puede ser superior al momento actual de Buenos Aires.', 'error');
                 inputFechaHora.value = inputFechaHora.max;
                 inputFechaHora.focus();
                 return;
             }
 
             if (!parteSeleccionada) {
-                alert('Debe seleccionar una parte');
+                showToast('Debe seleccionar una parte/variante', 'error');
                 return;
             }
 
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
 
-            // Validar campos requeridos
             if (!data.deposito_origen || !data.deposito_destino || !data.cantidad || parseFloat(data.cantidad) <= 0) {
-                alert('Por favor complete todos los campos requeridos correctamente.');
+                showToast('Por favor complete todos los campos requeridos correctamente.', 'error');
                 return;
             }
 
             if (esCompra() && (!data.importe_total || parseFloat(data.importe_total) <= 0)) {
-                alert('En compras debe ingresar un Importe Total mayor a 0.');
+                showToast('En compras debe ingresar un Importe Total mayor a 0.', 'error');
                 inputImporteTotal.focus();
                 return;
             }
@@ -1087,46 +1328,47 @@ use App\Core\Support\AssetHelper;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Guardando...';
 
             fetch('<?= url("transacciones/movimientos-partes") ?>', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert(result.message || 'Movimiento guardado exitosamente');
-                        // Resetear formulario
-                        form.reset();
-                        inputMovimientoId.value = '';
-                        setFormModeEditing(false);
-                        syncFechaHoraLimits(true);
-                        parteSeleccionada = null;
-                        inputParteHidden.value = '';
-                        searchInput.value = '';
-                        setSearchLockedState(false);
-                        selectDestino.disabled = true;
-                        selectDestino.innerHTML = '<option value="">Primero seleccione origen</option>';
-                        selectUM.disabled = true;
-                        selectUM.innerHTML = '<option value="">Seleccione una parte primero</option>';
-                        umTipoLabel.textContent = '';
-                        // Recargar página o actualizar lista de movimientos si estuviera implementada
-                        window.location.reload();
-                    } else {
-                        alert('Error: ' + (result.message || 'Ocurrió un error desconocido'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error de conexión al guardar el movimiento');
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = inputMovimientoId.value ? submitTextEdit : originalText;
-                });
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showToast(result.message || 'Movimiento guardado exitosamente');
+                    form.reset();
+                    inputMovimientoId.value = '';
+                    setFormModeEditing(false);
+                    syncFechaHoraLimits(true);
+                    parteSeleccionada = null;
+                    inputParteHidden.value = '';
+                    searchInput.value = '';
+                    setSearchLockedState(false);
+                    selectDestino.disabled = true;
+                    selectDestino.innerHTML = '<option value="">Primero seleccione origen</option>';
+                    selectUM.disabled = true;
+                    selectUM.innerHTML = '<option value="">Seleccione una parte primero</option>';
+                    umTipoLabel.textContent = '';
+                    if (parteSelectedDetail) parteSelectedDetail.classList.add('d-none');
+                    if (flowVisual) flowVisual.classList.add('d-none');
+                    fieldsCompra.forEach(f => f.classList.add('d-none'));
+                    fieldsStd.forEach(f => f.classList.remove('d-none'));
+                    window.location.reload();
+                } else {
+                    showToast('Error: ' + (result.message || 'Ocurri&oacute; un error desconocido'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error de conexi&oacute;n al guardar el movimiento', 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = inputMovimientoId.value ? submitTextEdit : originalText;
+            });
         });
 
+        // Bind edit buttons
         document.querySelectorAll('.btn-editar-movimiento').forEach(btn => {
             btn.addEventListener('click', function() {
                 cargarMovimientoParaEdicion(this);

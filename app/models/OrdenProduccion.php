@@ -50,13 +50,11 @@ final class OrdenProduccion extends BaseTenantModel
                 p.detalle as producto_nombre,
                 b.id as bom_id_ref,
                 b.version as bom_version,
-                COALESCE(p.detalle || \' (\' || v.codigo_variante || \')\', p.detalle) as bom_nombre,
-                u.username as usuario_nombre
+                COALESCE(p.detalle || \' (\' || v.codigo_variante || \')\', p.detalle) as bom_nombre
             FROM ordenes_produccion op
             LEFT JOIN variantes v ON v.id = op.variante_id
             LEFT JOIN partes p ON p.id = v.id_parte
             LEFT JOIN bom_cabecera b ON b.id = op.bom_id_utilizada
-            LEFT JOIN usuarios u ON u.id = op.usuario_creador
             WHERE op.id = :id
         ');
         $stmt->execute(['id' => $id]);

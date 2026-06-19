@@ -153,11 +153,11 @@ final class SearchController extends Controller
     /**
      * GET /api/v1/search/variantes/:id
      */
-    public function getVariante(Request $request, int $id): Response
+    public function getVariante(Request $request, string $id): Response
     {
         $format = $request->query['format'] ?? 'standard';
 
-        $variante = $this->searchService->getVarianteById($id, $format);
+        $variante = $this->searchService->getVarianteById((int) $id, $format);
 
         if ($variante === null) {
             return $this->json([
@@ -253,11 +253,11 @@ final class SearchController extends Controller
      * GET /api/v1/bom/variantes/{id}
      * Devuelve las BOMs disponibles para una variante (para seleccionar en órdenes).
      */
-    public function getBomsByVariante(Request $request, int $id): Response
+    public function getBomsByVariante(Request $request, string $id): Response
     {
         try {
             $bom = new \App\Models\Bom($this->tenantConnection);
-            $boms = $bom->getAllByVariante($id);
+            $boms = $bom->getAllByVariante((int) $id);
 
             $items = array_map(static fn(array $b) => [
                 'id'                => (int) $b['id'],
@@ -279,11 +279,11 @@ final class SearchController extends Controller
      * GET /api/v1/bom/variantes/:id/nivel1
      * Devuelve los componentes directos (nivel 1) de la BOM activa de una variante.
      */
-    public function getBomNivel1(Request $request, int $id): Response
+    public function getBomNivel1(Request $request, string $id): Response
     {
         try {
             $bom    = new \App\Models\Bom($this->tenantConnection);
-            $header = $bom->getActiveByVariante($id);
+            $header = $bom->getActiveByVariante((int) $id);
 
             if ($header === null) {
                 return $this->json(['success' => true, 'bom_id' => null, 'items' => []]);

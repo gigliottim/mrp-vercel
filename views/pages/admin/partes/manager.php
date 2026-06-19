@@ -96,7 +96,7 @@ $dimensionFields = [
                 <template x-if="isEditing && variantes.length > 0">
                     <div>
                         <template x-for="(variante, idx) in variantes" :key="variante.id || idx">
-                            <div class="pm-var-card" :class="{ 'active': variantForm && variantForm.id === variante.id }" @click="editVariante(variante)">
+                            <div class="pm-var-card" :class="{ 'active': variantForm && variantForm.id === variante.id }">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="pm-var-code" x-text="variante.codigo_variante || '—'"></div>
                                     <div class="pm-var-actions d-flex gap-1">

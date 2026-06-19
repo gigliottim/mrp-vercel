@@ -660,6 +660,12 @@ function parteManager(initialData) {
       }
     },
 
+    viewVariante(variante) {
+      if (this.form.id) {
+        window.location.href = `${BASE}/productos/partes/manager/${this.form.id}/variantes/${variante.id}`;
+      }
+    },
+
     editVariante(variante) {
       if (this.form.id) {
         window.location.href = `${BASE}/productos/partes/manager/${this.form.id}/variantes/${variante.id}/editar`;

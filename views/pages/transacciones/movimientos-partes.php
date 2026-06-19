@@ -1049,7 +1049,7 @@ use App\Core\Support\AssetHelper;
             function searchEntidades(query, soloProveedores) {
                 const q = query.toLowerCase();
                 return entidades.filter(e => {
-                    const matchTipo = soloProveedores ? (e.tipo === 'PROVEEDOR') : true;
+                    const matchTipo = soloProveedores ? (e.tipo === 'PROVEEDOR' || e.tipo === 'AMBOS') : true;
                     const matchText = e.razon_social.toLowerCase().includes(q) || (e.tipo || '').toLowerCase().includes(q);
                     return matchTipo && matchText;
                 });
@@ -1063,8 +1063,8 @@ use App\Core\Support\AssetHelper;
                     return;
                 }
                 results.forEach(entidad => {
-                    const tipoColor = entidad.tipo === 'PROVEEDOR' ? '#059669' : '#d97706';
-                    const tipoBg = entidad.tipo === 'PROVEEDOR' ? '#ecfdf5' : '#fffbeb';
+                    const tipoColor = (entidad.tipo === 'PROVEEDOR' || entidad.tipo === 'AMBOS') ? '#059669' : '#d97706';
+                    const tipoBg = (entidad.tipo === 'PROVEEDOR' || entidad.tipo === 'AMBOS') ? '#ecfdf5' : '#fffbeb';
                     const el = document.createElement('div');
                     el.className = 'mrp-search-item';
                     el.innerHTML = `

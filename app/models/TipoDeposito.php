@@ -13,7 +13,7 @@ final class TipoDeposito extends BaseTenantModel
 
     public function activos(): array
     {
-        $stmt = $this->connection->query('SELECT * FROM tipos_depositos ORDER BY orden, nombre');
+        $stmt = $this->connection->query('SELECT * FROM tipos_depositos ORDER BY id ASC');
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 

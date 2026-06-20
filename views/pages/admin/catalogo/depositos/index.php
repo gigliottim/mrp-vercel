@@ -103,6 +103,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
+                                <th>ID</th>
                                 <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Descripción</th>
@@ -115,6 +116,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                             <?php foreach ($tipos as $tipo) : ?>
                                 <?php $esSistema = (bool) ($tipo['es_sistema'] ?? false); ?>
                                 <tr>
+                                    <td class="text-muted small font-monospace"><?= (int) $tipo['id'] ?></td>
                                     <td class="fw-semibold">
                                         <?= View::escape($tipo['codigo']) ?>
                                         <?php if ($esSistema) : ?>

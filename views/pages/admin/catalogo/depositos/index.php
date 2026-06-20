@@ -75,10 +75,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                             name="descripcion"
                             rows="3"><?= View::escape($oldValue('descripcion')) ?></textarea>
                     </div>
-                    <div>
-                        <label class="form-label">Orden</label>
-                        <input class="form-control" type="number" name="orden" value="<?= View::escape($oldValue('orden', 0)) ?>" min="0" step="1">
-                    </div>
+
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="activo" id="tipo-activo" <?= (int) $oldValue('activo', 1) === 1 ? 'checked' : '' ?>>
                         <label class="form-check-label" for="tipo-activo">Tipo activo</label>
@@ -107,7 +104,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                                 <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Descripción</th>
-                                <th>Orden</th>
+
                                 <th>Estado</th>
                                 <th></th>
                             </tr>
@@ -127,7 +124,7 @@ $oldValue = static function (string $field, $default = '') use ($old, $editing) 
                                     <td class="text-muted small">
                                         <?= $tipo['descripcion'] ? View::escape($tipo['descripcion']) : '<span class="text-body-secondary">Sin descripción</span>' ?>
                                     </td>
-                                    <td><?= View::escape((string) ($tipo['orden'] ?? 0)) ?></td>
+
                                     <td>
                                         <span class="badge <?= (int) $tipo['activo'] === 1 ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= (int) $tipo['activo'] === 1 ? 'Activo' : 'Inactivo' ?></span>
                                     </td>

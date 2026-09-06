@@ -23,6 +23,7 @@ import { reportes } from './routes/reportes.js'
 import { empresa } from './routes/empresa.js'
 import { operaciones } from './routes/operaciones.js'
 import { importExport } from './routes/import-export.js'
+import { agent } from './routes/agent.js'
 
 const app = new Hono()
 
@@ -53,5 +54,6 @@ app.route('/api/v1/reportes', reportes)
 app.route('/api/v1/empresa', empresa)
 app.route('/api/v1/operaciones', operaciones)
 app.route('/api/v1/import-export', importExport)
+app.route('/api/v1/agent', agent)
 
 export default app

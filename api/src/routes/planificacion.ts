@@ -203,8 +203,7 @@ planificacion.post('/calcular', async (c) => {
         orden_produccion_id: ordenId,
         operacion_id: op.id,
         centro_trabajo_id: op.centro_trabajo_id,
-        inicio: fechaInicio.toISOString(),
-        fin: fechaFin.toISOString(),
+        periodo: `[${fechaInicio.toISOString()},${fechaFin.toISOString()})`,
         estado: 'programado',
         company_id: c.get('companyId'),
       })

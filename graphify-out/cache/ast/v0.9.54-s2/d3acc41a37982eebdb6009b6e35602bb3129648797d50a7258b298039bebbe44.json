@@ -1,0 +1,1 @@
+{"nodes": [{"id": "$graphify-root$_database_migrations_2026_06_15_001_entidades_unique_cuit_sql", "label": "2026_06_15_001_entidades_unique_cuit.sql", "file_type": "code", "source_file": "database/migrations/2026_06_15_001_entidades_unique_cuit.sql", "source_location": null}], "edges": []}

@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MRP · Demo moderna · Control de Producción e Inventario</title>
+
+    <!-- Bootstrap 5 + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js">
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js">
+    </script>
+
+    <style>
+        /* ===== VARIABLES GLOBALES ===== */
+        :root {
+            --primary: #0d6efd;
+            --primary-light: #e9f0ff;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #0dcaf0;
+            --secondary: #6c757d;
+            --dark: #212529;
+            --sidebar-width: 260px;
+            --header-height: 60px;
+            --border-radius-card: 16px;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f7fc;
+            overflow-x: hidden;
+            padding-top: var(--header-height);
+        }
+
+        /* ===== HEADER FIJO ===== */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: #ffffff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(4px);
+        }
+        .app-header .brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .app-header .brand i {
+            font-size: 1.6rem;
+        }
+        .app-header .header-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .app-header .header-actions .badge-env {
+            background: #ffc107;
+            color: #000;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .app-header .user-dropdown .dropdown-toggle::after {
+            display: none;
+        }
+        .app-header .user-dropdown .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .app-sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: #ffffff;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+            transition: transform var(--transition-speed) ease;
+            z-index: 1040;
+            padding: 1.2rem 0.75rem;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.02);
+        }
+        .app-sidebar .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+        .app-sidebar .sidebar-section .section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8b95a9;
+            font-weight: 600;
+            padding: 0 0.5rem 0.4rem 0.5rem;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .app-sidebar .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            color: #2d3748;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+            cursor: pointer;
+            margin-bottom: 0.1rem;
+        }
+        .app-sidebar .sidebar-item i {
+            width: 1.25rem;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #6b7a8f;
+        }
+        .app-sidebar .sidebar-item:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .app-sidebar .sidebar-item:hover i {
+            color: var(--primary);
+        }
+        .app-sidebar .sidebar-item.active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .app-sidebar .sidebar-item.active i {
+            color: #fff;
+        }
+        .app-sidebar .sidebar-item .badge-wip {
+            margin-left: auto;
+            background: #ffedd5;
+            color: #c2410c;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            text-transform: uppercase;
+        }
+        .app-sidebar .sidebar-item.active .badge-wip {
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+        .app-sidebar .tenant-info {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: #4a5568;
+            border: 1px solid #edf2f7;
+        }
+        .app-sidebar .tenant-info .tenant-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        /* ===== CONTENIDO PRINCIPAL ===== */
+        .app-main {
+            margin-left: var(--sidebar-width);
+            padding: 1.8rem 2rem 2rem 2rem;
+            transition: margin var(--transition-speed) ease;
+            min-height: calc(100vh - var(--header-height));
+        }
+        .app-main .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .app-main .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0b1a33;
+            margin: 0;
+        }
+        .app-main .page-header .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* ===== CARDS Y COMPONENTES ===== */
+        .card-modern {
+            background: #fff;
+            border: none;
+            border-radius: var(--border-radius-card);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.2s;
+            height: 100%;
+        }
+        .card-modern:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+        .card-modern .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f2f5;
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+        .card-modern .card-body {
+            padding: 1.25rem;
+        }
+
+        .kpi-card {
+            background: #fff;
+            border-radius: var(--border-radius-card);
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.2s;
+            height: 100%;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+        .kpi-card .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .kpi-card .kpi-icon.primary {
+            background: #e9f0ff;
+            color: var(--primary);
+        }
+        .kpi-card .kpi-icon.success {
+            background: #e6f6ed;
+            color: var(--success);
+        }
+        .kpi-card .kpi-icon.warning {
+            background: #fff4e0;
+            color: #b45309;
+        }
+        .kpi-card .kpi-icon.danger {
+            background: #fde8e8;
+            color: var(--danger);
+        }
+        .kpi-card .kpi-icon.info {
+            background: #e0f7fe;
+            color: #0e7490;
+        }
+        .kpi-card .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #0b1a33;
+        }
+        .kpi-card .kpi-label {
+            font-size: 0.85rem;
+            color: #6b7a8f;
+            font-weight: 500;
+        }
+
+        /* ===== TABLAS MODERNAS ===== */
+        .table-modern {
+            font-size: 0.9rem;
+        }
+        .table-modern thead th {
+            background: #f8fafc;
+            border-bottom: 1px solid #e9edf2;
+            font-weight: 600;
+            color: #1e293b;
+            padding: 0.75rem 1rem;
+        }
+        .table-modern tbody td {
+            padding: 0.7rem 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .table-modern tbody tr:hover {
+            background: #fafbfc;
+        }
+        .badge-status {
+            font-weight: 500;
+            padding: 0.35rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+        }
+
+        /* ===== MENÚ UNIFICADO (COMMAND PALETTE) ===== */
+        .command-palette-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 12vh;
+        }
+        .command-palette-overlay.open {
+            display: flex;
+        }
+        .command-palette {
+            background: #fff;
+            max-width: 680px;
+            width: 90%;
+            border-radius: 24px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .command-palette .search-box {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .command-palette .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1.1rem;
+            padding: 0.4rem 0;
+            background: transparent;
+        }
+        .command-palette .search-box input::placeholder {
+            color: #a0aec0;
+        }
+        .command-palette .results {
+            overflow-y: auto;
+            padding: 0.5rem 1rem 1rem 1rem;
+        }
+        .command-palette .results .category-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8b95a9;
+            font-weight: 600;
+            padding: 0.6rem 0.5rem 0.2rem 0.5rem;
+        }
+        .command-palette .results .result-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.1s;
+            color: #1a202c;
+        }
+        .command-palette .results .result-item:hover,
+        .command-palette .results .result-item.active {
+            background: var(--primary-light);
+        }
+        .command-palette .results .result-item i {
+            width: 1.5rem;
+            color: #6b7a8f;
+        }
+
+        /* ===== BOTÓN FLOTANTE AI ===== */
+        .ai-float-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1090;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff;
+            border: none;
+            box-shadow: 0 8px 30px rgba(79, 70, 229, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .ai-float-btn:hover {
+            transform: scale(1.06);
+            box-shadow: 0 12px 40px rgba(79, 70, 229, 0.45);
+        }
+        .ai-float-btn .status-dot {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: 2px solid #fff;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+            }
+            .app-sidebar.open {
+                transform: translateX(0);
+            }
+            .app-main {
+                margin-left: 0 !important;
+                padding: 1.2rem;
+            }
+            .app-header .sidebar-toggle {
+                display: flex !important;
+            }
+        }
+        @media (min-width: 992px) {
+            .app-header .sidebar-toggle {
+                display: none !important;
+            }
+        }
+
+        /* ===== UTILITIES ===== */
+        .bg-soft-primary {
+            background: var(--primary-light);
+        }
+        .text-primary-dark {
+            color: #0b1a33;
+        }
+        .gap-2 {
+            gap: 0.5rem;
+        }
+        .gap-3 {
+            gap: 1rem;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c9d6;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* ===== DEMO SPECIFIC ===== */
+        .gantt-bar {
+            height: 28px;
+            border-radius: 6px;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            font-weight: 500;
+        }
+        .gantt-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.4rem;
+        }
+        .gantt-row .gantt-label {
+            width: 120px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #1e293b;
+        }
+        .gantt-row .gantt-track {
+            flex: 1;
+            background: #f1f4f9;
+            border-radius: 6px;
+            height: 28px;
+            position: relative;
+        }
+        .gantt-row .gantt-track .gantt-bar {
+            position: absolute;
+            top: 0;
+            left: 10%;
+            width: 60%;
+            height: 100%;
+        }
+
+        /* Tree en maestro */
+        .tree-node {
+            padding: 0.3rem 0 0.3rem 1.2rem;
+            border-left: 1px dashed #dde2ea;
+            margin-left: 0.5rem;
+        }
+        .tree-node .node-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .tree-node .node-label:hover {
+            background: #f1f5f9;
+        }
+        .tree-node .node-label i {
+            color: #6b7a8f;
+        }
+        .tree-node .node-label .badge {
+            font-size: 0.65rem;
+        }
+
+        /* animación */
+        .fade-in {
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================================================ -->
+    <!-- HEADER FIJO -->
+    <!-- ============================================================ -->
+    <header class="app-header" x-data>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-link sidebar-toggle p-0 text-dark" @click="$dispatch('toggle-sidebar')" style="font-size:1.4rem;">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="brand">
+                <i class="bi bi-cpu"></i>
+                <span>MRP</span>
+                <span style="font-weight:400;color:#6b7a8f;font-size:0.85rem;">· Demo</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="badge-env"><i class="bi bi-exclamation-triangle-fill me-1"></i> No producción</span>
+            <button class="btn btn-outline-secondary btn-sm" @click="$dispatch('open-command-palette')" title="Ctrl+K">
+                <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Ctrl+K</span>
+            </button>
+            <div class="dropdown user-dropdown">
+                <a class="dropdown-toggle d-flex align-items-center gap-2 text-decoration-none text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="avatar">JD</div>
+                    <span class="d-none d-md-inline">Juan Díaz</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Configuración</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- SIDEBAR -->
+    <!-- ============================================================ -->
+    <aside class="app-sidebar" id="appSidebar" x-data="{ open: false }" @toggle-sidebar.window="open = !open" :class="open ? 'open' : ''">
+        <nav>
+            <!-- Sección Panel -->
+            <div class="sidebar-section">
+                <div class="section-title">Panel</div>
+                <a class="sidebar-item active" data-section="dashboard" @click="$dispatch('change-section', 'dashboard')">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a class="sidebar-item" data-section="menu" @click="$dispatch('change-section', 'menu')">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Mapa del sistema
+                </a>
+            </div>
+
+            <!-- Sección Taller -->
+            <div class="sidebar-section">
+                <div class="section-title">Taller</div>
+                <a class="sidebar-item" data-section="produccion" @click="$dispatch('change-section', 'produccion')">
+                    <i class="bi bi-tools"></i> Producción
+                    <span class="badge-wip">WIP</span>
+                </a>
+                <a class="sidebar-item" data-section="centros" @click="$dispatch('change-section', 'centros')">
+                    <i class="bi bi-hdd-stack"></i> Centros
+                </a>
+                <a class="sidebar-item" data-section="rutas" @click="$dispatch('change-section', 'rutas')">
+                    <i class="bi bi-diagram-3"></i> Rutas
+                </a>
+                <a class="sidebar-item" data-section="ordenes" @click="$dispatch('change-section', 'ordenes')">
+                    <i class="bi bi-clipboard-check"></i> Órdenes
+                </a>
+                <a class="sidebar-item" data-section="planificacion" @click="$dispatch('change-section', 'planificacion')">
+                    <i class="bi bi-calendar-range"></i> Planificación
+                </a>
+            </div>
+
+            <!-- Productos -->
+            <div class="sidebar-section">
+                <div class="section-title">Catálogo de productos</div>
+                <a class="sidebar-item" data-section="productos" @click="$dispatch('change-section', 'productos')">
+                    <i class="bi bi-box-seam"></i> BOM / Maestro
+                </a>
+                <a class="sidebar-item" data-section="partes" @click="$dispatch('change-section', 'partes')">
+                    <i class="bi bi-grid"></i> Partes &amp; Variantes
+                </a>
+            </div>
+
+            <!-- Planeamiento -->
+            <div class="sidebar-section">
+                <div class="section-title">Planeamiento</div>
+                <a class="sidebar-item" data-section="planeamiento" @click="$dispatch('change-section', 'planeamiento')">
+                    <i class="bi bi-lightbulb"></i> Sugerencias MRP
+                </a>
+            </div>
+
+            <!-- Reportes -->
+            <div class="sidebar-section">
+                <div class="section-title">Reportes</div>
+                <a class="sidebar-item" data-section="reportes" @click="$dispatch('change-section', 'reportes')">
+                    <i class="bi bi-file-earmark-bar-graph"></i> Destino de partes
+                </a>
+            </div>
+
+            <!-- Transacciones / Inventario -->
+            <div class="sidebar-section">
+                <div class="section-title">Inventario &amp; Compras</div>
+                <a class="sidebar-item" data-section="movimientos" @click="$dispatch('change-section', 'movimientos')">
+                    <i class="bi bi-arrow-left-right"></i> Movimientos
+                </a>
+                <a class="sidebar-item" data-section="inventario" @click="$dispatch('change-section', 'inventario')">
+                    <i class="bi bi-exclamation-triangle"></i> Stock crítico
+                </a>
+            </div>
+
+            <!-- Configuración -->
+            <div class="sidebar-section">
+                <div class="section-title">Administración</div>
+                <a class="sidebar-item" data-section="configuracion" @click="$dispatch('change-section', 'configuracion')">
+                    <i class="bi bi-sliders2"></i> Catálogos
+                </a>
+                <a class="sidebar-item" data-section="empresa" @click="$dispatch('change-section', 'empresa')">
+                    <i class="bi bi-building"></i> Empresa &amp; Usuarios
+                </a>
+            </div>
+
+            <!-- Info tenant -->
+            <div class="tenant-info">
+                <div class="tenant-name"><i class="bi bi-database me-1"></i> Mi Empresa S.A.</div>
+                <div class="text-muted small">Tenant: mrp_demo · v53.9.0</div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- ============================================================ -->
+    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ============================================================ -->
+    <main class="app-main" x-data="appState()" @change-section.window="if ($event.detail) changeSection($event.detail)" x-init="initChart()" @open-command-palette.window.stop>
+
+        <!-- ==================== DASHBOARD ==================== -->
+        <div id="section-dashboard" class="section-content active" x-show="currentSection === 'dashboard'" x-transition.duration.200ms>
+            <div class="page-header">
+                <h1><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item active">Panel</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- KPIs -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon primary"><i class="bi bi-clipboard-data"></i></div>
+                        <div>
+                            <div class="kpi-value">184</div>
+                            <div class="kpi-label">Órdenes activas</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon warning"><i class="bi bi-exclamation-diamond"></i></div>
+                        <div>
+                            <div class="kpi-value">23</div>
+                            <div class="kpi-label">Urgentes / atrasadas</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon danger"><i class="bi bi-box"></i></div>
+                        <div>
+                            <div class="kpi-value">47</div>
+                            <div class="kpi-label">Stock crítico</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon success"><i class="bi bi-cash-stack"></i></div>
+                        <div>
+                            <div class="kpi-value">$ 2.4M</div>
+                            <div class="kpi-label">Compras del mes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos y resumen -->
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card-modern">
+                        <div class="card-header">Distribución de órdenes por estado</div>
+                        <div class="card-body">
+                            <canvas id="statusChart" height="180"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card-modern">
+                        <div class="card-header">Cumplimiento operativo</div>
+                        <div class="card-body text-center">
+                            <canvas id="donutChart" height="180" style="max-width:180px;margin:0 auto;"></canvas>
+                            <div class="mt-3"><span class="badge bg-success">76%</span> en tiempo</div>
+                        </div>
+                    </div>
+                    <div class="card-modern mt-4">
+                        <div class="card-header">Resumen MRP</div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between"><span>Fabricables</span><span class="fw-bold text-success">58</span></div>
+                            <div class="d-flex justify-content-between"><span>Parciales</span><span class="fw-bold text-warning">31</span></div>
+                            <div class="d-flex justify-content-between"><span>Sin stock</span><span class="fw-bold text-danger">12</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist ejecutivo -->
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <div class="card-modern">
+                        <div class="card-body d-flex gap-3 align-items-center">
+                            <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                            <div><strong>Órdenes completadas</strong><br />34 esta semana</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-modern">
+                        <div class="card-body d-flex gap-3 align-items-center">
+                            <i class="bi bi-clock-fill text-warning fs-3"></i>
+                            <div><strong>En proceso</strong><br />12 con retraso</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-modern">
+                        <div class="card-body d-flex gap-3 align-items-center">
+                            <i class="bi bi-arrow-up-circle-fill text-primary fs-3"></i>
+                            <div><strong>Productividad</strong><br />+8% vs mes anterior</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MAPA DEL SISTEMA ==================== -->
+        <div id="section-menu" class="section-content" x-show="currentSection === 'menu'" x-transition.duration.200ms>
+            <div class="page-header">
+                <h1><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>Mapa del sistema</h1>
+                <button class="btn btn-outline-secondary btn-sm" @click="$dispatch('change-section', 'dashboard')"><i class="bi bi-arrow-left"></i> Volver</button>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-speedometer2 fs-1 text-primary"></i>
+                        <h6 class="mt-2">Panel</h6>
+                        <span class="badge bg-light text-dark">6</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-tools fs-1 text-warning"></i>
+                        <h6 class="mt-2">Taller</h6>
+                        <span class="badge bg-light text-dark">12</span>
+                        <span class="badge bg-warning text-dark ms-1">WIP</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-box-seam fs-1 text-success"></i>
+                        <h6 class="mt-2">Productos</h6>
+                        <span class="badge bg-light text-dark">8</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-lightbulb fs-1 text-info"></i>
+                        <h6 class="mt-2">Planeamiento</h6>
+                        <span class="badge bg-light text-dark">4</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-file-earmark-bar-graph fs-1 text-secondary"></i>
+                        <h6 class="mt-2">Reportes</h6>
+                        <span class="badge bg-light text-dark">9</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-arrow-left-right fs-1 text-danger"></i>
+                        <h6 class="mt-2">Inventario / Compras</h6>
+                        <span class="badge bg-light text-dark">5</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-sliders2 fs-1 text-dark"></i>
+                        <h6 class="mt-2">Administración</h6>
+                        <span class="badge bg-light text-dark">7</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="card-modern text-center p-3">
+                        <i class="bi bi-building fs-1 text-primary"></i>
+                        <h6 class="mt-2">Empresa &amp; Usuarios</h6>
+                        <span class="badge bg-light text-dark">6</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PRODUCTOS (BOM / MAESTRO) ==================== -->
+        <div id="section-productos" class="section-content" x-show="currentSection === 'productos'" x-transition.duration.200ms>
+            <div class="page-header">
+                <h1><i class="bi bi-box-seam me-2 text-success"></i>Maestro de composición</h1>
+                <div><button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Agregar componente</button></div>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="card-modern">
+                        <div class="card-header"><i class="bi bi-tree me-1"></i> Árbol BOM</div>
+                        <div class="card-body">
+                            <div class="tree-node">
+                                <div class="node-label"><i class="bi bi-folder-fill text-warning"></i> <strong>Producto A</strong> <span class="badge bg-primary ms-2">v2.1</span></div>
+                                <div class="tree-node">
+                                    <div class="node-label"><i class="bi bi-cube-fill text-info"></i> Subensamble X <span class="badge bg-secondary">2</span></div>
+                                    <div class="tree-node">
+                                        <div class="node-label"><i class="bi bi-cube-fill text-info"></i> Componente X1 <span class="badge bg-secondary">4</span></div>
+                                    </div>
+                                    <div class="tree-node">
+                                        <div class="node-label"><i class="bi bi-cube-fill text-info"></i> Componente X2 <span class="badge bg-secondary">1</span></div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="node-label"><i class="bi bi-cube-fill text-info"></i> Subensamble Y <span class="badge bg-secondary">1</span></div>
+                                    <div class="tree-node">
+                                        <div class="node-label"><i class="bi bi-cube-fill text-info"></i> Componente Y1 <span class="badge bg-secondary">3</span></div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="node-label"><i class="bi bi-cube-fill text-info"></i> Material M1 <span class="badge bg-secondary">5</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card-modern">
+                        <div class="card-header">Detalle del nodo seleccionado</div>
+                        <div class="card-body">
+                            <h6 class="fw-bold">Subensamble X</h6>
+                            <table class="table table-modern table-hover mt-2">
+                                <thead><tr><th>Componente</th><th>Cantidad</th><th>Unidad</th><th>Acciones</th></tr></thead>
+                                <tbody>
+                                    <tr><td>X1</td><td>4</td><td>u</td><td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button></td></tr>
+                                    <tr><td>X2</td><td>1</td><td>u</td><td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button></td></tr>
+                                </tbody>
+                            </table>
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-left-right"></i> Reemplazar</button>
+                                <button class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-arrow-down"></i> Importar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PARTES & VARIANTES ==================== -->
+        <div id="section-partes" class="section-content" x-show="currentSection === 'partes'" x-transition.duration.200ms>
+            <div class="page-header">
+                <h1><i class="bi bi-grid me-2 text-primary"></i>Partes &amp; Variantes</h1>
+                <div><button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nueva parte</button></div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card-modern">
+                        <div class="card-header"><i class="bi bi-search"></i> Buscador</div>
+                        <div class="card-body">
+                            <input type="text" class="form-control" placeholder="Código o descripción..." />
+                            <div class="mt-2"><span class="badge bg-light text-dark">Filtros:</span> <span class="badge bg-primary">Activas</span> <span class="badge bg-secondary">Desarrollo</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card-modern">
+                        <div class="card-header">Variantes de parte seleccionada</div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="fw-bold">P-1001</span>
+                                <span class="badge bg-success">Activa</span>
+                                <span class="badge bg-light text-dark">Tornillo M6</span>
+                            </div>
+                            <table class="table table-modern">
+                                <thead><tr><th>Variante</th><th>Stock</th><th>Punto pedido</th><th>Estado</th></tr></thead>
+                                <tbody>
+                                    <tr><td>P-1001-01</td><td>250</td><td>50</td><td><span class="badge bg-success">Normal</span></td></tr>
+                                    <tr><td>P-1001-02</td><td>12</td><td>30</td><td><span class="badge bg-warning">Crítico</span></td></tr>
+                                    <tr><td>P-1001-03</td><td>0</td><td>20</td><td><span class="badge bg-danger">Sin stock</span></td></tr>
+                                </tbody>
+                            </table>
+                            <div class="d-flex gap-2"><button class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-circle"></i> Agregar variante</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PRODUCCIÓN ==================== -->
+        <div id="section-produccion" class="section-content" x-show="currentSection === 'produccion'" x-transition.duration.200ms>
+            <div class="page-header">
+                <h1><i class="bi bi-tools me-2 text-warning"></i>Dashboard de producción</h1>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3"><div class="kpi-card"><div class="kpi-icon primary"><i class="bi bi-hdd-stack"></i></div><div><div class="kpi-value">8</div><div class="kpi-label">Centros activos</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div class="kpi-icon success"><i class="bi bi-diagram-3"></i></div><div><div class="kpi-value">14</div><div class="kpi-label">Rutas configuradas</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div class="kpi-icon warning"><i class="bi bi-clipboard-check"></i></div><div><div class="kpi-value">23</div><div class="kpi-label">Órdenes en proceso</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div class="kpi-icon info"><i class="bi bi-percent"></i></div><div><div class="kpi-value">67%</div><div class="kpi-label">Capacidad utilizada</div></div></div></div>
+            </div>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="card-modern"><div class="card-header">Órdenes recientes</div><div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="d-flex justify-content-between border-bottom py-2"><span>#OP-124 <span class="badge bg-warning">Urgente</span></span><span>Producto A - 50u</span><span class="badge bg-info">En proceso</span></li>
+                                <li class="d-flex justify-content-between border-bottom py-2"><span>#OP-123 <span class="badge bg-secondary">Normal</span></span><span>Producto B - 20u</span><span class="badge bg-success">Completada</span></li>
+                                <li class="d-flex justify-content-between border-bottom py-2"><span>#OP-122 <span class="badge bg-danger">Atrasada</span></span><span>Producto C - 100u</span><span class="badge bg-warning">Pausada</span></li>
+                            </ul>
+                        </div></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-modern"><div class="card-header">Acciones rápidas</div><div class="card-body d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-primary"><i class="bi bi-plus-circle"></i> Nueva orden</button>
+                            <button class="btn btn-outline-success"><i class="bi bi-calendar-plus"></i> Planificar</button>
+                            <button class="btn btn-outline-info"><i class="bi bi-clock-history"></i> Ver Gantt</button>
+                        </div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CENTROS ==================== -->
+        <div id="section-centros" class="section-content" x-show="currentSection === 'centros'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-hdd-stack me-2 text-primary"></i>Centros de trabajo</h1><button class="btn btn-primary btn-sm">Nuevo centro</button></div>
+            <div class="card-modern"><div class="card-body">
+                    <table class="table table-modern">
+                        <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Capacidad (h/día)</th><th>Eficiencia</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            <tr><td>CNT-01</td><td>Torno CNC</td><td>Mecanizado</td><td>16</td><td>92%</td><td><span class="badge bg-success">Activo</span></td></tr>
+                            <tr><td>CNT-02</td><td>Fresadora</td><td>Mecanizado</td><td>12</td><td>85%</td><td><span class="badge bg-success">Activo</span></td></tr>
+                            <tr><td>CNT-03</td><td>Montaje manual</td><td>Ensamble</td><td>8</td><td>78%</td><td><span class="badge bg-warning">Mantenimiento</span></td></tr>
+                        </tbody>
+                    </table>
+                </div></div>
+        </div>
+
+        <!-- ==================== RUTAS ==================== -->
+        <div id="section-rutas" class="section-content" x-show="currentSection === 'rutas'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-diagram-3 me-2 text-success"></i>Rutas de producción</h1></div>
+            <div class="card-modern"><div class="card-body">
+                    <div class="d-flex gap-3 mb-3"><span class="badge bg-primary">Operaciones: 5</span><span class="badge bg-secondary">Tiempo total: 47 min</span><span class="badge bg-info">Costo: $ 12.40</span></div>
+                    <div class="list-group">
+                        <div class="list-group-item d-flex gap-3 align-items-center"><span class="badge rounded-pill bg-primary">1</span><strong>Tornería</strong><span class="text-muted">CNT-01 · Setup 5' · Proceso 12'</span><button class="btn btn-sm btn-outline-secondary ms-auto"><i class="bi bi-arrow-up"></i></button></div>
+                        <div class="list-group-item d-flex gap-3 align-items-center"><span class="badge rounded-pill bg-primary">2</span><strong>Fresado</strong><span class="text-muted">CNT-02 · Setup 8' · Proceso 18'</span><button class="btn btn-sm btn-outline-secondary ms-auto"><i class="bi bi-arrow-up"></i></button></div>
+                        <div class="list-group-item d-flex gap-3 align-items-center"><span class="badge rounded-pill bg-primary">3</span><strong>Montaje</strong><span class="text-muted">CNT-03 · Setup 3' · Proceso 10'</span><button class="btn btn-sm btn-outline-secondary ms-auto"><i class="bi bi-arrow-up"></i></button></div>
+                    </div>
+                </div></div>
+        </div>
+
+        <!-- ==================== ÓRDENES ==================== -->
+        <div id="section-ordenes" class="section-content" x-show="currentSection === 'ordenes'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-clipboard-check me-2 text-primary"></i>Órdenes de producción</h1><button class="btn btn-primary btn-sm">Crear orden</button></div>
+            <div class="row g-3 mb-3">
+                <div class="col-auto"><span class="badge bg-primary">Borrador 4</span></div>
+                <div class="col-auto"><span class="badge bg-info">Planificada 7</span></div>
+                <div class="col-auto"><span class="badge bg-warning">Liberada 5</span></div>
+                <div class="col-auto"><span class="badge bg-success">Completada 12</span></div>
+                <div class="col-auto"><span class="badge bg-danger">Cancelada 2</span></div>
+            </div>
+            <div class="card-modern"><div class="card-body">
+                    <table class="table table-modern">
+                        <thead><tr><th>#</th><th>Producto</th><th>Cantidad</th><th>Prioridad</th><th>Estado</th><th>Avance</th></tr></thead>
+                        <tbody>
+                            <tr><td>OP-124</td><td>Producto A</td><td>50</td><td><span class="badge bg-warning">Urgente</span></td><td><span class="badge bg-info">En proceso</span></td><td><div class="progress" style="height:6px;width:100px;"><div class="progress-bar bg-success" style="width:45%"></div></div></td></tr>
+                            <tr><td>OP-123</td><td>Producto B</td><td>20</td><td><span class="badge bg-secondary">Normal</span></td><td><span class="badge bg-success">Completada</span></td><td><div class="progress" style="height:6px;width:100px;"><div class="progress-bar bg-success" style="width:100%"></div></div></td></tr>
+                            <tr><td>OP-122</td><td>Producto C</td><td>100</td><td><span class="badge bg-danger">Atrasada</span></td><td><span class="badge bg-warning">Pausada</span></td><td><div class="progress" style="height:6px;width:100px;"><div class="progress-bar bg-warning" style="width:20%"></div></div></td></tr>
+                        </tbody>
+                    </table>
+                </div></div>
+        </div>
+
+        <!-- ==================== PLANIFICACIÓN (GANTT) ==================== -->
+        <div id="section-planificacion" class="section-content" x-show="currentSection === 'planificacion'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-calendar-range me-2 text-info"></i>Planificación - Gantt</h1><button class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-pdf"></i> Exportar PDF</button></div>
+            <div class="card-modern"><div class="card-body">
+                    <div class="gantt-row"><span class="gantt-label">CNT-01 Torno</span><div class="gantt-track"><div class="gantt-bar" style="left:5%;width:30%;background:#0d6efd;">OP-124</div></div></div>
+                    <div class="gantt-row"><span class="gantt-label">CNT-02 Fresadora</span><div class="gantt-track"><div class="gantt-bar" style="left:20%;width:45%;background:#198754;">OP-123</div></div></div>
+                    <div class="gantt-row"><span class="gantt-label">CNT-03 Montaje</span><div class="gantt-track"><div class="gantt-bar" style="left:40%;width:25%;background:#ffc107;">OP-122</div></div></div>
+                    <div class="mt-3"><span class="badge bg-primary">Planificada</span> <span class="badge bg-success">En curso</span> <span class="badge bg-warning">Pausada</span></div>
+                </div></div>
+        </div>
+
+        <!-- ==================== PLANEAMIENTO MRP ==================== -->
+        <div id="section-planeamiento" class="section-content" x-show="currentSection === 'planeamiento'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-lightbulb me-2 text-warning"></i>Sugerencias MRP</h1></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value">58</div><div class="kpi-label">Fabricables</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value">31</div><div class="kpi-label">Parciales</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value">12</div><div class="kpi-label">Sin stock</div></div></div></div>
+            </div>
+            <div class="accordion" id="mrpAccordion">
+                <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#mrp1">Producto A · <span class="badge bg-success">Fabricable</span> 50u</button></h2>
+                    <div id="mrp1" class="accordion-collapse collapse show" data-bs-parent="#mrpAccordion">
+                        <div class="accordion-body">
+                            <table class="table table-sm"><tr><td>Componente X1</td><td>Necesario: 200</td><td>Stock: 450</td><td><div class="progress" style="height:5px;width:100px;"><div class="progress-bar bg-success" style="width:100%"></div></div></td></tr>
+                                <tr><td>Componente Y1</td><td>Necesario: 50</td><td>Stock: 30</td><td><div class="progress" style="height:5px;width:100px;"><div class="progress-bar bg-warning" style="width:60%"></div></div></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#mrp2">Producto B · <span class="badge bg-warning">Parcial</span> 20u</button></h2>
+                    <div id="mrp2" class="accordion-collapse collapse" data-bs-parent="#mrpAccordion">
+                        <div class="accordion-body">...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== REPORTES (Destino de partes) ==================== -->
+        <div id="section-reportes" class="section-content" x-show="currentSection === 'reportes'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-file-earmark-bar-graph me-2 text-secondary"></i>Destino de partes</h1></div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card-modern"><div class="card-body"><input type="text" class="form-control" placeholder="Buscar variante..." /></div></div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card-modern"><div class="card-body">
+                            <ul class="nav nav-tabs"><li class="nav-item"><a class="nav-link active" href="#">Rama 1</a></li><li class="nav-item"><a class="nav-link" href="#">Plana</a></li><li class="nav-item"><a class="nav-link" href="#">Árbol</a></li></ul>
+                            <div class="mt-3">
+                                <div class="tree-node"><div class="node-label"><i class="bi bi-cube-fill text-info"></i> P-1001-01</div>
+                                    <div class="tree-node"><div class="node-label"><i class="bi bi-cube-fill text-info"></i> Subensamble X</div></div>
+                                    <div class="tree-node"><div class="node-label"><i class="bi bi-cube-fill text-info"></i> Subensamble Y</div></div>
+                                </div>
+                                <div class="mt-2"><strong>Donde se utiliza:</strong> BOM de Producto A (v2.1), BOM de Producto C (v1.0)</div>
+                            </div>
+                        </div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MOVIMIENTOS ==================== -->
+        <div id="section-movimientos" class="section-content" x-show="currentSection === 'movimientos'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-arrow-left-right me-2 text-danger"></i>Movimientos de stock</h1><button class="btn btn-primary btn-sm">Nuevo movimiento</button></div>
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="card-modern"><div class="card-body">
+                            <div class="mb-3"><label class="form-label">Origen</label><select class="form-select"><option>PROVEEDOR</option><option>ALMACEN 01</option></select></div>
+                            <div class="mb-3"><label class="form-label">Destino</label><select class="form-select"><option>ALMACEN 01</option><option>ALMACEN 02</option></select></div>
+                            <div class="mb-3"><label class="form-label">Variante</label><input class="form-control" placeholder="Buscar..." /></div>
+                            <div class="mb-3"><label class="form-label">Cantidad</label><input class="form-control" type="number" value="10" /></div>
+                            <button class="btn btn-success">Registrar</button>
+                        </div></div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card-modern"><div class="card-header">Historial reciente</div><div class="card-body">
+                            <table class="table table-modern table-sm">
+                                <tr><td>Hoy 10:30</td><td>PROVEEDOR → ALMACEN01</td><td>P-1001-01</td><td>50u</td></tr>
+                                <tr><td>Hoy 09:15</td><td>ALMACEN01 → ALMACEN02</td><td>P-2002-03</td><td>20u</td></tr>
+                                <tr><td>Ayer 16:45</td><td>PROVEEDOR → ALMACEN01</td><td>P-3003-02</td><td>100u</td></tr>
+                            </table>
+                        </div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== INVENTARIO (Stock crítico) ==================== -->
+        <div id="section-inventario" class="section-content" x-show="currentSection === 'inventario'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Stock crítico</h1></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value">412</div><div class="kpi-label">Total variantes</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value text-danger">47</div><div class="kpi-label">Crítico</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value text-warning">28</div><div class="kpi-label">Advertencia</div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div><div class="kpi-value text-success">337</div><div class="kpi-label">Normal</div></div></div></div>
+            </div>
+            <div class="card-modern"><div class="card-body">
+                    <table class="table table-modern">
+                        <thead><tr><th>Variante</th><th>Stock</th><th>Punto pedido</th><th>Faltante</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            <tr><td>P-1001-02</td><td>12</td><td>30</td><td>18</td><td><span class="badge bg-danger">Crítico</span></td></tr>
+                            <tr><td>P-2002-01</td><td>5</td><td>15</td><td>10</td><td><span class="badge bg-danger">Crítico</span></td></tr>
+                            <tr><td>P-3003-05</td><td>45</td><td>50</td><td>5</td><td><span class="badge bg-warning">Advertencia</span></td></tr>
+                        </tbody>
+                    </table>
+                </div></div>
+        </div>
+
+        <!-- ==================== CONFIGURACIÓN ==================== -->
+        <div id="section-configuracion" class="section-content" x-show="currentSection === 'configuracion'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-sliders2 me-2 text-dark"></i>Catálogos</h1></div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card-modern"><div class="card-header">Tipos de partes</div><div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between"><span>Materia prima</span><span class="badge bg-secondary">12</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>Subensamble</span><span class="badge bg-secondary">8</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>Producto terminado</span><span class="badge bg-secondary">5</span></li>
+                            </ul>
+                            <button class="btn btn-outline-primary btn-sm mt-2">Agregar</button>
+                        </div></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-modern"><div class="card-header">Unidades de medida</div><div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between"><span>u (unidad)</span><span class="badge bg-success">Base</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>kg</span><span>1 u = 2.5 kg</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>m</span><span>1 u = 1.2 m</span></li>
+                            </ul>
+                            <button class="btn btn-outline-primary btn-sm mt-2">Agregar</button>
+                        </div></div>
+                </div>
+                <div class="col-12">
+                    <div class="card-modern"><div class="card-header">Configuración general</div><div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3"><label class="form-label">Decimales</label><input class="form-control" value="2" /></div>
+                                <div class="col-md-3"><label class="form-label">Redondeo</label><select class="form-select"><option>Normal</option><option>Hacia arriba</option></select></div>
+                                <div class="col-md-3"><label class="form-label">Formato fecha</label><input class="form-control" value="dd/mm/yyyy" /></div>
+                                <div class="col-md-3"><label class="form-label">Separador miles</label><input class="form-control" value="." /></div>
+                            </div>
+                            <button class="btn btn-primary mt-3">Guardar configuración</button>
+                        </div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== EMPRESA & USUARIOS ==================== -->
+        <div id="section-empresa" class="section-content" x-show="currentSection === 'empresa'" x-transition.duration.200ms>
+            <div class="page-header"><h1><i class="bi bi-building me-2 text-primary"></i>Empresa &amp; Usuarios</h1></div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card-modern"><div class="card-header">Datos de la empresa</div><div class="card-body">
+                            <p><strong>Razón social:</strong> Mi Empresa S.A.</p>
+                            <p><strong>CUIT:</strong> 30-12345678-9</p>
+                            <p><strong>País:</strong> Argentina</p>
+                            <button class="btn btn-outline-primary btn-sm">Editar</button>
+                        </div></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-modern"><div class="card-header">Usuarios</div><div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between"><span>juan@empresa.com</span><span class="badge bg-primary">Admin</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>maria@empresa.com</span><span class="badge bg-secondary">Supervisor</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>carlos@empresa.com</span><span class="badge bg-secondary">Operador</span></li>
+                            </ul>
+                            <button class="btn btn-outline-primary btn-sm mt-2">Invitar usuario</button>
+                        </div></div>
+                </div>
+                <div class="col-12">
+                    <div class="card-modern"><div class="card-header">Permisos ACL</div><div class="card-body">
+                            <div class="row"><div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" checked /> Dashboard</div><div class="form-check"><input class="form-check-input" type="checkbox" /> Producción</div><div class="form-check"><input class="form-check-input" type="checkbox" /> Productos</div></div>
+                                <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" /> Planeamiento</div><div class="form-check"><input class="form-check-input" type="checkbox" /> Reportes</div><div class="form-check"><input class="form-check-input" type="checkbox" /> Configuración</div></div>
+                            </div>
+                            <button class="btn btn-primary mt-3">Guardar permisos</button>
+                        </div></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- MENÚ UNIFICADO (COMMAND PALETTE) -->
+    <!-- ============================================================ -->
+    <div class="command-palette-overlay" id="commandPalette" x-data="commandPalette()" @open-command-palette.window.stop="onOpen()" @keydown.escape.window.stop="open = false" :class="open ? 'open' : ''" x-show="open" x-cloak @keydown.down.window.stop="handleKeydown($event)" @keydown.up.window.stop="handleKeydown($event)" @keydown.enter.window.stop="handleKeydown($event)">
+        <div class="command-palette" @click.outside="open = false">
+            <div class="search-box">
+                <input type="text" x-model="query" placeholder="Buscar módulos, acciones..." @input="search()" x-ref="searchInput" />
+            </div>
+            <div class="results" x-show="filtered.length > 0">
+                <template x-for="(item, idx) in filtered" :key="idx">
+                    <div class="result-item" :class="{ active: idx === selectedIndex }" @click="goTo(item.section)" @mouseenter="selectedIndex = idx">
+                        <i :class="item.icon"></i>
+                        <span x-text="item.label"></span>
+                        <span class="ms-auto small text-muted" x-text="item.category"></span>
+                    </div>
+                </template>
+            </div>
+            <div class="results" x-show="filtered.length === 0 && query.length > 0">
+                <div class="p-3 text-muted">No se encontraron resultados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- BOTÓN FLOTANTE AI (LUCHI) -->
+    <!-- ============================================================ -->
+    <button class="ai-float-btn" title="Agente AI Luchi" @click="$dispatch('open-command-palette')">
+        <i class="bi bi-robot"></i>
+        <span class="status-dot"></span>
+    </button>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <script>
+        // ============================================================
+        // Alpine.js: App State (sección actual)
+        // ============================================================
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('appState', () => ({
+                currentSection: 'dashboard',
+                chartInstance: null,
+                donutInstance: null,
+
+                changeSection(section) {
+                    section = String(section || 'dashboard');
+                    this.currentSection = section;
+                    // Actualizar sidebar activo
+                    document.querySelectorAll('.sidebar-item').forEach(el => {
+                        el.classList.toggle('active', el.dataset.section === section);
+                    });
+                    // Cerrar sidebar en móvil
+                    if (window.innerWidth < 992) {
+                        document.getElementById('appSidebar').classList.remove('open');
+                    }
+                    // Re-renderizar gráficos si es dashboard
+                    if (section === 'dashboard') {
+                        this.$nextTick(() => this.initChart());
+                    }
+                },
+
+                initChart() {
+                    if (this.currentSection !== 'dashboard') return;
+                    // Status chart (barras)
+                    const ctx = document.getElementById('statusChart');
+                    if (!ctx) return;
+                    if (this.chartInstance) this.chartInstance.destroy();
+                    this.chartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Borrador', 'Planificada', 'Liberada', 'En proceso', 'Completada', 'Cancelada'],
+                            datasets: [{
+                                label: 'Órdenes',
+                                data: [4, 7, 5, 12, 18, 2],
+                                backgroundColor: ['#adb5bd', '#0dcaf0', '#ffc107', '#0d6efd', '#198754',
+                                    '#dc3545'
+                                ],
+                                borderRadius: 6,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+
+                    // Donut
+                    const donut = document.getElementById('donutChart');
+                    if (!donut) return;
+                    if (this.donutInstance) this.donutInstance.destroy();
+                    this.donutInstance = new Chart(donut, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['En tiempo', 'Retraso'],
+                            datasets: [{
+                                data: [76, 24],
+                                backgroundColor: ['#198754', '#ffc107'],
+                                borderWidth: 0,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { display: false } },
+                            cutout: '70%',
+                        }
+                    });
+                }
+            }));
+
+            // ============================================================
+            // Command Palette
+            // ============================================================
+            Alpine.data('commandPalette', () => ({
+                open: false,
+                query: '',
+                selectedIndex: 0,
+                items: [
+                    { label: 'Dashboard', icon: 'bi bi-speedometer2', category: 'Panel', section: 'dashboard' },
+                    { label: 'Mapa del sistema', icon: 'bi bi-grid-3x3-gap-fill', category: 'Panel',
+                    section: 'menu' },
+                    { label: 'Producción', icon: 'bi bi-tools', category: 'Taller', section: 'produccion' },
+                    { label: 'Centros de trabajo', icon: 'bi bi-hdd-stack', category: 'Taller',
+                    section: 'centros' },
+                    { label: 'Rutas de producción', icon: 'bi bi-diagram-3', category: 'Taller',
+                    section: 'rutas' },
+                    { label: 'Órdenes de producción', icon: 'bi bi-clipboard-check', category: 'Taller',
+                        section: 'ordenes' },
+                    { label: 'Planificación Gantt', icon: 'bi bi-calendar-range', category: 'Taller',
+                        section: 'planificacion' },
+                    { label: 'BOM / Maestro', icon: 'bi bi-box-seam', category: 'Productos', section: 'productos' },
+                    { label: 'Partes & Variantes', icon: 'bi bi-grid', category: 'Productos', section: 'partes' },
+                    { label: 'Sugerencias MRP', icon: 'bi bi-lightbulb', category: 'Planeamiento',
+                        section: 'planeamiento' },
+                    { label: 'Destino de partes', icon: 'bi bi-file-earmark-bar-graph', category: 'Reportes',
+                        section: 'reportes' },
+                    { label: 'Movimientos de stock', icon: 'bi bi-arrow-left-right', category: 'Inventario',
+                        section: 'movimientos' },
+                    { label: 'Stock crítico', icon: 'bi bi-exclamation-triangle', category: 'Inventario',
+                        section: 'inventario' },
+                    { label: 'Catálogos', icon: 'bi bi-sliders2', category: 'Administración',
+                    section: 'configuracion' },
+                    { label: 'Empresa & Usuarios', icon: 'bi bi-building', category: 'Administración',
+                        section: 'empresa' },
+                ],
+                filtered: [],
+
+                init() {
+                    this.filtered = this.items;
+                },
+
+                onOpen() {
+                    this.open = true;
+                    this.$nextTick(() => {
+                        this.$refs.searchInput && this.$refs.searchInput.focus();
+                    });
+                },
+
+                search() {
+                    if (!this.query) {
+                        this.filtered = this.items;
+                        return;
+                    }
+                    const q = this.query.toLowerCase();
+                    this.filtered = this.items.filter(item =>
+                        item.label.toLowerCase().includes(q) ||
+                        item.category.toLowerCase().includes(q)
+                    );
+                    this.selectedIndex = 0;
+                },
+
+                goTo(section) {
+                    this.open = false;
+                    this.query = '';
+                    this.filtered = this.items;
+                    window.dispatchEvent(new CustomEvent('change-section', { detail: section }));
+                },
+
+                // Keyboard navigation
+                handleKeydown(e) {
+                    if (!this.open) return;
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        this.selectedIndex = Math.min(this.selectedIndex + 1, this.filtered.length - 1);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (this.filtered[this.selectedIndex]) {
+                            this.goTo(this.filtered[this.selectedIndex].section);
+                        }
+                    }
+                }
+            }));
+
+            // Global keyboard listener
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('open-command-palette'));
+                }
+            });
+        });
+
+        // Fallback nativo por si Alpine no captura el cambio de sección
+        document.querySelectorAll('.sidebar-item[data-section]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const section = el.dataset.section;
+                if (!section) return;
+                const main = document.querySelector('.app-main');
+                if (main && main._x_dataStack) {
+                    const data = main._x_dataStack[0];
+                    if (data && typeof data.changeSection === 'function') {
+                        data.changeSection(section);
+                    } else {
+                        window.dispatchEvent(new CustomEvent('change-section', { detail: section }));
+                    }
+                } else {
+                    window.dispatchEvent(new CustomEvent('change-section', { detail: section }));
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

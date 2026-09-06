@@ -1,0 +1,97 @@
+{
+ "gods": [],
+ "surprises": [
+  {
+   "source": "app_core_logging_logger_logger",
+   "target": "app_core_kernel_kernel_dispatch",
+   "source_files": [
+    "",
+    ""
+   ],
+   "confidence": "EXTRACTED",
+   "relation": "",
+   "note": "Bridges community 0 → community 15"
+  },
+  {
+   "source": "app_core_logging_logger_logger",
+   "target": "app_services_tenantprovisioningservice",
+   "source_files": [
+    "",
+    ""
+   ],
+   "confidence": "EXTRACTED",
+   "relation": "",
+   "note": "Bridges community 0 → community 55"
+  },
+  {
+   "source": "app_services_empresausuariosservice_empresausuariosservice",
+   "target": "app_controllers_admin_configuracioncontroller_configuracioncontroller_construct",
+   "source_files": [
+    "",
+    ""
+   ],
+   "confidence": "EXTRACTED",
+   "relation": "",
+   "note": "Bridges community 0 → community 30"
+  },
+  {
+   "source": "app_services_empresausuariosservice_empresausuariosservice",
+   "target": "app_controllers_admin_empresausuarioscontroller_empresausuarioscontroller_construct",
+   "source_files": [
+    "",
+    ""
+   ],
+   "confidence": "EXTRACTED",
+   "relation": "",
+   "note": "Bridges community 0 → community 38"
+  },
+  {
+   "source": "app_services_empresausuariosservice_empresausuariosservice",
+   "target": "app_controllers_admin_configuracioncontroller_configuracioncontroller",
+   "source_files": [
+    "",
+    ""
+   ],
+   "confidence": "EXTRACTED",
+   "relation": "",
+   "note": "Bridges community 0 → community 68"
+  }
+ ],
+ "questions": [
+  {
+   "type": "low_cohesion",
+   "question": "Should `Logging y errores` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.06519114688128773 - nodes in this community are weakly interconnected."
+  },
+  {
+   "type": "low_cohesion",
+   "question": "Should `Auth y agente` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.08819345661450925 - nodes in this community are weakly interconnected."
+  },
+  {
+   "type": "low_cohesion",
+   "question": "Should `Empresa usuarios admin` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.10984848484848485 - nodes in this community are weakly interconnected."
+  },
+  {
+   "type": "low_cohesion",
+   "question": "Should `Kernel request lifecycle` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.12183908045977011 - nodes in this community are weakly interconnected."
+  },
+  {
+   "type": "low_cohesion",
+   "question": "Should `Planificación recursos` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.09259259259259259 - nodes in this community are weakly interconnected."
+  },
+  {
+   "type": "low_cohesion",
+   "question": "Should `Import partes` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.13105413105413105 - nodes in this community are weakly interconnected."
+  },
+  {
+   "type": "low_cohesion",
+   "question": "Should `Órdenes producción modelo` be split into smaller, more focused modules?",
+   "why": "Cohesion score 0.11965811965811966 - nodes in this community are weakly interconnected."
+  }
+ ]
+}

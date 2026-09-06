@@ -1,0 +1,1 @@
+{"nodes": [{"id": "$graphify-root$_database_migrations_2026_03_23_001_system_roles_reorganize_sql", "label": "2026_03_23_001_system_roles_reorganize.sql", "file_type": "code", "source_file": "database/migrations/2026_03_23_001_system_roles_reorganize.sql", "source_location": null}], "edges": []}

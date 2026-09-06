@@ -1,0 +1,121 @@
+{
+  "nodes": [
+    {
+      "id": "agenteai_readme_agentai_readme",
+      "label": "README m\u00f3dulo Agente AI",
+      "file_type": "document",
+      "source_file": "agenteAI/README.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "agenteai_frontend_css_agent_chat",
+      "label": "CSS chat agente",
+      "file_type": "code",
+      "source_file": "agenteAI/frontend/css/agent_chat.css",
+      "source_location": "L1"
+    },
+    {
+      "id": "agenteai_frontend_css_agent_floating",
+      "label": "CSS bot\u00f3n flotante agente",
+      "file_type": "code",
+      "source_file": "agenteAI/frontend/css/agent_floating.css",
+      "source_location": "L1"
+    },
+    {
+      "id": "public_agenteai_frontend_css_agent_chat",
+      "label": "CSS chat agente (public copy)",
+      "file_type": "code",
+      "source_file": "public/agenteAI/frontend/css/agent_chat.css",
+      "source_location": "L1"
+    },
+    {
+      "id": "public_agenteai_frontend_css_agent_floating",
+      "label": "CSS bot\u00f3n flotante agente (public copy)",
+      "file_type": "code",
+      "source_file": "public/agenteAI/frontend/css/agent_floating.css",
+      "source_location": "L1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "agenteai_readme_agentai_readme",
+      "target": "agenteai_docs_agentearchivos_centralized_folder",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "agenteAI/README.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "agenteai_readme_agentai_readme",
+      "target": "agenteai_docs_agentearchivos_agent_tables",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "agenteAI/README.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "agenteai_frontend_css_agent_chat",
+      "target": "agenteai_frontend_js_agent_chat_agentchat",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "agenteAI/frontend/css/agent_chat.css",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "agenteai_frontend_css_agent_chat",
+      "target": "agenteai_frontend_views_agent_chat",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "agenteAI/frontend/css/agent_chat.css",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "agenteai_frontend_css_agent_floating",
+      "target": "agenteai_frontend_js_agent_floating_agentfloating",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "agenteAI/frontend/css/agent_floating.css",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "agenteai_frontend_css_agent_floating",
+      "target": "agenteai_frontend_views_components_floating_button",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "agenteAI/frontend/css/agent_floating.css",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "public_agenteai_frontend_css_agent_chat",
+      "target": "public_agenteai_frontend_js_agent_chat_agentchat",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "public/agenteAI/frontend/css/agent_chat.css",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "public_agenteai_frontend_css_agent_floating",
+      "target": "public_agenteai_frontend_js_agent_floating_agentfloating",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "public/agenteAI/frontend/css/agent_floating.css",
+      "source_location": "L1",
+      "weight": 1.0
+    }
+  ]
+}

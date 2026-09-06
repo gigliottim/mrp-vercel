@@ -73,7 +73,8 @@ companies.post('/', requireRole('Super Administrador'), async (c) => {
       email: parsed.data.admin_email,
       password: parsed.data.admin_password,
       email_confirm: true,
-      user_metadata: { name: parsed.data.admin_name },
+      // Password temporal: forzar cambio en primer login
+      user_metadata: { name: parsed.data.admin_name, must_change_password: true },
     }),
   })
   const authData = (await authRes.json()) as { id?: string; msg?: string }

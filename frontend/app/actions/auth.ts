@@ -28,6 +28,38 @@ export async function signOut() {
   redirect('/login')
 }
 
+// Cambio de contraseña forzado (usuarios creados con password temporal):
+// valida la actual, setea la nueva y limpia el flag must_change_password.
+// El JWT recién deja de traer mustChangePassword tras refrescar la sesión.
+export async function changePassword(
+  current: string,
+  nueva: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Sesión expirada' }
+
+  // La password temporal sirve de credential actual: verificar que la sepa
+  const { error: credErr } = await supabase.auth.signInWithPassword({
+    email: user.email ?? '',
+    password: current,
+  })
+  if (credErr) return { ok: false, error: 'La contraseña actual es incorrecta' }
+
+  if (nueva.length < 8) return { ok: false, error: 'La nueva contraseña debe tener al menos 8 caracteres' }
+
+  const { error } = await supabase.auth.updateUser({ password: nueva })
+  if (error) return { ok: false, error: error.message }
+
+  // Limpia el flag en user_metadata (merge por claves en updateUser)
+  await supabase.auth.updateUser({ data: { must_change_password: false } })
+  // Refresca el JWT para que mustChangePassword llegue false en la sesión
+  await supabase.auth.refreshSession()
+
+  revalidatePath('/', 'layout')
+  redirect('/panel')
+}
+
 export async function switchCompany(
   companyId: number
 ): Promise<{ ok: boolean; error?: string }> {

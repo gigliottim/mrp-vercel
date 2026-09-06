@@ -18,13 +18,18 @@ export function useSession() {
       }
       const payload = JSON.parse(
         Buffer.from(s.access_token.split('.')[1], 'base64url').toString()
-      )
+      ) as {
+        company_id?: unknown
+        user_role?: unknown
+        user_metadata?: { must_change_password?: unknown } | null
+      }
       setSession({
         userId: s.user.id,
         email: s.user.email ?? '',
         companyId: Number(payload.company_id),
         role: String(payload.user_role ?? ''),
         accessToken: s.access_token,
+        mustChangePassword: Boolean(payload.user_metadata?.must_change_password),
       })
       setLoading(false)
     })

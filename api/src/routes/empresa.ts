@@ -111,7 +111,8 @@ empresa.post('/usuarios', requireRole('Super Administrador', 'Administrador'), a
       email: parsed.data.email,
       password: parsed.data.password ?? 'Temporal123!',
       email_confirm: true,
-      user_metadata: { name: parsed.data.nombre ?? '' },
+      // Password temporal: forzar cambio en primer login
+      user_metadata: { name: parsed.data.nombre ?? '', must_change_password: true },
     }),
   })
   if (!authRes.ok) {
@@ -149,6 +150,21 @@ empresa.patch('/usuarios/:userId', requireRole('Super Administrador', 'Administr
     if (eRole) return c.json({ error: { code: 'DB_ERROR', message: eRole.message } }, 500)
   }
   if (parsed.data.password) {
+    // PUT reemplaza TODA la user_metadata: leer la actual y mergear
+    // must_change_password: false sin perder las demas claves (name, active_company_id...)
+    const metaRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+      },
+    })
+    const metaBody = (await metaRes.json().catch(() => null)) as {
+      user_metadata?: Record<string, unknown>
+    } | null
+    if (!metaRes.ok || !metaBody) {
+      // Sin la metadata actual no se puede hacer un PUT seguro (lo reemplaza todo)
+      return c.json({ error: { code: 'AUTH_ERROR', message: 'Error actualizando password' } }, 400)
+    }
     const passRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
       method: 'PUT',
       headers: {
@@ -156,7 +172,13 @@ empresa.patch('/usuarios/:userId', requireRole('Super Administrador', 'Administr
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ password: parsed.data.password }),
+      body: JSON.stringify({
+        password: parsed.data.password,
+        user_metadata: {
+          ...metaBody.user_metadata,
+          must_change_password: false,
+        },
+      }),
     })
     if (!passRes.ok) {
       return c.json({ error: { code: 'AUTH_ERROR', message: 'Error actualizando password' } }, 400)

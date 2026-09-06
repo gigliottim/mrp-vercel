@@ -7,6 +7,7 @@ export type SessionInfo = {
   companyId: number
   role: string
   accessToken: string
+  mustChangePassword: boolean
 }
 
 export async function getSession(): Promise<SessionInfo | null> {
@@ -20,12 +21,17 @@ export async function getSession(): Promise<SessionInfo | null> {
   if (!session) return null
   const payload = JSON.parse(
     Buffer.from(session.access_token.split('.')[1], 'base64url').toString()
-  )
+  ) as {
+    company_id?: unknown
+    user_role?: unknown
+    user_metadata?: { must_change_password?: unknown } | null
+  }
   return {
     userId: user.id,
     email: user.email ?? '',
     companyId: Number(payload.company_id),
     role: String(payload.user_role ?? ''),
     accessToken: session.access_token,
+    mustChangePassword: Boolean(payload.user_metadata?.must_change_password),
   }
 }

@@ -11,6 +11,10 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession()
   if (!session) redirect('/login')
+  // Password temporal: forzar cambio antes de navegar.
+  // /cambiar-password vive fuera de este grupo (app/cambiar-password) para no
+  // reentrar en este layout y evitar un loop de redirect.
+  if (session.mustChangePassword) redirect('/cambiar-password')
 
   const items = await fetchMenu(session.accessToken)
 

@@ -11,12 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { registrarMovimiento } from './actions'
+import { registrarMovimientoPartes } from './actions'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 export type VarianteOpt = { id: number; codigo_variante: string; detalle: string }
 export type AlmacenOpt = { id: number; codigo: string; nombre: string }
+export type DestinoOpt = { id: number; codigo: string; nombre: string }
+export type DestinosMap = Array<{
+  origen_id: number
+  origen_codigo: string
+  origen_nombre: string
+  destinos: DestinoOpt[]
+}>
+export type EntidadOpt = { id: number; razon_social: string; tipo: string }
 
 const TIPOS = [
   'compra_recepcion',
@@ -40,33 +48,80 @@ const TIPO_LABELS: Record<string, string> = {
   transferencia_entrada: 'Entrada por transferencia',
 }
 
+function sugerirTipo(origenCodigo: string | undefined, destinoCodigo: string | undefined): string {
+  if (origenCodigo === 'PROVEEDOR') return 'compra_recepcion'
+  if (destinoCodigo === 'CLIENTE') return 'venta_despacho'
+  if (origenCodigo === 'AJUSTE') return 'ajuste_inventario'
+  return 'transferencia_salida'
+}
+
 export function MovimientoForm({
   variantes,
-  almacenes,
+  destinos,
+  entidades,
 }: {
   variantes: VarianteOpt[]
-  almacenes: AlmacenOpt[]
+  destinos: DestinosMap
+  entidades: EntidadOpt[]
 }) {
   const router = useRouter()
   const [varianteId, setVarianteId] = useState(0)
-  const [tipo, setTipo] = useState('ajuste_inventario')
+  const [origenId, setOrigenId] = useState(0)
+  const [destinoId, setDestinoId] = useState(0)
+  const [tipo, setTipo] = useState('transferencia_salida')
   const [cantidad, setCantidad] = useState('1')
-  const [almacenId, setAlmacenId] = useState(0)
+  const [entidadId, setEntidadId] = useState(0)
+  const [importeTotal, setImporteTotal] = useState('')
+  const [fechaHora, setFechaHora] = useState('')
+  const [nroComprobante, setNroComprobante] = useState('')
   const [observaciones, setObservaciones] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
+  const origenActual = destinos.find((d) => d.origen_id === origenId)
+  const destinosDisponibles = origenActual?.destinos ?? []
+  const destinoActual = destinosDisponibles.find((d) => d.id === destinoId)
+  const esOrigenProveedor = origenActual?.origen_codigo === 'PROVEEDOR'
+  const entidadesFiltradas = entidades.filter(
+    (e) => e.tipo === 'PROVEEDOR' || e.tipo === 'AMBOS'
+  )
+
+  const handleOrigenChange = (id: number) => {
+    setOrigenId(id)
+    setDestinoId(0)
+    setEntidadId(0)
+    const origen = destinos.find((d) => d.origen_id === id)
+    setTipo(sugerirTipo(origen?.origen_codigo, undefined))
+  }
+
+  const handleDestinoChange = (id: number) => {
+    setDestinoId(id)
+    const destino = destinosDisponibles.find((d) => d.id === id)
+    setTipo(sugerirTipo(origenActual?.origen_codigo, destino?.codigo))
+  }
+
   const handleSubmit = async () => {
     setError('')
     if (!varianteId) return setError('Seleccioná la variante')
+    if (!origenId) return setError('Seleccioná el depósito origen')
+    if (!destinoId) return setError('Seleccioná el depósito destino')
     if (!cantidad || Number(cantidad) <= 0) return setError('Cantidad inválida')
+    if (esOrigenProveedor) {
+      if (!entidadId) return setError('Seleccioná la entidad (proveedor)')
+      if (!importeTotal || Number(importeTotal) <= 0) return setError('Importe total inválido')
+    }
     setBusy(true)
-    const res = await registrarMovimiento({
+    const res = await registrarMovimientoPartes({
       variante_id: varianteId,
-      almacen_id: almacenId || null,
-      tipo_movimiento: tipo,
       cantidad: Number(cantidad),
-      observaciones: observaciones || undefined,
+      tipo_deposito_origen_id: origenId,
+      tipo_deposito_destino_id: destinoId,
+      tipo_movimiento: tipo,
+      entidad_id: esOrigenProveedor ? entidadId : null,
+      importe_total: esOrigenProveedor && importeTotal ? Number(importeTotal) : null,
+      fecha_hora: fechaHora ? new Date(fechaHora).toISOString() : null,
+      nro_comprobante: esOrigenProveedor && nroComprobante ? nroComprobante : null,
+      observaciones: observaciones || null,
     })
     setBusy(false)
     if (res.ok) {
@@ -95,6 +150,40 @@ export function MovimientoForm({
         </Select>
       </div>
       <div className="space-y-2">
+        <Label>Depósito origen</Label>
+        <Select value={String(origenId)} onValueChange={(v) => handleOrigenChange(Number(v))}>
+          <SelectTrigger>
+            <SelectValue placeholder="Origen" />
+          </SelectTrigger>
+          <SelectContent>
+            {destinos.map((d) => (
+              <SelectItem key={d.origen_id} value={String(d.origen_id)}>
+                {d.origen_nombre} ({d.origen_codigo})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Depósito destino</Label>
+        <Select
+          value={String(destinoId)}
+          onValueChange={(v) => handleDestinoChange(Number(v))}
+          disabled={!origenId}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={origenId ? 'Destino' : 'Elegí origen primero'} />
+          </SelectTrigger>
+          <SelectContent>
+            {destinosDisponibles.map((d) => (
+              <SelectItem key={d.id} value={String(d.id)}>
+                {d.nombre} ({d.codigo})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
         <Label>Tipo de movimiento</Label>
         <Select value={tipo} onValueChange={(v) => v && setTipo(v)}>
           <SelectTrigger>
@@ -114,20 +203,42 @@ export function MovimientoForm({
         <Input type="number" step="any" min={0} value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
       </div>
       <div className="space-y-2">
-        <Label>Almacén (opcional)</Label>
-        <Select value={String(almacenId)} onValueChange={(v) => setAlmacenId(Number(v))}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sin almacén" />
-          </SelectTrigger>
-          <SelectContent>
-            {almacenes.map((a) => (
-              <SelectItem key={a.id} value={String(a.id)}>
-                {a.nombre} ({a.codigo})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label>Fecha y hora (opcional)</Label>
+        <Input type="datetime-local" value={fechaHora} onChange={(e) => setFechaHora(e.target.value)} />
       </div>
+      {esOrigenProveedor ? (
+        <>
+          <div className="space-y-2">
+            <Label>Entidad (proveedor)</Label>
+            <Select value={String(entidadId)} onValueChange={(v) => setEntidadId(Number(v))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Entidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {entidadesFiltradas.map((e) => (
+                  <SelectItem key={e.id} value={String(e.id)}>
+                    {e.razon_social}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Importe total</Label>
+            <Input
+              type="number"
+              step="0.01"
+              min={0}
+              value={importeTotal}
+              onChange={(e) => setImporteTotal(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Nro. comprobante (opcional)</Label>
+            <Input value={nroComprobante} onChange={(e) => setNroComprobante(e.target.value)} />
+          </div>
+        </>
+      ) : null}
       <div className="space-y-2">
         <Label>Observaciones</Label>
         <Input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />

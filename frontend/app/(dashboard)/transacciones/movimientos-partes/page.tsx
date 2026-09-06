@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
-import { MovimientoForm, type VarianteOpt, type AlmacenOpt } from './movimientos-form'
+import { MovimientoForm, type VarianteOpt, type DestinosMap, type EntidadOpt } from './movimientos-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,10 +29,11 @@ export default async function MovimientosPage() {
   const session = await getSession()
   if (!session) return null
 
-  const [movimientos, variantes, almacenes] = await Promise.all([
+  const [movimientos, variantes, destinosPermitidos, entidades] = await Promise.all([
     apiFetch<Paginated<MovimientoRow>>('/api/v1/movimientos-inventario?perPage=50', session.accessToken).catch(() => null),
     apiFetch<Paginated<VarianteOpt>>('/api/v1/variantes?perPage=100', session.accessToken).catch(() => null),
-    apiFetch<Paginated<AlmacenOpt>>('/api/v1/almacenes?perPage=100', session.accessToken).catch(() => null),
+    apiFetch<{ data: DestinosMap }>('/api/v1/tipos-depositos/destinos-permitidos', session.accessToken).catch(() => null),
+    apiFetch<Paginated<EntidadOpt>>('/api/v1/entidades?perPage=100', session.accessToken).catch(() => null),
   ])
 
   const canOperar = ['Super Administrador', 'Administrador', 'Supervisor'].includes(session.role)
@@ -44,7 +45,11 @@ export default async function MovimientosPage() {
         <p className="text-sm text-muted-foreground">Registro de movimientos con actualización automática de stock</p>
       </div>
       {canOperar ? (
-        <MovimientoForm variantes={variantes?.data ?? []} almacenes={almacenes?.data ?? []} />
+        <MovimientoForm
+          variantes={variantes?.data ?? []}
+          destinos={destinosPermitidos?.data ?? []}
+          entidades={entidades?.data ?? []}
+        />
       ) : null}
       <div className="rounded-md border">
         <table className="w-full text-sm">

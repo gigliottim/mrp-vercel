@@ -380,6 +380,76 @@ psql "$SUPABASE_DB_URL" -f database/backups/2026-09-06_09-40-12/mrp_tunna_full_2
 - `password` (hash PHP) **no es migrable** a Supabase Auth: los usuarios deberán hacer reset de contraseña, o se migra con el hook de migración de Supabase (importar usuarios con `supabase_auth_admin`).
 - El trigger `fn_super_admin_auto_link` se recrea tal cual (con `ON CONFLICT DO NOTHING`).
 
+#### 6.5 Ciclo de vida de empresas (alta / baja) — reemplazo de `TenantProvisioningService`
+
+> **Contexto**: en PHP, el alta de empresa creaba una **BD física** (`CREATE DATABASE mrp_<slug>`), aplicaba 4 scripts wizard (`00_mrp_wizard.sql`, `01_mrp_depositos.sql`, `02_mrp_validaciones.sql`, `03_mrp_um.sql`) y registraba la conexión en `company_databases`. En Supabase **no se crean bases de datos por empresa** (no es posible ni deseable): el multi-tenant se resuelve con `company_id` en cada tabla + RLS (ya implementado en P1). El alta pasa de "crear BD + 4 scripts + 7 registros" a "1 fila + 1 usuario Auth + 3 INSERTs de seed", todo en una transacción.
+
+**Alta de empresa** (reemplaza `TenantProvisioningService::provision()`):
+
+```ts
+// Server Action / API route (solo service_role, nunca anon)
+// 1. Crear la empresa (el trigger fn_super_admin_auto_link vincula a Martin automáticamente)
+const { data: company, error: e1 } = await supabase
+  .from('companies')
+  .insert({ name, slug, tax_id, contact_email, status: 'active' })
+  .select()
+  .single()
+
+// 2. Crear el usuario admin en Supabase Auth
+const { data: user, error: e2 } = await supabase.auth.admin.createUser({
+  email,
+  password,
+  email_confirm: true,
+  user_metadata: { name: fullName },
+})
+
+// 3. Vincular admin a la empresa con rol Administrador
+await supabase.from('user_company').insert({
+  user_id: user.id,
+  company_id: company.id,
+  role_id: 2, // Administrador
+})
+
+// 4. Sembrar datos base de la empresa (reemplaza los 4 scripts wizard)
+//    → función SQL idempotente seed_company(company_id) o INSERTs agrupados:
+await supabase.from('unidades_medida').insert([...])        // 29 unidades
+await supabase.from('tipos_depositos').insert([...])        // 7 tipos
+await supabase.from('tipos_depositos_movimientos').insert([...]) // 18 validaciones
+```
+
+**Baja de empresa** (reemplaza `deleteCompany()`):
+
+```ts
+// 1. Borrar datos de negocio (service_role ignora RLS)
+await supabase.from('partes').delete().eq('company_id', id)
+// ... todas las tablas tenant (26)
+
+// 2. Borrar ACL, vínculos y empresa
+await supabase.from('menu_acl').delete().eq('company_id', id)
+await supabase.from('user_company').delete().eq('company_id', id)
+await supabase.from('companies').delete().eq('id', id)
+
+// 3. (Opcional) Banear usuarios exclusivos de la empresa
+await supabase.auth.admin.updateUserById(uid, { ban_duration: '876000h' })
+```
+
+**Ventajas sobre el diseño PHP** (verificado contra `TenantProvisioningService.php`):
+
+| Aspecto | PHP (mrp_auth + BD por empresa) | Supabase (una BD + RLS) |
+|---|---|---|
+| Alta de empresa | `CREATE DATABASE` + 4 scripts + 7 INSERTs en mrp_auth | 1 INSERT + 1 usuario Auth + 3 INSERTs de seed |
+| Migraciones | Por BD física (N veces) | **Una sola migración** para todas las empresas |
+| Aislamiento | Físico (BD separada) | Lógico (RLS por `company_id` en JWT) |
+| Conexiones | Pool N+1, imposible en serverless | **1 pool** (Supabase Pooler) para todas |
+| Seguridad | Password de BD en `company_databases` | JWT firmado, sin credenciales de BD en la app |
+| Escala | Límite de conexiones por BD | Serverless-friendly (Vercel) |
+| Backup | Por BD | Un solo backup del proyecto |
+
+**Trade-offs honestos:**
+- **Aislamiento lógico vs físico**: un bug en una política RLS podría exponer datos entre empresas. Mitigación: políticas probadas (verificadas en P1), `service_role` solo en server, auditoría.
+- **Seed de datos base**: los 4 scripts wizard se convierten en **una función SQL idempotente** `seed_company(company_id)` que se ejecuta una vez por alta (no por deploy).
+- **Límite de Supabase**: no hay `CREATE DATABASE` desde la app — no se necesita: el aislamiento por fila es el patrón oficial de Supabase para multi-tenant (verificado en Context7).
+
 ---
 
 ### 7. Autenticación con Supabase en Next.js 16

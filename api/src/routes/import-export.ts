@@ -65,7 +65,8 @@ function parseCsv(text: string, requiredHeaders: string[]): Array<{ line: number
 /** Parsea decimales con formato español (1.234,56 o 1234.56). Acepta number o string. */
 function parseDecimal(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
-  const raw = (value ?? '').trim()
+  if (typeof value !== 'string') return null
+  const raw = value.trim()
   if (raw === '') return null
   let v = raw
   if (/^-?\d{1,3}(\.\d{3})*(,\d+)?$/.test(v)) {

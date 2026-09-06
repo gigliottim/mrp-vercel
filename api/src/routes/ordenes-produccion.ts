@@ -22,9 +22,9 @@ const crearSchema = z.object({
   bom_id_utilizada: z.number().int().positive().optional(),
   cantidad_planificada: z.number().positive(),
   fecha_inicio_programada: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  fecha_fin_programada: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  fecha_fin_programada: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'fecha inválida (YYYY-MM-DD)'),
   prioridad: z.enum(['baja', 'normal', 'alta', 'urgente']).optional(),
-  configuracion_orden: z.record(z.unknown()).optional(),
+  configuracion_orden: z.record(z.string(), z.unknown()).optional(),
   observaciones: z.string().optional(),
 })
 

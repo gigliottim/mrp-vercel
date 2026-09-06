@@ -20,7 +20,7 @@ const detalleSchema = z.object({
 const crearSchema = z.object({
   variante_padre_id: z.number().int().positive(),
   version: z.string().max(10).default('1.0'),
-  fecha_efectiva: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  fecha_efectiva: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'fecha inválida (YYYY-MM-DD)'),
   detalles: z.array(detalleSchema).min(1),
 })
 

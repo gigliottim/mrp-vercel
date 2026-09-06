@@ -8,7 +8,7 @@ const schema = z.object({
   codigo: z.string().min(1).max(20),
   nombre: z.string().min(1).max(100),
   descripcion: z.string().optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'color inválido').optional(),
   activo: z.boolean().optional(),
 })
 

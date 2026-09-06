@@ -5,7 +5,7 @@ import { createAdminClient, createUserClient } from '../lib/supabase.js'
 
 const createSchema = z.object({
   name: z.string().min(1).max(120),
-  slug: z.string().min(1).max(160).regex(/^[a-z0-9_-]+$/),
+  slug: z.string().min(1).max(160).regex(/^[a-z0-9_-]+$/, 'slug inválido'),
   tax_id: z.string().max(50).optional(),
   contact_email: z.string().email().max(120),
   admin_email: z.string().email(),

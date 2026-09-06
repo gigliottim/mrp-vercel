@@ -5,7 +5,7 @@ import { createUserClient } from '../lib/supabase.js'
 import { parsePagination } from '../lib/pagination.js'
 
 const schema = z.object({
-  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'fecha inválida (YYYY-MM-DD)'),
   precio_unitario: z.number().positive(),
   observaciones: z.string().optional(),
   id_entidad: z.number().int().positive(),

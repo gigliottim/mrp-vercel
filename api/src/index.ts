@@ -8,10 +8,19 @@ import { entidades } from './routes/entidades.js'
 import { almacenes } from './routes/almacenes.js'
 import { configuracion } from './routes/configuracion.js'
 import { companies } from './routes/companies.js'
+import { partes } from './routes/partes.js'
+import { variantes } from './routes/variantes.js'
+import { bom } from './routes/bom.js'
+import { centrosTrabajo } from './routes/centros-trabajo.js'
+import { rutasProduccion } from './routes/rutas-produccion.js'
+import { ordenesProduccion } from './routes/ordenes-produccion.js'
+import { movimientosInventario } from './routes/movimientos-inventario.js'
+import { compras } from './routes/compras.js'
+import { planificacion } from './routes/planificacion.js'
 
 const app = new Hono()
 
-app.get('/api/health', (c) => c.json({ status: 'ok', version: '0.2.0' }))
+app.get('/api/health', (c) => c.json({ status: 'ok', version: '0.3.0' }))
 
 app.route('/api/v1/unidades-medida', unidadesMedida)
 app.route('/api/v1/tipos-partes', tiposPartes)
@@ -22,5 +31,14 @@ app.route('/api/v1/entidades', entidades)
 app.route('/api/v1/almacenes', almacenes)
 app.route('/api/v1/configuracion', configuracion)
 app.route('/api/v1/companies', companies)
+app.route('/api/v1/partes', partes)
+app.route('/api/v1/variantes', variantes)
+app.route('/api/v1/bom', bom)
+app.route('/api/v1/centros-trabajo', centrosTrabajo)
+app.route('/api/v1/rutas-produccion', rutasProduccion)
+app.route('/api/v1/ordenes-produccion', ordenesProduccion)
+app.route('/api/v1/movimientos-inventario', movimientosInventario)
+app.route('/api/v1/compras', compras)
+app.route('/api/v1/planificacion', planificacion)
 
 export default app

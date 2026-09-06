@@ -181,11 +181,13 @@ Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronog
 - **No se toca aún el frontend**, solo se valida con pruebas unitarias e integración (Vitest 5).
 
 #### Fase 2: API REST con Hono 4 (1-2 semanas)
-- Desarrollar la API en `/api` exponiendo endpoints para cada recurso.
-- Implementar middlewares: autenticación (JWT de Supabase), CORS, manejo de errores.
-- Conectar los casos de uso de `/backend` en los handlers de Hono.
-- Probar la API con herramientas como Postman o tests automatizados.
-- Configurar `vercel.json` para que las rutas `/api/*` sean manejadas por Hono.
+- [x] Desarrollar la API en `/api` exponiendo endpoints para cada recurso.
+- [x] Implementar middlewares: autenticación (JWT de Supabase), CORS, manejo de errores.
+- [x] Conectar los casos de uso de `/backend` en los handlers de Hono.
+- [x] Probar la API con herramientas como Postman o tests automatizados (Vitest 5, 35 tests de integración contra Supabase real).
+- [x] Configurar `vercel.json` para que las rutas `/api/*` sean manejadas por Hono.
+
+**Estado P2 (2026-09-06):** API Hono 4.13.7 desplegada en Vercel (`https://api-tau-eight-42.vercel.app`). CRUD de módulos maestros (unidades de medida, tipos de partes, grupos de partes, tipos de depósitos, validaciones, entidades, almacenes, configuración) con auth JWT + claims `company_id`/`user_role`. Provisioning de empresas (alta/baja) con `seed_company()` (6 depósitos, 2 almacenes, 15 validaciones, 29 unidades — datos reales de los wizard scripts). Fixes multi-tenant: constraints UNIQUE por `company_id` (migración 14), RLS `user_company` (migraciones 13+15). Pendiente: P3 (módulos transaccionales).
 
 #### Fase 3: Frontend Next.js 16 (3-4 semanas)
 - Crear la estructura de páginas y layouts en `/frontend` con **shadcn/ui** (`npx shadcn@latest init -y -d` + `npx shadcn@latest add` por componente: table, dialog, form, select, etc.).

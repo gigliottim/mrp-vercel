@@ -109,3 +109,15 @@ describe('planificacion', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('planificacion automatica', () => {
+  it('rechaza orden sin BOM o sin ruta', async () => {
+    const app = new Hono().route('/api/v1/planificacion', planificacion)
+    const res = await app.request('/api/v1/planificacion/calcular', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orden_id: 999999 }),
+    })
+    expect(res.status).toBe(404)
+  })
+})

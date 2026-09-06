@@ -133,3 +133,96 @@ planificacion.delete('/:id', async (c) => {
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
   return c.body(null, 204)
 })
+
+// ─── Planificación automática desde la ruta de la orden ─────────────────────
+// Port de PlanificacionService::planificarOrdenAutomatica
+
+planificacion.post('/calcular', async (c) => {
+  const body = await c.req.json().catch(() => null)
+  const ordenId = Number(body?.orden_id ?? 0)
+  const fechaInicioInput = body?.fecha_inicio ? String(body.fecha_inicio) : null
+  if (!Number.isInteger(ordenId) || ordenId <= 0) {
+    return c.json({ error: { code: 'VALIDATION', message: 'orden_id inválido' } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  // Orden
+  const { data: orden, error: eOrd } = await supabase
+    .from('ordenes_produccion')
+    .select('id, bom_id_utilizada, cantidad_planificada, fecha_inicio_programada')
+    .eq('id', ordenId)
+    .single()
+  if (eOrd) return c.json({ error: { code: 'NOT_FOUND', message: 'Orden no encontrada' } }, 404)
+  if (!orden.bom_id_utilizada) {
+    return c.json({ error: { code: 'VALIDATION', message: 'La orden no tiene un BOM asignado' } }, 400)
+  }
+
+  // Operaciones de la ruta del BOM
+  const { data: ops, error: eOps } = await supabase
+    .from('rutas_produccion')
+    .select('id, secuencia, centro_trabajo_id, tiempo_setup_mins, tiempo_proceso_unitario_mins, tiempo_cola_mins, tiempo_movimiento_mins')
+    .eq('bom_id', orden.bom_id_utilizada)
+    .order('secuencia')
+  if (eOps) return c.json({ error: { code: 'DB_ERROR', message: eOps.message } }, 500)
+  const operaciones = (ops ?? []) as any[]
+  if (operaciones.length === 0) {
+    return c.json({ error: { code: 'VALIDATION', message: 'No hay operaciones definidas en la ruta' } }, 400)
+  }
+
+  const cantidad = Number(orden.cantidad_planificada ?? 1) || 1
+  let fechaInicio = fechaInicioInput ? new Date(fechaInicioInput) : new Date(orden.fecha_inicio_programada ?? new Date())
+  if (isNaN(fechaInicio.getTime())) fechaInicio = new Date()
+
+  const resultados: Array<Record<string, unknown>> = []
+  for (const op of operaciones) {
+    const setup = Number(op.tiempo_setup_mins ?? 0)
+    const proceso = Number(op.tiempo_proceso_unitario_mins ?? 0) * cantidad
+    const cola = Number(op.tiempo_cola_mins ?? 0)
+    const movimiento = Number(op.tiempo_movimiento_mins ?? 0)
+    const duracionMin = setup + proceso + cola + movimiento
+
+    const fechaFin = new Date(fechaInicio.getTime() + duracionMin * 60000)
+
+    // Verificar solapamiento en el centro
+    const { data: solapa } = await supabase.rpc('verificar_solapamiento', {
+      p_company_id: c.get('companyId'),
+      p_centro_trabajo_id: op.centro_trabajo_id,
+      p_inicio: fechaInicio.toISOString(),
+      p_fin: fechaFin.toISOString(),
+      p_excluir_id: null,
+    })
+    if (solapa) {
+      return c.json({
+        error: { code: 'VALIDATION', message: `La operación ${op.secuencia} se solapa con otro recurso del centro ${op.centro_trabajo_id}` },
+      }, 400)
+    }
+
+    const { data: nueva, error: eIns } = await supabase
+      .from('planificacion_recursos')
+      .insert({
+        orden_produccion_id: ordenId,
+        operacion_id: op.id,
+        centro_trabajo_id: op.centro_trabajo_id,
+        inicio: fechaInicio.toISOString(),
+        fin: fechaFin.toISOString(),
+        estado: 'programado',
+        company_id: c.get('companyId'),
+      })
+      .select('id')
+      .single()
+    if (eIns) return c.json({ error: { code: 'DB_ERROR', message: eIns.message } }, 500)
+
+    resultados.push({
+      operacion_id: op.id,
+      planificacion_id: nueva.id,
+      secuencia: op.secuencia,
+      fecha_inicio: fechaInicio.toISOString(),
+      fecha_fin: fechaFin.toISOString(),
+      duracion_mins: duracionMin,
+    })
+
+    fechaInicio = fechaFin
+  }
+
+  return c.json({ data: { success: true, planificaciones: resultados } }, 201)
+})

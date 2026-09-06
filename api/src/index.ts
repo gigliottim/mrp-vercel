@@ -16,6 +16,7 @@ import { centrosTrabajo } from './routes/centros-trabajo.js'
 import { rutasProduccion } from './routes/rutas-produccion.js'
 import { ordenesProduccion } from './routes/ordenes-produccion.js'
 import { movimientosInventario } from './routes/movimientos-inventario.js'
+import { movimientosPartes } from './routes/movimientos-partes.js'
 import { compras } from './routes/compras.js'
 import { planificacion } from './routes/planificacion.js'
 import { menu } from './routes/menu.js'
@@ -63,6 +64,7 @@ app.route('/api/v1/centros-trabajo', centrosTrabajo)
 app.route('/api/v1/rutas-produccion', rutasProduccion)
 app.route('/api/v1/ordenes-produccion', ordenesProduccion)
 app.route('/api/v1/movimientos-inventario', movimientosInventario)
+app.route('/api/v1/movimientos-partes', movimientosPartes)
 app.route('/api/v1/compras', compras)
 app.route('/api/v1/planificacion', planificacion)
 app.route('/api/v1/menu', menu)

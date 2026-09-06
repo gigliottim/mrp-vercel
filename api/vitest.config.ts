@@ -24,6 +24,9 @@ export default defineConfig(({ mode }) => {
         SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY,
         SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY,
       },
+      // Tests de integración contra Supabase real: 30s por test
+      testTimeout: 30000,
+      hookTimeout: 30000,
     },
   }
 })

@@ -1,7 +1,9 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth, type AuthEnv } from '../middleware/auth.js'
+import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth.js'
 import { createUserClient } from '../lib/supabase.js'
+import { buildXlsx } from '../lib/export/xlsx.js'
+import { buildPdf } from '../lib/export/pdf.js'
 
 // ─── Reportes ────────────────────────────────────────────────────────────────
 // Port de ReportesController.php: destino-partes, listado-ingenieria,
@@ -59,87 +61,50 @@ async function fetchDetalles(supabase: ReturnType<typeof createUserClient>, bomI
   return (data ?? []) as any[]
 }
 
-// ─── Destino de Partes ───────────────────────────────────────────────────────
+// ─── Lógica de reportes (reutilizada por GET y export) ──────────────────────
 
-reportes.get('/destino-partes', async (c) => {
-  const varianteId = Number(c.req.query('id_variante') ?? 0)
-  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+// Contrato de tabla exportable (XLSX/PDF)
+type Tabla = { title: string; subtitle: string; headers: string[]; rows: (string | number | null)[][] }
 
-  const variantes = await fetchVariantes(supabase)
-  const varianteSeleccionada = variantes.find((v: any) => Number(v.id) === varianteId) ?? null
+type ListadoIngenieriaParams = {
+  id_variante: number
+  cantidad: number
+  tipo_salida: string
+  con_precios: boolean
+  agrupar_tipo: boolean
+  ordenar_tipo: boolean
+  mostrar_tipos: number[]
+}
 
-  let rama1: unknown[] = []
-  let arbol: unknown[] = []
-  let plana: unknown[] = []
-  let dondeSeUtiliza: unknown[] = []
+type ListadoIngenieriaResult = {
+  variantes: unknown[]
+  varianteSeleccionada: unknown
+  tipos: unknown[]
+  items: unknown[]
+  tabla: Tabla
+}
 
-  if (varianteSeleccionada) {
-    const bom = await fetchBomActiva(supabase, varianteId)
-    if (bom) {
-      rama1 = await fetchDetalles(supabase, bom.id)
-      const { data: tree } = await supabase.rpc('bom_tree', { p_variante_id: varianteId, p_max_depth: 5 })
-      arbol = tree ?? []
-      // Composición plana: consolidar por variante
-      const consolidado = new Map<number, any>()
-      for (const item of arbol as Array<any>) {
-        if (Number(item.nivel) === 0) continue
-        const vid = Number(item.variante_id)
-        const prev = consolidado.get(vid)
-        if (prev) {
-          prev.cantidad_necesaria = Number(prev.cantidad_necesaria) + Number(item.cantidad)
-        } else {
-          consolidado.set(vid, {
-            variante_id: vid,
-            parte_codigo: item.parte_codigo ?? '',
-            componente_codigo: item.codigo_variante ?? 'N/A',
-            parte_detalle: item.parte_detalle ?? '',
-            componente_detalle: item.variante_detalle ?? '',
-            cantidad_necesaria: Number(item.cantidad),
-            unidad_simbolo: item.unidad ?? 'UN',
-          })
-        }
-      }
-      plana = [...consolidado.values()]
-    }
-    const { data: whereUsed } = await supabase.rpc('bom_where_used', { p_variante_id: varianteId })
-    dondeSeUtiliza = whereUsed ?? []
-  }
+async function getListadoIngenieria(
+  supabase: ReturnType<typeof createUserClient>,
+  params: ListadoIngenieriaParams
+): Promise<ListadoIngenieriaResult> {
+  const varianteId = params.id_variante
+  const cantidad = params.cantidad
+  const tipoSalida = params.tipo_salida
+  const conPrecios = params.con_precios
+  const agruparTipo = params.agrupar_tipo
+  const ordenarTipo = params.ordenar_tipo
+  const mostrarTipos = params.mostrar_tipos
 
-  return c.json({
-    data: {
-      variantes,
-      variante_seleccionada: varianteSeleccionada,
-      rama1,
-      plana,
-      arbol,
-      donde_se_utiliza: dondeSeUtiliza,
-    },
-  })
-})
-
-// ─── Listado de Ingeniería ───────────────────────────────────────────────────
-
-reportes.get('/listado-ingenieria', async (c) => {
-  const varianteId = Number(c.req.query('id_variante') ?? 0)
-  const cantidad = Number(c.req.query('cantidad') ?? 1) || 1
-  const tipoSalida = c.req.query('tipo_salida') ?? 'arbol'
-  const conPrecios = c.req.query('con_precios') === '1'
-  const agruparTipo = c.req.query('agrupar_tipo') === '1'
-  const ordenarTipo = c.req.query('ordenar_tipo') === '1'
-  const mostrarTipos = (c.req.query('mostrar_tipos') ?? '')
-    .split(',')
-    .map(Number)
-    .filter((n) => n > 0)
-
-  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const variantes = await fetchVariantes(supabase)
   const varianteSeleccionada = variantes.find((v: any) => Number(v.id) === varianteId) ?? null
 
   // Tipos de partes para filtros
   const { data: tiposData } = await supabase.from('tipos_partes').select('id, nombre, codigo').order('id')
   const tipos = tiposData ?? []
+  const tipoNombre = (id: any) => tipos.find((t: { id: number }) => t.id === Number(id))?.nombre ?? ''
 
-  let items: unknown[] = []
+  let items: any[] = []
   if (varianteSeleccionada) {
     const bom = await fetchBomActiva(supabase, varianteId)
     if (bom) {
@@ -199,7 +164,6 @@ reportes.get('/listado-ingenieria', async (c) => {
 
       // Ordenar por tipo
       if (ordenarTipo) {
-        const tipoNombre = (id: any) => tipos.find((t: { id: number }) => t.id === Number(id))?.nombre ?? ''
         items.sort((a: any, b: any) =>
           tipoNombre(a.tipo_parte_id).localeCompare(tipoNombre(b.tipo_parte_id))
         )
@@ -207,7 +171,7 @@ reportes.get('/listado-ingenieria', async (c) => {
 
       // Precios (costo de última compra)
       if (conPrecios) {
-        for (const item of items as any[]) {
+        for (const item of items) {
           const vid = Number(item.variante_id ?? item.variante_componente_id ?? 0)
           const qty = Number(item.cantidad_ajustada ?? item.cantidad ?? item.cantidad_necesaria ?? item.cantidad_total ?? 0)
           let precio = 0
@@ -229,7 +193,7 @@ reportes.get('/listado-ingenieria', async (c) => {
       // Agrupar por tipo
       if (agruparTipo) {
         const agrupado: Record<string, unknown[]> = {}
-        for (const item of items as any[]) {
+        for (const item of items) {
           const tipoId = Number(item.tipo_parte_id ?? 0)
           const nombre = tipos.find((t: { id: number }) => t.id === tipoId)?.nombre ?? 'Sin Tipo'
           ;(agrupado[nombre] ??= []).push(item)
@@ -239,21 +203,59 @@ reportes.get('/listado-ingenieria', async (c) => {
     }
   }
 
-  return c.json({ data: { variantes, variante_seleccionada: varianteSeleccionada, tipos, items } })
-})
+  // Tabla exportable (adicional, no afecta la respuesta JSON del GET)
+  const headers: string[] = ['Tipo', 'Código', 'Detalle', 'Cantidad', 'Cant. Ajustada', 'UM']
+  if (conPrecios) headers.push('Precio Unit.', 'Subtotal')
+  const pushItem = (item: any, tipoOverride?: string) => {
+    const esNivelCero = Number(item.nivel) === 0
+    const fila: (string | number | null)[] = [
+      esNivelCero ? '' : tipoOverride ?? tipoNombre(item.tipo_parte_id),
+      item.codigo_variante ?? item.variantes_componente?.codigo_variante ?? '',
+      item.variante_detalle ?? item.variantes_componente?.detalle ?? '',
+      item.cantidad_necesaria ?? item.cantidad_total ?? item.cantidad ?? null,
+      item.cantidad_ajustada ?? null,
+      item.unidad ?? item.unidades_medida?.simbolo ?? '',
+    ]
+    if (conPrecios) fila.push(item.precio_unitario ?? null, item.subtotal ?? null)
+    return fila
+  }
+  const filas: (string | number | null)[][] = []
+  if (agruparTipo) {
+    for (const grupo of items as Array<{ tipo: string; items: any[] }>) {
+      for (const it of grupo.items ?? []) filas.push(pushItem(it, grupo.tipo))
+    }
+  } else {
+    for (const it of items) filas.push(pushItem(it))
+  }
+  const tabla: Tabla = {
+    title: 'Listado de Ingeniería',
+    subtitle: `Variante: ${varianteSeleccionada?.codigo_variante ?? '-'} · cantidad: ${cantidad} · tipo_salida: ${tipoSalida}`,
+    headers,
+    rows: filas,
+  }
 
-// ─── Planificación de Producción ─────────────────────────────────────────────
+  return { variantes, varianteSeleccionada, tipos, items, tabla }
+}
 
-const productosSchema = z.record(z.string(), z.coerce.number().positive())
+type PlanificacionParams = { productos: string; fecha_costo: string }
 
-reportes.get('/planificacion-produccion', async (c) => {
-  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const fechaCosto = c.req.query('fecha_costo') ?? new Date().toISOString().slice(0, 10)
+type PlanificacionResult = {
+  variantes: unknown[]
+  productos: Record<string, number>
+  requerimientos: unknown[]
+  fechaCosto: string
+  tabla: Tabla
+}
+
+async function getPlanificacionProduccion(
+  supabase: ReturnType<typeof createUserClient>,
+  params: PlanificacionParams
+): Promise<PlanificacionResult> {
+  const fechaCosto = params.fecha_costo
 
   // productos: "VID:QTY,VID2:QTY2"
-  const productosRaw = c.req.query('productos') ?? ''
   const productos: Record<string, number> = {}
-  for (const par of productosRaw.split(',').filter(Boolean)) {
+  for (const par of params.productos.split(',').filter(Boolean)) {
     const [vid, qty] = par.split(':')
     if (vid && qty) productos[vid] = Number(qty)
   }
@@ -325,7 +327,169 @@ reportes.get('/planificacion-produccion', async (c) => {
 
   requerimientos.sort((a, b) => String(a.codigo).localeCompare(String(b.codigo)))
 
-  return c.json({ data: { variantes, productos, requerimientos, fecha_costo: fechaCosto } })
+  // Tabla exportable (adicional, no afecta la respuesta JSON del GET)
+  const tabla: Tabla = {
+    title: 'Planificación de Producción',
+    subtitle: `Fecha de costo: ${fechaCosto} · Productos: ${params.productos || '(ninguno)'}`,
+    headers: [
+      'Código', 'Parte', 'Detalle', 'Tipo', 'UM Uso', 'UM Compra',
+      'Programado', 'Stock', 'Faltante', 'A Comprar', 'Stock Final', 'Precio Unit.', 'Total a Comprar',
+    ],
+    rows: requerimientos.map((r: any) => [
+      r.codigo, r.parte_codigo, r.detalle, r.tipo, r.um_uso, r.um_compra,
+      r.programado, r.stock, r.faltante, r.a_comprar, r.stock_final, r.precio_unitario, r.a_comprar_precio,
+    ]),
+  }
+
+  return { variantes, productos, requerimientos, fechaCosto, tabla }
+}
+
+// ─── Destino de Partes ───────────────────────────────────────────────────────
+
+reportes.get('/destino-partes', async (c) => {
+  const varianteId = Number(c.req.query('id_variante') ?? 0)
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  const variantes = await fetchVariantes(supabase)
+  const varianteSeleccionada = variantes.find((v: any) => Number(v.id) === varianteId) ?? null
+
+  let rama1: unknown[] = []
+  let arbol: unknown[] = []
+  let plana: unknown[] = []
+  let dondeSeUtiliza: unknown[] = []
+
+  if (varianteSeleccionada) {
+    const bom = await fetchBomActiva(supabase, varianteId)
+    if (bom) {
+      rama1 = await fetchDetalles(supabase, bom.id)
+      const { data: tree } = await supabase.rpc('bom_tree', { p_variante_id: varianteId, p_max_depth: 5 })
+      arbol = tree ?? []
+      // Composición plana: consolidar por variante
+      const consolidado = new Map<number, any>()
+      for (const item of arbol as Array<any>) {
+        if (Number(item.nivel) === 0) continue
+        const vid = Number(item.variante_id)
+        const prev = consolidado.get(vid)
+        if (prev) {
+          prev.cantidad_necesaria = Number(prev.cantidad_necesaria) + Number(item.cantidad)
+        } else {
+          consolidado.set(vid, {
+            variante_id: vid,
+            parte_codigo: item.parte_codigo ?? '',
+            componente_codigo: item.codigo_variante ?? 'N/A',
+            parte_detalle: item.parte_detalle ?? '',
+            componente_detalle: item.variante_detalle ?? '',
+            cantidad_necesaria: Number(item.cantidad),
+            unidad_simbolo: item.unidad ?? 'UN',
+          })
+        }
+      }
+      plana = [...consolidado.values()]
+    }
+    const { data: whereUsed } = await supabase.rpc('bom_where_used', { p_variante_id: varianteId })
+    dondeSeUtiliza = whereUsed ?? []
+  }
+
+  return c.json({
+    data: {
+      variantes,
+      variante_seleccionada: varianteSeleccionada,
+      rama1,
+      plana,
+      arbol,
+      donde_se_utiliza: dondeSeUtiliza,
+    },
+  })
+})
+
+// ─── Listado de Ingeniería ───────────────────────────────────────────────────
+
+reportes.get('/listado-ingenieria', async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const result = await getListadoIngenieria(supabase, {
+    id_variante: Number(c.req.query('id_variante') ?? 0),
+    cantidad: Number(c.req.query('cantidad') ?? 1) || 1,
+    tipo_salida: c.req.query('tipo_salida') ?? 'arbol',
+    con_precios: c.req.query('con_precios') === '1',
+    agrupar_tipo: c.req.query('agrupar_tipo') === '1',
+    ordenar_tipo: c.req.query('ordenar_tipo') === '1',
+    mostrar_tipos: (c.req.query('mostrar_tipos') ?? '')
+      .split(',')
+      .map(Number)
+      .filter((n) => n > 0),
+  })
+
+  return c.json({
+    data: {
+      variantes: result.variantes,
+      variante_seleccionada: result.varianteSeleccionada,
+      tipos: result.tipos,
+      items: result.items,
+    },
+  })
+})
+
+reportes.get('/listado-ingenieria/export', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const formato = c.req.query('formato') === 'pdf' ? 'pdf' : 'xlsx'
+  const result = await getListadoIngenieria(supabase, {
+    id_variante: Number(c.req.query('id_variante') ?? 0),
+    cantidad: Number(c.req.query('cantidad') ?? 1) || 1,
+    tipo_salida: c.req.query('tipo_salida') ?? 'arbol',
+    con_precios: c.req.query('con_precios') === '1',
+    agrupar_tipo: c.req.query('agrupar_tipo') === '1',
+    ordenar_tipo: c.req.query('ordenar_tipo') === '1',
+    mostrar_tipos: (c.req.query('mostrar_tipos') ?? '')
+      .split(',')
+      .map(Number)
+      .filter((n) => n > 0),
+  })
+  const tabla = result.tabla
+  const filename = `listado-ingenieria.${formato}`
+  const buf = formato === 'pdf'
+    ? await buildPdf({ title: tabla.title, subtitle: tabla.subtitle, headers: tabla.headers, rows: tabla.rows })
+    : await buildXlsx([{ name: 'Listado', rows: [tabla.headers, ...tabla.rows] }])
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      'Content-Type': formato === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    },
+  })
+})
+
+// ─── Planificación de Producción ─────────────────────────────────────────────
+
+const productosSchema = z.record(z.string(), z.coerce.number().positive())
+void productosSchema
+
+reportes.get('/planificacion-produccion', async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const fechaCosto = c.req.query('fecha_costo') ?? new Date().toISOString().slice(0, 10)
+  const productosRaw = c.req.query('productos') ?? ''
+
+  const result = await getPlanificacionProduccion(supabase, { productos: productosRaw, fecha_costo: fechaCosto })
+
+  return c.json({ data: { variantes: result.variantes, productos: result.productos, requerimientos: result.requerimientos, fecha_costo: fechaCosto } })
+})
+
+reportes.get('/planificacion-produccion/export', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const formato = c.req.query('formato') === 'pdf' ? 'pdf' : 'xlsx'
+  const fechaCosto = c.req.query('fecha_costo') ?? new Date().toISOString().slice(0, 10)
+  const productosRaw = c.req.query('productos') ?? ''
+
+  const result = await getPlanificacionProduccion(supabase, { productos: productosRaw, fecha_costo: fechaCosto })
+  const tabla = result.tabla
+  const filename = `planificacion-produccion.${formato}`
+  const buf = formato === 'pdf'
+    ? await buildPdf({ title: tabla.title, subtitle: tabla.subtitle, headers: tabla.headers, rows: tabla.rows })
+    : await buildXlsx([{ name: 'Planificación', rows: [tabla.headers, ...tabla.rows] }])
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      'Content-Type': formato === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    },
+  })
 })
 
 // ─── Resumen por Grupos ──────────────────────────────────────────────────────

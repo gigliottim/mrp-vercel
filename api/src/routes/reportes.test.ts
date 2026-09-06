@@ -58,4 +58,26 @@ describe('reportes', () => {
     const body = await res.json()
     expect(Array.isArray(body.data.grupos)).toBe(true)
   })
+
+  it('export listado-ingenieria xlsx devuelve binario', async () => {
+    const app = new Hono().route('/api/v1/reportes', reportes)
+    const res = await app.request(`/api/v1/reportes/listado-ingenieria/export?formato=xlsx&id_variante=${varianteId}&cantidad=2&tipo_salida=arbol`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('spreadsheetml')
+    const buf = Buffer.from(await res.arrayBuffer())
+    expect(buf.subarray(0, 2).toString()).toBe('PK')
+  })
+
+  it('export planificacion-produccion pdf devuelve binario', async () => {
+    const app = new Hono().route('/api/v1/reportes', reportes)
+    const res = await app.request(`/api/v1/reportes/planificacion-produccion/export?formato=pdf&productos=${varianteId}:2`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('application/pdf')
+    const buf = Buffer.from(await res.arrayBuffer())
+    expect(buf.subarray(0, 5).toString()).toBe('%PDF-')
+  })
 })

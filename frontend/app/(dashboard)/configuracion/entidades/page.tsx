@@ -2,8 +2,8 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { EntidadesForm, type EntidadesRow } from './entidades-form'
+import { columns } from './columns'
 import { crear, actualizar, eliminar } from './actions'
-import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,11 +36,7 @@ export default async function EntidadesPage({
       page={page}
       perPage={perPage}
       total={result?.pagination.total ?? 0}
-      columns={[
-        { key: 'razon_social', header: 'Razón social', render: (r) => String(r.razon_social ?? '') },
-        { key: 'tipo', header: 'Tipo', render: (r) => (r.tipo ? <Badge variant="outline">Sí</Badge> : <Badge variant="secondary">No</Badge>) },
-        { key: 'identificacion_tributaria', header: 'CUIT', render: (r) => String(r.identificacion_tributaria ?? '') },
-      ]}
+      columns={columns}
       FormComponent={EntidadesForm}
       onCreate={crear}
       onUpdate={actualizar}

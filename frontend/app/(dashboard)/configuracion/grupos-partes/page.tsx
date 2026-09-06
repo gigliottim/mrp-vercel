@@ -2,8 +2,8 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { GruposPartesForm, type GruposPartesRow } from './grupos-partes-form'
+import { columns } from './columns'
 import { crear, actualizar, eliminar } from './actions'
-import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,12 +36,7 @@ export default async function GruposPartesPage({
       page={page}
       perPage={perPage}
       total={result?.pagination.total ?? 0}
-      columns={[
-        { key: 'codigo', header: 'Código', render: (r) => String(r.codigo ?? '') },
-        { key: 'nombre', header: 'Nombre', render: (r) => String(r.nombre ?? '') },
-        { key: 'color', header: 'Color', render: (r) => (<span className="inline-block h-4 w-4 rounded border" style={{ backgroundColor: String(r.color) }} />) },
-        { key: 'activo', header: 'Estado', render: (r) => (r.activo ? <Badge variant="outline">Sí</Badge> : <Badge variant="secondary">No</Badge>) },
-      ]}
+      columns={columns}
       FormComponent={GruposPartesForm}
       onCreate={crear}
       onUpdate={actualizar}

@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { ValidacionForm, type ValidacionRow, type Deposito } from './validacion-form'
+import { makeColumns } from './columns'
 import { crear, actualizar, eliminar } from './actions'
 import { Badge } from '@/components/ui/badge'
 
@@ -45,24 +46,7 @@ export default async function ValidacionesPage({
       page={page}
       perPage={perPage}
       total={result?.pagination.total ?? 0}
-      columns={[
-        {
-          key: 'origen',
-          header: 'Origen',
-          render: (r) => nombreDeposito(Number(r.tipo_deposito_origen_id)),
-        },
-        {
-          key: 'destino',
-          header: 'Destino',
-          render: (r) => nombreDeposito(Number(r.tipo_deposito_destino_id)),
-        },
-        {
-          key: 'activo',
-          header: 'Estado',
-          render: (r) =>
-            r.activo ? <Badge variant="outline">Activo</Badge> : <Badge variant="destructive">Inactivo</Badge>,
-        },
-      ]}
+      columns={makeColumns(depositos)}
       FormComponent={(props) => (
         <ValidacionForm {...props} depositos={depositos} />
       )}

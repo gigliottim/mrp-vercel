@@ -2,8 +2,8 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { AlmacenesForm, type AlmacenesRow } from './almacenes-form'
+import { columns } from './columns'
 import { crear, actualizar, eliminar } from './actions'
-import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,12 +36,7 @@ export default async function AlmacenesPage({
       page={page}
       perPage={perPage}
       total={result?.pagination.total ?? 0}
-      columns={[
-        { key: 'codigo', header: 'Código', render: (r) => String(r.codigo ?? '') },
-        { key: 'nombre', header: 'Nombre', render: (r) => String(r.nombre ?? '') },
-        { key: 'es_deposito_venta', header: 'Venta', render: (r) => (r.es_deposito_venta ? <Badge variant="outline">Sí</Badge> : <Badge variant="secondary">No</Badge>) },
-        { key: 'es_deposito_produccion', header: 'Producción', render: (r) => (r.es_deposito_produccion ? <Badge variant="outline">Sí</Badge> : <Badge variant="secondary">No</Badge>) },
-      ]}
+      columns={columns}
       FormComponent={AlmacenesForm}
       onCreate={crear}
       onUpdate={actualizar}

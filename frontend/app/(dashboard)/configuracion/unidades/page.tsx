@@ -2,7 +2,7 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { UnidadForm, type UnidadMedida } from './unidades-form'
-import { tipoLabel } from './unidades-labels'
+import { columns } from './columns'
 import { crearUnidad, actualizarUnidad, eliminarUnidad } from './actions'
 import { Badge } from '@/components/ui/badge'
 
@@ -37,27 +37,7 @@ export default async function UnidadesPage({
       page={page}
       perPage={perPage}
       total={result?.pagination.total ?? 0}
-      columns={[
-        { key: 'tipo', header: 'Tipo', render: (r) => tipoLabel(String(r.tipo)) },
-        { key: 'unidad', header: 'Unidad', render: (r) => String(r.unidad) },
-        { key: 'simbolo', header: 'Símbolo', render: (r) => <code>{String(r.simbolo)}</code> },
-        {
-          key: 'equivalencia_base',
-          header: 'Equivalencia',
-          render: (r) => String(r.equivalencia_base),
-        },
-        {
-          key: 'es_base',
-          header: 'Base',
-          render: (r) => (r.es_base ? <Badge>Base</Badge> : null),
-        },
-        {
-          key: 'activo',
-          header: 'Estado',
-          render: (r) =>
-            r.activo ? <Badge variant="outline">Activo</Badge> : <Badge variant="destructive">Inactivo</Badge>,
-        },
-      ]}
+      columns={columns}
       FormComponent={UnidadForm}
       onCreate={crearUnidad}
       onUpdate={actualizarUnidad}

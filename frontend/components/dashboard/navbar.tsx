@@ -3,6 +3,7 @@
 import { signOut } from '@/app/actions/auth'
 import type { SessionInfo } from '@/lib/session'
 import { ThemeToggle } from '@/components/dashboard/theme-toggle'
+import { CompanySwitcher } from '@/components/dashboard/company-switcher'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,8 +18,9 @@ import { LogOut, User } from 'lucide-react'
 export function Navbar({ session }: { session: SessionInfo }) {
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background px-6">
-      <div className="text-sm text-muted-foreground">
-        {session.role} · Empresa #{session.companyId}
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <CompanySwitcher currentCompanyId={session.companyId} accessToken={session.accessToken} />
+        <span>{session.role}</span>
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />

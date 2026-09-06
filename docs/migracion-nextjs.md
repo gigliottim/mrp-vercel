@@ -165,11 +165,13 @@ Este documento detalla la estrategia para transformar tu actual sistema MRP en P
 Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronograma:
 
 #### Fase 0: Preparación del entorno (1 semana)
-- Configurar repositorio con la estructura de carpetas propuesta.
-- Configurar proyectos en Vercel y Supabase (región `sa-east-1`, São Paulo).
-- Configurar dominio `mimrp.com.ar` en Cloudflare (apuntando a Vercel).
-- Migrar la base de datos (esquema y datos) a Supabase usando los dumps de `database/backups/2026-09-06_09-40-12/` (ver sección 6).
-- Establecer pipeline de CI/CD (Vercel despliega automáticamente desde main).
+- [x] Configurar repositorio con la estructura de carpetas propuesta.
+- [x] Configurar proyectos en Vercel y Supabase (región `sa-east-1`, São Paulo).
+- [ ] Configurar dominio `mimrp.com.ar` en Cloudflare (apuntando a Vercel). *(pendiente: requiere acceso a Cloudflare — se hará en P5)*
+- [x] Migrar la base de datos (esquema y datos) a Supabase usando los dumps de `database/backups/2026-09-06_09-40-12/` (ver sección 6).
+- [ ] Establecer pipeline de CI/CD (Vercel despliega automáticamente desde main). *(pendiente: se hará en P2)*
+
+**Estado P1 (2026-09-06):** Proyecto Supabase `ooyiahzawilmdfualggx` creado (sa-east-1, USD 10/mes). Esquema auth (9 tablas) + tenant (26 tablas) migrados con RLS por `company_id`. Custom Access Token Hook activo (claims `company_id` + `user_role`). 3 usuarios migrados con password temporal `Temporal123!` (deben cambiarla en el primer login). Trigger `fn_super_admin_auto_link` corregido (rol "Super Administrador") y verificado. Monorepo scaffolded (frontend Next.js 16.3.4 + shadcn/ui, api Hono 4.13.7, backend). Login funcional verificado (JWT claims OK, aislamiento RLS OK). Pendiente: P2 (API Hono).
 
 #### Fase 1: Migración de modelos y lógica de negocio (2-3 semanas)
 - Analizar el código PHP existente y extraer las entidades principales (Partes, Órdenes de Producción, BOM, Inventario, etc.).

@@ -1,0 +1,89 @@
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+export type AlmacenesRow = {
+  id: number
+  codigo: string
+  nombre: string
+  es_deposito_venta: boolean
+  es_deposito_produccion: boolean
+  activo: boolean
+}
+
+const schema = z.object({
+  codigo: z.string().optional(),
+  nombre: z.string().optional(),
+  es_deposito_venta: z.boolean().optional(),
+  es_deposito_produccion: z.boolean().optional(),
+  activo: z.boolean().optional(),
+})
+
+export function AlmacenesForm({
+  initial,
+  onSubmit,
+  onCancel,
+}: {
+  initial: AlmacenesRow | null
+  onSubmit: (data: Record<string, unknown>) => Promise<void>
+  onCancel: () => void
+}) {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      codigo: initial?.codigo ?? '',
+      nombre: initial?.nombre ?? '',
+      es_deposito_venta: initial?.es_deposito_venta ?? false,
+      es_deposito_produccion: initial?.es_deposito_produccion ?? false,
+      activo: initial?.activo ?? false,
+    },
+  })
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) => onSubmit(values as Record<string, unknown>))}
+      className="space-y-4"
+    >
+      <div className="space-y-2">
+        <Label>Código</Label>
+        <Input type="text" {...register('codigo')} />
+      </div>
+      <div className="space-y-2">
+        <Label>Nombre</Label>
+        <Input type="text" {...register('nombre')} />
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch checked={watch('es_deposito_venta') ?? false} onCheckedChange={(v) => setValue('es_deposito_venta', v)} />
+        <Label>Depósito de venta</Label>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch checked={watch('es_deposito_produccion') ?? false} onCheckedChange={(v) => setValue('es_deposito_produccion', v)} />
+        <Label>Depósito de producción</Label>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch checked={watch('activo') ?? false} onCheckedChange={(v) => setValue('activo', v)} />
+        <Label>Activo</Label>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit">Guardar</Button>
+      </div>
+    </form>
+  )
+}

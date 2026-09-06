@@ -265,6 +265,8 @@ const aclSchema = z.object({
   subject_type: z.enum(['role', 'user']),
   subject_id: z.union([z.number().int().positive(), z.string().min(1)]),
   effect: z.enum(['allow', 'deny']),
+  scope: z.string().max(20).default('item'),
+  permission_level: z.string().max(20).default('read'),
 })
 
 empresa.post('/permisos', requireRole('Super Administrador', 'Administrador'), async (c) => {
@@ -273,10 +275,14 @@ empresa.post('/permisos', requireRole('Super Administrador', 'Administrador'), a
   if (!parsed.success) {
     return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
   }
-  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const { data, error } = await supabase
+  // RLS bloquea escritura en menu_acl para authenticated: usar service role
+  const admin = createAdminClient()
+  const { data, error } = await admin
     .from('menu_acl')
-    .upsert({ ...parsed.data, company_id: c.get('companyId') }, { onConflict: 'company_id,menu_item_id,subject_type,subject_id' })
+    .upsert(
+      { ...parsed.data, company_id: c.get('companyId') },
+      { onConflict: 'company_id,menu_item_id,subject_type,subject_id,scope' }
+    )
     .select()
     .single()
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
@@ -290,6 +296,8 @@ const bulkSchema = z.object({
       subject_type: z.enum(['role', 'user']),
       subject_id: z.union([z.number().int().positive(), z.string().min(1)]),
       effect: z.enum(['allow', 'deny']),
+      scope: z.string().max(20).default('item'),
+      permission_level: z.string().max(20).default('read'),
     })
   ),
 })
@@ -300,26 +308,30 @@ empresa.post('/permisos/bulk', requireRole('Super Administrador', 'Administrador
   if (!parsed.success) {
     return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
   }
-  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  // RLS bloquea escritura en menu_acl para authenticated: usar service role
+  const admin = createAdminClient()
   const rows = parsed.data.menu_item_ids.flatMap((menuItemId) =>
     parsed.data.perms.map((p) => ({
       menu_item_id: menuItemId,
       subject_type: p.subject_type,
       subject_id: p.subject_id,
       effect: p.effect,
+      scope: p.scope,
+      permission_level: p.permission_level,
       company_id: c.get('companyId'),
     }))
   )
-  const { error } = await supabase.from('menu_acl').upsert(rows, {
-    onConflict: 'company_id,menu_item_id,subject_type,subject_id',
+  const { error } = await admin.from('menu_acl').upsert(rows, {
+    onConflict: 'company_id,menu_item_id,subject_type,subject_id,scope',
   })
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
   return c.json({ data: { ok: true } })
 })
 
 empresa.delete('/permisos/:id', requireRole('Super Administrador', 'Administrador'), async (c) => {
-  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const { error } = await supabase
+  // RLS bloquea DELETE en menu_acl para authenticated: usar service role
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('menu_acl')
     .delete()
     .eq('id', Number(c.req.param('id')))

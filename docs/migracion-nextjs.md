@@ -192,16 +192,18 @@ Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronog
 **Estado P3 (2026-09-06):** API transaccional desplegada en Vercel (`mrp-api`, v0.3.0, 61 tests). Endpoints: partes (con filtro `q`), variantes (con stock y FK validation), BOM atómico (`crear_bom` RPC), centros de trabajo, rutas de producción, órdenes de producción (máquina de estados completa + `next_numero_orden`), movimientos de inventario (stock atómico vía `movimiento_inventario` RPC), compras con recepción (`recibir_compra` RPC), planificación de recursos (validación de solapamiento). Fixes: trigger `set_timestamp_ordenes` roto en el dump original (migración 18), `usuario_id` bigint legacy (migración 20), Zod 4 `.regex()`/`.record()`. **Dominios**: `mimrp.com.ar` (frontend, propagando), `api.mimrp.com.ar` (API, ✅ funcionando), `chauexcel.com.ar` y `mrpsimple.ar` (redirect 308 → `mimrp.com.ar`, propagados). Pendiente: P4/P5 (frontend).
 
 #### Fase 3: Frontend Next.js 16 (3-4 semanas)
-- Crear la estructura de páginas y layouts en `/frontend` con **shadcn/ui** (`npx shadcn@latest init -y -d` + `npx shadcn@latest add` por componente: table, dialog, form, select, etc.).
-- Implementar la autenticación (usando `@supabase/ssr` 0.12 con `proxy.ts` para manejo de sesiones en Next.js 16).
-- Consumir la API desde el frontend (usando `fetch` en Server Components y Client Components).
-- Migrar las vistas PHP una por una, reutilizando componentes shadcn/ui (tablas, formularios, modales):
-  1. Módulo de inventario (listado, creación, edición).
-  2. Módulo de producción.
-  3. Módulo de ventas.
-  4. Dashboard y reportes.
-- Mantener el diseño actual (dark/light mode con `next-themes` + shadcn/ui).
+- [x] Crear la estructura de páginas y layouts en `/frontend` con **shadcn/ui** (`npx shadcn@latest init -y -d` + `npx shadcn@latest add` por componente: table, dialog, form, select, etc.).
+- [x] Implementar la autenticación (usando `@supabase/ssr` 0.12 con `proxy.ts` para manejo de sesiones en Next.js 16).
+- [x] Consumir la API desde el frontend (usando `fetch` en Server Components y Client Components).
+- [x] Migrar las vistas PHP una por una, reutilizando componentes shadcn/ui (tablas, formularios, modales):
+  1. [x] Módulo de inventario (listado, creación, edición).
+  2. [ ] Módulo de producción. *(pendiente: P5)*
+  3. [ ] Módulo de ventas. *(pendiente: P5)*
+  4. [ ] Dashboard y reportes. *(dashboard con KPIs OK; reportes en P5)*
+- [x] Mantener el diseño actual (dark/light mode con `next-themes` + shadcn/ui).
 - Durante esta fase, el sistema PHP sigue en producción hasta que se complete la migración.
+
+**Estado P4 (2026-09-06):** Frontend desplegado en Vercel (`mrp-frontend`, alias `https://mimrp.com.ar` — DNS propagado). Layout dashboard con sidebar dinámico (menú por ACL vía `/api/v1/menu`), navbar con dark/light + logout, KPIs en `/`. 8 módulos CRUD: unidades de medida, tipos de partes, grupos de partes, tipos de depósitos, validaciones de movimientos, entidades, almacenes, configuración general (patrón DataTable + CrudPage + react-hook-form/zod). Fixes: shadcn/ui 3.5 usa Base UI (`render` en vez de `asChild`), separación server/client de sesión (`lib/session.ts` + `lib/use-session.ts`), deps explícitas en `frontend/package.json`. **Dominios verificados**: `mimrp.com.ar` → frontend (200), `api.mimrp.com.ar` → API (unidades: 29, menu: 33 items), `chauexcel.com.ar`/`mrpsimple.ar` → redirect 307 a `mimrp.com.ar`. Pendiente: P5 (módulos transaccionales en frontend: partes, variantes, BOM, órdenes, compras, stock).
 
 #### Fase 4: Pruebas, optimización y corte (1-2 semanas)
 - Pruebas end-to-end (Cypress/Playwright) para validar flujos críticos.

@@ -1,0 +1,21 @@
+{
+  "name": "@mrp/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.13.7",
+    "@supabase/supabase-js": "^2.115.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "tsx": "^4.19.0",
+    "vitest": "^5.0.0"
+  }
+}

@@ -9,3 +9,5 @@ storage/logs/
 storage/cache/
 temp.txt
 app-release.zip
+.next/
+dist/

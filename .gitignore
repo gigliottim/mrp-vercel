@@ -11,3 +11,6 @@ temp.txt
 app-release.zip
 .next/
 dist/
+.playwright-mcp/
+.turbo/
+.graphify/

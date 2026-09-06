@@ -105,3 +105,47 @@ describe('bom', () => {
     expect(res.status).toBe(500)
   })
 })
+
+describe('bom avanzado', () => {
+  it('obtiene arbol de una variante', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    const res = await app.request(`/api/v1/bom/tree/${variantePadreId}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(Array.isArray(body.data)).toBe(true)
+    // El nivel 0 es la raíz
+    expect(body.data[0].nivel).toBe(0)
+  })
+
+  it('obtiene where-used de una variante', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    const res = await app.request(`/api/v1/bom/where-used/${varianteHijoId}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(Array.isArray(body.data)).toBe(true)
+  })
+
+  it('rechaza copiar con origen y destino iguales', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    const res = await app.request('/api/v1/bom/copiar', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variante_origen_id: variantePadreId, variante_destino_id: variantePadreId }),
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('rechaza reemplazar con origen y nueva iguales', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    const res = await app.request('/api/v1/bom/reemplazar', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variante_origen_id: varianteHijoId, variante_nueva_id: varianteHijoId }),
+    })
+    expect(res.status).toBe(400)
+  })
+})

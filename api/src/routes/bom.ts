@@ -100,3 +100,180 @@ bom.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
   return c.body(null, 204)
 })
+
+// ─── BOM avanzado: árbol, where-used, copiar, reemplazar ────────────────────
+
+bom.get('/tree/:varianteId', async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const varianteId = Number(c.req.param('varianteId'))
+  if (!Number.isInteger(varianteId) || varianteId <= 0) {
+    return c.json({ error: { code: 'VALIDATION', message: 'varianteId inválido' } }, 400)
+  }
+  const { data, error } = await supabase.rpc('bom_tree', {
+    p_variante_id: varianteId,
+    p_max_depth: 5,
+  })
+  if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+  return c.json({ data: data ?? [] })
+})
+
+bom.get('/where-used/:varianteId', async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const varianteId = Number(c.req.param('varianteId'))
+  if (!Number.isInteger(varianteId) || varianteId <= 0) {
+    return c.json({ error: { code: 'VALIDATION', message: 'varianteId inválido' } }, 400)
+  }
+  const { data, error } = await supabase.rpc('bom_where_used', {
+    p_variante_id: varianteId,
+  })
+  if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+  return c.json({ data: data ?? [] })
+})
+
+const copiarSchema = z.object({
+  variante_origen_id: z.number().int().positive(),
+  variante_destino_id: z.number().int().positive(),
+})
+
+bom.post('/copiar', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const body = await c.req.json().catch(() => null)
+  const parsed = copiarSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
+  }
+  const { variante_origen_id: origenId, variante_destino_id: destinoId } = parsed.data
+  if (origenId === destinoId) {
+    return c.json({ error: { code: 'VALIDATION', message: 'La pieza de origen y de destino no pueden ser la misma' } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  // BOM activa del origen
+  const { data: origenBom } = await supabase
+    .from('bom_cabecera')
+    .select('id')
+    .eq('variante_padre_id', origenId)
+    .eq('activa', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (!origenBom) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'La pieza de origen no tiene una BOM activa' } }, 404)
+  }
+
+  const { data: origenDetalles, error: eDet } = await supabase
+    .from('bom_detalle')
+    .select('*')
+    .eq('bom_id', origenBom.id)
+    .order('secuencia')
+  if (eDet) return c.json({ error: { code: 'DB_ERROR', message: eDet.message } }, 500)
+  if (!origenDetalles || origenDetalles.length === 0) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'La BOM de origen no contiene componentes de nivel 1' } }, 404)
+  }
+
+  // BOM activa del destino (o crear cabecera)
+  const { data: destinoBom } = await supabase
+    .from('bom_cabecera')
+    .select('id')
+    .eq('variante_padre_id', destinoId)
+    .eq('activa', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  let destinoBomId = destinoBom?.id
+  if (!destinoBomId) {
+    const { data: nueva, error: eNueva } = await supabase
+      .from('bom_cabecera')
+      .insert({
+        variante_padre_id: destinoId,
+        activa: true,
+        version: '1.0',
+        fecha_efectiva: new Date().toISOString().slice(0, 10),
+        company_id: c.get('companyId'),
+      })
+      .select('id')
+      .single()
+    if (eNueva) return c.json({ error: { code: 'DB_ERROR', message: eNueva.message } }, 500)
+    destinoBomId = nueva.id
+  }
+
+  // Eliminar detalles actuales del destino
+  const { error: eDel } = await supabase.from('bom_detalle').delete().eq('bom_id', destinoBomId)
+  if (eDel) return c.json({ error: { code: 'DB_ERROR', message: eDel.message } }, 500)
+
+  // Copiar validando cada componente
+  let copiados = 0
+  const saltados: string[] = []
+  for (const item of origenDetalles) {
+    const { data: validacion } = await supabase.rpc('bom_validate_add', {
+      p_parent_id: destinoId,
+      p_component_id: item.variante_componente_id,
+    })
+    const valido = validacion?.[0]?.valid ?? false
+    if (!valido) {
+      saltados.push(`${item.variante_componente_id}: ${validacion?.[0]?.error ?? 'No válido'}`)
+      continue
+    }
+    const { error: eIns } = await supabase.from('bom_detalle').insert({
+      bom_id: destinoBomId,
+      variante_componente_id: item.variante_componente_id,
+      cantidad_necesaria: item.cantidad_necesaria,
+      unidad_medida_id: item.unidad_medida_id,
+      secuencia: item.secuencia ?? 0,
+      company_id: c.get('companyId'),
+    })
+    if (eIns) return c.json({ error: { code: 'DB_ERROR', message: eIns.message } }, 500)
+    copiados++
+  }
+
+  return c.json({
+    data: {
+      copiados,
+      eliminados: origenDetalles.length - copiados + saltados.length,
+      saltados,
+    },
+  })
+})
+
+const reemplazarSchema = z.object({
+  variante_origen_id: z.number().int().positive(),
+  variante_nueva_id: z.number().int().positive(),
+  bom_ids: z.array(z.number().int().positive()).optional(),
+})
+
+bom.post('/reemplazar', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const body = await c.req.json().catch(() => null)
+  const parsed = reemplazarSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
+  }
+  const { variante_origen_id: origenId, variante_nueva_id: nuevaId, bom_ids } = parsed.data
+  if (origenId === nuevaId) {
+    return c.json({ error: { code: 'VALIDATION', message: 'La pieza a reemplazar y la de reemplazo no pueden ser la misma' } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  // Si no vienen bom_ids, usar todas las BOMs donde aparece el origen
+  let bomIds = bom_ids
+  if (!bomIds || bomIds.length === 0) {
+    const { data: whereUsed } = await supabase.rpc('bom_where_used', { p_variante_id: origenId })
+    bomIds = (whereUsed ?? []).map((r: { bom_id: number }) => Number(r.bom_id))
+  }
+  if (!bomIds || bomIds.length === 0) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'La pieza seleccionada no aparece en ningún maestro activo' } }, 404)
+  }
+
+  const { data, error } = await supabase
+    .from('bom_detalle')
+    .update({ variante_componente_id: nuevaId })
+    .eq('variante_componente_id', origenId)
+    .in('bom_id', bomIds)
+    .select('id')
+  if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+
+  return c.json({
+    data: {
+      reemplazados: data?.length ?? 0,
+      boms_afectadas: bomIds.length,
+    },
+  })
+})

@@ -40,6 +40,19 @@ describe('tipos-depositos', () => {
     })
     expect(del.status).toBe(204)
   })
+
+  it('destinos-permitidos devuelve mapa origen→destinos', async () => {
+    const app = new Hono().route('/api/v1/tipos-depositos', tiposDepositos)
+    const res = await app.request('/api/v1/tipos-depositos/destinos-permitidos', {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.length).toBeGreaterThan(0)
+    const fila = body.data[0]
+    expect(fila.origen_codigo).toBeTruthy()
+    expect(Array.isArray(fila.destinos)).toBe(true)
+  })
 })
 
 describe('tipos-depositos-movimientos', () => {

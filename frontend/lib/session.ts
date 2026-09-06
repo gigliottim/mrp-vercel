@@ -11,15 +11,19 @@ export type SessionInfo = {
 
 export async function getSession(): Promise<SessionInfo | null> {
   const supabase = await createClient()
-  const { data } = await supabase.auth.getSession()
-  const session = data.session
+  // getUser() autentica contra el servidor de Supabase (los datos de la cookie
+  // no son confiables por sí solos — warning de seguridad de @supabase/ssr)
+  const { data } = await supabase.auth.getUser()
+  const user = data.user
+  if (!user) return null
+  const session = (await supabase.auth.getSession()).data.session
   if (!session) return null
   const payload = JSON.parse(
     Buffer.from(session.access_token.split('.')[1], 'base64url').toString()
   )
   return {
-    userId: session.user.id,
-    email: session.user.email ?? '',
+    userId: user.id,
+    email: user.email ?? '',
     companyId: Number(payload.company_id),
     role: String(payload.user_role ?? ''),
     accessToken: session.access_token,

@@ -1,3 +1,5 @@
+'use client'
+
 import type { Column } from '@/components/crud/data-table'
 import { Badge } from '@/components/ui/badge'
 import { tipoLabel } from './unidades-labels'

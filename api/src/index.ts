@@ -21,6 +21,7 @@ import { menu } from './routes/menu.js'
 import { sugerencias, inventario } from './routes/sugerencias.js'
 import { reportes } from './routes/reportes.js'
 import { empresa } from './routes/empresa.js'
+import { operaciones } from './routes/operaciones.js'
 
 const app = new Hono()
 
@@ -49,5 +50,6 @@ app.route('/api/v1/sugerencias', sugerencias)
 app.route('/api/v1/inventario', inventario)
 app.route('/api/v1/reportes', reportes)
 app.route('/api/v1/empresa', empresa)
+app.route('/api/v1/operaciones', operaciones)
 
 export default app

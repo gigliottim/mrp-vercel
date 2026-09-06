@@ -62,7 +62,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col gap-4 py-4">
       <div className="px-4">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+        <Link href="/panel" className="flex items-center gap-2 text-lg font-bold">
           <span className="bg-primary text-primary-foreground rounded-md px-2 py-1">M</span>
           MRP
         </Link>

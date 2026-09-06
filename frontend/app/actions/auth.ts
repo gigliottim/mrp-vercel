@@ -18,7 +18,7 @@ export async function signInWithPassword(
   if (error) return { error: error.message }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect('/panel')
 }
 
 export async function signOut() {

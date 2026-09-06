@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/session'
 import { apiFetch } from '@/lib/api'
+import { ExportButtons } from '@/components/reportes/export-buttons'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,8 +31,10 @@ export default async function PlanificacionProduccionPage({ searchParams }: { se
   const productosRaw = sp.productos ?? ''
   const fechaCosto = sp.fecha_costo ?? new Date().toISOString().slice(0, 10)
 
+  const query = `productos=${encodeURIComponent(productosRaw)}&fecha_costo=${fechaCosto}`
+
   const res = await apiFetch<{ data: { variantes: Variante[]; productos: Record<string, number>; requerimientos: Req[]; fecha_costo: string } }>(
-    `/api/v1/reportes/planificacion-produccion?productos=${encodeURIComponent(productosRaw)}&fecha_costo=${fechaCosto}`,
+    `/api/v1/reportes/planificacion-produccion?${query}`,
     session.accessToken
   ).catch(() => null)
 
@@ -59,6 +62,7 @@ export default async function PlanificacionProduccionPage({ searchParams }: { se
           <input name="cantidad" type="number" step="any" min={0} defaultValue={1} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
         </div>
         <button type="submit" className="h-10 rounded-md bg-primary px-4 text-sm text-primary-foreground">Agregar</button>
+        {Object.keys(productos).length > 0 ? <ExportButtons path={`/api/v1/reportes/planificacion-produccion/export?${query}`} filename="planificacion-produccion" /> : null}
       </form>
 
       {Object.keys(productos).length > 0 ? (

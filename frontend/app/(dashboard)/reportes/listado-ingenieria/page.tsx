@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/session'
 import { apiFetch } from '@/lib/api'
+import { ExportButtons } from '@/components/reportes/export-buttons'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,9 +20,11 @@ export default async function ListadoIngenieriaPage({ searchParams }: { searchPa
   const ordenarTipo = sp.ordenar_tipo === '1'
   const mostrarTipos = (sp.mostrar_tipos ?? '').split(',').map(Number).filter((n) => n > 0)
 
+  const query = `id_variante=${varianteId}&cantidad=${cantidad}&tipo_salida=${tipoSalida}${conPrecios ? '&con_precios=1' : ''}${agruparTipo ? '&agrupar_tipo=1' : ''}${ordenarTipo ? '&ordenar_tipo=1' : ''}${mostrarTipos.length > 0 ? `&mostrar_tipos=${mostrarTipos.join(',')}` : ''}`
+
   const res = varianteId > 0
     ? await apiFetch<{ data: { variantes: Variante[]; variante_seleccionada: Variante | null; tipos: Tipo[]; items: Item[] | Array<{ tipo: string; items: Item[] }> } }>(
-        `/api/v1/reportes/listado-ingenieria?id_variante=${varianteId}&cantidad=${cantidad}&tipo_salida=${tipoSalida}${conPrecios ? '&con_precios=1' : ''}${agruparTipo ? '&agrupar_tipo=1' : ''}${ordenarTipo ? '&ordenar_tipo=1' : ''}${mostrarTipos.length > 0 ? `&mostrar_tipos=${mostrarTipos.join(',')}` : ''}`,
+        `/api/v1/reportes/listado-ingenieria?${query}`,
         session.accessToken
       ).catch(() => null)
     : null
@@ -67,6 +70,7 @@ export default async function ListadoIngenieriaPage({ searchParams }: { searchPa
           <input type="checkbox" name="ordenar_tipo" value="1" defaultChecked={ordenarTipo} className="h-4 w-4" /> Ordenar por tipo
         </label>
         <button type="submit" className="h-10 rounded-md bg-primary px-4 text-sm text-primary-foreground">Generar</button>
+        {varianteId > 0 ? <ExportButtons path={`/api/v1/reportes/listado-ingenieria/export?${query}`} filename="listado-ingenieria" /> : null}
       </form>
 
       {tipos.length > 0 ? (

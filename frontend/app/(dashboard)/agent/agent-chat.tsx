@@ -9,7 +9,7 @@ type Suggestion = { label: string; value?: string; intent?: string }
 type GuidedState = { intent: string; data: Record<string, unknown>; step: number } | null
 type Msg = { role: 'user' | 'agent'; content: string; suggestions?: Suggestion[]; status?: string; lookup?: string | null }
 
-export function AgentChat({ token, initialSuggestions, isOnline }: { token: string; initialSuggestions: Suggestion[]; isOnline: boolean }) {
+export function AgentChat({ token, apiUrl, initialSuggestions, isOnline }: { token: string; apiUrl: string; initialSuggestions: Suggestion[]; isOnline: boolean }) {
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: 'agent',
@@ -38,7 +38,7 @@ export function AgentChat({ token, initialSuggestions, isOnline }: { token: stri
       setMessages((m) => [...m, { role: 'user', content: text }])
     }
     try {
-      const res = await fetch('/api/v1/agent/message', {
+      const res = await fetch(`${apiUrl}/api/v1/agent/message`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,7 +82,7 @@ export function AgentChat({ token, initialSuggestions, isOnline }: { token: stri
 
   const loadLookup = async (type: string) => {
     try {
-      const res = await fetch(`/api/v1/agent/lookup/${type}`, {
+      const res = await fetch(`${apiUrl}/api/v1/agent/lookup/${type}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const body = await res.json()
@@ -106,7 +106,7 @@ export function AgentChat({ token, initialSuggestions, isOnline }: { token: stri
     if (!guided) return
     setBusy(true)
     try {
-      const res = await fetch('/api/v1/agent/confirm', {
+      const res = await fetch(`${apiUrl}/api/v1/agent/confirm`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_id: convId, intent: guided.intent, data: guided.data }),
@@ -136,7 +136,7 @@ export function AgentChat({ token, initialSuggestions, isOnline }: { token: stri
 
   const handleCancel = async () => {
     if (convId) {
-      await fetch('/api/v1/agent/cancel', {
+      await fetch(`${apiUrl}/api/v1/agent/cancel`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_id: convId }),

@@ -26,6 +26,7 @@ export default async function AgentPage() {
       </div>
       <AgentChat
         token={session.accessToken}
+        apiUrl={process.env.NEXT_PUBLIC_API_URL ?? 'https://api.mimrp.com.ar'}
         initialSuggestions={(sug?.data ?? []).map((s) => ({ label: s.label, intent: s.intent }))}
         isOnline={status?.data.isOnline ?? false}
       />

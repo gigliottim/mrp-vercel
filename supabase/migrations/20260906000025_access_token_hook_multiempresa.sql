@@ -3,6 +3,9 @@
 -- (verificado capturando el evento real con un hook de debug); el path raíz
 -- `event.user_metadata` NO existe en el evento de login. Se leen ambos paths
 -- con COALESCE por si GoTrue cambia el shape entre versiones.
+-- Blindaje: active_company_id es user-editable (PUT /auth/v1/user), así que se
+-- valida con regex antes del cast ::bigint; un valor no numérico cae al
+-- fallback (ORDER BY company_id) en vez de lanzar excepción y romper el login.
 CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -13,11 +16,15 @@ DECLARE
   v_company_id bigint;
   v_role_name text;
   v_active bigint;
+  v_raw text;
 BEGIN
-  v_active := COALESCE(
+  v_raw := COALESCE(
     NULLIF(event->'user_metadata'->>'active_company_id', ''),
     NULLIF(event->'claims'->'user_metadata'->>'active_company_id', '')
-  )::bigint;
+  );
+  IF v_raw IS NOT NULL AND v_raw ~ '^[0-9]+$' THEN
+    v_active := v_raw::bigint;
+  END IF;
 
   IF v_active IS NOT NULL THEN
     SELECT uc.company_id, r.name

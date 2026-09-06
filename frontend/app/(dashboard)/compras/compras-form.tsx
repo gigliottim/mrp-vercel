@@ -26,14 +26,14 @@ export type VarianteOpt = { id: number; codigo_variante: string }
 
 export function CompraForm({
   initial,
-  entidades,
-  variantes,
+  entidades = [],
+  variantes = [],
   onSubmit,
   onCancel,
 }: {
   initial: CompraRow | null
-  entidades: EntidadOpt[]
-  variantes: VarianteOpt[]
+  entidades?: EntidadOpt[]
+  variantes?: VarianteOpt[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

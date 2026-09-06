@@ -46,14 +46,14 @@ export type UmOpt = { id: number; unidad: string; simbolo: string }
 
 export function BomForm({
   initial,
-  variantes,
-  ums,
+  variantes = [],
+  ums = [],
   onSubmit,
   onCancel,
 }: {
   initial: BomRow | null
-  variantes: VarianteOpt[]
-  ums: UmOpt[]
+  variantes?: VarianteOpt[]
+  ums?: UmOpt[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

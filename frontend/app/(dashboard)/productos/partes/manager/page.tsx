@@ -41,7 +41,8 @@ export default async function VariantesPage({
       perPage={perPage}
       total={result?.pagination.total ?? 0}
       columns={columns}
-      FormComponent={(props) => <VarianteForm {...props} partes={partes?.data ?? []} />}
+      FormComponent={VarianteForm}
+      formExtraProps={{ partes: partes?.data ?? [] }}
       onCreate={crear}
       onUpdate={actualizar}
       onDelete={eliminar}

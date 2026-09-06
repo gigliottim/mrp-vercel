@@ -3,9 +3,10 @@ import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { PlanificacionForm, type PlanRow, type OrdenOpt, type CentroOpt } from './planificacion-form'
 import { columns } from './columns'
-import { crear, eliminar } from './actions'
+import { crear, eliminar, noop } from './actions'
 
 export const dynamic = 'force-dynamic'
+
 
 export default async function PlanificacionPage({ searchParams }: { searchParams: Promise<{ page?: string; perPage?: string }> }) {
   const session = await getSession()
@@ -30,9 +31,10 @@ export default async function PlanificacionPage({ searchParams }: { searchParams
       perPage={perPage}
       total={result?.pagination.total ?? 0}
       columns={columns}
-      FormComponent={(props) => <PlanificacionForm {...props} ordenes={ordenes?.data ?? []} centros={centros?.data ?? []} />}
+      FormComponent={PlanificacionForm}
+      formExtraProps={{ ordenes: ordenes?.data ?? [], centros: centros?.data ?? [] }}
       onCreate={crear}
-      onUpdate={async () => ({ ok: true })}
+      onUpdate={noop}
       onDelete={eliminar}
     />
   )

@@ -25,14 +25,14 @@ export type CentroOpt = { id: number; codigo: string; nombre: string }
 
 export function PlanificacionForm({
   initial,
-  ordenes,
-  centros,
+  ordenes = [],
+  centros = [],
   onSubmit,
   onCancel,
 }: {
   initial: PlanRow | null
-  ordenes: OrdenOpt[]
-  centros: CentroOpt[]
+  ordenes?: OrdenOpt[]
+  centros?: CentroOpt[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

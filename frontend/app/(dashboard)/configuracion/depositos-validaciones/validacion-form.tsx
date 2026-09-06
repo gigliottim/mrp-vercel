@@ -43,12 +43,12 @@ const schema = z
 
 export function ValidacionForm({
   initial,
-  depositos,
+  depositos = [],
   onSubmit,
   onCancel,
 }: {
   initial: ValidacionRow | null
-  depositos: Deposito[]
+  depositos?: Deposito[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

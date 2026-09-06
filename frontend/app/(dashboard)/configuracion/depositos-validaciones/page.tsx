@@ -2,7 +2,7 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { ValidacionForm, type ValidacionRow, type Deposito } from './validacion-form'
-import { makeColumns } from './columns'
+import { columns, type ValidacionRowConNombres } from './columns'
 import { crear, actualizar, eliminar } from './actions'
 import { Badge } from '@/components/ui/badge'
 
@@ -34,6 +34,14 @@ export default async function ValidacionesPage({
   const nombreDeposito = (id: number) =>
     depositos.find((d) => d.id === id)?.nombre ?? `#${id}`
 
+  // Precomputar nombres en el server: Column es client-only, así que el server
+  // no puede llamar a makeColumns(). Se enriquecen las filas con los nombres.
+  const rows: ValidacionRowConNombres[] = (result?.data ?? []).map((r) => ({
+    ...r,
+    origen_nombre: nombreDeposito(r.tipo_deposito_origen_id),
+    destino_nombre: nombreDeposito(r.tipo_deposito_destino_id),
+  }))
+
   const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
 
   return (
@@ -42,14 +50,13 @@ export default async function ValidacionesPage({
       description="Movimientos permitidos entre tipos de depósito"
       canCreate={canAdmin}
       createLabel="Nueva validación"
-      data={result?.data ?? []}
+      data={rows}
       page={page}
       perPage={perPage}
       total={result?.pagination.total ?? 0}
-      columns={makeColumns(depositos)}
-      FormComponent={(props) => (
-        <ValidacionForm {...props} depositos={depositos} />
-      )}
+      columns={columns}
+      FormComponent={ValidacionForm}
+      formExtraProps={{ depositos }}
       onCreate={crear}
       onUpdate={actualizar}
       onDelete={eliminar}

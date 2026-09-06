@@ -38,6 +38,8 @@ export type CrudPageProps<T extends Record<string, unknown>> = {
     onSubmit: (data: Record<string, unknown>) => Promise<void>
     onCancel: () => void
   }>
+  /** Props extra serializables (opciones de selects, etc.) para FormComponent */
+  formExtraProps?: Record<string, unknown>
   onCreate: (data: Record<string, unknown>) => Promise<{ ok?: boolean; error?: string }>
   onUpdate: (id: number, data: Record<string, unknown>) => Promise<{ ok?: boolean; error?: string }>
   onDelete: (id: number) => Promise<{ ok?: boolean; error?: string }>
@@ -55,6 +57,7 @@ export function CrudPage<T extends Record<string, unknown>>({
   canCreate,
   createLabel = 'Nuevo',
   FormComponent,
+  formExtraProps,
   onCreate,
   onUpdate,
   onDelete,
@@ -166,6 +169,7 @@ export function CrudPage<T extends Record<string, unknown>>({
               setDialogOpen(false)
               setEditing(null)
             }}
+            {...formExtraProps}
           />
         </DialogContent>
       </Dialog>

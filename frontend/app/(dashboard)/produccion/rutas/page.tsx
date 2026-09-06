@@ -3,9 +3,10 @@ import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { RutaForm, type RutaRow, type BomOpt, type CentroOpt } from './ruta-form'
 import { columns } from './columns'
-import { crear, eliminar } from './actions'
+import { crear, eliminar, noop } from './actions'
 
 export const dynamic = 'force-dynamic'
+
 
 export default async function RutasPage({ searchParams }: { searchParams: Promise<{ page?: string; perPage?: string }> }) {
   const session = await getSession()
@@ -30,9 +31,10 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
       perPage={perPage}
       total={result?.pagination.total ?? 0}
       columns={columns}
-      FormComponent={(props) => <RutaForm {...props} boms={boms?.data ?? []} centros={centros?.data ?? []} />}
+      FormComponent={RutaForm}
+      formExtraProps={{ boms: boms?.data ?? [], centros: centros?.data ?? [] }}
       onCreate={crear}
-      onUpdate={async () => ({ ok: true })}
+      onUpdate={noop}
       onDelete={eliminar}
     />
   )

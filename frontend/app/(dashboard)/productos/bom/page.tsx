@@ -3,9 +3,10 @@ import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { BomForm, type BomRow, type VarianteOpt, type UmOpt } from './bom-form'
 import { columns } from './columns'
-import { crear, eliminar } from './actions'
+import { crear, eliminar, noop } from './actions'
 
 export const dynamic = 'force-dynamic'
+
 
 export default async function BomPage({
   searchParams,
@@ -45,11 +46,10 @@ export default async function BomPage({
       perPage={perPage}
       total={result?.pagination.total ?? 0}
       columns={columns}
-      FormComponent={(props) => (
-        <BomForm {...props} variantes={variantes?.data ?? []} ums={ums?.data ?? []} />
-      )}
+      FormComponent={BomForm}
+      formExtraProps={{ variantes: variantes?.data ?? [], ums: ums?.data ?? [] }}
       onCreate={crear}
-      onUpdate={async () => ({ ok: true })}
+      onUpdate={noop}
       onDelete={eliminar}
     />
   )

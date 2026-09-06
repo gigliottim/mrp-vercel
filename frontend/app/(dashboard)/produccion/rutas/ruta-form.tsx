@@ -27,14 +27,14 @@ export type CentroOpt = { id: number; codigo: string; nombre: string }
 
 export function RutaForm({
   initial,
-  boms,
-  centros,
+  boms = [],
+  centros = [],
   onSubmit,
   onCancel,
 }: {
   initial: RutaRow | null
-  boms: BomOpt[]
-  centros: CentroOpt[]
+  boms?: BomOpt[]
+  centros?: CentroOpt[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

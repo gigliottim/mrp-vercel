@@ -48,12 +48,12 @@ const schema = z.object({
 
 export function VarianteForm({
   initial,
-  partes,
+  partes = [],
   onSubmit,
   onCancel,
 }: {
   initial: VarianteRow | null
-  partes: ParteOpt[]
+  partes?: ParteOpt[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

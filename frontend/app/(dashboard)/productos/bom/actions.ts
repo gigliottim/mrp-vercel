@@ -46,3 +46,8 @@ export async function eliminar(id: number): Promise<ActionResult> {
     return { error: (e as Error).message }
   }
 }
+
+/** No-op: módulo sin edición (CRUDPage exige onUpdate). */
+export async function noop(): Promise<ActionResult> {
+  return { ok: true }
+}

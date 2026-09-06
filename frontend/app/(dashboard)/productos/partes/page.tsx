@@ -66,13 +66,8 @@ export default async function PartesPage({
         perPage={perPage}
         total={result?.pagination.total ?? 0}
         columns={columns}
-        FormComponent={(props) => (
-          <ParteForm
-            {...props}
-            tipos={tipos?.data ?? []}
-            grupos={grupos?.data ?? []}
-          />
-        )}
+        FormComponent={ParteForm}
+        formExtraProps={{ tipos: tipos?.data ?? [], grupos: grupos?.data ?? [] }}
         onCreate={crear}
         onUpdate={actualizar}
         onDelete={eliminar}

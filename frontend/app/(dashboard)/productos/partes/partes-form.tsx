@@ -45,14 +45,14 @@ const schema = z.object({
 
 export function ParteForm({
   initial,
-  tipos,
-  grupos,
+  tipos = [],
+  grupos = [],
   onSubmit,
   onCancel,
 }: {
   initial: ParteRow | null
-  tipos: TipoParte[]
-  grupos: GrupoParte[]
+  tipos?: TipoParte[]
+  grupos?: GrupoParte[]
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
 }) {

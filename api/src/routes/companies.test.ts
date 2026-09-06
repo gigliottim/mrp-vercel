@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Hono } from 'hono'
-import { companies } from './companies'
+import { companies } from './companies.js'
 
 let adminToken = ''
 let supervisorToken = ''
 
-import { login } from '../test-utils'
+import { login } from '../test-utils.js'
 
 beforeAll(async () => {
   adminToken = await login('martin@unik.ar')

@@ -1,16 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Hono } from 'hono'
-import { configuracion } from './configuracion'
+import { configuracion } from './configuracion.js'
+import { login } from '../test-utils.js'
 
 let token = ''
 
 beforeAll(async () => {
-  const res = await fetch(`${process.env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { apikey: process.env.SUPABASE_ANON_KEY!, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'sabrinasmurro22@gmail.com', password: 'Temporal123!' }),
-  })
-  token = (await res.json()).access_token
+  token = await login('sabrinasmurro22@gmail.com')
 })
 
 describe('configuracion', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Hono } from 'hono'
-import { requireAuth, type AuthEnv } from './auth'
+import { requireAuth, type AuthEnv } from './auth.js'
 
 describe('requireAuth', () => {
   it('rechaza sin token', async () => {

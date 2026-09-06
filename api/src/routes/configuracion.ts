@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth, type AuthEnv } from '../middleware/auth'
-import { createUserClient } from '../lib/supabase'
+import { requireAuth, type AuthEnv } from '../middleware/auth.js'
+import { createUserClient } from '../lib/supabase.js'
 
 const generalSchema = z
   .object({

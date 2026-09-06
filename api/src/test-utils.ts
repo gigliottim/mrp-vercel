@@ -12,7 +12,7 @@ export async function login(email: string): Promise<string> {
     headers: { apikey: process.env.SUPABASE_ANON_KEY!, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password: 'Temporal123!' }),
   })
-  const body = await res.json()
+  const body = (await res.json()) as { access_token?: string }
   if (!body.access_token) {
     throw new Error(`login falló para ${email}: ${JSON.stringify(body)}`)
   }

@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth'
-import { createUserClient } from '../lib/supabase'
-import { parsePagination } from '../lib/pagination'
+import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth.js'
+import { createUserClient } from '../lib/supabase.js'
+import { parsePagination } from '../lib/pagination.js'
 
 const schema = z.object({
   tipo: z.enum(['longitud', 'superficie', 'volumen', 'masa', 'tiempo', 'temperatura', 'unidad']),

@@ -1,18 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { Hono } from 'hono'
-import { almacenes } from './almacenes'
+import { almacenes } from './almacenes.js'
 
 let token = ''
 let adminToken = ''
 
-async function login(email: string) {
-  const res = await fetch(`${process.env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { apikey: process.env.SUPABASE_ANON_KEY!, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: 'Temporal123!' }),
-  })
-  return (await res.json()).access_token
-}
+import { login } from '../test-utils.js'
 
 beforeAll(async () => {
   token = await login('sabrinasmurro22@gmail.com')

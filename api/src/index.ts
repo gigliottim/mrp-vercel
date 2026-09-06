@@ -1,13 +1,13 @@
 import { Hono } from 'hono'
-import { unidadesMedida } from './routes/unidades-medida'
-import { tiposPartes } from './routes/tipos-partes'
-import { gruposPartes } from './routes/grupos-partes'
-import { tiposDepositos } from './routes/tipos-depositos'
-import { tiposDepositosMovimientos } from './routes/tipos-depositos-movimientos'
-import { entidades } from './routes/entidades'
-import { almacenes } from './routes/almacenes'
-import { configuracion } from './routes/configuracion'
-import { companies } from './routes/companies'
+import { unidadesMedida } from './routes/unidades-medida.js'
+import { tiposPartes } from './routes/tipos-partes.js'
+import { gruposPartes } from './routes/grupos-partes.js'
+import { tiposDepositos } from './routes/tipos-depositos.js'
+import { tiposDepositosMovimientos } from './routes/tipos-depositos-movimientos.js'
+import { entidades } from './routes/entidades.js'
+import { almacenes } from './routes/almacenes.js'
+import { configuracion } from './routes/configuracion.js'
+import { companies } from './routes/companies.js'
 
 const app = new Hono()
 

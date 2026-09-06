@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth'
-import { createAdminClient, createUserClient } from '../lib/supabase'
+import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth.js'
+import { createAdminClient, createUserClient } from '../lib/supabase.js'
 
 const createSchema = z.object({
   name: z.string().min(1).max(120),
@@ -76,7 +76,7 @@ companies.post('/', requireRole('Super Administrador'), async (c) => {
       user_metadata: { name: parsed.data.admin_name },
     }),
   })
-  const authData = await authRes.json()
+  const authData = (await authRes.json()) as { id?: string; msg?: string }
   if (!authRes.ok) {
     await admin.from('companies').delete().eq('id', company.id) // rollback
     return c.json({ error: { code: 'DB_ERROR', message: authData.msg ?? 'no se pudo crear el usuario' } }, 500)

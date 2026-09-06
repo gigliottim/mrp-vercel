@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parsePagination } from './pagination'
+import { parsePagination } from './pagination.js'
 
 describe('parsePagination', () => {
   it('usa defaults', () => {

@@ -20,6 +20,7 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
     apiFetch<Paginated<CentroOpt>>('/api/v1/centros-trabajo?perPage=100', session.accessToken).catch(() => null),
   ])
   const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
+  const primerBomId = (result?.data ?? [])[0]?.bom_id ?? (boms?.data ?? [])[0]?.id ?? 0
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -27,12 +28,14 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
           <h1 className="text-2xl font-bold">Rutas de Producción</h1>
           <p className="text-sm text-muted-foreground">Secuencias de operaciones por BOM</p>
         </div>
-        <a
-          href={`/produccion/rutas/${(result?.data ?? [])[0]?.bom_id ?? ''}/editor`}
-          className="rounded-md border px-4 py-2 text-sm hover:bg-accent"
-        >
-          Editor de ruta
-        </a>
+        {primerBomId > 0 ? (
+          <a
+            href={`/produccion/rutas/${primerBomId}/editor`}
+            className="rounded-md border px-4 py-2 text-sm hover:bg-accent"
+          >
+            Editor de ruta
+          </a>
+        ) : null}
       </div>
       <CrudPage
         title=""

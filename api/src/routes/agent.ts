@@ -1,29 +1,75 @@
 import { Hono } from 'hono'
 import { requireAuth, type AuthEnv } from '../middleware/auth.js'
-import { createUserClient } from '../lib/supabase.js'
+import { createAdminClient, createUserClient } from '../lib/supabase.js'
 
 // ─── Agente AI: flujos guiados (port de AgentService + PromptBuilder) ───────
 
-// Estado de conversación en memoria (serverless: sin Valkey)
-const stateCache = new Map<string, { intent: string; data: Record<string, unknown>; step: number; expiresAt: number }>()
+type AgentState = { intent: string; data: Record<string, unknown>; step: number }
+
+// Estado de conversación: memoria como caché/fallback (serverless resilience)
+// y Postgres (agent_conversations + agent_messages) como fuente de verdad.
+const stateCache = new Map<string, { state: AgentState; expiresAt: number }>()
 const TTL_MS = 30 * 60 * 1000
 
-function getState(convId: string): { intent: string; data: Record<string, unknown>; step: number } | null {
-  const s = stateCache.get(convId)
-  if (!s) return null
-  if (Date.now() > s.expiresAt) {
-    stateCache.delete(convId)
-    return null
+async function dbSave(convId: string, companyId: number, state: AgentState, role: 'user' | 'assistant', lastMessage: string): Promise<void> {
+  // memoria primero (caché fresca + fallback si la BD falla)
+  stateCache.set(convId, { state, expiresAt: Date.now() + TTL_MS })
+  try {
+    const supabase = createAdminClient()
+    const { data: existing } = await supabase
+      .from('agent_conversations')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('metadata->>conv_key', convId)
+      .maybeSingle()
+    if (!existing) {
+      await supabase.from('agent_conversations').insert({
+        company_id: companyId, intent: state.intent, status: 'active',
+        metadata: { conv_key: convId },
+      })
+    }
+    await supabase.from('agent_messages').insert({
+      company_id: companyId, conversation_id: convId, role, content: lastMessage,
+      metadata: { step: state.step, state },
+    })
+  } catch {
+    // fallback silencioso: la sesión vive solo en memoria
   }
-  return { intent: s.intent, data: s.data, step: s.step }
 }
 
-function saveState(convId: string, intent: string, data: Record<string, unknown>, step: number): void {
-  stateCache.set(convId, { intent, data, step, expiresAt: Date.now() + TTL_MS })
+async function dbLoad(convId: string, companyId: number): Promise<AgentState | null> {
+  // 1. memoria primero (más rápido y fresco)
+  const s = stateCache.get(convId)
+  if (s && Date.now() <= s.expiresAt) return s.state
+  // 2. DB: reconstruir estado desde el último mensaje con snapshot en metadata
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('agent_messages')
+      .select('metadata')
+      .eq('company_id', companyId)
+      .eq('conversation_id', convId)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const snap = data?.metadata?.state as AgentState | undefined
+    if (snap) {
+      stateCache.set(convId, { state: snap, expiresAt: Date.now() + TTL_MS })
+      return snap
+    }
+  } catch { /* noop */ }
+  return null
 }
 
-function clearState(convId: string): void {
+async function clearState(convId: string, companyId: number): Promise<void> {
   stateCache.delete(convId)
+  try {
+    await createAdminClient()
+      .from('agent_conversations')
+      .update({ status: 'cancelled' })
+      .eq('company_id', companyId)
+      .eq('metadata->>conv_key', convId)
+  } catch { /* noop */ }
 }
 
 // ─── Definiciones de campos (port de PromptBuilder) ─────────────────────────
@@ -552,7 +598,7 @@ agent.post('/message', async (c) => {
     convId = `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   }
 
-  let state = convId ? getState(convId) : null
+  let state = await dbLoad(convId, companyId)
   let intent = state?.intent ?? intentHint ?? ''
   let data = state?.data ?? {}
   let step = state?.step ?? 0
@@ -565,7 +611,7 @@ agent.post('/message', async (c) => {
   if (step === 0 && isGuidedIntent(intent)) {
     data = { _phase: 'parte' }
     step = 1
-    saveState(convId, intent, data, step)
+    await dbSave(convId, companyId, { intent, data, step }, 'user', userInput)
     const next = nextMissingField(intent, data)
     return c.json({
       data: {
@@ -591,7 +637,7 @@ agent.post('/message', async (c) => {
         data['_current_variante'] = {}
         data['_phase'] = 'otra_variante'
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', userInput)
         const variantes = (data['variantes'] as unknown[]) ?? []
         const suggested = `${String(data['codigo'] ?? 'P').toUpperCase()}-${String(variantes.length + 2).padStart(2, '0')}`
         return c.json({
@@ -609,7 +655,7 @@ agent.post('/message', async (c) => {
       data['_phase'] = 'done'
       const result = await savePart(supabase, companyId, data)
       if (result.success) {
-        clearState(convId)
+        await clearState(convId, companyId)
         return c.json({
           data: {
             conversation_id: convId,
@@ -662,7 +708,7 @@ agent.post('/message', async (c) => {
         data['parent_part'] = code
         data['_current_component'] = {}
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
         const nxt = nextMissingField(intent, data)
         return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
       }
@@ -673,7 +719,7 @@ agent.post('/message', async (c) => {
         }
         ;(data['_current_component'] as Record<string, unknown>)['code'] = code
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
         const nxt = nextMissingField(intent, data)
         return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
       }
@@ -684,7 +730,7 @@ agent.post('/message', async (c) => {
         }
         ;(data['_current_component'] as Record<string, unknown>)['quantity'] = qty
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
         const nxt = nextMissingField(intent, data)
         return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
       }
@@ -696,7 +742,7 @@ agent.post('/message', async (c) => {
           data['components'] = components
           data['_current_component'] = {}
           step++
-          saveState(convId, intent, data, step)
+          await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
           const nxt = nextMissingField(intent, data)
           return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
         }
@@ -706,7 +752,7 @@ agent.post('/message', async (c) => {
         data['components'] = components
         data['_current_component'] = {}
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
         return c.json({
           data: {
             conversation_id: convId,
@@ -746,7 +792,7 @@ agent.post('/message', async (c) => {
       }
       data['_current_variante'] = current
       step++
-      saveState(convId, intent, data, step)
+      await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
 
       // ¿variante completa?
       const nxt = nextMissingField(intent, data)
@@ -757,7 +803,7 @@ agent.post('/message', async (c) => {
         data['_current_variante'] = {}
         data['_phase'] = 'ask_more_variante'
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
         return c.json({
           data: {
             conversation_id: convId,
@@ -779,13 +825,13 @@ agent.post('/message', async (c) => {
         if (def !== null) {
           data[field] = def
           step++
-          saveState(convId, intent, data, step)
+          await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
           const nxt = nextMissingField(intent, data)
           if (nxt === null || nxt.field === 'codigo_variante') {
             data['_phase'] = 'variante'
             data['_current_variante'] = {}
             step++
-            saveState(convId, intent, data, step)
+            await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
             const nxt2 = nextMissingField(intent, data)
             return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt2?.message ?? '', data, suggestions: nxt2?.suggestions ?? [], lookup: nxt2?.lookup ?? null, guided_state: { intent, data, step } } })
           }
@@ -812,14 +858,14 @@ agent.post('/message', async (c) => {
         data['_label_' + field] = fieldLabel
       }
       step++
-      saveState(convId, intent, data, step)
+      await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
 
       const nxt = nextMissingField(intent, data)
       if (nxt === null || nxt.field === 'codigo_variante') {
         data['_phase'] = 'variante'
         data['_current_variante'] = {}
         step++
-        saveState(convId, intent, data, step)
+        await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
         const nxt2 = nextMissingField(intent, data)
         return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt2?.message ?? '', data, suggestions: nxt2?.suggestions ?? [], lookup: nxt2?.lookup ?? null, guided_state: { intent, data, step } } })
       }
@@ -848,7 +894,7 @@ agent.post('/message', async (c) => {
         }
       }
       step++
-      saveState(convId, intent, data, step)
+      await dbSave(convId, companyId, { intent, data, step }, 'user', effectiveInput)
       const nxt = nextMissingField(intent, data)
       if (nxt === null) {
         return c.json({
@@ -931,13 +977,14 @@ agent.post('/confirm', async (c) => {
     result = { success: false, message: `Intent no soportado: ${intent}` }
   }
 
-  if (result.success) clearState(convId)
+  if (result.success) await clearState(convId, companyId)
   return c.json({ data: result })
 })
 
 agent.post('/cancel', async (c) => {
   const body = await c.req.json().catch(() => null)
   const convId = String(body?.conversation_id ?? '')
-  if (convId) clearState(convId)
+  const companyId = c.get('companyId')
+  if (convId) await clearState(convId, companyId)
   return c.json({ data: { success: true, message: 'Operación cancelada.', guided_state: null } })
 })

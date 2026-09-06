@@ -145,4 +145,23 @@ describe('agent', () => {
     const body = await res.json()
     expect(body.data.success).toBe(true)
   })
+
+  it('persiste la conversación en agent_messages', async () => {
+    const app = makeApp()
+    const convId = crypto.randomUUID()
+    const res = await app.request('/api/v1/agent/message', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversation_id: convId, message: 'crear parte' }),
+    })
+    expect(res.status).toBe(200)
+    const supabase = await import('../lib/supabase').then((m) => m.createAdminClient())
+    const { data: msgs } = await supabase.from('agent_messages').select('id, role').eq('conversation_id', convId)
+    expect(msgs!.length).toBeGreaterThanOrEqual(1)
+    const { data: conv } = await supabase.from('agent_conversations').select('id').eq('metadata->>conv_key', convId).maybeSingle()
+    expect(conv).not.toBeNull()
+    // cleanup
+    await supabase.from('agent_messages').delete().eq('conversation_id', convId)
+    await supabase.from('agent_conversations').delete().eq('metadata->>conv_key', convId)
+  })
 })

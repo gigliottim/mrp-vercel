@@ -140,42 +140,54 @@ describe('registrar_movimiento_partes (POST /movimientos-partes)', () => {
     // capturar estado previo para restaurar la BD al final (requisito: dejar la BD como estaba)
     const stockAntes = Number((await supabase.from('variantes').select('stock_actual').eq('id', varianteId).single()).data!.stock_actual)
     const factorAntes = Number((await supabase.from('partes').select('factor_conversion').eq('id', parteId).single()).data!.factor_conversion)
-    await supabase.from('partes').update({ factor_conversion: 10 }).eq('id', parteId)
-    const app = new Hono().route('/api/v1/movimientos-partes', movimientosPartes)
-    const res = await app.request('/api/v1/movimientos-partes', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        variante_id: varianteId, cantidad: 2, importe_total: 100,
-        tipo_deposito_origen_id: deps['PROVEEDOR'], tipo_deposito_destino_id: deps['ALMACEN'],
-        tipo_movimiento: 'compra_recepcion', entidad_id: entidadId,
-      }),
-    })
-    expect(res.status).toBe(201)
-    const body = await res.json()
-    expect(body.data.compra_id).toBeGreaterThan(0)
-    expect(body.data.cantidad_uso).toBe(20) // 2 x factor 10
-    // precio_unitario = (100/2)/10 = 5
-    const compra = await supabase.from('compras').select('precio_unitario').eq('id', body.data.compra_id).single()
-    expect(Number(compra.data!.precio_unitario)).toBe(5)
-    // revert: ajuste inverso + borrar compra
-    await app.request('/api/v1/movimientos-partes', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        variante_id: varianteId, cantidad: 2,
-        tipo_deposito_origen_id: deps['ALMACEN'], tipo_deposito_destino_id: deps['AJUSTE'],
-        tipo_movimiento: 'ajuste_inventario', observaciones: 'test-revert',
-      }),
-    })
-    await supabase.from('compras').delete().eq('id', body.data.compra_id)
-    // cleanup extra: trg_actualizar_stock es AFTER INSERT (borrar filas NO revierte
-    // stock_actual) → borrar filas creadas + restaurar stock y factor manualmente
-    await supabase.from('movimientos_inventario').delete().eq('id', body.data.movimiento_inventario_id)
-    await supabase.from('movimientos_inventario').delete().eq('observaciones', 'test-revert')
-    await supabase.from('movimientos_stock').delete().eq('id', body.data.movimiento_stock_id)
-    await supabase.from('movimientos_stock').delete().eq('observaciones', 'test-revert')
-    await supabase.from('variantes').update({ stock_actual: stockAntes }).eq('id', varianteId)
-    await supabase.from('partes').update({ factor_conversion: factorAntes }).eq('id', parteId)
+    // ids de filas creadas: quedan en 0 si el test falla antes de crearlas (cleanup no-op)
+    let compraId = 0
+    let movimientoInventarioId = 0
+    let movimientoStockId = 0
+    try {
+      await supabase.from('partes').update({ factor_conversion: 10 }).eq('id', parteId)
+      const app = new Hono().route('/api/v1/movimientos-partes', movimientosPartes)
+      const res = await app.request('/api/v1/movimientos-partes', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          variante_id: varianteId, cantidad: 2, importe_total: 100,
+          tipo_deposito_origen_id: deps['PROVEEDOR'], tipo_deposito_destino_id: deps['ALMACEN'],
+          tipo_movimiento: 'compra_recepcion', entidad_id: entidadId,
+        }),
+      })
+      expect(res.status).toBe(201)
+      const body = await res.json()
+      compraId = body?.data?.compra_id ?? 0
+      movimientoInventarioId = body?.data?.movimiento_inventario_id ?? 0
+      movimientoStockId = body?.data?.movimiento_stock_id ?? 0
+      expect(body.data.compra_id).toBeGreaterThan(0)
+      expect(body.data.cantidad_uso).toBe(20) // 2 x factor 10
+      // precio_unitario = (100/2)/10 = 5
+      const compra = await supabase.from('compras').select('precio_unitario').eq('id', body.data.compra_id).single()
+      expect(Number(compra.data!.precio_unitario)).toBe(5)
+      // revert: ajuste inverso (deja filas con observaciones 'test-revert')
+      await app.request('/api/v1/movimientos-partes', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          variante_id: varianteId, cantidad: 2,
+          tipo_deposito_origen_id: deps['ALMACEN'], tipo_deposito_destino_id: deps['AJUSTE'],
+          tipo_movimiento: 'ajuste_inventario', observaciones: 'test-revert',
+        }),
+      })
+    } finally {
+      // cleanup failure-safe: corre aunque cualquier asercion falle antes.
+      // trg_actualizar_stock es AFTER INSERT (borrar filas NO revierte stock_actual)
+      // -> borrar filas creadas + restaurar stock y factor manualmente.
+      // eq('id', 0) es no-op si el test fallo antes de crear las filas.
+      await supabase.from('compras').delete().eq('id', compraId)
+      await supabase.from('movimientos_inventario').delete().eq('id', movimientoInventarioId)
+      await supabase.from('movimientos_inventario').delete().eq('observaciones', 'test-revert')
+      await supabase.from('movimientos_stock').delete().eq('id', movimientoStockId)
+      await supabase.from('movimientos_stock').delete().eq('observaciones', 'test-revert')
+      await supabase.from('variantes').update({ stock_actual: stockAntes }).eq('id', varianteId)
+      await supabase.from('partes').update({ factor_conversion: factorAntes }).eq('id', parteId)
+    }
   })
 })

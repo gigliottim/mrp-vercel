@@ -11,7 +11,9 @@
   "dependencies": {
     "@supabase/postgrest-js": "^2.115.0",
     "@supabase/supabase-js": "^2.115.0",
+    "exceljs": "^4.4.0",
     "hono": "^4.13.7",
+    "pdf-lib": "^1.17.1",
     "zod": "^4.5.4"
   },
   "devDependencies": {

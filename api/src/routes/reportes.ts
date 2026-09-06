@@ -24,7 +24,7 @@ async function fetchVariantes(supabase: ReturnType<typeof createUserClient>) {
     )
     .order('id')
   if (error) throw new Error(error.message)
-  return data ?? []
+  return (data ?? []) as any[]
 }
 
 // Helper: BOM activa de una variante
@@ -56,7 +56,7 @@ async function fetchDetalles(supabase: ReturnType<typeof createUserClient>, bomI
     .eq('bom_id', bomId)
     .order('secuencia')
   if (error) throw new Error(error.message)
-  return data ?? []
+  return (data ?? []) as any[]
 }
 
 // ─── Destino de Partes ───────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ reportes.get('/destino-partes', async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
 
   const variantes = await fetchVariantes(supabase)
-  const varianteSeleccionada = variantes.find((v: { id: number }) => Number(v.id) === varianteId) ?? null
+  const varianteSeleccionada = variantes.find((v: any) => Number(v.id) === varianteId) ?? null
 
   let rama1: unknown[] = []
   let arbol: unknown[] = []
@@ -80,8 +80,8 @@ reportes.get('/destino-partes', async (c) => {
       const { data: tree } = await supabase.rpc('bom_tree', { p_variante_id: varianteId, p_max_depth: 5 })
       arbol = tree ?? []
       // Composición plana: consolidar por variante
-      const consolidado = new Map<number, Record<string, unknown>>()
-      for (const item of arbol as Array<Record<string, unknown>>) {
+      const consolidado = new Map<number, any>()
+      for (const item of arbol as Array<any>) {
         if (Number(item.nivel) === 0) continue
         const vid = Number(item.variante_id)
         const prev = consolidado.get(vid)
@@ -133,7 +133,7 @@ reportes.get('/listado-ingenieria', async (c) => {
 
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const variantes = await fetchVariantes(supabase)
-  const varianteSeleccionada = variantes.find((v: { id: number }) => Number(v.id) === varianteId) ?? null
+  const varianteSeleccionada = variantes.find((v: any) => Number(v.id) === varianteId) ?? null
 
   // Tipos de partes para filtros
   const { data: tiposData } = await supabase.from('tipos_partes').select('id, nombre, codigo').order('id')
@@ -145,7 +145,7 @@ reportes.get('/listado-ingenieria', async (c) => {
     if (bom) {
       if (tipoSalida === 'rama1') {
         const detalles = await fetchDetalles(supabase, bom.id)
-        items = detalles.map((d: Record<string, unknown>) => ({
+        items = detalles.map((d: any) => ({
           ...d,
           cantidad_ajustada: Number(d.cantidad_necesaria) * cantidad,
           tipo_parte_id: d.variantes_componente?.partes?.tipos_partes?.id ?? null,
@@ -155,8 +155,8 @@ reportes.get('/listado-ingenieria', async (c) => {
         const { data: tree } = await supabase.rpc('bom_tree', { p_variante_id: varianteId, p_max_depth: 5 })
         const arbol = tree ?? []
         if (tipoSalida === 'plana') {
-          const consolidado = new Map<number, Record<string, unknown>>()
-          for (const item of arbol as Array<Record<string, unknown>>) {
+          const consolidado = new Map<number, any>()
+          for (const item of arbol as Array<any>) {
             if (Number(item.nivel) === 0) continue
             const vid = Number(item.variante_id)
             const prev = consolidado.get(vid)
@@ -182,7 +182,7 @@ reportes.get('/listado-ingenieria', async (c) => {
           }))
         } else {
           // arbol
-          items = arbol.map((item: Record<string, unknown>) => ({
+          items = arbol.map((item: any) => ({
             ...item,
             cantidad_ajustada: Number(item.cantidad) * cantidad,
           }))
@@ -191,7 +191,7 @@ reportes.get('/listado-ingenieria', async (c) => {
 
       // Filtrar por tipos
       if (mostrarTipos.length > 0) {
-        items = items.filter((i: Record<string, unknown>) => {
+        items = items.filter((i: any) => {
           if (i.nivel === 0) return true
           return mostrarTipos.includes(Number(i.tipo_parte_id))
         })
@@ -199,15 +199,15 @@ reportes.get('/listado-ingenieria', async (c) => {
 
       // Ordenar por tipo
       if (ordenarTipo) {
-        const tipoNombre = (id: unknown) => tipos.find((t: { id: number }) => t.id === Number(id))?.nombre ?? ''
-        items.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+        const tipoNombre = (id: any) => tipos.find((t: { id: number }) => t.id === Number(id))?.nombre ?? ''
+        items.sort((a: any, b: any) =>
           tipoNombre(a.tipo_parte_id).localeCompare(tipoNombre(b.tipo_parte_id))
         )
       }
 
       // Precios (costo de última compra)
       if (conPrecios) {
-        for (const item of items as Array<Record<string, unknown>>) {
+        for (const item of items as any[]) {
           const vid = Number(item.variante_id ?? item.variante_componente_id ?? 0)
           const qty = Number(item.cantidad_ajustada ?? item.cantidad ?? item.cantidad_necesaria ?? item.cantidad_total ?? 0)
           let precio = 0
@@ -229,7 +229,7 @@ reportes.get('/listado-ingenieria', async (c) => {
       // Agrupar por tipo
       if (agruparTipo) {
         const agrupado: Record<string, unknown[]> = {}
-        for (const item of items as Array<Record<string, unknown>>) {
+        for (const item of items as any[]) {
           const tipoId = Number(item.tipo_parte_id ?? 0)
           const nombre = tipos.find((t: { id: number }) => t.id === tipoId)?.nombre ?? 'Sin Tipo'
           ;(agrupado[nombre] ??= []).push(item)
@@ -259,12 +259,12 @@ reportes.get('/planificacion-produccion', async (c) => {
   }
 
   const variantes = await fetchVariantes(supabase)
-  const requerimientos: Array<Record<string, unknown>> = []
-  const consolidado = new Map<number, Record<string, unknown>>()
+  const requerimientos: Array<any> = []
+  const consolidado = new Map<number, any>()
 
   for (const [vid, qty] of Object.entries(productos)) {
     const { data: tree } = await supabase.rpc('bom_tree', { p_variante_id: Number(vid), p_max_depth: 5 })
-    for (const item of (tree ?? []) as Array<Record<string, unknown>>) {
+    for (const item of (tree ?? []) as any[]) {
       if (Number(item.nivel) === 0) continue
       const compId = Number(item.variante_id)
       const cantidad = Number(item.cantidad) * qty
@@ -272,7 +272,7 @@ reportes.get('/planificacion-produccion', async (c) => {
       if (prev) {
         prev.programado = Number(prev.programado) + cantidad
       } else {
-        const info = variantes.find((v: { id: number }) => Number(v.id) === compId)
+        const info = variantes.find((v: any) => Number(v.id) === compId)
         consolidado.set(compId, {
           variante_id: compId,
           parte_id: info?.partes?.id ?? 0,
@@ -339,19 +339,19 @@ reportes.get('/resumen-grupos', async (c) => {
     .from('grupos_partes')
     .select('id, nombre, color, partes(id)')
     .order('nombre')
-  const grupos = (gruposData ?? []).map((g: Record<string, unknown>) => ({
+  const grupos = (gruposData ?? []).map((g: any) => ({
     id: g.id,
     nombre: g.nombre,
     color: g.color,
     cantidad_partes: (g.partes as unknown[])?.length ?? 0,
   }))
 
-  let grupoSeleccionado: Record<string, unknown> | null = null
+  let grupoSeleccionado: any | null = null
   let partesDelGrupo: unknown[] = []
   let sinGrupo: unknown[] = []
 
   if (grupoId > 0) {
-    grupoSeleccionado = grupos.find((g: { id: number }) => Number(g.id) === grupoId) ?? null
+    grupoSeleccionado = grupos.find((g: any) => Number(g.id) === grupoId) ?? null
     if (grupoSeleccionado) {
       const { data: partes } = await supabase
         .from('partes')
@@ -363,8 +363,8 @@ reportes.get('/resumen-grupos', async (c) => {
         )
         .eq('id_grupo', grupoId)
         .order('codigo')
-      const agrupado = new Map<number, Record<string, unknown>>()
-      for (const p of (partes ?? []) as Array<Record<string, unknown>>) {
+      const agrupado = new Map<number, any>()
+      for (const p of (partes ?? []) as Array<any>) {
         const pid = Number(p.id)
         const prev = agrupado.get(pid)
         if (!prev) {
@@ -377,7 +377,7 @@ reportes.get('/resumen-grupos', async (c) => {
             variantes: [],
           })
         }
-        for (const v of (p.variantes ?? []) as Array<Record<string, unknown>>) {
+        for (const v of (p.variantes ?? []) as any[]) {
           const stock = Number(v.stock_actual ?? 0)
           const punto = Number(v.punto_pedido ?? 0)
           agrupado.get(pid)!.variantes.push({
@@ -408,8 +408,8 @@ reportes.get('/resumen-grupos', async (c) => {
     )
     .is('id_grupo', null)
     .order('codigo')
-  const sinGrupoMap = new Map<number, Record<string, unknown>>()
-  for (const p of (sinGrupoData ?? []) as Array<Record<string, unknown>>) {
+  const sinGrupoMap = new Map<number, any>()
+  for (const p of (sinGrupoData ?? []) as any[]) {
     const pid = Number(p.id)
     const prev = sinGrupoMap.get(pid)
     if (!prev) {
@@ -421,7 +421,7 @@ reportes.get('/resumen-grupos', async (c) => {
         variantes: [],
       })
     }
-    for (const v of (p.variantes ?? []) as Array<Record<string, unknown>>) {
+    for (const v of (p.variantes ?? []) as any[]) {
       sinGrupoMap.get(pid)!.variantes.push({
         codigo_variante: v.codigo_variante,
         variante_detalle: v.detalle,

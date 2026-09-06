@@ -19,7 +19,7 @@ sugerencias.get('/', async (c) => {
     : null
 
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const { data: filas, error } = await supabase
+  const { data: filasRaw, error } = await supabase
     .from('bom_cabecera')
     .select(
       `id,
@@ -45,12 +45,13 @@ sugerencias.get('/', async (c) => {
   const resumen = { fabricables: 0, parciales: 0, sin_stock: 0, total: 0 }
   const variantes: Array<Record<string, unknown>> = []
 
-  for (const bom of filas ?? []) {
+  const filas = (filasRaw ?? []) as any[]
+  for (const bom of filas) {
     const padre = bom.variantes_padre
     const detalles = bom.bom_detalle ?? []
     if (!padre || detalles.length === 0) continue
 
-    const componentes = detalles.map((d: Record<string, unknown>) => {
+    const componentes = detalles.map((d: any) => {
       const comp = d.variantes_componente
       const qty = Number(d.cantidad_necesaria ?? 0)
       const stock = Number(comp?.stock_actual ?? 0)
@@ -111,7 +112,7 @@ inventario.get('/critico', async (c) => {
     : 'todos'
 
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const { data: variantes, error } = await supabase
+  const { data: variantesRaw, error } = await supabase
     .from('variantes')
     .select(
       `id, codigo_variante, detalle, stock_actual, punto_pedido, stock_seguridad,
@@ -125,8 +126,8 @@ inventario.get('/critico', async (c) => {
 
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
 
-  const items = (variantes ?? [])
-    .map((v: Record<string, unknown>) => {
+  const items = ((variantesRaw ?? []) as any[])
+    .map((v: any) => {
       const stock = Number(v.stock_actual ?? 0)
       const punto = Number(v.punto_pedido ?? 0)
       const estadoStock =
@@ -149,17 +150,17 @@ inventario.get('/critico', async (c) => {
         faltante: Math.max(0, punto - stock),
       }
     })
-    .filter((v: { estado_stock: string }) => estadoValido === 'todos' || v.estado_stock === estadoValido)
-    .sort((a: { estado_stock: string }, b: { estado_stock: string }) => {
+    .filter((v: any) => estadoValido === 'todos' || v.estado_stock === estadoValido)
+    .sort((a: any, b: any) => {
       const orden = { critico: 1, advertencia: 2, normal: 3 } as Record<string, number>
       return (orden[a.estado_stock] ?? 3) - (orden[b.estado_stock] ?? 3)
     })
 
   const stats = {
     total: items.length,
-    critico: items.filter((v: { estado_stock: string }) => v.estado_stock === 'critico').length,
-    advertencia: items.filter((v: { estado_stock: string }) => v.estado_stock === 'advertencia').length,
-    normal: items.filter((v: { estado_stock: string }) => v.estado_stock === 'normal').length,
+    critico: items.filter((v: any) => v.estado_stock === 'critico').length,
+    advertencia: items.filter((v: any) => v.estado_stock === 'advertencia').length,
+    normal: items.filter((v: any) => v.estado_stock === 'normal').length,
   }
 
   return c.json({ data: { items, stats } })

@@ -55,22 +55,24 @@ empresa.patch('/', requireRole('Super Administrador', 'Administrador'), async (c
 
 empresa.get('/usuarios', async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const { data, error } = await supabase
+  const { data: ucRaw, error } = await supabase
     .from('user_company')
     .select('user_id, role_id, roles(*)')
     .eq('company_id', c.get('companyId'))
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
 
+  const data = (ucRaw ?? []) as any[]
+
   // Enriquecer con email/nombre desde auth.users (admin client)
   const admin = createAdminClient()
-  const userIds = (data ?? []).map((r: { user_id: string }) => r.user_id)
+  const userIds = data.map((r: any) => r.user_id)
   const { data: users } = await admin
     .from('auth.users')
     .select('id, email, raw_user_meta_data')
     .in('id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
 
-  const rows = (data ?? []).map((r: { user_id: string; role_id: number; roles?: unknown }) => {
-    const u = (users ?? []).find((x: { id: string }) => x.id === r.user_id)
+  const rows = data.map((r: any) => {
+    const u = (users ?? []).find((x: any) => x.id === r.user_id)
     return {
       user_id: r.user_id,
       email: u?.email ?? '',
@@ -97,24 +99,36 @@ empresa.post('/usuarios', requireRole('Super Administrador', 'Administrador'), a
   }
   const admin = createAdminClient()
 
-  // Crear usuario en auth
-  const { data: authUser, error: eAuth } = await admin.auth.admin.createUser({
-    email: parsed.data.email,
-    password: parsed.data.password ?? 'Temporal123!',
-    email_confirm: true,
-    user_metadata: { name: parsed.data.nombre ?? '' },
+  // Crear usuario en auth (REST: admin client no expone .auth)
+  const authRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: parsed.data.email,
+      password: parsed.data.password ?? 'Temporal123!',
+      email_confirm: true,
+      user_metadata: { name: parsed.data.nombre ?? '' },
+    }),
   })
-  if (eAuth) return c.json({ error: { code: 'AUTH_ERROR', message: eAuth.message } }, 400)
+  if (!authRes.ok) {
+    const errBody = (await authRes.json().catch(() => null)) as { msg?: string } | null
+    return c.json({ error: { code: 'AUTH_ERROR', message: errBody?.msg ?? 'Error creando usuario' } }, 400)
+  }
+  const authUser = (await authRes.json()) as { id: string }
 
   // Vincular a la empresa
   const { error: eLink } = await admin.from('user_company').insert({
-    user_id: authUser.user.id,
+    user_id: authUser.id,
     company_id: c.get('companyId'),
     role_id: parsed.data.role_id,
   })
   if (eLink) return c.json({ error: { code: 'DB_ERROR', message: eLink.message } }, 500)
 
-  return c.json({ data: { user_id: authUser.user.id } }, 201)
+  return c.json({ data: { user_id: authUser.id } }, 201)
 })
 
 empresa.patch('/usuarios/:userId', requireRole('Super Administrador', 'Administrador'), async (c) => {
@@ -135,10 +149,18 @@ empresa.patch('/usuarios/:userId', requireRole('Super Administrador', 'Administr
     if (eRole) return c.json({ error: { code: 'DB_ERROR', message: eRole.message } }, 500)
   }
   if (parsed.data.password) {
-    const { error: ePass } = await admin.auth.admin.updateUserById(userId, {
-      password: parsed.data.password,
+    const passRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password: parsed.data.password }),
     })
-    if (ePass) return c.json({ error: { code: 'AUTH_ERROR', message: ePass.message } }, 400)
+    if (!passRes.ok) {
+      return c.json({ error: { code: 'AUTH_ERROR', message: 'Error actualizando password' } }, 400)
+    }
   }
   return c.json({ data: { ok: true } })
 })

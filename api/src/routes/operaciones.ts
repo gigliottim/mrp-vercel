@@ -56,12 +56,13 @@ operaciones.get('/gantt', async (c) => {
     .order('centro_trabajo_id')
   if (centroId) query = query.eq('centro_trabajo_id', Number(centroId))
 
-  const { data, error } = await query
+  const { data: ganttRaw, error } = await query
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
 
   // Agrupar por centro
   const filas = new Map<number, { centro_id: number; centro_codigo: string; centro_nombre: string; tareas: unknown[] }>()
-  for (const pr of data ?? []) {
+  const data = (ganttRaw ?? []) as any[]
+  for (const pr of data) {
     const centro = pr.centros_trabajo
     const key = Number(pr.centro_trabajo_id)
     if (!filas.has(key)) {

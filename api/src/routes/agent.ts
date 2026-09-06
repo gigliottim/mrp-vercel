@@ -574,6 +574,7 @@ agent.post('/message', async (c) => {
         message: next?.message ?? '¿Qué querés hacer?',
         data,
         suggestions: next?.suggestions ?? [],
+        lookup: next?.lookup ?? null,
         guided_state: { intent, data, step },
       },
     })
@@ -663,7 +664,7 @@ agent.post('/message', async (c) => {
         step++
         saveState(convId, intent, data, step)
         const nxt = nextMissingField(intent, data)
-        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], guided_state: { intent, data, step } } })
+        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
       }
       if (field === 'component_code') {
         const code = extractCode(effectiveInput)
@@ -674,7 +675,7 @@ agent.post('/message', async (c) => {
         step++
         saveState(convId, intent, data, step)
         const nxt = nextMissingField(intent, data)
-        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], guided_state: { intent, data, step } } })
+        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
       }
       if (field === 'component_qty') {
         const qty = extractPositiveNumber(effectiveInput)
@@ -685,7 +686,7 @@ agent.post('/message', async (c) => {
         step++
         saveState(convId, intent, data, step)
         const nxt = nextMissingField(intent, data)
-        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], guided_state: { intent, data, step } } })
+        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
       }
       if (field === 'add_more') {
         const lower = effectiveInput.toLowerCase()
@@ -697,7 +698,7 @@ agent.post('/message', async (c) => {
           step++
           saveState(convId, intent, data, step)
           const nxt = nextMissingField(intent, data)
-          return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], guided_state: { intent, data, step } } })
+          return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt?.message ?? '', data, suggestions: nxt?.suggestions ?? [], lookup: nxt?.lookup ?? null, guided_state: { intent, data, step } } })
         }
         // finalizar → preview
         const components = (data['components'] as Array<Record<string, unknown>>) ?? []
@@ -768,7 +769,7 @@ agent.post('/message', async (c) => {
           },
         })
       }
-      return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, guided_state: { intent, data, step } } })
+      return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, lookup: nxt.lookup ?? null, guided_state: { intent, data, step } } })
     }
 
     // Parte: campos de parte
@@ -786,9 +787,9 @@ agent.post('/message', async (c) => {
             step++
             saveState(convId, intent, data, step)
             const nxt2 = nextMissingField(intent, data)
-            return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt2?.message ?? '', data, suggestions: nxt2?.suggestions ?? [], guided_state: { intent, data, step } } })
+            return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt2?.message ?? '', data, suggestions: nxt2?.suggestions ?? [], lookup: nxt2?.lookup ?? null, guided_state: { intent, data, step } } })
           }
-          return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, guided_state: { intent, data, step } } })
+          return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, lookup: nxt.lookup ?? null, guided_state: { intent, data, step } } })
         }
         return c.json({ data: { conversation_id: convId, status: 'clarify', message: `Este dato es obligatorio. ${next.message}`, data, suggestions: next.suggestions, guided_state: { intent, data, step } } })
       }
@@ -820,9 +821,9 @@ agent.post('/message', async (c) => {
         step++
         saveState(convId, intent, data, step)
         const nxt2 = nextMissingField(intent, data)
-        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt2?.message ?? '', data, suggestions: nxt2?.suggestions ?? [], guided_state: { intent, data, step } } })
+        return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt2?.message ?? '', data, suggestions: nxt2?.suggestions ?? [], lookup: nxt2?.lookup ?? null, guided_state: { intent, data, step } } })
       }
-      return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, guided_state: { intent, data, step } } })
+      return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, lookup: nxt.lookup ?? null, guided_state: { intent, data, step } } })
     }
 
     // Supplier: campos genéricos
@@ -861,7 +862,7 @@ agent.post('/message', async (c) => {
           },
         })
       }
-      return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, guided_state: { intent, data, step } } })
+      return c.json({ data: { conversation_id: convId, status: 'clarify', message: nxt.message, data, suggestions: nxt.suggestions, lookup: nxt.lookup ?? null, guided_state: { intent, data, step } } })
     }
   }
 

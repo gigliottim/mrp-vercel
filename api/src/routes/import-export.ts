@@ -645,6 +645,8 @@ importExport.post('/geometria/recalcular', requireAdmin, async (c) => {
   let actualizados = 0
   let errores = 0
 
+  // Procesar en batches paralelos (evita timeout con muchas partes)
+  const updates: Array<{ id: number; update: Record<string, unknown> }> = []
   for (const p of (partes ?? []) as any[]) {
     const l = parseDecimal(p.largo_alto)
     const a = parseDecimal(p.ancho)
@@ -667,12 +669,22 @@ importExport.post('/geometria/recalcular', requireAdmin, async (c) => {
         }
       }
       if (Object.keys(update).length > 0) {
-        const { error } = await supabase.from('partes').update(update).eq('id', Number(p.id))
-        if (error) throw new Error(error.message)
-        actualizados++
+        updates.push({ id: Number(p.id), update })
       }
     } catch {
       errores++
+    }
+  }
+
+  // Ejecutar en batches de 20 en paralelo
+  for (let i = 0; i < updates.length; i += 20) {
+    const batch = updates.slice(i, i + 20)
+    const results = await Promise.allSettled(
+      batch.map((u) => supabase.from('partes').update(u.update).eq('id', u.id))
+    )
+    for (const r of results) {
+      if (r.status === 'fulfilled' && !r.value.error) actualizados++
+      else errores++
     }
   }
 

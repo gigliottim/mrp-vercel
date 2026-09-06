@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { unidadesMedida } from './routes/unidades-medida.js'
 import { tiposPartes } from './routes/tipos-partes.js'
 import { gruposPartes } from './routes/grupos-partes.js'
@@ -26,6 +27,23 @@ import { importExport } from './routes/import-export.js'
 import { agent } from './routes/agent.js'
 
 const app = new Hono()
+
+// CORS: permitir el frontend (Vercel) y el dominio principal
+app.use(
+  '*',
+  cors({
+    origin: [
+      'https://mimrp.com.ar',
+      'https://frontend-ten-phi-80.vercel.app',
+      'https://mrp-frontend.vercel.app',
+      'http://localhost:3999',
+      'http://localhost:3000',
+    ],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    maxAge: 86400,
+  })
+)
 
 app.get('/api/health', (c) => c.json({ status: 'ok', version: '0.3.0' }))
 

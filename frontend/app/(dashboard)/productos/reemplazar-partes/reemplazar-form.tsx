@@ -18,11 +18,9 @@ export type WhereUsedRow = { bom_id: number; padre_codigo: string; padre_detalle
 export function ReemplazarForm({
   variantes = [],
   whereUsed = [],
-  onBuscar,
 }: {
   variantes?: VarianteOpt[]
   whereUsed?: WhereUsedRow[]
-  onBuscar: (origenId: number) => void
 }) {
   const [origenId, setOrigenId] = useState(0)
   const [nuevaId, setNuevaId] = useState(0)
@@ -33,6 +31,14 @@ export function ReemplazarForm({
 
   const toggleBom = (id: number) => {
     setBomIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  const handleOrigenChange = (v: string | null) => {
+    const id = Number(v ?? 0)
+    setOrigenId(id)
+    if (id > 0) {
+      window.location.href = `/productos/reemplazar-partes?id_variante_origen=${id}`
+    }
   }
 
   const handleEjecutar = async () => {
@@ -59,7 +65,7 @@ export function ReemplazarForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Pieza a reemplazar (X)</Label>
-          <Select value={String(origenId)} onValueChange={(v) => { setOrigenId(Number(v)); onBuscar(Number(v)) }}>
+          <Select value={String(origenId)} onValueChange={handleOrigenChange}>
             <SelectTrigger><SelectValue placeholder="Pieza X" /></SelectTrigger>
             <SelectContent>
               {variantes.map((v) => (

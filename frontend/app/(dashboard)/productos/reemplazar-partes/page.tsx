@@ -28,10 +28,6 @@ export default async function ReemplazarPage({ searchParams }: { searchParams: P
         <ReemplazarForm
           variantes={variantes?.data ?? []}
           whereUsed={whereUsed?.data ?? []}
-          onBuscar={(id) => {
-            // navegación con query param para recargar where-used
-            window.location.href = `/productos/reemplazar-partes?id_variante_origen=${id}`
-          }}
         />
       ) : (
         <p className="text-sm text-muted-foreground">Sin permisos para reemplazar partes.</p>

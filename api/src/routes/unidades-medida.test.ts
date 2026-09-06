@@ -8,7 +8,7 @@ let createdId = 0
 import { login } from '../test-utils.js'
 
 beforeAll(async () => {
-  token = await login('sabrinasmurro22@gmail.com')
+  token = await login('usuario@mimrp.com.ar')
 })
 
 describe('unidades-medida', () => {

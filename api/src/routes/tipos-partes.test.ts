@@ -8,7 +8,7 @@ let adminToken = ''
 import { login } from '../test-utils.js'
 
 beforeAll(async () => {
-  token = await login('sabrinasmurro22@gmail.com')
+  token = await login('usuario@mimrp.com.ar')
   adminToken = await login('martin@unik.ar')
 })
 

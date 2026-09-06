@@ -23,7 +23,7 @@ describe('requireAuth', () => {
     const login = await fetch(`${process.env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: 'POST',
       headers: { apikey: process.env.SUPABASE_ANON_KEY!, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'sabrinasmurro22@gmail.com', password: 'Temporal123!' }),
+      body: JSON.stringify({ email: 'sabrinasmurro22@gmail.com', password: 'sabrina1986_' }),
     })
     const auth = await login.json()
     expect(auth.access_token).toBeTruthy()
@@ -38,6 +38,6 @@ describe('requireAuth', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.companyId).toBe(2)
-    expect(body.role).toBe('Supervisor')
+    expect(body.role).toBe('Administrador')
   })
 })

@@ -26,6 +26,7 @@ import { empresa } from './routes/empresa.js'
 import { operaciones } from './routes/operaciones.js'
 import { importExport } from './routes/import-export.js'
 import { agent } from './routes/agent.js'
+import { register } from './routes/register.js'
 
 const app = new Hono()
 
@@ -75,5 +76,8 @@ app.route('/api/v1/empresa', empresa)
 app.route('/api/v1/operaciones', operaciones)
 app.route('/api/v1/import-export', importExport)
 app.route('/api/v1/agent', agent)
+
+// Registro público de empresas (sin requireAuth: el endpoint gestiona su propio flujo)
+app.route('/api/v1/register', register)
 
 export default app

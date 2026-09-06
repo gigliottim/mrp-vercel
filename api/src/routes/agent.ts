@@ -290,7 +290,7 @@ agent.get('/suggestions', async (c) => {
 agent.get('/status', async (c) => {
   const key = process.env.AGENT_AI_API_KEY
   const endpoint = process.env.AGENT_AI_API_ENDPOINT ?? 'https://ollama.com/v1/chat/completions'
-  const model = process.env.AGENT_AI_API_MODEL ?? 'gemini-3-flash-preview'
+  const model = process.env.AGENT_AI_API_MODEL ?? 'deepseek-v4-flash:0731'
   const configValid = Boolean(key && endpoint && model)
   return c.json({ data: { isOnline: configValid, configValid, apiResponds: configValid, mode: 'api' } })
 })
@@ -871,7 +871,7 @@ agent.post('/message', async (c) => {
   if (apiKey) {
     try {
       const endpoint = process.env.AGENT_AI_API_ENDPOINT ?? 'https://ollama.com/v1/chat/completions'
-      const model = process.env.AGENT_AI_API_MODEL ?? 'gemini-3-flash-preview'
+      const model = process.env.AGENT_AI_API_MODEL ?? 'deepseek-v4-flash:0731'
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },

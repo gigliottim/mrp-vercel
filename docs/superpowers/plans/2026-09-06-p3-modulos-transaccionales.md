@@ -45,7 +45,7 @@
 - Produces: router `/api/v1/partes` con GET `/` (paginado + filtro `q` por codigo/detalle), GET `/:id`, POST `/`, PATCH `/:id`, DELETE `/:id` (rol Admin). GET `/:id/variantes` (variantes de la parte).
 - Consumes: Task 1-2 P2 (`requireAuth`, `requireRole`, `createUserClient`, `parsePagination`).
 
-- [ ] **Step 1: Escribir el router**
+- [x] **Step 1: Escribir el router**
 
 `api/src/routes/partes.ts`:
 ```ts
@@ -134,7 +134,7 @@ partes.delete('/:id', requireRole('Super Administrador', 'Administrador'), async
 })
 ```
 
-- [ ] **Step 2: Escribir tests**
+- [x] **Step 2: Escribir tests**
 
 `api/src/routes/partes.test.ts`:
 - Login como Sabrina (empresa 2, tiene 204 partes).
@@ -143,12 +143,12 @@ partes.delete('/:id', requireRole('Super Administrador', 'Administrador'), async
 - POST `/` con `{ codigo: 'TEST-' + Date.now(), id_tipo: <id real>, id_grupo: <id real>, detalle: 'test' }` (usar ids reales de `tipos_partes` y `grupos_partes` de la empresa 2) → 201, luego DELETE → 204.
 - POST con id_tipo inexistente → 500 (FK violation) — documentar que se valida en Task 2.
 
-- [ ] **Step 3: Ejecutar tests**
+- [x] **Step 3: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add api/src/routes/partes.ts api/src/routes/partes.test.ts
@@ -168,7 +168,7 @@ git commit -m "feat: add partes CRUD"
 - Produces: `validarReferencias(supabase, tabla, ids: Record<string, number>)` → `Promise<{ ok: boolean, error?: string }>` que verifica existencia de cada FK dentro de la misma empresa (RLS lo garantiza). Router `/api/v1/variantes` con CRUD + filtro por parte (`?id_parte=`) + GET `/:id/stock` (stock_actual + punto_pedido + stock_seguridad).
 - Consumes: Task 1-2 P2.
 
-- [ ] **Step 1: Escribir el helper de validación de FKs**
+- [x] **Step 1: Escribir el helper de validación de FKs**
 
 `api/src/lib/validate-fk.ts`:
 ```ts
@@ -188,7 +188,7 @@ export async function validarReferencias(
 }
 ```
 
-- [ ] **Step 2: Escribir el router de variantes**
+- [x] **Step 2: Escribir el router de variantes**
 
 `api/src/routes/variantes.ts`:
 ```ts
@@ -263,7 +263,7 @@ variantes.patch('/:id', async (c) => { /* igual patrón P2 + validar id_parte si
 variantes.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c) => { /* igual patrón P2 */ })
 ```
 
-- [ ] **Step 3: Escribir tests**
+- [x] **Step 3: Escribir tests**
 
 `api/src/routes/variantes.test.ts`:
 - GET `/` → total = 266 (empresa 2).
@@ -272,12 +272,12 @@ variantes.delete('/:id', requireRole('Super Administrador', 'Administrador'), as
 - POST con `id_parte: 999999` → 400 (FK validation).
 - GET `/:id/stock` → devuelve stock_actual.
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/src/lib/validate-fk.ts api/src/routes/variantes.ts api/src/routes/variantes.test.ts
@@ -296,7 +296,7 @@ git commit -m "feat: add variantes CRUD with FK validation"
 - Produces: router `/api/v1/bom` con GET `/` (listar cabeceras, filtro `?variante_padre_id=`), GET `/:id` (cabecera + detalle expandido), POST `/` (cabecera + array de detalles en una transacción vía RPC `crear_bom`), PATCH `/:id` (cabecera), PUT `/:id/detalle` (reemplazar detalles), DELETE `/:id` (cabecera + detalles). Función SQL `public.crear_bom(p_company_id, p_variante_padre_id, p_version, p_fecha_efectiva, p_detalles jsonb)` (security definer, transacción atómica).
 - Consumes: Task 1-2 P2, `validarReferencias` (Task 2).
 
-- [ ] **Step 1: Escribir la migración de la función `crear_bom`**
+- [x] **Step 1: Escribir la migración de la función `crear_bom`**
 
 `supabase/migrations/20260906000016_crear_bom.sql`:
 ```sql
@@ -361,7 +361,7 @@ GRANT EXECUTE ON FUNCTION public.crear_bom(bigint, integer, text, date, jsonb) T
 
 Aplicar: `supabase db push` (workdir supabase).
 
-- [ ] **Step 2: Escribir el router**
+- [x] **Step 2: Escribir el router**
 
 `api/src/routes/bom.ts`:
 ```ts
@@ -455,7 +455,7 @@ bom.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c
 })
 ```
 
-- [ ] **Step 3: Escribir tests**
+- [x] **Step 3: Escribir tests**
 
 `api/src/routes/bom.test.ts`:
 - GET `/` → total = 27 (empresa 2).
@@ -465,12 +465,12 @@ bom.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c
 - DELETE `/:id` → 204, verificar que `bom_detalle` quedó vacío para ese bom.
 - POST con variante inexistente → 500 (RAISE EXCEPTION de la función).
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/src/routes/bom.ts api/src/routes/bom.test.ts supabase/migrations/20260906000016_crear_bom.sql
@@ -489,7 +489,7 @@ git commit -m "feat: add bom CRUD with atomic create"
 - Produces: routers `/api/v1/centros-trabajo` y `/api/v1/rutas-produccion` (CRUD estándar + validación FKs).
 - Consumes: Task 1-2 P2, `validarReferencias` (Task 2).
 
-- [ ] **Step 1: Escribir los routers**
+- [x] **Step 1: Escribir los routers**
 
 `api/src/routes/centros-trabajo.ts` — schema:
 ```ts
@@ -529,14 +529,14 @@ const schema = z.object({
 ```
 GET `/` con filtro `?bom_id=`.
 
-- [ ] **Step 2: Escribir tests** (empresa 2: centros_trabajo y rutas_produccion vacías → crear+eliminar; GET con 200 y array vacío)
+- [x] **Step 2: Escribir tests** (empresa 2: centros_trabajo y rutas_produccion vacías → crear+eliminar; GET con 200 y array vacío)
 
-- [ ] **Step 3: Ejecutar tests**
+- [x] **Step 3: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add api/src/routes/centros-trabajo.ts api/src/routes/rutas-produccion.ts api/src/routes/centros-trabajo.test.ts api/src/routes/rutas-produccion.test.ts
@@ -556,7 +556,7 @@ git commit -m "feat: add centros de trabajo and rutas de produccion CRUD"
 - Produces: router `/api/v1/ordenes-produccion` con GET `/` (filtro `?estado=`), GET `/:id`, POST `/` (genera numero_orden vía RPC), PATCH `/:id` (estado + campos), POST `/:id/estado` (transición validada: borrador→planificada→liberada→en_proceso→pausada/completada→cerrada, cancelada desde cualquier estado activo), DELETE `/:id` (solo borrador). Función SQL `public.next_numero_orden(p_company_id)` con secuencia por empresa.
 - Consumes: Task 1-2 P2, `validarReferencias` (Task 2).
 
-- [ ] **Step 1: Escribir la migración de numeración**
+- [x] **Step 1: Escribir la migración de numeración**
 
 `supabase/migrations/20260906000017_next_numero_orden.sql`:
 ```sql
@@ -581,7 +581,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.next_numero_orden(bigint) TO authenticated;
 ```
 
-- [ ] **Step 2: Escribir el router**
+- [x] **Step 2: Escribir el router**
 
 `api/src/routes/ordenes-produccion.ts`:
 ```ts
@@ -701,7 +701,7 @@ ordenesProduccion.delete('/:id', requireRole('Super Administrador', 'Administrad
 })
 ```
 
-- [ ] **Step 3: Escribir tests**
+- [x] **Step 3: Escribir tests**
 
 `api/src/routes/ordenes-produccion.test.ts`:
 - POST `/` → 201 con `numero_orden` generado (`OP-YYYYMMDD-2-XXXX`).
@@ -710,12 +710,12 @@ ordenesProduccion.delete('/:id', requireRole('Super Administrador', 'Administrad
 - DELETE en estado liberada → 400.
 - DELETE en borrador → 204.
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/src/routes/ordenes-produccion.ts api/src/routes/ordenes-produccion.test.ts supabase/migrations/20260906000017_next_numero_orden.sql
@@ -735,7 +735,7 @@ git commit -m "feat: add ordenes de produccion CRUD with state machine"
 - Produces: router `/api/v1/movimientos-inventario` con GET `/` (filtros `?variante_id=`, `?tipo_movimiento=`), POST `/` (RPC `movimiento_inventario` que inserta movimiento + actualiza stock_actual de la variante en UNA transacción), GET `/:id`. Función SQL `public.movimiento_inventario(...)` (security definer).
 - Consumes: Task 1-2 P2, `validarReferencias` (Task 2).
 
-- [ ] **Step 1: Escribir la migración de la función de movimiento**
+- [x] **Step 1: Escribir la migración de la función de movimiento**
 
 `supabase/migrations/20260906000018_movimiento_inventario.sql`:
 ```sql
@@ -788,7 +788,7 @@ GRANT EXECUTE ON FUNCTION public.movimiento_inventario(bigint, integer, integer,
 
 > **Nota**: verificar en Step 2 que el trigger `actualizar_stock_trigger` (migrado en P1 desde `mrp_tunna_schema`) actualiza `variantes.stock_actual` con `NEW.cantidad * NEW.signo`. Si no lo hace para todos los tipos, corregir la función.
 
-- [ ] **Step 2: Escribir el router**
+- [x] **Step 2: Escribir el router**
 
 `api/src/routes/movimientos-inventario.ts`:
 ```ts
@@ -850,7 +850,7 @@ movimientosInventario.post('/', requireRole('Super Administrador', 'Administrado
 })
 ```
 
-- [ ] **Step 3: Escribir tests**
+- [x] **Step 3: Escribir tests**
 
 `api/src/routes/movimientos-inventario.test.ts`:
 - Tomar una variante real (empresa 2), leer su `stock_actual`.
@@ -860,12 +860,12 @@ movimientosInventario.post('/', requireRole('Super Administrador', 'Administrado
 - POST con variante inexistente → 500 (FK).
 - Limpiar movimientos creados (DELETE directo con admin para no dejar residuos — documentar).
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/src/routes/movimientos-inventario.ts api/src/routes/movimientos-inventario.test.ts supabase/migrations/20260906000018_movimiento_inventario.sql
@@ -884,7 +884,7 @@ git commit -m "feat: add movimientos de inventario with atomic stock update"
 - Produces: router `/api/v1/compras` con GET `/` (filtro `?entidad_id=`), GET `/:id`, POST `/` (crea compra + recepción: RPC `recibir_compra` que crea el movimiento de inventario `compra_recepcion` y actualiza stock), PATCH `/:id`, DELETE `/:id` (solo si no tiene recepción). Función SQL `public.recibir_compra(...)` (security definer).
 - Consumes: Task 1-2 P2, `movimiento_inventario` (Task 6).
 
-- [ ] **Step 1: Escribir la migración de la función de recepción**
+- [x] **Step 1: Escribir la migración de la función de recepción**
 
 `supabase/migrations/20260906000019_recibir_compra.sql`:
 ```sql
@@ -933,7 +933,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.recibir_compra(bigint, date, numeric, integer, text, integer, numeric, text) TO authenticated;
 ```
 
-- [ ] **Step 2: Escribir el router**
+- [x] **Step 2: Escribir el router**
 
 `api/src/routes/compras.ts`:
 ```ts
@@ -1000,7 +1000,7 @@ compras.delete('/:id', requireRole('Super Administrador', 'Administrador'), asyn
 })
 ```
 
-- [ ] **Step 3: Escribir tests**
+- [x] **Step 3: Escribir tests**
 
 `api/src/routes/compras.test.ts`:
 - POST `/` con entidad real (empresa 2 tiene 1) + variante real + cantidad 3 → 201; verificar que `stock_actual` de la variante subió 3 y que existe el movimiento `compra_recepcion`.
@@ -1008,12 +1008,12 @@ compras.delete('/:id', requireRole('Super Administrador', 'Administrador'), asyn
 - GET `/?entidad_id=` → incluye la compra.
 - Limpiar: DELETE directo con admin de `movimientos_stock`, `movimientos_inventario`, `compras` creados (documentar).
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/src/routes/compras.ts api/src/routes/compras.test.ts supabase/migrations/20260906000019_recibir_compra.sql
@@ -1032,7 +1032,7 @@ git commit -m "feat: add compras with recepcion and stock update"
 - Produces: router `/api/v1/planificacion` con GET `/` (filtros `?orden_produccion_id=`, `?centro_trabajo_id=`), POST `/` (programar recurso: valida solapamiento de periodos en el mismo centro de trabajo), PATCH `/:id`, DELETE `/:id`. Función SQL `public.verificar_solapamiento(...)` (security definer) que retorna TRUE si el periodo se solapa con otro en el mismo centro.
 - Consumes: Task 1-2 P2, `validarReferencias` (Task 2).
 
-- [ ] **Step 1: Escribir la migración de verificación de solapamiento**
+- [x] **Step 1: Escribir la migración de verificación de solapamiento**
 
 `supabase/migrations/20260906000020_verificar_solapamiento.sql`:
 ```sql
@@ -1065,7 +1065,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.verificar_solapamiento(bigint, integer, timestamp, timestamp, integer) TO authenticated;
 ```
 
-- [ ] **Step 2: Escribir el router**
+- [x] **Step 2: Escribir el router**
 
 `api/src/routes/planificacion.ts`:
 ```ts
@@ -1122,7 +1122,7 @@ planificacion.patch('/:id', async (c) => { /* igual + verificar solapamiento exc
 planificacion.delete('/:id', async (c) => { /* patrón P2 */ })
 ```
 
-- [ ] **Step 3: Escribir tests**
+- [x] **Step 3: Escribir tests**
 
 `api/src/routes/planificacion.test.ts`:
 - Crear centro de trabajo de prueba + usar orden existente (empresa 2 tiene 1).
@@ -1132,12 +1132,12 @@ planificacion.delete('/:id', async (c) => { /* patrón P2 */ })
 - DELETE de ambos → 204.
 - Limpiar centro de trabajo creado.
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w api`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/src/routes/planificacion.ts api/src/routes/planificacion.test.ts supabase/migrations/20260906000020_verificar_solapamiento.sql
@@ -1155,7 +1155,7 @@ git commit -m "feat: add planificacion de recursos with overlap validation"
 - Produces: app completa con las 8 nuevas rutas montadas; re-deploy a Vercel (`mrp-api`).
 - Consumes: Tasks 1-8.
 
-- [ ] **Step 1: Montar rutas en index.ts**
+- [x] **Step 1: Montar rutas en index.ts**
 
 Agregar imports y routes:
 ```ts
@@ -1180,12 +1180,12 @@ app.route('/api/v1/compras', compras)
 app.route('/api/v1/planificacion', planificacion)
 ```
 
-- [ ] **Step 2: Verificar build y tests**
+- [x] **Step 2: Verificar build y tests**
 
 Run: `npm run build && npm run test`
 Expected: 3/3 workspaces OK, todos los tests PASS.
 
-- [ ] **Step 3: Deploy a Vercel**
+- [x] **Step 3: Deploy a Vercel**
 
 Run: `vercel deploy --prod --cwd api --yes`
 Expected: re-deploy de `mrp-api`. Verificar:
@@ -1193,7 +1193,7 @@ Expected: re-deploy de `mrp-api`. Verificar:
 curl -s https://api-tau-eight-42.vercel.app/api/health
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add api/src/index.ts
@@ -1207,19 +1207,19 @@ git commit -m "feat: mount transactional routes and deploy to vercel"
 **Files:**
 - Modify: `docs/migracion-nextjs.md`
 
-- [ ] **Step 1: Actualizar el documento**
+- [x] **Step 1: Actualizar el documento**
 
 Agregar en Fase 2/3:
 ```
 **Estado P3 (2026-09-06):** API transaccional desplegada en Vercel (`mrp-api`). Endpoints: partes, variantes (con stock), BOM atómico, centros de trabajo, rutas de producción, órdenes de producción (máquina de estados), movimientos de inventario (stock atómico vía RPC), compras con recepción, planificación de recursos (validación de solapamiento). Pendiente: P4/P5 (frontend).
 ```
 
-- [ ] **Step 2: Verificar estado final**
+- [x] **Step 2: Verificar estado final**
 
 Run: `npm run build && npm run test`
 Expected: todo OK.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/migracion-nextjs.md

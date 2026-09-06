@@ -31,11 +31,11 @@
   - `GET /api/v1/import-export/partes/export` → CSV con todas las partes+variantes
   - `POST /api/v1/import-export/partes/import` (multipart `archivo`) → `{ data: { total_rows, ok_rows, error_rows, created_parts, updated_parts, created_variants, updated_variants, rows: [{line, status, message}], fatal_error } }`
 
-- [ ] **Step 1: Tests fallidos** (template 200 + csv, export 200 + csv, import con CSV válido creado en el test)
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar** (port RowMapper: parse decimal español, lookup maps por código; upsert parte por codigo, upsert variante por (id_parte, codigo_variante); reporte por fila)
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): partes-variantes csv import/export`
+- [x] **Step 1: Tests fallidos** (template 200 + csv, export 200 + csv, import con CSV válido creado en el test)
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar** (port RowMapper: parse decimal español, lookup maps por código; upsert parte por codigo, upsert variante por (id_parte, codigo_variante); reporte por fila)
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): partes-variantes csv import/export`
 
 ### Task 2: API — Import/Export Maestro BOM
 
@@ -49,11 +49,11 @@
   - `GET /api/v1/import-export/maestro/export` → CSV de BOMs activas
   - `POST /api/v1/import-export/maestro/import` (multipart) → `{ data: { total_rows, ok_rows, error_rows, skipped_rows, created_links, rows: [{line, status, message}], fatal_error } }`
 
-- [ ] **Step 1: Tests fallidos**
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar** (port MaestroImportExportService: varianteMap [parte][variante], unidadMap, grafo en memoria + BFS ciclo, getActiveByVariante, createHeader si falta, isDuplicate → skip)
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): maestro bom csv import/export`
+- [x] **Step 1: Tests fallidos**
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar** (port MaestroImportExportService: varianteMap [parte][variante], unidadMap, grafo en memoria + BFS ciclo, getActiveByVariante, createHeader si falta, isDuplicate → skip)
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): maestro bom csv import/export`
 
 ### Task 3: API — Recálculo de geometría + borrado seguro de variante
 
@@ -66,11 +66,11 @@
   - `POST /api/v1/import-export/geometria/recalcular` body `{ solo_dimensiones_completas?: boolean }` → `{ data: { actualizados, errores, decimal_places } }` (port PartesGeometryRecalculationService: superficie = largo_alto × ancho, volumen = largo_alto × ancho × espesor, con unidades convertidas a m²/cm³)
   - `GET /api/v1/variantes/:id/verificar-borrado` → `{ data: { puede_borrar: boolean, errores: string[] } }` (port VarianteDeletionService: compras, movimientos, es hijo BOM, es padre BOM)
 
-- [ ] **Step 1: Tests fallidos**
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar**
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): geometry recalculation and safe variant deletion check`
+- [x] **Step 1: Tests fallidos**
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar**
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): geometry recalculation and safe variant deletion check`
 
 ### Task 4: Frontend — Import Partes y Variantes
 
@@ -81,10 +81,10 @@
 - Consumes: Task 1 endpoints.
 - Produces: página con descarga de plantilla, upload CSV, reporte de resultados por fila (tabla line/status/message), resumen (creadas/actualizadas).
 
-- [ ] **Step 1: page.tsx** (server: fetch template link, render client wrapper)
-- [ ] **Step 2: import-client.tsx** (file input + fetch multipart a API + tabla reporte)
-- [ ] **Step 3: Build + verificar en dev**
-- [ ] **Step 4: Commit** `feat(frontend): partes-variantes import page`
+- [x] **Step 1: page.tsx** (server: fetch template link, render client wrapper)
+- [x] **Step 2: import-client.tsx** (file input + fetch multipart a API + tabla reporte)
+- [x] **Step 3: Build + verificar en dev**
+- [x] **Step 4: Commit** `feat(frontend): partes-variantes import page`
 
 ### Task 5: Frontend — Import/Export Maestro BOM
 
@@ -95,14 +95,14 @@
 - Consumes: Task 2 endpoints.
 - Produces: página con descarga de plantilla/export, upload CSV, reporte por fila (creados/saltados/errores).
 
-- [ ] **Step 1: page.tsx** + **Step 2: import-client.tsx**
-- [ ] **Step 3: Build + verificar**
-- [ ] **Step 4: Commit** `feat(frontend): maestro bom import/export page`
+- [x] **Step 1: page.tsx** + **Step 2: import-client.tsx**
+- [x] **Step 3: Build + verificar**
+- [x] **Step 4: Commit** `feat(frontend): maestro bom import/export page`
 
 ### Task 6: Deploy + verificación E2E
 
-- [ ] **Step 1: Tests completos** (api + frontend)
-- [ ] **Step 2: Deploy API + frontend**
-- [ ] **Step 3: E2E**: export partes → import con archivo de 2 filas nuevas → verificar creadas → limpiar; export maestro → import 1 relación → verificar → limpiar
-- [ ] **Step 4: Actualizar docs/migracion-nextjs.md + ledger**
-- [ ] **Step 5: Commit final + push**
+- [x] **Step 1: Tests completos** (api + frontend)
+- [x] **Step 2: Deploy API + frontend**
+- [x] **Step 3: E2E**: export partes → import con archivo de 2 filas nuevas → verificar creadas → limpiar; export maestro → import 1 relación → verificar → limpiar
+- [x] **Step 4: Actualizar docs/migracion-nextjs.md + ledger**
+- [x] **Step 5: Commit final + push**

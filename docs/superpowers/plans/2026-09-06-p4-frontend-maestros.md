@@ -35,7 +35,7 @@
 - Produces: `apiFetch<T>(path, options)` (server-side: recibe token; client-side: obtiene token de supabase browser y llama); `getSession()` (server: lee cookie de supabase y devuelve user + access_token + companyId + role); `useSession()` (client hook con estado).
 - Consumes: `lib/supabase/server.ts`, `lib/supabase/client.ts` (P1).
 
-- [ ] **Step 1: Escribir el API client**
+- [x] **Step 1: Escribir el API client**
 
 `frontend/lib/api.ts`:
 ```ts
@@ -82,7 +82,7 @@ export type Paginated<T> = {
 }
 ```
 
-- [ ] **Step 2: Escribir getSession (server) y useSession (client)**
+- [x] **Step 2: Escribir getSession (server) y useSession (client)**
 
 `frontend/lib/use-session.ts`:
 ```ts
@@ -141,7 +141,7 @@ export function useSession() {
 }
 ```
 
-- [ ] **Step 3: Escribir test del cliente**
+- [x] **Step 3: Escribir test del cliente**
 
 `frontend/lib/api.test.ts`:
 ```ts
@@ -176,12 +176,12 @@ describe('apiFetch', () => {
 })
 ```
 
-- [ ] **Step 4: Ejecutar tests**
+- [x] **Step 4: Ejecutar tests**
 
 Run: `npm run test -w frontend`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/lib/api.ts frontend/lib/use-session.ts frontend/lib/api.test.ts
@@ -203,11 +203,11 @@ git commit -m "feat: add api client and session hooks"
 - Produces: layout `(dashboard)` que: (1) server-side obtiene sesión (`getSession`) y redirige a `/login` si no hay; (2) consulta el menú (server component fetch a API `/api/v1/companies` para role + fetch a `/api/v1/menu` — ver Task 3) y renderiza sidebar; (3) navbar con toggle de tema + usuario + signOut.
 - Consumes: Task 1, shadcn/ui (sheet, dropdown-menu, button, tooltip).
 
-- [ ] **Step 1: Agregar ThemeProvider al layout raíz**
+- [x] **Step 1: Agregar ThemeProvider al layout raíz**
 
 `frontend/app/layout.tsx`: envolver `children` con `ThemeProvider` (next-themes, attribute="class", defaultTheme="system", enableSystem).
 
-- [ ] **Step 2: Crear el layout del dashboard**
+- [x] **Step 2: Crear el layout del dashboard**
 
 `frontend/app/(dashboard)/layout.tsx`:
 ```tsx
@@ -236,7 +236,7 @@ export default async function DashboardLayout({
 }
 ```
 
-- [ ] **Step 3: Crear el Sidebar**
+- [x] **Step 3: Crear el Sidebar**
 
 `frontend/components/dashboard/sidebar.tsx` (Client Component):
 - Prop: `session` (serializable).
@@ -244,18 +244,18 @@ export default async function DashboardLayout({
 - Render: secciones agrupadas por `section_label`, items con `icon` (Font Awesome — mapear a lucide-react o usar el CSS class `fa-solid`), ruta `route` con `next/link`, `active` según `usePathname()`.
 - Mobile: `Sheet` de shadcn con botón hamburguesa.
 
-- [ ] **Step 4: Crear el Navbar + ThemeToggle**
+- [x] **Step 4: Crear el Navbar + ThemeToggle**
 
 `frontend/components/dashboard/theme-toggle.tsx`: botón con `useTheme()` (next-themes) que alterna light/dark con icono sol/luna.
 
 `frontend/components/dashboard/navbar.tsx`: header sticky con: título de la sección actual, ThemeToggle, dropdown con email del usuario y botón "Cerrar sesión" (`signOut` de `app/actions/auth.ts`).
 
-- [ ] **Step 5: Verificar build**
+- [x] **Step 5: Verificar build**
 
 Run: `npm run build -w frontend`
 Expected: build OK.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/app/layout.tsx frontend/app/'(dashboard)' frontend/components/dashboard
@@ -277,7 +277,7 @@ git commit -m "feat: add dashboard layout with dynamic sidebar and navbar"
 - Produces: GET `/api/v1/menu` → `{ data: MenuItem[] }` donde `MenuItem = { id, code, label, route, icon, section_key, section_label, sort_order, parent_id }` filtrado por RLS (authenticated ve solo su empresa) y **filtrado por ACL**: items cuyo `menu_acl` con `subject_type='role'`, `subject_id` = role del claim, `effect='allow'`. Si no hay ACL para el item, NO se muestra (default deny).
 - Consumes: `requireAuth` (P2), tabla `menu_items` + `menu_acl`.
 
-- [ ] **Step 1: Escribir el endpoint**
+- [x] **Step 1: Escribir el endpoint**
 
 `api/src/routes/menu.ts`:
 ```ts
@@ -329,7 +329,7 @@ menu.get('/', async (c) => {
 })
 ```
 
-- [ ] **Step 2: Montar y testear**
+- [x] **Step 2: Montar y testear**
 
 Modificar `api/src/index.ts` para montar `app.route('/api/v1/menu', menu)`.
 
@@ -339,7 +339,7 @@ Modificar `api/src/index.ts` para montar `app.route('/api/v1/menu', menu)`.
 
 Run: `npm run test -w api` — Expected: PASS.
 
-- [ ] **Step 3: Escribir el cliente de menú en frontend**
+- [x] **Step 3: Escribir el cliente de menú en frontend**
 
 `frontend/lib/menu.ts`:
 ```ts
@@ -370,16 +370,16 @@ export async function fetchMenu(token: string): Promise<MenuItem[]> {
 
 `frontend/lib/menu.test.ts`: test de agrupación por secciones (función pura `groupBySection(items)`).
 
-- [ ] **Step 4: Integrar en el layout**
+- [x] **Step 4: Integrar en el layout**
 
 Modificar `app/(dashboard)/layout.tsx`: server-side `fetchMenu(session.accessToken)` y pasar `items` a `<Sidebar items={items} />`.
 
-- [ ] **Step 5: Verificar build + tests**
+- [x] **Step 5: Verificar build + tests**
 
 Run: `npm run build && npm run test`
 Expected: todo OK.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add api/src/routes/menu.ts api/src/routes/menu.test.ts api/src/index.ts frontend/lib/menu.ts frontend/lib/menu.test.ts frontend/app/'(dashboard)'/layout.tsx frontend/components/dashboard/sidebar.tsx
@@ -399,11 +399,11 @@ git commit -m "feat: add dynamic menu endpoint with ACL filtering"
 - Produces: página `/` (dashboard) con KPIs: total de partes, variantes, órdenes activas, stock crítico. Data vía API: GET `/api/v1/partes?perPage=1` (count), `/api/v1/variantes?perPage=1`, `/api/v1/ordenes-produccion?estado=en_proceso`, `/api/v1/variantes/stock-critico` (nuevo endpoint o filtro en frontend).
 - Consumes: Task 1, shadcn (card, badge).
 
-- [ ] **Step 1: Crear KpiCard**
+- [x] **Step 1: Crear KpiCard**
 
 `frontend/components/dashboard/kpi-card.tsx`: card con título, valor grande, ícono, subtítulo opcional.
 
-- [ ] **Step 2: Crear la página dashboard**
+- [x] **Step 2: Crear la página dashboard**
 
 `frontend/app/(dashboard)/page.tsx` (Server Component):
 ```tsx
@@ -435,19 +435,19 @@ export default async function DashboardPage() {
 }
 ```
 
-- [ ] **Step 3: Test KpiCard**
+- [x] **Step 3: Test KpiCard**
 
 Instalar: `npm install -D @testing-library/react @testing-library/jest-dom jsdom --legacy-peer-deps`
 Configurar vitest frontend con environment jsdom para tests de componentes (ajustar `vitest.config.ts` con `environmentMatchGlobs` o por archivo `// @vitest-environment jsdom`).
 
 `kpi-card.test.tsx`: renderiza título y valor.
 
-- [ ] **Step 4: Verificar build + tests**
+- [x] **Step 4: Verificar build + tests**
 
 Run: `npm run build && npm run test`
 Expected: OK.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/app/'(dashboard)'/page.tsx frontend/components/dashboard/kpi-card.tsx frontend/components/dashboard/kpi-card.test.tsx frontend/vitest.config.ts frontend/package.json
@@ -470,15 +470,15 @@ git commit -m "feat: add dashboard page with KPIs"
 - Produces: página `/configuracion/unidades` (rutas del menú: `catalogos.unidades` → `/configuracion/unidades`): tabla con paginación (server), dialog de alta/edición (client con react-hook-form + zod), delete con confirmación (alert-dialog) y rol Admin.
 - Consumes: Task 1 (apiFetch), Task 2 (layout), shadcn (table, dialog, form, select, alert-dialog, sonner para toasts).
 
-- [ ] **Step 1: Crear DataTable genérica**
+- [x] **Step 1: Crear DataTable genérica**
 
 `frontend/components/crud/data-table.tsx`: props `columns` (definición), `data`, `pagination`, `onPageChange`. Renderiza `<Table>` con `<TablePagination>`.
 
-- [ ] **Step 2: Crear el form de unidad**
+- [x] **Step 2: Crear el form de unidad**
 
 `unidades-form.tsx` (Client): `useForm` con zod schema (tipo, unidad, simbolo, equivalencia_base, es_base, activo). Props: `initial?: UnidadMedida | null`, `onSubmit(data)`, `onCancel`. Usa `Form`, `Input`, `Select`, `Switch` de shadcn.
 
-- [ ] **Step 3: Crear las actions (server actions para mutaciones)**
+- [x] **Step 3: Crear las actions (server actions para mutaciones)**
 
 `actions.ts`:
 ```ts
@@ -506,20 +506,20 @@ export async function actualizarUnidad(id: number, data: unknown) { /* PATCH */ 
 export async function eliminarUnidad(id: number) { /* DELETE con role check client-side */ }
 ```
 
-- [ ] **Step 4: Crear la página**
+- [x] **Step 4: Crear la página**
 
 `page.tsx` (Server Component): obtiene sesión, fetches `GET /api/v1/unidades-medida?page&perPage`, renderiza CrudPage con columns (tipo, unidad, simbolo, equivalencia, activo badge) y acciones (editar/eliminar → dialog client).
 
-- [ ] **Step 5: Test de helpers**
+- [x] **Step 5: Test de helpers**
 
 `page.test.ts`: test de la función que mapea `tipo` a label en español (longitud→Longitud, etc.) — función pura exportada.
 
-- [ ] **Step 6: Verificar build + tests + deploy**
+- [x] **Step 6: Verificar build + tests + deploy**
 
 Run: `npm run build && npm run test`
 Expected: OK.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/components/crud frontend/app/'(dashboard)'/configuracion/unidades
@@ -539,24 +539,24 @@ git commit -m "feat: add unidades de medida module"
 - Produces: 3 páginas CRUD con el mismo patrón de Task 5 (rutas del menú: `catalogos.tipos_partes` → `/configuracion/tipos-partes`, `catalogos.grupos_partes` → `/configuracion/grupos-partes`, `catalogos.tipos_depositos` → `/configuracion/tipos-depositos`).
 - Consumes: Task 5 (CrudPage/DataTable), API endpoints de P2.
 
-- [ ] **Step 1: Tipos de Partes**
+- [x] **Step 1: Tipos de Partes**
 
 Campos: codigo, nombre, descripcion, orden, activo, requiere_stock. Form con Input + Switch.
 
-- [ ] **Step 2: Grupos de Partes**
+- [x] **Step 2: Grupos de Partes**
 
 Campos: codigo, nombre, descripcion, color (Input type=color con preview), activo.
 
-- [ ] **Step 3: Tipos de Depósitos**
+- [x] **Step 3: Tipos de Depósitos**
 
 Campos: codigo, nombre, descripcion, orden, es_sistema (solo lectura si true), activo.
 
-- [ ] **Step 4: Verificar build + tests**
+- [x] **Step 4: Verificar build + tests**
 
 Run: `npm run build && npm run test`
 Expected: OK.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/app/'(dashboard)'/configuracion
@@ -576,24 +576,24 @@ git commit -m "feat: add tipos de partes, grupos and depositos modules"
 - Produces: 3 páginas CRUD (rutas: `catalogos.validaciones_depositos` → `/configuracion/depositos-validaciones`, `catalogos.entidades` → `/configuracion/entidades`, `catalogos.almacenes` → `/configuracion/almacenes`).
 - Consumes: Task 5, API endpoints de P2.
 
-- [ ] **Step 1: Validaciones de movimientos**
+- [x] **Step 1: Validaciones de movimientos**
 
 Form: selects origen/destino (cargados de `/api/v1/tipos-depositos`), activo, observaciones. Validación origen≠destino.
 
-- [ ] **Step 2: Entidades (clientes y proveedores)**
+- [x] **Step 2: Entidades (clientes y proveedores)**
 
 Form: razon_social, tipo (select PROVEEDOR/CLIENTE/AMBOS), identificacion_tributaria, contacto_email, contacto_telefono, direccion.
 
-- [ ] **Step 3: Almacenes**
+- [x] **Step 3: Almacenes**
 
 Form: codigo, nombre, es_deposito_venta, es_deposito_produccion, activo (switches).
 
-- [ ] **Step 4: Verificar build + tests**
+- [x] **Step 4: Verificar build + tests**
 
 Run: `npm run build && npm run test`
 Expected: OK.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/app/'(dashboard)'/configuracion
@@ -611,20 +611,20 @@ git commit -m "feat: add validaciones, entidades and almacenes modules"
 - Produces: página `/configuracion/general` (ruta `catalogos.configuracion`): formulario de configuracion_general (decimal_places, rounding_mode, thousand_separator, decimal_separator, date_format, time_format) + sección KV (tabla clave/valor con upsert).
 - Consumes: Task 1, API `/api/v1/configuracion` (P2).
 
-- [ ] **Step 1: Crear el form de configuración general**
+- [x] **Step 1: Crear el form de configuración general**
 
 `general-form.tsx` (Client): campos del schema de la API (P2 Task 7), guardar con PATCH.
 
-- [ ] **Step 2: Crear la sección KV**
+- [x] **Step 2: Crear la sección KV**
 
 Tabla con GET `/api/v1/configuracion/kv` + dialog para PUT `/api/v1/configuracion/kv/:clave`.
 
-- [ ] **Step 3: Verificar build + tests**
+- [x] **Step 3: Verificar build + tests**
 
 Run: `npm run build && npm run test`
 Expected: OK.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/app/'(dashboard)'/configuracion/general
@@ -642,16 +642,16 @@ git commit -m "feat: add configuracion general module"
 - Produces: deploy de `mrp-frontend` a Vercel; verificación end-to-end: login → sidebar con menú → módulos maestros → API.
 - Consumes: Tasks 1-8.
 
-- [ ] **Step 1: Configurar env en Vercel**
+- [x] **Step 1: Configurar env en Vercel**
 
 Run: `vercel env add NEXT_PUBLIC_API_URL production --cwd frontend` con `https://api.mimrp.com.ar`; `vercel env add NEXT_PUBLIC_SUPABASE_URL production` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` (reusar valores de `.env.local`).
 
-- [ ] **Step 2: Deploy**
+- [x] **Step 2: Deploy**
 
 Run: `vercel deploy --prod --cwd frontend --yes`
 Expected: URL de producción + alias `mimrp.com.ar` (cuando DNS propague).
 
-- [ ] **Step 3: Verificación E2E con browser**
+- [x] **Step 3: Verificación E2E con browser**
 
 Abrir `https://mimrp.com.ar` (o la URL de preview):
 1. Login con `martin@unik.ar` / `Temporal123!` → redirige a `/`
@@ -660,7 +660,7 @@ Abrir `https://mimrp.com.ar` (o la URL de preview):
 4. Crear unidad → aparece en la tabla
 5. Logout funciona
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/vercel.json frontend/.env.local.example
@@ -674,16 +674,16 @@ git commit -m "feat: deploy frontend to vercel"
 **Files:**
 - Modify: `docs/migracion-nextjs.md`
 
-- [ ] **Step 1: Actualizar el documento**
+- [x] **Step 1: Actualizar el documento**
 
 Marcar Fase 3 (parcial: layout + módulos maestros) y agregar estado P4.
 
-- [ ] **Step 2: Verificar estado final**
+- [x] **Step 2: Verificar estado final**
 
 Run: `npm run build && npm run test`
 Expected: OK.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/migracion-nextjs.md

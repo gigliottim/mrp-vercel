@@ -34,7 +34,7 @@
 **Interfaces:**
 - Produces: `SUPABASE_PROJECT_REF` (string, ej. `abcdefghijklmnopqrst`) usado por todas las tareas siguientes; `SUPABASE_DB_URL` (postgresql://postgres.<ref>:<password>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres).
 
-- [ ] **Step 1: Crear el proyecto con la confirmación de costo**
+- [x] **Step 1: Crear el proyecto con la confirmación de costo**
 
 Usar el MCP Supabase (herramienta `create_project`) con:
 - name: `mrp`
@@ -42,11 +42,11 @@ Usar el MCP Supabase (herramienta `create_project`) con:
 - organization_id: `vkwknhfwuqtxswllgieg`
 - confirm_cost_id: `BGoZHqqJd2JYMt+cWSDFH7qDeNkZZAwbTytJrHy7r+E=`
 
-- [ ] **Step 2: Verificar que el proyecto quedó ACTIVE_HEALTHY**
+- [x] **Step 2: Verificar que el proyecto quedó ACTIVE_HEALTHY**
 
 Usar MCP `get_project` con el id devuelto. Esperar hasta que `status == "ACTIVE_HEALTHY"` (puede tardar 2-5 min; reintentar cada 30s, máx 10 intentos).
 
-- [ ] **Step 3: Obtener URL y claves del proyecto**
+- [x] **Step 3: Obtener URL y claves del proyecto**
 
 Usar MCP `get_project_url` y `get_publishable_keys`. Guardar en `.env` del repo (NO commitear):
 ```
@@ -57,12 +57,12 @@ SUPABASE_DB_URL=postgresql://postgres.<ref>:<password>@aws-0-sa-east-1.pooler.su
 ```
 El service_role key se obtiene del dashboard (o `supabase projects api-keys --project-ref <ref>` con el CLI autenticado).
 
-- [ ] **Step 4: Verificar conectividad**
+- [x] **Step 4: Verificar conectividad**
 
 Run: `psql "$SUPABASE_DB_URL" -c "select version();"`
 Expected: devuelve PostgreSQL 17.x.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .env.example
@@ -82,7 +82,7 @@ git commit -m "chore: add supabase env template for mrp project"
 - Produces: tablas `public.companies`, `public.roles`, `public.permissions`, `public.role_has_permissions`, `public.user_company`, `public.user_has_roles`, `public.menu_items`, `public.menu_acl`, `public.audit_logs`; funciones `public.update_updated_at_column()`, `public.fn_super_admin_auto_link()`; triggers `set_timestamp_*`, `trg_super_admin_auto_link`.
 - Consumes: `SUPABASE_PROJECT_REF` (Task 1).
 
-- [ ] **Step 1: Escribir la migración del esquema auth**
+- [x] **Step 1: Escribir la migración del esquema auth**
 
 Crear `supabase/migrations/202609060001_auth_schema.sql` con el esquema adaptado del dump `mrp_auth_schema_2026-09-06_09-40-12.sql` (líneas 83-872). Cambios respecto al dump:
 - `users` NO se crea (la reemplaza `auth.users` de Supabase).
@@ -100,17 +100,17 @@ Crear `supabase/migrations/202609060001_auth_schema.sql` con el esquema adaptado
 - Índices `idx_menu_acl_company_subject`, `idx_menu_items_parent`, `idx_menu_items_section_sort` idénticos (líneas 706-724).
 - `uuid-ossp` NO se necesita (Supabase ya lo tiene).
 
-- [ ] **Step 2: Aplicar la migración**
+- [x] **Step 2: Aplicar la migración**
 
 Run: `supabase db push --project-ref <SUPABASE_PROJECT_REF>`
 Expected: migración aplicada sin errores.
 
-- [ ] **Step 3: Verificar el esquema**
+- [x] **Step 3: Verificar el esquema**
 
 Run: `psql "$SUPABASE_DB_URL" -c "\dt public"` y `psql "$SUPABASE_DB_URL" -c "\df public.fn_super_admin_auto_link"`
 Expected: 9 tablas listadas (companies, roles, permissions, role_has_permissions, user_company, user_has_roles, menu_items, menu_acl, audit_logs) y la función existe.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add supabase/migrations/202609060001_auth_schema.sql
@@ -129,7 +129,7 @@ git commit -m "feat: migrate mrp_auth schema to supabase"
 - Produces: 26 tablas de negocio (todas las del tenant excepto `schema_migrations`) con columna `company_id bigint NOT NULL` + índice `idx_<tabla>_company` + RLS habilitado con políticas `*_tenant_select/insert/update/delete`.
 - Consumes: `SUPABASE_PROJECT_REF` (Task 1).
 
-- [ ] **Step 1: Escribir la migración del esquema tenant**
+- [x] **Step 1: Escribir la migración del esquema tenant**
 
 Crear `supabase/migrations/202609060003_tenant_schema.sql` con las 26 tablas del dump `mrp_tunna_schema_2026-09-06_09-40-12.sql` (líneas 138-1203), con estos cambios en TODAS:
 - Agregar columna `company_id bigint NOT NULL` (primera columna después de `id`).
@@ -138,7 +138,7 @@ Crear `supabase/migrations/202609060003_tenant_schema.sql` con las 26 tablas del
 - Triggers del dump (líneas 1956-1991: `set_timestamp_ordenes`, `set_timestamp_partes`, `set_timestamp_variantes`, `trg_actualizar_stock`, `update_partes_updated_at`) y la función `actualizar_stock_trigger()` (línea 75) se copian tal cual.
 - Agregar índice por tabla: `CREATE INDEX idx_<tabla>_company ON public.<tabla> (company_id);`
 
-- [ ] **Step 2: Escribir la migración RLS**
+- [x] **Step 2: Escribir la migración RLS**
 
 Crear `supabase/migrations/202609060004_tenant_rls.sql` con, para cada una de las 26 tablas:
 
@@ -163,17 +163,17 @@ create policy "<tabla>_tenant_delete" on public.<tabla>
   using (company_id = (auth.jwt() ->> 'company_id')::bigint);
 ```
 
-- [ ] **Step 3: Aplicar ambas migraciones**
+- [x] **Step 3: Aplicar ambas migraciones**
 
 Run: `supabase db push --project-ref <SUPABASE_PROJECT_REF>`
 Expected: sin errores.
 
-- [ ] **Step 4: Verificar RLS**
+- [x] **Step 4: Verificar RLS**
 
 Run: `psql "$SUPABASE_DB_URL" -c "select tablename, rowsecurity from pg_tables where schemaname='public' and tablename in ('partes','ordenes_produccion','compras');"`
 Expected: `rowsecurity = t` en las 3.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add supabase/migrations/202609060003_tenant_schema.sql supabase/migrations/202609060004_tenant_rls.sql
@@ -191,7 +191,7 @@ git commit -m "feat: migrate tenant schema with company_id and RLS policies"
 - Produces: función `public.custom_access_token_hook(event jsonb) returns jsonb` que inyecta `company_id` y `role` en el JWT; grants a `supabase_auth_admin`.
 - Consumes: tablas `user_company`, `roles` (Task 2).
 
-- [ ] **Step 1: Escribir la migración del hook**
+- [x] **Step 1: Escribir la migración del hook**
 
 Crear `supabase/migrations/202609060005_access_token_hook.sql`:
 
@@ -232,16 +232,16 @@ create policy "auth admin read user_company" on public.user_company
   as permissive for select to supabase_auth_admin using (true);
 ```
 
-- [ ] **Step 2: Aplicar y verificar**
+- [x] **Step 2: Aplicar y verificar**
 
 Run: `supabase db push --project-ref <SUPABASE_PROJECT_REF>`
 Expected: sin errores. Verificar: `psql "$SUPABASE_DB_URL" -c "select proname from pg_proc where proname='custom_access_token_hook';"` devuelve la función.
 
-- [ ] **Step 3: Activar el hook en el dashboard**
+- [x] **Step 3: Activar el hook en el dashboard**
 
 El hook Custom Access Token se activa en Supabase Dashboard → Auth → Hooks → Custom Access Token → seleccionar `public.custom_access_token_hook`. (Si el CLI no lo soporta, documentar en el commit que la activación manual es el único paso humano de esta task.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add supabase/migrations/202609060005_access_token_hook.sql
@@ -260,7 +260,7 @@ git commit -m "feat: add custom access token hook for company_id and role claims
 - Produces: datos poblados en `public.companies` (1 fila), `public.roles` (4), `public.permissions` (2), `public.menu_items` (31), `public.menu_acl` (N filas), `public.user_company` (3), `public.user_has_roles` (3); 3 usuarios en `auth.users` con password temporal `Temporal123!` y `email_confirmed_at` seteado.
 - Consumes: dumps `mrp_auth_full_2026-09-06_09-40-12.sql`; `SUPABASE_SERVICE_ROLE_KEY` (Task 1).
 
-- [ ] **Step 1: Escribir la migración de datos estáticos**
+- [x] **Step 1: Escribir la migración de datos estáticos**
 
 Crear `supabase/migrations/202609060006_auth_data.sql` con INSERTs idempotentes (`ON CONFLICT DO NOTHING`) tomados del dump `mrp_auth_full_2026-09-06_09-40-12.sql`:
 - `companies`: (2, 'tunna', 'mrp_tunna', '20323837857', 'sabrinasmurro22@gmail.com', 'active', ...).
@@ -271,7 +271,7 @@ Crear `supabase/migrations/202609060006_auth_data.sql` con INSERTs idempotentes 
 - `user_company`: (user_id uuid de Sabrina, 2, 3), (uuid de Martin, 2, 1), (uuid de pepe, 2, 4) — los uuid se resuelven en Step 2 y se insertan en Step 3.
 - `user_has_roles`: (uuid de pepe, 1), (uuid de Sabrina, 3), (uuid de Martin, 1).
 
-- [ ] **Step 2: Escribir el script de migración de usuarios**
+- [x] **Step 2: Escribir el script de migración de usuarios**
 
 Crear `scripts/migrate-users.ts`:
 
@@ -308,7 +308,7 @@ async function main() {
 main().catch((e) => { console.error(e); process.exit(1) })
 ```
 
-- [ ] **Step 3: Ejecutar el script y completar los INSERTs de user_company/user_has_roles**
+- [x] **Step 3: Ejecutar el script y completar los INSERTs de user_company/user_has_roles**
 
 Run: `npx tsx scripts/migrate-users.ts`
 Expected: 3 usuarios creados con sus uuid impresos.
@@ -317,7 +317,7 @@ Luego editar `supabase/migrations/202609060006_auth_data.sql` reemplazando los p
 
 Run: `supabase db push --project-ref <SUPABASE_PROJECT_REF>`
 
-- [ ] **Step 4: Verificar datos**
+- [x] **Step 4: Verificar datos**
 
 Run:
 ```sql
@@ -328,12 +328,12 @@ psql "$SUPABASE_DB_URL" -c "select uc.user_id, uc.company_id, r.name from public
 ```
 Expected: 3 usuarios, 31 menu_items, N menu_acl, 3 filas user_company con roles (Supervisor, Super Administrador, Usuario).
 
-- [ ] **Step 5: Verificar el trigger de super admin**
+- [x] **Step 5: Verificar el trigger de super admin**
 
 Run: `psql "$SUPABASE_DB_URL" -c "insert into public.companies (name, slug) values ('test', 'test-trigger') on conflict do nothing; select uc.user_id, uc.company_id, r.name from public.user_company uc join public.roles r on r.id=uc.role_id where uc.company_id = (select id from public.companies where slug='test-trigger');"`
 Expected: Martin (martin@unik.ar) vinculado automáticamente con rol Super Administrador a la empresa nueva. Luego limpiar: `delete from public.companies where slug='test-trigger';`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/migrations/202609060006_auth_data.sql scripts/migrate-users.ts
@@ -351,7 +351,7 @@ git commit -m "feat: migrate auth data (users, roles, permissions, menu, acl)"
 - Produces: datos de las 26 tablas tenant poblados con `company_id = 2` (empresa tunna).
 - Consumes: dump `mrp_tunna_full_2026-09-06_09-40-12.sql`; `SUPABASE_SERVICE_ROLE_KEY` (Task 1).
 
-- [ ] **Step 1: Escribir el script de migración tenant**
+- [x] **Step 1: Escribir el script de migración tenant**
 
 Crear `scripts/migrate-tenant.ts`:
 
@@ -421,17 +421,17 @@ async function main() {
 main().catch((e) => { console.error(e); process.exit(1) })
 ```
 
-- [ ] **Step 2: Ejecutar el script**
+- [x] **Step 2: Ejecutar el script**
 
 Run: `npx tsx scripts/migrate-tenant.ts`
 Expected: cada tabla imprime `ok <tabla>: N rows` (0 filas en las vacías es correcto).
 
-- [ ] **Step 3: Verificar conteos contra el dump**
+- [x] **Step 3: Verificar conteos contra el dump**
 
 Run: `psql "$SUPABASE_DB_URL" -c "select 'partes' t, count(*) from public.partes union all select 'variantes', count(*) from public.variantes union all select 'ordenes_produccion', count(*) from public.ordenes_produccion union all select 'bom_cabecera', count(*) from public.bom_cabecera;"`
 Expected: conteos > 0 y consistentes con el dump (verificar con `grep -c "^[0-9]"` sobre las secciones COPY del dump).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/migrate-tenant.ts
@@ -452,7 +452,7 @@ git commit -m "feat: migrate tenant data with company_id"
 - Produces: workspaces `frontend`, `api`, `backend` instalables con `npm install` desde la raíz; scripts `dev`, `build`, `test`, `lint` por workspace; `turbo.json` con pipeline `build`, `test`, `lint`.
 - Consumes: nada (scaffolding puro).
 
-- [ ] **Step 1: Crear package.json raíz**
+- [x] **Step 1: Crear package.json raíz**
 
 ```json
 {
@@ -473,7 +473,7 @@ git commit -m "feat: migrate tenant data with company_id"
 }
 ```
 
-- [ ] **Step 2: Crear turbo.json**
+- [x] **Step 2: Crear turbo.json**
 
 ```json
 {
@@ -487,7 +487,7 @@ git commit -m "feat: migrate tenant data with company_id"
 }
 ```
 
-- [ ] **Step 3: Crear backend workspace**
+- [x] **Step 3: Crear backend workspace**
 
 `backend/package.json`:
 ```json
@@ -509,7 +509,7 @@ export const VERSION = '0.1.0'
 { "extends": "../tsconfig.base.json", "compilerOptions": { "outDir": "dist" }, "include": ["src"] }
 ```
 
-- [ ] **Step 4: Crear api workspace (Hono)**
+- [x] **Step 4: Crear api workspace (Hono)**
 
 `api/package.json`:
 ```json
@@ -546,7 +546,7 @@ export default app
 { "framework": "other" }
 ```
 
-- [ ] **Step 5: Crear frontend workspace (Next.js 16)**
+- [x] **Step 5: Crear frontend workspace (Next.js 16)**
 
 Run: `npx create-next-app@latest frontend --typescript --tailwind --app --no-src-dir --import-alias "@/*" --use-npm --yes`
 Luego fijar versiones en `frontend/package.json`: `next: 16.3.4`, `react: 19.2.8`, `react-dom: 19.2.8`, `typescript: ^5.9.3`, `tailwindcss: ^4.3.3`.
@@ -556,12 +556,12 @@ Luego fijar versiones en `frontend/package.json`: `next: 16.3.4`, `react: 19.2.8
 { "framework": "nextjs" }
 ```
 
-- [ ] **Step 6: Instalar y verificar build**
+- [x] **Step 6: Instalar y verificar build**
 
 Run: `npm install && npm run build`
 Expected: los 3 workspaces compilan sin errores.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package.json turbo.json tsconfig.base.json backend api frontend
@@ -581,17 +581,17 @@ git commit -m "chore: scaffold monorepo with nextjs, hono and backend workspaces
 - Produces: componentes shadcn/ui en `frontend/components/ui/`; `createClient()` server (lee cookies, `getAll`/`setAll`); `createBrowserClient()` client; `proxy.ts` con refresh de sesión y redirect a `/login`; página `/login` con form de email+password; server action `signInWithPassword`.
 - Consumes: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (Task 1).
 
-- [ ] **Step 1: Inicializar shadcn/ui**
+- [x] **Step 1: Inicializar shadcn/ui**
 
 Run: `npx shadcn@latest init -y -d`
 Expected: genera `frontend/components.json` (con `tailwind` vacío, Tailwind 4) y `frontend/components/ui/` con el preset base-nova.
 
-- [ ] **Step 2: Agregar componentes base**
+- [x] **Step 2: Agregar componentes base**
 
 Run: `npx shadcn@latest add button input label card table dialog select form dropdown-menu tabs badge alert-dialog sonner sheet tooltip skeleton pagination checkbox switch calendar chart`
 Expected: componentes copiados a `frontend/components/ui/`.
 
-- [ ] **Step 3: Instalar @supabase/ssr y crear clientes**
+- [x] **Step 3: Instalar @supabase/ssr y crear clientes**
 
 Run: `npm install @supabase/ssr@^0.12.6 @supabase/supabase-js@^2.115.0 next-themes`
 
@@ -632,7 +632,7 @@ export function createClient() {
 }
 ```
 
-- [ ] **Step 4: Crear proxy.ts (Next 16, reemplaza middleware.ts)**
+- [x] **Step 4: Crear proxy.ts (Next 16, reemplaza middleware.ts)**
 
 `frontend/proxy.ts`:
 ```ts
@@ -676,7 +676,7 @@ export const config = {
 }
 ```
 
-- [ ] **Step 5: Crear server action de login y página /login**
+- [x] **Step 5: Crear server action de login y página /login**
 
 `frontend/app/actions/auth.ts`:
 ```ts
@@ -701,7 +701,7 @@ export async function signInWithPassword(formData: FormData) {
 
 `frontend/app/login/page.tsx`: página con form (shadcn `Card`, `Input`, `Button`) que llama a `signInWithPassword` con `useActionState` (React 19) y muestra el error si existe.
 
-- [ ] **Step 6: Test de humo del cliente server**
+- [x] **Step 6: Test de humo del cliente server**
 
 `frontend/lib/supabase/server.test.ts`:
 ```ts
@@ -717,13 +717,13 @@ describe('supabase server client', () => {
 Run: `npm run test -w frontend`
 Expected: PASS.
 
-- [ ] **Step 7: Verificar build y login manual**
+- [x] **Step 7: Verificar build y login manual**
 
 Run: `npm run build -w frontend`
 Expected: build OK. Luego `npm run dev -w frontend`, abrir `http://localhost:3000/login`, loguear con `martin@unik.ar` / `Temporal123!`.
 Expected: redirige a `/` y el JWT contiene `company_id: 2` y `role: "Super Administrador"` (verificar decodificando el token en `https://jwt.io` o con `supabase.auth.getSession()` en una ruta de debug).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add frontend
@@ -741,7 +741,7 @@ git commit -m "feat: add shadcn/ui, supabase ssr auth and login page"
 - Consumes: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (Task 1); usuarios migrados (Task 5).
 - Produces: script que valida aislamiento entre tenants (crea 2 empresas de prueba, verifica que un usuario de una no ve datos de la otra, y limpia).
 
-- [ ] **Step 1: Escribir el script de verificación**
+- [x] **Step 1: Escribir el script de verificación**
 
 `scripts/verify-tenant.ts`:
 ```ts
@@ -784,12 +784,12 @@ async function main() {
 main().catch((e) => { console.error(e); process.exit(1) })
 ```
 
-- [ ] **Step 2: Ejecutar y verificar**
+- [x] **Step 2: Ejecutar y verificar**
 
 Run: `npx tsx scripts/verify-tenant.ts`
 Expected: imprime `JWT claims OK: 2 Supervisor`, `partes visibles: 1`, `aislamiento RLS OK`, `cleanup OK`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/verify-tenant.ts
@@ -808,19 +808,19 @@ git commit -m "test: verify multi-tenant RLS isolation and jwt claims"
 - Consumes: todo lo anterior.
 - Produces: estado documentado: proyecto Supabase ref, credenciales en `.env`, migraciones aplicadas, usuarios con password temporal, pendientes para P2.
 
-- [ ] **Step 1: Actualizar el documento de migración**
+- [x] **Step 1: Actualizar el documento de migración**
 
 En `docs/migracion-nextjs.md`, sección 3 Fase 0: marcar cada ítem con `[x]` y agregar al final:
 ```
 **Estado P1 (2026-09-06):** Proyecto Supabase `<ref>` creado (sa-east-1, USD 10/mes). Esquema auth + tenant migrados con RLS. Custom Access Token Hook activo. 3 usuarios migrados con password temporal `Temporal123!` (deben cambiarla en el primer login). Monorepo scaffolded. Login funcional. Pendiente: P2 (API Hono).
 ```
 
-- [ ] **Step 2: Verificar estado final**
+- [x] **Step 2: Verificar estado final**
 
 Run: `npm run build && npm run test`
 Expected: todos los workspaces compilan y los tests pasan.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/migracion-nextjs.md

@@ -34,11 +34,11 @@
   - `POST /api/v1/bom/copiar` body `{ variante_origen_id, variante_destino_id }` → `{ data: { copiados, eliminados, saltados: string[] } }`
   - `POST /api/v1/bom/reemplazar` body `{ variante_origen_id, variante_nueva_id, bom_ids?: number[] }` → `{ data: { reemplazados, boms_afectadas } }`
 
-- [ ] **Step 1: Escribir tests fallidos** (agregar a bom.test.ts: tree, where-used, copiar, reemplazar)
-- [ ] **Step 2: Correr tests → FAIL**
-- [ ] **Step 3: Implementar endpoints** (SQL directo vía supabase.rpc o queries con joins; validar ciclos en copiar con la misma lógica de validateAddComponent)
-- [ ] **Step 4: Correr tests → PASS**
-- [ ] **Step 5: Commit** `feat(api): bom tree, copy, replace and where-used endpoints`
+- [x] **Step 1: Escribir tests fallidos** (agregar a bom.test.ts: tree, where-used, copiar, reemplazar)
+- [x] **Step 2: Correr tests → FAIL**
+- [x] **Step 3: Implementar endpoints** (SQL directo vía supabase.rpc o queries con joins; validar ciclos en copiar con la misma lógica de validateAddComponent)
+- [x] **Step 4: Correr tests → PASS**
+- [x] **Step 5: Commit** `feat(api): bom tree, copy, replace and where-used endpoints`
 
 ### Task 2: API — Sugerencias MRP + Stock crítico
 
@@ -52,11 +52,11 @@
   - `GET /api/v1/sugerencias?filtro=fabricable|parcial|sin_stock` → `{ data: { resumen: {fabricables, parciales, sin_stock, total}, variantes: [...] } }` (lógica del SugerenciasService.php: ratio stock/cantidad por componente, status por min ratio)
   - `GET /api/v1/inventario/critico?estado=todos|critico|advertencia|normal` → `{ data: { items: [...], stats: {total, critico, advertencia, normal} } }` (lógica getStockCritico/getStockCriticoStats)
 
-- [ ] **Step 1: Tests fallidos**
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar** (queries con joins variantes/partes/tipos/grupos/ums; agrupar en JS como el servicio PHP)
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): sugerencias mrp and stock critico endpoints`
+- [x] **Step 1: Tests fallidos**
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar** (queries con joins variantes/partes/tipos/grupos/ums; agrupar en JS como el servicio PHP)
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): sugerencias mrp and stock critico endpoints`
 
 ### Task 3: API — Reportes (destino-partes, listado-ingenieria, planificacion-produccion, resumen-grupos)
 
@@ -71,11 +71,11 @@
   - `GET /api/v1/reportes/planificacion-produccion?productos=VID:QTY,VID2:QTY2&fecha_costo=YYYY-MM-DD` → `{ data: { requerimientos: [...], productos } }`
   - `GET /api/v1/reportes/resumen-grupos?id_grupo=X` → `{ data: { grupos, grupo_seleccionado, partes, sin_grupo } }`
 
-- [ ] **Step 1: Tests fallidos**
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar** (reusar getTree/getDetalles/getWhereUsed; consolidación plana en JS; cálculo de requerimientos con lote mínimo y factor conversión)
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): reportes endpoints`
+- [x] **Step 1: Tests fallidos**
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar** (reusar getTree/getDetalles/getWhereUsed; consolidación plana en JS; cálculo de requerimientos con lote mínimo y factor conversión)
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): reportes endpoints`
 
 ### Task 4: API — Empresa/Usuarios/Roles/Permisos
 
@@ -98,11 +98,11 @@
   - `POST /api/v1/empresa/permisos/bulk` body `{ menu_item_ids, perms }`
   - `POST/PATCH/DELETE /api/v1/empresa/permisos[/:id]`
 
-- [ ] **Step 1: Tests fallidos**
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar** (tablas: companies, user_company, roles, menu_acl; admin client para auth.users)
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): empresa usuarios roles permisos endpoints`
+- [x] **Step 1: Tests fallidos**
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar** (tablas: companies, user_company, roles, menu_acl; admin client para auth.users)
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): empresa usuarios roles permisos endpoints`
 
 ### Task 5: API — Gantt + Dashboard operaciones
 
@@ -116,11 +116,11 @@
   - `GET /api/v1/planificacion/gantt?centro_id=X&fecha_inicio=...&fecha_fin=...` → `{ data: { filas: [{ centro, tareas: [{ orden, inicio, fin, estado }] }] } }`
   - `GET /api/v1/operaciones` → `{ data: { metricas: {centros_activos, rutas_configuradas, ordenes_activas, capacidad_utilizada}, ordenes_recientes: [] } }`
 
-- [ ] **Step 1: Tests fallidos**
-- [ ] **Step 2: FAIL**
-- [ ] **Step 3: Implementar**
-- [ ] **Step 4: PASS**
-- [ ] **Step 5: Commit** `feat(api): gantt and operaciones dashboard endpoints`
+- [x] **Step 1: Tests fallidos**
+- [x] **Step 2: FAIL**
+- [x] **Step 3: Implementar**
+- [x] **Step 4: PASS**
+- [x] **Step 5: Commit** `feat(api): gantt and operaciones dashboard endpoints`
 
 ### Task 6: Frontend — Maestro, Copiar Componentes, Reemplazar Partes
 
@@ -133,11 +133,11 @@
 - Consumes: Task 1 endpoints.
 - Produces: 3 páginas funcionales.
 
-- [ ] **Step 1: Maestro** — selector de variante + árbol BOM (tabla con indentación por nivel) + form agregar componente (variante, cantidad, unidad) + editar/eliminar filas
-- [ ] **Step 2: Copiar Componentes** — 2 selects (origen/destino) + botón ejecutar + resultado (copiados/eliminados/saltados)
-- [ ] **Step 3: Reemplazar Partes** — 2 selects + preview de where-used (checkboxes por BOM) + ejecutar + resultado
-- [ ] **Step 4: Build + verificar 3 rutas en dev**
-- [ ] **Step 5: Commit** `feat(frontend): maestro, copiar and reemplazar pages`
+- [x] **Step 1: Maestro** — selector de variante + árbol BOM (tabla con indentación por nivel) + form agregar componente (variante, cantidad, unidad) + editar/eliminar filas
+- [x] **Step 2: Copiar Componentes** — 2 selects (origen/destino) + botón ejecutar + resultado (copiados/eliminados/saltados)
+- [x] **Step 3: Reemplazar Partes** — 2 selects + preview de where-used (checkboxes por BOM) + ejecutar + resultado
+- [x] **Step 4: Build + verificar 3 rutas en dev**
+- [x] **Step 5: Commit** `feat(frontend): maestro, copiar and reemplazar pages`
 
 ### Task 7: Frontend — Sugerencias MRP + Stock crítico + Órdenes planificadas
 
@@ -150,11 +150,11 @@
 - Consumes: Task 2 endpoints.
 - Produces: 3 páginas.
 
-- [ ] **Step 1: Sugerencias** — filtros (todos/fabricable/parcial/sin_stock) + resumen cards + tabla expandible con componentes y cobertura %
-- [ ] **Step 2: Stock crítico** — filtro estado + stats cards + tabla con badges de estado
-- [ ] **Step 3: Órdenes planificadas** — tabla de órdenes con estado planificada (reusa /ordenes-produccion?estado=planificada)
-- [ ] **Step 4: Build + verificar**
-- [ ] **Step 5: Commit** `feat(frontend): sugerencias, stock critico and ordenes planificadas`
+- [x] **Step 1: Sugerencias** — filtros (todos/fabricable/parcial/sin_stock) + resumen cards + tabla expandible con componentes y cobertura %
+- [x] **Step 2: Stock crítico** — filtro estado + stats cards + tabla con badges de estado
+- [x] **Step 3: Órdenes planificadas** — tabla de órdenes con estado planificada (reusa /ordenes-produccion?estado=planificada)
+- [x] **Step 4: Build + verificar**
+- [x] **Step 5: Commit** `feat(frontend): sugerencias, stock critico and ordenes planificadas`
 
 ### Task 8: Frontend — Reportes (4 páginas)
 
@@ -168,12 +168,12 @@
 - Consumes: Task 3 endpoints.
 - Produces: 4 páginas de reporte (tablas + filtros).
 
-- [ ] **Step 1: destino-partes** — selector variante + 3 vistas (rama1/plana/árbol) + donde se utiliza
-- [ ] **Step 2: listado-ingenieria** — selector + cantidad + tipo salida + filtros tipo + tabla
-- [ ] **Step 3: planificacion-produccion** — agregar productos (variante+cantidad) + tabla requerimientos (programado/stock/faltante/a comprar)
-- [ ] **Step 4: resumen-grupos** — selector grupo + tabla partes/variantes con stock
-- [ ] **Step 5: Build + verificar**
-- [ ] **Step 6: Commit** `feat(frontend): reportes pages`
+- [x] **Step 1: destino-partes** — selector variante + 3 vistas (rama1/plana/árbol) + donde se utiliza
+- [x] **Step 2: listado-ingenieria** — selector + cantidad + tipo salida + filtros tipo + tabla
+- [x] **Step 3: planificacion-produccion** — agregar productos (variante+cantidad) + tabla requerimientos (programado/stock/faltante/a comprar)
+- [x] **Step 4: resumen-grupos** — selector grupo + tabla partes/variantes con stock
+- [x] **Step 5: Build + verificar**
+- [x] **Step 6: Commit** `feat(frontend): reportes pages`
 
 ### Task 9: Frontend — Empresa/Usuarios/Roles/Permisos + Gantt + Dashboard operaciones
 
@@ -187,19 +187,19 @@
 - Consumes: Tasks 4-5 endpoints.
 - Produces: 7 páginas.
 
-- [ ] **Step 1: Empresa** — form edición datos company
-- [ ] **Step 2: Usuarios** — CRUD con rol
-- [ ] **Step 3: Roles** — CRUD
-- [ ] **Step 4: Permisos** — árbol de menú con checkboxes por rol (bulk)
-- [ ] **Step 5: Gantt** — barras por centro (CSS grid, sin librería)
-- [ ] **Step 6: Dashboard operaciones** — metricas cards + órdenes recientes
-- [ ] **Step 7: Build + verificar**
-- [ ] **Step 8: Commit** `feat(frontend): empresa usuarios roles permisos gantt dashboards`
+- [x] **Step 1: Empresa** — form edición datos company
+- [x] **Step 2: Usuarios** — CRUD con rol
+- [x] **Step 3: Roles** — CRUD
+- [x] **Step 4: Permisos** — árbol de menú con checkboxes por rol (bulk)
+- [x] **Step 5: Gantt** — barras por centro (CSS grid, sin librería)
+- [x] **Step 6: Dashboard operaciones** — metricas cards + órdenes recientes
+- [x] **Step 7: Build + verificar**
+- [x] **Step 8: Commit** `feat(frontend): empresa usuarios roles permisos gantt dashboards`
 
 ### Task 10: Deploy + verificación E2E completa
 
-- [ ] **Step 1: Tests completos** (api + frontend)
-- [ ] **Step 2: Deploy API + frontend a Vercel**
-- [ ] **Step 3: Verificar las 33 rutas del menú en producción** (login martin@unik.ar, recorrer todas)
-- [ ] **Step 4: Actualizar docs/migracion-nextjs.md + ledger P6**
-- [ ] **Step 5: Commit final + push**
+- [x] **Step 1: Tests completos** (api + frontend)
+- [x] **Step 2: Deploy API + frontend a Vercel**
+- [x] **Step 3: Verificar las 33 rutas del menú en producción** (login martin@unik.ar, recorrer todas)
+- [x] **Step 4: Actualizar docs/migracion-nextjs.md + ledger P6**
+- [x] **Step 5: Commit final + push**

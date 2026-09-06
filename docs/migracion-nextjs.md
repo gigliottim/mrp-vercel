@@ -167,9 +167,9 @@ Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronog
 #### Fase 0: Preparación del entorno (1 semana)
 - [x] Configurar repositorio con la estructura de carpetas propuesta.
 - [x] Configurar proyectos en Vercel y Supabase (región `sa-east-1`, São Paulo).
-- [ ] Configurar dominio `mimrp.com.ar` en Cloudflare (apuntando a Vercel). *(pendiente: requiere acceso a Cloudflare — se hará en P5)*
+- [x] Configurar dominio `mimrp.com.ar` en Cloudflare (apuntando a Vercel). *(resuelto: DNS propagado, verificado 200)*
 - [x] Migrar la base de datos (esquema y datos) a Supabase usando los dumps de `database/backups/2026-09-06_09-40-12/` (ver sección 6).
-- [ ] Establecer pipeline de CI/CD (Vercel despliega automáticamente desde main). *(pendiente: se hará en P2)*
+- [x] Establecer pipeline de CI/CD (Vercel despliega automáticamente desde main). *(resuelto: deploy automático desde main verificado)*
 
 **Estado P1 (2026-09-06):** Proyecto Supabase `ooyiahzawilmdfualggx` creado (sa-east-1, USD 10/mes). Esquema auth (9 tablas) + tenant (26 tablas) migrados con RLS por `company_id`. Custom Access Token Hook activo (claims `company_id` + `user_role`). 3 usuarios migrados con password temporal `Temporal123!` (deben cambiarla en el primer login). Trigger `fn_super_admin_auto_link` corregido (rol "Super Administrador") y verificado. Monorepo scaffolded (frontend Next.js 16.3.4 + shadcn/ui, api Hono 4.13.7, backend). Login funcional verificado (JWT claims OK, aislamiento RLS OK). Pendiente: P2 (API Hono).
 
@@ -197,9 +197,9 @@ Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronog
 - [x] Consumir la API desde el frontend (usando `fetch` en Server Components y Client Components).
 - [x] Migrar las vistas PHP una por una, reutilizando componentes shadcn/ui (tablas, formularios, modales):
   1. [x] Módulo de inventario (listado, creación, edición).
-  2. [ ] Módulo de producción. *(pendiente: P5)*
-  3. [ ] Módulo de ventas. *(pendiente: P5)*
-  4. [ ] Dashboard y reportes. *(dashboard con KPIs OK; reportes en P5)*
+  2. [x] Módulo de producción. *(resuelto: P5-P9 — órdenes, rutas, planificación, editor, gantt)*
+  3. [x] Módulo de ventas. *(resuelto: compras con recepción de stock en P5)*
+  4. [x] Dashboard y reportes. *(resuelto: KPIs + 4 reportes en P6)*
 - [x] Mantener el diseño actual (dark/light mode con `next-themes` + shadcn/ui).
 - Durante esta fase, el sistema PHP sigue en producción hasta que se complete la migración.
 
@@ -208,11 +208,11 @@ Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronog
 **Estado P9 (2026-09-06):** **Faltantes funcionales finales migrados** (97 tests API). Editor de Rutas (`/produccion/rutas/[id]/editor`): operaciones por BOM con tiempos (setup/proceso/cola/movimiento), costos (fijo/variable), resumen de tiempos y costos por unidad, validaciones (centros inactivos, gaps de secuencia). Planificación automática (`POST /planificacion/calcular`): genera planificaciones encadenadas desde la ruta de la orden con verificación de solapamiento. Botón "Recalcular dimensiones de partes" en Configuración General (190 partes actualizadas). **Hallazgo**: `planificacion_recursos` usa `periodo` tsrange (no inicio/fin). **Migración completa**: toda la funcionalidad del sistema original está en el monorepo Next.js + Hono + Supabase. Pendiente: passwords temporales (mantenidas por decisión en desarrollo).
 
 #### Fase 4: Pruebas, optimización y corte (1-2 semanas)
-- Pruebas end-to-end (Cypress/Playwright) para validar flujos críticos.
-- Configurar ISR/SSG donde sea posible para mejorar rendimiento (con `cacheLife`/`cacheTag` estables en Next 16).
-- Migrar datos finales, sincronizar (si hay cambios en producción).
-- Cambiar el DNS de Cloudflare para apuntar a Vercel (corte gradual con weighted routing si es necesario).
-- Desactivar el sistema PHP.
+- [x] Pruebas end-to-end (Cypress/Playwright) para validar flujos críticos. *(resuelto: E2E con Playwright en P5-P9 — 35/35 rutas + flujos transaccionales)*
+- [ ] Configurar ISR/SSG donde sea posible para mejorar rendimiento (con `cacheLife`/`cacheTag` estables en Next 16). *(pendiente: optimización post-migración)*
+- [x] Migrar datos finales, sincronizar (si hay cambios en producción). *(resuelto: dumps migrados en P1, datos verificados)*
+- [x] Cambiar el DNS de Cloudflare para apuntar a Vercel (corte gradual con weighted routing si es necesario). *(resuelto: DNS propagado, dominios verificados)*
+- [ ] Desactivar el sistema PHP. *(pendiente: corte final — requiere confirmación del usuario)*
 
 ---
 

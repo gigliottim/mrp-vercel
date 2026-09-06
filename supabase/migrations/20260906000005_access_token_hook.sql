@@ -34,6 +34,7 @@ revoke execute on function public.custom_access_token_hook from authenticated, a
 
 grant all on table public.user_company to supabase_auth_admin;
 revoke all on table public.user_company from authenticated, anon, public;
+grant select on table public.roles to supabase_auth_admin;
 
 create policy "auth admin read user_company" on public.user_company
   as permissive for select to supabase_auth_admin using (true);

@@ -47,7 +47,7 @@ app.use(
   })
 )
 
-app.get('/api/health', (c) => c.json({ status: 'ok', version: '0.3.0' }))
+app.get('/api/health', (c) => c.json({ status: 'ok', version: '0.4.0' }))
 
 app.route('/api/v1/unidades-medida', unidadesMedida)
 app.route('/api/v1/tipos-partes', tiposPartes)

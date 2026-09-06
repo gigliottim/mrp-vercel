@@ -207,6 +207,15 @@ Para minimizar riesgos y permitir entregas incrementales, seguiremos este cronog
 
 **Estado P9 (2026-09-06):** **Faltantes funcionales finales migrados** (97 tests API). Editor de Rutas (`/produccion/rutas/[id]/editor`): operaciones por BOM con tiempos (setup/proceso/cola/movimiento), costos (fijo/variable), resumen de tiempos y costos por unidad, validaciones (centros inactivos, gaps de secuencia). Planificación automática (`POST /planificacion/calcular`): genera planificaciones encadenadas desde la ruta de la orden con verificación de solapamiento. Botón "Recalcular dimensiones de partes" en Configuración General (190 partes actualizadas). **Hallazgo**: `planificacion_recursos` usa `periodo` tsrange (no inicio/fin). **Migración completa**: toda la funcionalidad del sistema original está en el monorepo Next.js + Hono + Supabase. Pendiente: passwords temporales (mantenidas por decisión en desarrollo).
 
+**Estado P10-P15 (2026-09-06):** **Paridad funcional con PHP completada** (23 commits, todas las fases deployadas y smoke-tested en producción — `api.mimrp.com.ar` / `mimrp.com.ar`):
+- **Validación de movimientos**: RPC `registrar_movimiento_partes` con matriz de depósitos (origen/destino), stock negativo controlado, conversión compra→uso, compras satélite y fecha con TZ (commits `ec381a5..e337cd5` + smoke).
+- **Export XLSX/PDF**: exportación de listado-ingenieria y planificacion-produccion en XLSX (`exceljs`) y PDF (`pdf-lib`) (commits `8b8b1a6..ec0349c`).
+- **Multi-empresa**: hook JWT con `active_company_id` (regex guard) + `switchCompany` + selector de empresa en navbar (commits `4ed685c..1870601`).
+- **Persistencia del agente**: conversaciones en `agent_conversations`/`agent_messages` (fallback en memoria) + log en `agent_ai_logs` (commits `d444e80..28ce5c5`).
+- **Landing/registro self-service**: endpoint público `POST /api/v1/register` (`seed_company` + rate limit), landing pública `/`, panel en `/panel` y wizard `/registro` (commits `9b64aa3..c70cc9d`).
+- **Cambio de contraseña forzado**: `must_change_password` para usuarios creados con password temporal (commit `0753ced`).
+- API actualizada a v0.4.0. Pendiente de Fase 4: optimización ISR/SSG y desactivación del sistema PHP (requiere confirmación del usuario).
+
 #### Fase 4: Pruebas, optimización y corte (1-2 semanas)
 - [x] Pruebas end-to-end (Cypress/Playwright) para validar flujos críticos. *(resuelto: E2E con Playwright en P5-P9 — 35/35 rutas + flujos transaccionales)*
 - [ ] Configurar ISR/SSG donde sea posible para mejorar rendimiento (con `cacheLife`/`cacheTag` estables en Next 16). *(pendiente: optimización post-migración)*

@@ -21,21 +21,34 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
   ])
   const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
   return (
-    <CrudPage
-      title="Rutas de Producción"
-      description="Secuencias de operaciones por BOM"
-      canCreate={canAdmin}
-      createLabel="Nueva ruta"
-      data={result?.data ?? []}
-      page={page}
-      perPage={perPage}
-      total={result?.pagination.total ?? 0}
-      columns={columns}
-      FormComponent={RutaForm}
-      formExtraProps={{ boms: boms?.data ?? [], centros: centros?.data ?? [] }}
-      onCreate={crear}
-      onUpdate={noop}
-      onDelete={eliminar}
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Rutas de Producción</h1>
+          <p className="text-sm text-muted-foreground">Secuencias de operaciones por BOM</p>
+        </div>
+        <a
+          href={`/produccion/rutas/${(result?.data ?? [])[0]?.bom_id ?? ''}/editor`}
+          className="rounded-md border px-4 py-2 text-sm hover:bg-accent"
+        >
+          Editor de ruta
+        </a>
+      </div>
+      <CrudPage
+        title=""
+        canCreate={canAdmin}
+        createLabel="Nueva ruta"
+        data={result?.data ?? []}
+        page={page}
+        perPage={perPage}
+        total={result?.pagination.total ?? 0}
+        columns={columns}
+        FormComponent={RutaForm}
+        formExtraProps={{ boms: boms?.data ?? [], centros: centros?.data ?? [] }}
+        onCreate={crear}
+        onUpdate={noop}
+        onDelete={eliminar}
+      />
+    </div>
   )
 }

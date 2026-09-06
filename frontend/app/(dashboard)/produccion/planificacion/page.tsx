@@ -4,6 +4,7 @@ import { CrudPage } from '@/components/crud/crud-page'
 import { PlanificacionForm, type PlanRow, type OrdenOpt, type CentroOpt } from './planificacion-form'
 import { columns } from './columns'
 import { crear, eliminar, noop } from './actions'
+import { CalcularAutomatico } from './calcular-automatico'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,21 +22,26 @@ export default async function PlanificacionPage({ searchParams }: { searchParams
   ])
   const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
   return (
-    <CrudPage
-      title="Planificación de Recursos"
-      description="Programación de órdenes en centros de trabajo (sin solapamientos)"
-      canCreate={canAdmin}
-      createLabel="Programar recurso"
-      data={result?.data ?? []}
-      page={page}
-      perPage={perPage}
-      total={result?.pagination.total ?? 0}
-      columns={columns}
-      FormComponent={PlanificacionForm}
-      formExtraProps={{ ordenes: ordenes?.data ?? [], centros: centros?.data ?? [] }}
-      onCreate={crear}
-      onUpdate={noop}
-      onDelete={eliminar}
-    />
+    <div className="space-y-6">
+      {canAdmin ? (
+        <CalcularAutomatico token={session.accessToken} ordenes={ordenes?.data ?? []} />
+      ) : null}
+      <CrudPage
+        title="Planificación de Recursos"
+        description="Programación de órdenes en centros de trabajo (sin solapamientos)"
+        canCreate={canAdmin}
+        createLabel="Programar recurso"
+        data={result?.data ?? []}
+        page={page}
+        perPage={perPage}
+        total={result?.pagination.total ?? 0}
+        columns={columns}
+        FormComponent={PlanificacionForm}
+        formExtraProps={{ ordenes: ordenes?.data ?? [], centros: centros?.data ?? [] }}
+        onCreate={crear}
+        onUpdate={noop}
+        onDelete={eliminar}
+      />
+    </div>
   )
 }

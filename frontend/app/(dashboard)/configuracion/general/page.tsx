@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { RecalcularGeometria } from './recalcular-geometria'
 
 export const dynamic = 'force-dynamic'
 
@@ -78,6 +79,15 @@ export default async function ConfiguracionGeneralPage() {
               ) : null}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mantenimiento</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RecalcularGeometria token={session.accessToken} />
         </CardContent>
       </Card>
     </div>

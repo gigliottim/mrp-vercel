@@ -915,6 +915,8 @@ agent.post('/message', async (c) => {
   // general_query: respuesta offline (sin API key) o vía Ollama
   const apiKey = process.env.AGENT_AI_API_KEY
   if (apiKey) {
+    const t0 = Date.now()
+    let aiOk = false
     try {
       const endpoint = process.env.AGENT_AI_API_ENDPOINT ?? 'https://ollama.com/v1/chat/completions'
       const model = process.env.AGENT_AI_API_MODEL ?? 'deepseek-v4-flash:0731'
@@ -931,12 +933,21 @@ agent.post('/message', async (c) => {
           max_tokens: 800,
         }),
       })
+      aiOk = res.ok
       if (res.ok) {
         const data = await res.json()
         const content = data?.choices?.[0]?.message?.content ?? ''
         const jsonMatch = content.match(/\{.*\}/s)
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
+        let parsed: { status?: string; message?: string; data?: unknown; suggestions?: string[] } | null = null
+        if (jsonMatch) parsed = JSON.parse(jsonMatch[0])
+        // fire-and-forget: nunca bloquea la respuesta
+        void createAdminClient().from('agent_ai_logs').insert({
+          company_id: companyId, conversation_id: convId,
+          model_used: model, provider: 'ollama',
+          response_time_ms: Date.now() - t0,
+          validation_result: parsed ? 'valid' : 'invalid',
+        }).then(() => {}, () => {})
+        if (parsed) {
           return c.json({ data: { conversation_id: convId, status: parsed.status ?? 'response', message: parsed.message ?? content, data: parsed.data ?? null, suggestions: parsed.suggestions ?? [], guided_state: null } })
         }
         return c.json({ data: { conversation_id: convId, status: 'response', message: content, data: null, suggestions: [], guided_state: null } })
@@ -944,6 +955,13 @@ agent.post('/message', async (c) => {
     } catch {
       // fallback offline
     }
+    // log de la llamada fallida (fire-and-forget)
+    void createAdminClient().from('agent_ai_logs').insert({
+      company_id: companyId, conversation_id: convId,
+      model_used: process.env.AGENT_AI_API_MODEL ?? 'deepseek-v4-flash:0731',
+      provider: 'ollama', response_time_ms: Date.now() - t0,
+      validation_result: 'invalid',
+    }).then(() => {}, () => {})
   }
 
   return c.json({

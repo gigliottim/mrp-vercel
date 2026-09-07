@@ -11,22 +11,6 @@ const schema = z.object({
   password: z.string().min(8).max(72),
 })
 
-// Rate limit simple por IP (serverless: por instancia)
-const intentos = new Map<string, { count: number; resetAt: number }>()
-const LIMIT = 3
-const WINDOW_MS = 60_000
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now()
-  const e = intentos.get(ip)
-  if (!e || now > e.resetAt) {
-    intentos.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    return false
-  }
-  e.count++
-  return e.count > LIMIT
-}
-
 function slugify(nombre: string): string {
   return nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) || 'empresa'
@@ -61,15 +45,31 @@ async function adminDeleteUser(userId: string): Promise<void> {
   })
 }
 
+// Unique violation de Postgres vía PostgREST (slug duplicado de companies)
+function isUniqueViolation(e: { code?: string; message?: string } | null): boolean {
+  if (!e) return false
+  return e.code === '23505' || /companies_slug_key|duplicate key/i.test(e.message ?? '')
+}
+
 export const register = new Hono()
 register.post('/', async (c) => {
   const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  if (rateLimited(ip)) return c.json({ error: { code: 'RATE_LIMIT', message: 'Demasiados intentos, probá en un minuto' } }, 429)
+  // Rate limit persistente en BD (serverless: la memoria por instancia no es
+  // fiable). check_register_rate hace el upsert atómico (ventana 1 min, máx 3)
+  // y es solo ejecutable por service_role (server-side).
+  const admin = createAdminClient()
+  const { data: permitido, error: eRate } = await admin.rpc('check_register_rate', { p_ip: ip })
+  if (eRate) {
+    // Fail-open: no bloquear registros por un fallo del contador (logueable)
+    console.error('[register] rate limit check falló:', eRate.message)
+  } else if (permitido === false) {
+    return c.json({ error: { code: 'RATE_LIMIT', message: 'Demasiados intentos, probá en un minuto' } }, 429)
+  }
+
   const body = await c.req.json().catch(() => null)
   const parsed = schema.safeParse(body)
   if (!parsed.success) return c.json({ error: { code: 'VALIDATION', message: parsed.error.issues[0]?.message ?? 'datos inválidos' } }, 400)
   const d = parsed.data
-  const admin = createAdminClient()
 
   // 1. Crear usuario admin en Supabase Auth (fetch directo: PostgrestClient no expone auth)
   const user = await adminCreateUser({
@@ -115,6 +115,12 @@ register.post('/', async (c) => {
       await admin.from('user_company').delete().eq('user_id', userId)
     }
     await adminDeleteUser(userId)
+
+    // Slug duplicado (o cualquier unique violation): error esperado del usuario,
+    // no un fallo del servidor → 400 con mensaje accionable
+    if (isUniqueViolation(e as { code?: string; message?: string } | null)) {
+      return c.json({ error: { code: 'VALIDATION', message: 'Ya existe una empresa con un nombre similar, probá con otro nombre' } }, 400)
+    }
     return c.json({ error: { code: 'DB_ERROR', message: 'No se pudo crear la empresa' } }, 500)
   }
 })

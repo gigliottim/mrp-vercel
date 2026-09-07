@@ -37,6 +37,12 @@ async function adminDeleteUser(userId: string): Promise<void> {
 
 describe('register (público)', () => {
   it('crea empresa + admin + seed', async () => {
+    // Rate limit persistente en BD (3/min por IP): el test no manda
+    // x-forwarded-for, así que todas las corridas comparten la fila 'unknown'.
+    // Se resetea ANTES del POST para que re-corridas en <1 min no 429een.
+    const admin = await import('../lib/supabase.js').then((m) => m.createAdminClient())
+    await admin.from('register_rate_limit').delete().eq('ip', 'unknown')
+
     const app = new Hono().route('/api/v1/register', register)
     const email = `admin-test-${Date.now()}@mimrp.com.ar`
     const res = await app.request('/api/v1/register', {
@@ -54,7 +60,6 @@ describe('register (público)', () => {
     expect(companyId).toBeGreaterThan(0)
 
     // verificación: seed aplicado (unidades de la nueva empresa)
-    const admin = await import('../lib/supabase.js').then((m) => m.createAdminClient())
     const um = await admin.from('unidades_medida').select('id').eq('company_id', companyId)
     expect(um.data!.length).toBeGreaterThanOrEqual(29)
 
@@ -67,6 +72,10 @@ describe('register (público)', () => {
   })
 
   afterAll(async () => {
+    // 0. Limpiar el contador de rate limit del IP sintético del test
+    const admin = await import('../lib/supabase.js').then((m) => m.createAdminClient())
+    await admin.from('register_rate_limit').delete().eq('ip', 'unknown')
+
     // 1. Borrar empresa (datos tenant + user_company por company_id: el vínculo
     //    de Martin agregado por el trigger se borra con la empresa, Martin intacto)
     if (companyId) {

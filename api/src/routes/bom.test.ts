@@ -7,6 +7,8 @@ let adminToken = ''
 let variantePadreId = 0
 let varianteHijoId = 0
 let umId = 0
+// Candidato que NO es componente existente del padre (para POST /detalle)
+let varianteCandidatoId = 0
 
 beforeAll(async () => {
   adminToken = await login('martin@unik.ar')
@@ -17,6 +19,19 @@ beforeAll(async () => {
   variantePadreId = v1.data![0].id
   varianteHijoId = v2.data![0].id
   umId = um.data![0].id
+  // Buscar una variante que el validador acepte como componente del padre
+  // (las variantes 1 y 2 ya están relacionadas en la seed)
+  const todas = await supabase.from('variantes').select('id').order('id').range(2, 30)
+  for (const v of todas.data ?? []) {
+    const { data } = await supabase.rpc('bom_validate_add', {
+      p_parent_id: variantePadreId,
+      p_component_id: v.id,
+    })
+    if (data?.[0]?.valid) {
+      varianteCandidatoId = v.id
+      break
+    }
+  }
 })
 
 describe('bom', () => {
@@ -103,6 +118,72 @@ describe('bom', () => {
       }),
     })
     expect(res.status).toBe(500)
+  })
+
+  it('agrega componente a BOM existente (POST /detalle) y lo elimina', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    // variantePadreId ya tiene BOM activa (seed) — get-or-create;
+    // varianteCandidatoId es una variante que no es componente del padre aún
+    const res = await app.request('/api/v1/bom/detalle', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        variante_padre_id: variantePadreId,
+        variante_componente_id: varianteCandidatoId,
+        cantidad: 3,
+        unidad_medida_id: umId,
+      }),
+    })
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(Number(body.data.cantidad_necesaria)).toBe(3)
+    const detalleId = body.data.id
+
+    // PATCH cantidad
+    const patch = await app.request(`/api/v1/bom/detalle/${detalleId}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cantidad: 7 }),
+    })
+    expect(patch.status).toBe(200)
+    const patched = await patch.json()
+    expect(Number(patched.data.cantidad_necesaria)).toBe(7)
+
+    // DELETE
+    const del = await app.request(`/api/v1/bom/detalle/${detalleId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    expect(del.status).toBe(204)
+  })
+
+  it('rechaza componente recursivo con 422', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    const res = await app.request('/api/v1/bom/detalle', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        variante_padre_id: variantePadreId,
+        variante_componente_id: variantePadreId,
+        cantidad: 1,
+        unidad_medida_id: umId,
+      }),
+    })
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error.message).toBeTruthy()
+  })
+
+  it('validar-candidatos clasifica ids', async () => {
+    const app = new Hono().route('/api/v1/bom', bom)
+    const res = await app.request(
+      `/api/v1/bom/validar-candidatos?variante_padre_id=${variantePadreId}&candidate_ids=${varianteCandidatoId},${variantePadreId}`,
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.valid_ids).toContain(varianteCandidatoId)
+    expect(Object.keys(body.data.invalid)).toContain(String(variantePadreId))
   })
 })
 

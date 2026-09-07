@@ -40,6 +40,147 @@ bom.get('/', async (c) => {
   return c.json({ data, pagination: { page, perPage, total: count } })
 })
 
+// ─── Componentes individuales (paridad con addItem/updateItem/deleteItem del PHP) ───
+
+const addDetalleSchema = z.object({
+  variante_padre_id: z.number().int().positive(),
+  variante_componente_id: z.number().int().positive(),
+  cantidad: z.number().positive(),
+  unidad_medida_id: z.number().int().positive(),
+})
+
+const patchDetalleSchema = z.object({
+  cantidad: z.number().positive().optional(),
+  unidad_medida_id: z.number().int().positive().optional(),
+})
+
+async function getOrCreateBomActiva(
+  supabase: ReturnType<typeof createUserClient>,
+  companyId: number,
+  variantePadreId: number
+): Promise<{ id: number } | { error: string }> {
+  const { data: existing } = await supabase
+    .from('bom_cabecera')
+    .select('id')
+    .eq('variante_padre_id', variantePadreId)
+    .eq('activa', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (existing) return { id: existing.id }
+  const { data: created, error } = await supabase
+    .from('bom_cabecera')
+    .insert({
+      variante_padre_id: variantePadreId,
+      activa: true,
+      version: '1.0',
+      fecha_efectiva: new Date().toISOString().slice(0, 10),
+      company_id: companyId,
+    })
+    .select('id')
+    .single()
+  if (error) return { error: error.message }
+  return { id: created.id }
+}
+
+bom.post('/detalle', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const body = await c.req.json().catch(() => null)
+  const parsed = addDetalleSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  // Validar con la RPC (recursividad, duplicados) — igual que addItem del PHP
+  const { data: validacion } = await supabase.rpc('bom_validate_add', {
+    p_parent_id: parsed.data.variante_padre_id,
+    p_component_id: parsed.data.variante_componente_id,
+  })
+  const valido = validacion?.[0]?.valid ?? false
+  if (!valido) {
+    return c.json(
+      { error: { code: 'VALIDATION', message: validacion?.[0]?.error ?? 'Componente no permitido.' } },
+      422
+    )
+  }
+
+  const bomHeader = await getOrCreateBomActiva(supabase, c.get('companyId'), parsed.data.variante_padre_id)
+  if ('error' in bomHeader) {
+    return c.json({ error: { code: 'DB_ERROR', message: bomHeader.error } }, 500)
+  }
+
+  const { data, error } = await supabase
+    .from('bom_detalle')
+    .insert({
+      bom_id: bomHeader.id,
+      variante_componente_id: parsed.data.variante_componente_id,
+      cantidad_necesaria: parsed.data.cantidad,
+      unidad_medida_id: parsed.data.unidad_medida_id,
+      company_id: c.get('companyId'),
+    })
+    .select()
+    .single()
+  if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+  return c.json({ data }, 201)
+})
+
+bom.patch('/detalle/:detalleId', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const body = await c.req.json().catch(() => null)
+  const parsed = patchDetalleSchema.safeParse(body)
+  if (!parsed.success || (parsed.success && !parsed.data.cantidad && !parsed.data.unidad_medida_id)) {
+    return c.json({ error: { code: 'VALIDATION', message: 'Cantidad o unidad requerida' } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  // Mapear el contrato del API (cantidad) a la columna real (cantidad_necesaria)
+  const update: Record<string, number> = {}
+  if (parsed.data.cantidad) update.cantidad_necesaria = parsed.data.cantidad
+  if (parsed.data.unidad_medida_id) update.unidad_medida_id = parsed.data.unidad_medida_id
+  const { data, error } = await supabase
+    .from('bom_detalle')
+    .update(update)
+    .eq('id', Number(c.req.param('detalleId')))
+    .select()
+    .single()
+  if (error) return c.json({ error: { code: 'NOT_FOUND', message: 'Detalle no encontrado' } }, 404)
+  return c.json({ data })
+})
+
+bom.delete('/detalle/:detalleId', requireRole('Super Administrador', 'Administrador'), async (c) => {
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const { error } = await supabase
+    .from('bom_detalle')
+    .delete()
+    .eq('id', Number(c.req.param('detalleId')))
+  if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+  return c.body(null, 204)
+})
+
+bom.get('/validar-candidatos', async (c) => {
+  const variantePadre = Number(c.req.query('variante_padre_id') ?? 0)
+  const candidateIds = (c.req.query('candidate_ids') ?? '')
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n) && n > 0)
+  if (!Number.isInteger(variantePadre) || variantePadre <= 0 || candidateIds.length === 0) {
+    return c.json({ error: { code: 'VALIDATION', message: 'variante_padre_id y candidate_ids requeridos' } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const validIds: number[] = []
+  const invalid: Record<string, string> = {}
+  for (const candidateId of candidateIds) {
+    const { data } = await supabase.rpc('bom_validate_add', {
+      p_parent_id: variantePadre,
+      p_component_id: candidateId,
+    })
+    if (data?.[0]?.valid) {
+      validIds.push(candidateId)
+    } else {
+      invalid[String(candidateId)] = data?.[0]?.error ?? 'Componente no permitido.'
+    }
+  }
+  return c.json({ data: { valid_ids: validIds, invalid } })
+})
+
 bom.get('/:id', async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const { data: cabecera, error: e1 } = await supabase
@@ -100,6 +241,7 @@ bom.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
   return c.body(null, 204)
 })
+
 
 // ─── BOM avanzado: árbol, where-used, copiar, reemplazar ────────────────────
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +10,7 @@ import { toast } from 'sonner'
 export type OrdenOpt = { id: number; numero_orden: string }
 
 export function CalcularAutomatico({ token, ordenes = [] }: { token: string; ordenes?: OrdenOpt[] }) {
+  const router = useRouter()
   const [ordenId, setOrdenId] = useState(0)
   const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().slice(0, 16))
   const [busy, setBusy] = useState(false)
@@ -32,7 +34,7 @@ export function CalcularAutomatico({ token, ordenes = [] }: { token: string; ord
       } else {
         setResultado(body.data.planificaciones)
         toast.success(`${body.data.planificaciones.length} operaciones planificadas`)
-        window.location.reload()
+        router.refresh()
       }
     } catch (e) {
       setError((e as Error).message)

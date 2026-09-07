@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -44,6 +45,7 @@ export function EditorClient({
   resumen: Resumen | null
   canAdmin: boolean
 }) {
+  const router = useRouter()
   const [ops, setOps] = useState(operaciones)
   const [secuencia, setSecuencia] = useState(String(ops.length + 1))
   const [centroId, setCentroId] = useState(0)
@@ -76,7 +78,7 @@ export function EditorClient({
     setBusy(false)
     if (res.ok) {
       toast.success('Operación agregada')
-      window.location.reload()
+      router.refresh()
     } else {
       setError(res.error ?? 'Error')
     }

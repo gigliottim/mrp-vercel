@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/session'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { apiFetch } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
@@ -44,8 +45,14 @@ export default async function DestinoPartesPage({ searchParams }: { searchParams
       </form>
 
       {d ? (
-        <>
-          <div className="grid gap-4 lg:grid-cols-2">
+        <Tabs defaultValue="rama1">
+          <TabsList>
+            <TabsTrigger value="rama1">Rama 1</TabsTrigger>
+            <TabsTrigger value="plana">Plana</TabsTrigger>
+            <TabsTrigger value="arbol">Árbol</TabsTrigger>
+            <TabsTrigger value="where">Dónde se usa</TabsTrigger>
+          </TabsList>
+          <TabsContent value="rama1">
             <div className="rounded-md border p-4">
               <h2 className="mb-2 font-semibold">Rama 1 (nivel directo)</h2>
               <table className="w-full text-sm">
@@ -61,8 +68,9 @@ export default async function DestinoPartesPage({ searchParams }: { searchParams
                 </tbody>
               </table>
             </div>
+          </TabsContent>
+          <TabsContent value="plana">
             <div className="rounded-md border p-4">
-              <h2 className="mb-2 font-semibold">Composición plana (consolidada)</h2>
               <table className="w-full text-sm">
                 <thead><tr className="border-b text-left text-muted-foreground"><th className="p-2">Componente</th><th className="p-2 text-right">Cantidad</th></tr></thead>
                 <tbody>
@@ -76,8 +84,8 @@ export default async function DestinoPartesPage({ searchParams }: { searchParams
                 </tbody>
               </table>
             </div>
-          </div>
-
+          </TabsContent>
+          <TabsContent value="arbol">
           <div className="rounded-md border p-4">
             <h2 className="mb-2 font-semibold">Árbol completo</h2>
             <table className="w-full text-sm">
@@ -95,7 +103,8 @@ export default async function DestinoPartesPage({ searchParams }: { searchParams
               </tbody>
             </table>
           </div>
-
+          </TabsContent>
+          <TabsContent value="where">
           <div className="rounded-md border p-4">
             <h2 className="mb-2 font-semibold">Dónde se utiliza</h2>
             <table className="w-full text-sm">
@@ -112,7 +121,8 @@ export default async function DestinoPartesPage({ searchParams }: { searchParams
               </tbody>
             </table>
           </div>
-        </>
+          </TabsContent>
+        </Tabs>
       ) : null}
     </div>
   )

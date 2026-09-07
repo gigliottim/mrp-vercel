@@ -47,3 +47,21 @@ export async function eliminarOperacion(opId: number, bomId: number): Promise<Ac
     return { error: (e as Error).message }
   }
 }
+
+export async function reordenarOperaciones(
+  bomId: number,
+  ids: number[]
+): Promise<ActionResult> {
+  const session = await getSession()
+  if (!session) return { error: 'Sin sesión' }
+  try {
+    await apiFetch(`/api/v1/rutas-produccion/bom/${bomId}/operaciones/reordenar`, session.accessToken, {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    })
+    revalidatePath(`/produccion/rutas/${bomId}/editor`)
+    return { ok: true }
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}

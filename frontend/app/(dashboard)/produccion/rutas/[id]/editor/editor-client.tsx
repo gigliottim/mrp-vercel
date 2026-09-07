@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { agregarOperacion, actualizarOperacion, eliminarOperacion } from './actions'
+import { agregarOperacion, actualizarOperacion, eliminarOperacion, reordenarOperaciones } from './actions'
 
 export type Operacion = {
   id: number
@@ -93,6 +93,22 @@ export function EditorClient({
     }
   }
 
+  const handleMover = async (index: number, direccion: -1 | 1) => {
+    const destino = index + direccion
+    if (destino < 0 || destino >= ops.length) return
+    const nuevo = [...ops]
+    const [movida] = nuevo.splice(index, 1)
+    nuevo.splice(destino, 0, movida)
+    setOps(nuevo)
+    const res = await reordenarOperaciones(bomId, nuevo.map((o) => o.id))
+    if (res.ok) {
+      toast.success('Orden actualizado')
+    } else {
+      toast.error(res.error ?? 'Error')
+      setOps(operaciones)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {canAdmin ? (
@@ -170,9 +186,31 @@ export function EditorClient({
             </tr>
           </thead>
           <tbody>
-            {ops.map((op) => (
+            {ops.map((op, index) => (
               <tr key={op.id} className="border-b">
-                <td className="p-2">{op.secuencia}</td>
+                <td className="p-2">
+                  <span>{op.secuencia}</span>
+                  {canAdmin && ops.length > 1 ? (
+                    <span className="ml-1 inline-flex flex-col">
+                      <button
+                        aria-label="Subir"
+                        disabled={index === 0}
+                        onClick={() => handleMover(index, -1)}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        aria-label="Bajar"
+                        disabled={index === ops.length - 1}
+                        onClick={() => handleMover(index, 1)}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      >
+                        ▼
+                      </button>
+                    </span>
+                  ) : null}
+                </td>
                 <td className="p-2">
                   {op.centros_trabajo?.nombre ?? `#${op.centro_trabajo_id}`}
                   {op.centros_trabajo && !op.centros_trabajo.activo ? <span className="ml-1 text-xs text-destructive">(inactivo)</span> : null}

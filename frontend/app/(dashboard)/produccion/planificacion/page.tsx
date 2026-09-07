@@ -3,7 +3,7 @@ import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { PlanificacionForm, type PlanRow, type OrdenOpt, type CentroOpt } from './planificacion-form'
 import { columns } from './columns'
-import { crear, eliminar, noop } from './actions'
+import { crear, actualizar, eliminar } from './actions'
 import { CalcularAutomatico } from './calcular-automatico'
 
 export const dynamic = 'force-dynamic'
@@ -39,7 +39,7 @@ export default async function PlanificacionPage({ searchParams }: { searchParams
         FormComponent={PlanificacionForm}
         formExtraProps={{ ordenes: ordenes?.data ?? [], centros: centros?.data ?? [] }}
         onCreate={crear}
-        onUpdate={noop}
+        onUpdate={actualizar}
         onDelete={eliminar}
       />
     </div>

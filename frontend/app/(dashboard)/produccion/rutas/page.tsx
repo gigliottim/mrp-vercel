@@ -3,7 +3,7 @@ import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { RutaForm, type RutaRow, type BomOpt, type CentroOpt } from './ruta-form'
 import { columns } from './columns'
-import { crear, eliminar, noop } from './actions'
+import { crear, actualizar, eliminar } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,7 +49,7 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
         FormComponent={RutaForm}
         formExtraProps={{ boms: boms?.data ?? [], centros: centros?.data ?? [] }}
         onCreate={crear}
-        onUpdate={noop}
+        onUpdate={actualizar}
         onDelete={eliminar}
       />
     </div>

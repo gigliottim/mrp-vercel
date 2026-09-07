@@ -85,3 +85,61 @@ describe('rutas-produccion editor', () => {
     expect(del.status).toBe(204)
   })
 })
+
+describe('rutas reordenar', () => {
+  it('reordena operaciones y verifica secuencia', async () => {
+    const adminToken = await login('martin@unik.ar')
+    const supabase = await import('../lib/supabase').then((m) => m.createAdminClient())
+    // Buscar un BOM con >= 2 operaciones
+    const { data: rutas } = await supabase
+      .from('rutas_produccion')
+      .select('bom_id, id, secuencia')
+      .order('bom_id')
+      .limit(50)
+    if (!rutas || rutas.length === 0) return
+    const bomId = rutas[0].bom_id
+    const opsDeBom = rutas.filter((r: any) => r.bom_id === bomId)
+    if (opsDeBom.length < 2) return
+    const idsOriginal = opsDeBom.sort((a: any, b: any) => a.secuencia - b.secuencia).map((r: any) => r.id)
+
+    const app = new Hono().route('/api/v1/rutas-produccion', rutasProduccion)
+    // Reordenar: invertir
+    const idsNuevo = [...idsOriginal].reverse()
+    const res = await app.request(`/api/v1/rutas-produccion/bom/${bomId}/operaciones/reordenar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: idsNuevo }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.reordenadas).toBe(idsNuevo.length)
+
+    // Verificar secuencia según nueva posición
+    const { data: despues } = await supabase
+      .from('rutas_produccion')
+      .select('id, secuencia')
+      .eq('bom_id', bomId)
+      .order('secuencia')
+    const idsOrdenados = (despues ?? []).map((r: any) => r.id)
+    expect(idsOrdenados).toEqual(idsNuevo)
+
+    // Restaurar orden original
+    const restore = await app.request(`/api/v1/rutas-produccion/bom/${bomId}/operaciones/reordenar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: idsOriginal }),
+    })
+    expect(restore.status).toBe(200)
+  })
+
+  it('rechaza ids de otro BOM', async () => {
+    const adminToken = await login('martin@unik.ar')
+    const app = new Hono().route('/api/v1/rutas-produccion', rutasProduccion)
+    const res = await app.request('/api/v1/rutas-produccion/bom/999999/operaciones/reordenar', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [1] }),
+    })
+    expect([400, 500]).toContain(res.status)
+  })
+})

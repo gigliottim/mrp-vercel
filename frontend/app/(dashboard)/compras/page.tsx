@@ -3,7 +3,7 @@ import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { CompraForm, type CompraRow, type EntidadOpt, type VarianteOpt } from './compras-form'
 import { columns } from './columns'
-import { crear, eliminar, noop } from './actions'
+import { crear, actualizar, eliminar } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,7 +42,7 @@ export default async function ComprasPage({
       FormComponent={CompraForm}
       formExtraProps={{ entidades: entidades?.data ?? [], variantes: variantes?.data ?? [] }}
       onCreate={crear}
-      onUpdate={noop}
+      onUpdate={actualizar}
       onDelete={eliminar}
     />
   )

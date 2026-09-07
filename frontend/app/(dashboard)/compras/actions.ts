@@ -33,7 +33,15 @@ export async function eliminar(id: number): Promise<ActionResult> {
   }
 }
 
-/** No-op: módulo sin edición (CRUDPage exige onUpdate). */
-export async function noop(): Promise<ActionResult> {
-  return { ok: true }
+export async function actualizar(id: number, data: Record<string, unknown>): Promise<ActionResult> {
+  const session = await getSession()
+  if (!session) return { error: 'Sin sesión' }
+  try {
+    await apiFetch(`${PATH}/${id}`, session.accessToken, { method: 'PATCH', body: JSON.stringify(data) })
+    revalidatePath('/compras')
+    revalidatePath('/productos/partes/manager')
+    return { ok: true }
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
 }

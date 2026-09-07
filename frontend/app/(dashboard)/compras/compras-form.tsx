@@ -45,12 +45,25 @@ export function CompraForm({
   const [comprobante, setComprobante] = useState(initial?.nro_comprobante ?? '')
   const [error, setError] = useState('')
 
+  // Modo edición: solo fecha/proveedor/precio/comprobante (la recepción de
+  // stock asociada a variante/cantidad no se re-ejecuta)
+  const esEdicion = Boolean(initial?.id)
+
   const handleSubmit = async () => {
     setError('')
     if (!entidadId) return setError('Seleccioná el proveedor')
-    if (!varianteId) return setError('Seleccioná la variante')
-    if (!cantidad || Number(cantidad) <= 0) return setError('Cantidad inválida')
+    if (!esEdicion && !varianteId) return setError('Seleccioná la variante')
     if (!precio || Number(precio) <= 0) return setError('Precio inválido')
+    if (esEdicion) {
+      await onSubmit({
+        fecha,
+        precio_unitario: Number(precio),
+        id_entidad: entidadId,
+        nro_comprobante: comprobante || null,
+      })
+      return
+    }
+    if (!cantidad || Number(cantidad) <= 0) return setError('Cantidad inválida')
     await onSubmit({
       fecha,
       precio_unitario: Number(precio),
@@ -83,25 +96,29 @@ export function CompraForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label>Variante</Label>
-          <Select value={String(varianteId)} onValueChange={(v) => setVarianteId(Number(v))}>
-            <SelectTrigger>
-              <SelectValue placeholder="Variante" />
-            </SelectTrigger>
-            <SelectContent>
-              {variantes.map((v) => (
-                <SelectItem key={v.id} value={String(v.id)}>
-                  {v.codigo_variante}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Cantidad</Label>
-          <Input type="number" step="any" min={0} value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
-        </div>
+      {!esEdicion ? (
+        <>
+          <div className="space-y-2">
+            <Label>Variante</Label>
+            <Select value={String(varianteId)} onValueChange={(v) => setVarianteId(Number(v))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Variante" />
+              </SelectTrigger>
+              <SelectContent>
+                {variantes.map((v) => (
+                  <SelectItem key={v.id} value={String(v.id)}>
+                    {v.codigo_variante}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Cantidad</Label>
+            <Input type="number" step="any" min={0} value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+          </div>
+        </>
+      ) : null}
         <div className="space-y-2">
           <Label>Precio unitario</Label>
           <Input type="number" step="any" min={0} value={precio} onChange={(e) => setPrecio(e.target.value)} />
@@ -116,7 +133,7 @@ export function CompraForm({
         <Button variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button onClick={handleSubmit}>Comprar y recibir</Button>
+        <Button onClick={handleSubmit}>{esEdicion ? 'Actualizar' : 'Comprar y recibir'}</Button>
       </div>
     </div>
   )

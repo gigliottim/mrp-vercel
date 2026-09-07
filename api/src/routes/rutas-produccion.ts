@@ -252,3 +252,55 @@ rutasProduccion.delete('/operaciones/:opId', async (c) => {
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
   return c.body(null, 204)
 })
+
+// POST /bom/:bomId/operaciones/reordenar → reasignar secuencia según orden de ids
+// (paridad con rutaEditor del PHP: mover con ▲▼)
+const reordenarSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1),
+})
+
+rutasProduccion.post('/bom/:bomId/operaciones/reordenar', async (c) => {
+  const bomId = Number(c.req.param('bomId'))
+  const body = await c.req.json().catch(() => null)
+  const parsed = reordenarSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  // Verificar que todas las operaciones pertenecen a este BOM (tenant-safe:
+  // RLS filtra por company_id en el select)
+  const { data: ops, error: eOps } = await supabase
+    .from('rutas_produccion')
+    .select('id')
+    .eq('bom_id', bomId)
+  if (eOps) return c.json({ error: { code: 'DB_ERROR', message: eOps.message } }, 500)
+  const idsValidos = new Set((ops ?? []).map((o) => Number(o.id)))
+  const ids = parsed.data.ids
+  const todasValidas = ids.every((id) => idsValidos.has(id))
+  if (!todasValidas || ids.length !== (ops ?? []).length) {
+    return c.json(
+      { error: { code: 'VALIDATION', message: 'Los ids no corresponden a las operaciones del BOM' } },
+      400
+    )
+  }
+
+  // Asignar secuencia por posición (2 fases para evitar conflicto de unique)
+  for (let i = 0; i < ids.length; i++) {
+    const tmp = 1000 + i
+    const { error: e1 } = await supabase
+      .from('rutas_produccion')
+      .update({ secuencia: tmp })
+      .eq('id', ids[i])
+    if (e1) return c.json({ error: { code: 'DB_ERROR', message: e1.message } }, 500)
+  }
+  for (let i = 0; i < ids.length; i++) {
+    const { error: e2 } = await supabase
+      .from('rutas_produccion')
+      .update({ secuencia: i + 1 })
+      .eq('id', ids[i])
+    if (e2) return c.json({ error: { code: 'DB_ERROR', message: e2.message } }, 500)
+  }
+
+  return c.json({ data: { reordenadas: ids.length } })
+})

@@ -30,9 +30,12 @@ bom.use('*', requireAuth)
 bom.get('/', async (c) => {
   const { page, perPage, offset } = parsePagination(c.req.query())
   const variantePadre = c.req.query('variante_padre_id')
+  const activa = c.req.query('activa')
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   let query = supabase.from('bom_cabecera').select('*', { count: 'exact' })
   if (variantePadre) query = query.eq('variante_padre_id', Number(variantePadre))
+  if (activa === 'true') query = query.eq('activa', true)
+  if (activa === 'false') query = query.eq('activa', false)
   const { data, error, count } = await query
     .order('id', { ascending: false })
     .range(offset, offset + perPage - 1)
@@ -141,7 +144,12 @@ bom.patch('/detalle/:detalleId', requireRole('Super Administrador', 'Administrad
     .eq('id', Number(c.req.param('detalleId')))
     .select()
     .single()
-  if (error) return c.json({ error: { code: 'NOT_FOUND', message: 'Detalle no encontrado' } }, 404)
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return c.json({ error: { code: 'NOT_FOUND', message: 'Detalle no encontrado' } }, 404)
+    }
+    return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+  }
   return c.json({ data })
 })
 

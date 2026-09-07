@@ -56,9 +56,10 @@ export async function reemplazarComponente(data: {
   variante_padre_id: number
 }): Promise<ActionResult> {
   return withSession(async (token) => {
-    // Resolver el BOM activo del padre (bom_tree no expone bom_id)
+    // Resolver el BOM ACTIVO del padre (bom_tree no expone bom_id; el filtro
+    // activa=true evita reemplazar en una versión inactiva)
     const bom = await apiFetch<{ data: { id: number }[] }>(
-      `/api/v1/bom?variante_padre_id=${data.variante_padre_id}&perPage=1`,
+      `/api/v1/bom?variante_padre_id=${data.variante_padre_id}&activa=true&perPage=1`,
       token
     )
     const bomId = bom.data?.[0]?.id

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -220,11 +219,6 @@ export function ParteForm({
           </Select>
           {errors.id_grupo ? <p className="text-sm text-destructive">{errors.id_grupo.message}</p> : null}
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Detalle extendido</Label>
-        <Textarea {...register('detalle')} rows={2} placeholder="Descripción de la parte" />
       </div>
 
       <div className="grid grid-cols-3 gap-4">

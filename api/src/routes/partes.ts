@@ -76,11 +76,12 @@ partes.post('/', async (c) => {
   })
   if (error) {
     const msg = error.message ?? ''
+    // Chequeos específicos primero; 'duplicate key' como fallback
+    if (msg.includes('variantes_id_parte_codigo_variante_key') || (msg.includes('variante') && msg.includes('duplicate'))) {
+      return c.json({ error: { code: 'CONFLICT', message: 'El código de variante ya existe para esta parte' } }, 409)
+    }
     if (msg.includes('partes_company_codigo_key') || msg.includes('duplicate key')) {
       return c.json({ error: { code: 'CONFLICT', message: 'El código ya existe' } }, 409)
-    }
-    if (msg.includes('variante') && msg.includes('duplicate')) {
-      return c.json({ error: { code: 'CONFLICT', message: 'El código de variante ya existe para esta parte' } }, 409)
     }
     return c.json({ error: { code: 'DB_ERROR', message: msg } }, 500)
   }

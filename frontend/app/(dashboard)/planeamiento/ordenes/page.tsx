@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
+import { AccionLiberar } from './liberar-client'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,7 @@ export default async function OrdenesPlanificadasPage() {
   if (!session) return null
   const res = await apiFetch<Paginated<Orden>>('/api/v1/ordenes-produccion?estado=planificada&perPage=50', session.accessToken).catch(() => null)
   const ordenes = res?.data ?? []
+  const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
 
   return (
     <div className="space-y-6">
@@ -36,6 +38,7 @@ export default async function OrdenesPlanificadasPage() {
               <th className="p-2 text-right font-medium">Producida</th>
               <th className="p-2 font-medium">Prioridad</th>
               <th className="p-2 font-medium">Estado</th>
+              {canAdmin ? <th className="p-2 font-medium">Acciones</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -46,7 +49,12 @@ export default async function OrdenesPlanificadasPage() {
                 <td className="p-2 text-right font-mono">{o.cantidad_producida}</td>
                 <td className="p-2">{o.prioridad}</td>
                 <td className="p-2"><Badge variant="outline">{o.estado}</Badge></td>
-              </tr>
+              {canAdmin ? (
+                <td className="p-2">
+                  <AccionLiberar id={o.id} />
+                </td>
+              ) : null}
+            </tr>
             ))}
             {ordenes.length === 0 ? (
               <tr>

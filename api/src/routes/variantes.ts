@@ -31,12 +31,32 @@ variantes.use('*', requireAuth)
 variantes.get('/', async (c) => {
   const { page, perPage, offset } = parsePagination(c.req.query())
   const idParte = c.req.query('id_parte')
+  const withParte = c.req.query('with_parte') === '1'
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  let query = supabase.from('variantes').select('*', { count: 'exact' })
+  const select = withParte
+    ? '*, partes(id, codigo, detalle, tipos_partes(codigo))'
+    : '*'
+  let query = supabase.from('variantes').select(select, { count: 'exact' })
   if (idParte) query = query.eq('id_parte', Number(idParte))
-  const { data, error, count } = await query.order('id').range(offset, offset + perPage - 1)
+  const { data, error, count } = (await query.order('id').range(offset, offset + perPage - 1)) as {
+    data: Record<string, unknown>[] | null
+    error: { message: string } | null
+    count: number | null
+  }
   if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
-  return c.json({ data, pagination: { page, perPage, total: count } })
+  const rows = (data ?? []).map((v: Record<string, unknown>) => {
+    if (!withParte) return v
+    const parte = (v.partes ?? {}) as Record<string, unknown>
+    const tipo = (parte.tipos_partes ?? {}) as Record<string, unknown>
+    const { partes: _p, ...rest } = v
+    return {
+      ...rest,
+      parte_codigo: parte.codigo ?? null,
+      parte_detalle: parte.detalle ?? null,
+      tipo_codigo: tipo.codigo ?? null,
+    }
+  })
+  return c.json({ data: rows, pagination: { page, perPage, total: count } })
 })
 
 variantes.get('/:id', async (c) => {

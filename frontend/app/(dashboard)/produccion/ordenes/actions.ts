@@ -28,6 +28,7 @@ export async function cambiarEstado(id: number, estado: string): Promise<ActionR
       method: 'POST',
       body: JSON.stringify({ estado }),
     })
+    revalidatePath(`/produccion/ordenes/${id}`)
     revalidatePath('/produccion/ordenes')
     return { ok: true }
   } catch (e) {

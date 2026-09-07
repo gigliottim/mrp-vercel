@@ -36,9 +36,13 @@ ordenesProduccion.use('*', requireAuth)
 ordenesProduccion.get('/', async (c) => {
   const { page, perPage, offset } = parsePagination(c.req.query())
   const estado = c.req.query('estado')
+  const prioridad = c.req.query('prioridad')
+  const q = c.req.query('q') ?? ''
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   let query = supabase.from('ordenes_produccion').select('*', { count: 'exact' })
   if (estado) query = query.eq('estado', estado)
+  if (prioridad) query = query.eq('prioridad', prioridad)
+  if (q) query = query.ilike('numero_orden', `%${q}%`)
   const { data, error, count } = await query
     .order('id', { ascending: false })
     .range(offset, offset + perPage - 1)

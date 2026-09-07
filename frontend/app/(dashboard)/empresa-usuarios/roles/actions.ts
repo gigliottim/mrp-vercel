@@ -29,3 +29,15 @@ export async function eliminarRol(id: number): Promise<ActionResult> {
     return { error: (e as Error).message }
   }
 }
+
+export async function actualizarRol(id: number, data: Record<string, unknown>): Promise<ActionResult> {
+  const session = await getSession()
+  if (!session) return { error: 'Sin sesión' }
+  try {
+    await apiFetch(`/api/v1/empresa/roles/${id}`, session.accessToken, { method: 'PATCH', body: JSON.stringify(data) })
+    revalidatePath('/empresa-usuarios/roles')
+    return { ok: true }
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}

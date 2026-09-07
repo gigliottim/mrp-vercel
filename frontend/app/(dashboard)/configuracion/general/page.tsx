@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { ConfiguracionForm, type ConfiguracionGeneral } from './general-form'
-import { actualizarGeneral, upsertClave } from './actions'
+import { actualizarGeneral } from './actions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

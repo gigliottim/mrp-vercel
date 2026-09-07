@@ -34,15 +34,3 @@ export async function cambiarEstado(id: number, estado: string): Promise<ActionR
     return { error: (e as Error).message }
   }
 }
-
-export async function eliminar(id: number): Promise<ActionResult> {
-  const session = await getSession()
-  if (!session) return { error: 'Sin sesión' }
-  try {
-    await apiFetch(`${PATH}/${id}`, session.accessToken, { method: 'DELETE' })
-    revalidatePath('/produccion/ordenes')
-    return { ok: true }
-  } catch (e) {
-    return { error: (e as Error).message }
-  }
-}

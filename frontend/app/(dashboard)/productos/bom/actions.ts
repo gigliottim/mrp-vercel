@@ -20,21 +20,6 @@ export async function crear(data: Record<string, unknown>): Promise<ActionResult
   }
 }
 
-export async function reemplazarDetalles(id: number, detalles: unknown[]): Promise<ActionResult> {
-  const session = await getSession()
-  if (!session) return { error: 'Sin sesión' }
-  try {
-    await apiFetch(`${PATH}/${id}/detalle`, session.accessToken, {
-      method: 'PUT',
-      body: JSON.stringify(detalles),
-    })
-    revalidatePath('/productos/bom')
-    return { ok: true }
-  } catch (e) {
-    return { error: (e as Error).message }
-  }
-}
-
 export async function eliminar(id: number): Promise<ActionResult> {
   const session = await getSession()
   if (!session) return { error: 'Sin sesión' }

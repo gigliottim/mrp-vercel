@@ -22,7 +22,7 @@ export default async function PartesPage({
   const perPage = Number(sp.perPage ?? 20)
   const q = sp.q ?? ''
 
-  const [result, tipos, grupos] = await Promise.all([
+  const [result, tipos, grupos, unidades] = await Promise.all([
     apiFetch<Paginated<ParteRow>>(
       `/api/v1/partes?page=${page}&perPage=${perPage}${q ? `&q=${encodeURIComponent(q)}` : ''}`,
       session.accessToken
@@ -33,6 +33,10 @@ export default async function PartesPage({
     apiFetch<Paginated<GrupoParte>>('/api/v1/grupos-partes?perPage=100', session.accessToken).catch(
       () => null
     ),
+    apiFetch<Paginated<{ id: number; unidad: string; simbolo: string; tipo: string }>>(
+      '/api/v1/unidades-medida?perPage=500',
+      session.accessToken
+    ).catch(() => null),
   ])
 
   const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
@@ -67,7 +71,11 @@ export default async function PartesPage({
         total={result?.pagination.total ?? 0}
         columns={columns}
         FormComponent={ParteForm}
-        formExtraProps={{ tipos: tipos?.data ?? [], grupos: grupos?.data ?? [] }}
+        formExtraProps={{
+          tipos: tipos?.data ?? [],
+          grupos: grupos?.data ?? [],
+          unidades: unidades?.data ?? [],
+        }}
         onCreate={crear}
         onUpdate={actualizar}
         onDelete={eliminar}

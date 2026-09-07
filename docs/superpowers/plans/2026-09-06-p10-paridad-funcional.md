@@ -34,7 +34,7 @@ Fase F (P15) Cierre + docs        ── siempre última
 
 ---
 
-# Fase A (P10): Reglas de negocio de movimientos de partes
+## Fase A (P10): Reglas de negocio de movimientos de partes
 
 Port fiel de `MovimientosPartesController::store` (PHP): matriz de depósitos, stock negativo, conversión compra→uso, compras satélite, fecha manual TZ Argentina.
 
@@ -586,7 +586,7 @@ git commit -m "feat(frontend): form de movimientos con matriz de depósitos, ent
 
 ---
 
-# Fase B (P11): Export XLSX/PDF de reportes
+## Fase B (P11): Export XLSX/PDF de reportes
 
 ### Task B1: Lib de export (exceljs + pdf-lib) con tests unitarios
 
@@ -899,7 +899,7 @@ git commit -m "feat(frontend): botones export Excel/PDF en reportes con export"
 
 ---
 
-# Fase C (P12): Multi-empresa (selector de empresa)
+## Fase C (P12): Multi-empresa (selector de empresa)
 
 ### Task C1: Hook JWT multi-empresa (`active_company_id`)
 
@@ -1161,7 +1161,7 @@ git commit -m "feat(frontend): selector de empresa en navbar con cambio de sesi�
 
 ---
 
-# Fase D (P13): Persistencia del agente AI en PostgreSQL
+## Fase D (P13): Persistencia del agente AI en PostgreSQL
 
 ### Task D1: Estado de conversación en `agent_conversations`/`agent_messages`
 
@@ -1314,7 +1314,7 @@ git commit -m "feat(api): log de llamadas IA del agente en agent_ai_logs"
 
 ---
 
-# Fase E (P14): Landing pública + registro self-service
+## Fase E (P14): Landing pública + registro self-service
 
 ### Task E1: Endpoint público `POST /api/v1/register`
 
@@ -1587,7 +1587,7 @@ git commit -m "feat(frontend): página de registro self-service con wizard de 2 
 
 ---
 
-# Fase F (P15): Cierre — contraseña temporal + documentación
+## Fase F (P15): Cierre — contraseña temporal + documentación
 
 ### Task F1: Cambio de contraseña forzado en primer login
 

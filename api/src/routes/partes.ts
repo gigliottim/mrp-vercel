@@ -70,12 +70,20 @@ partes.post('/', async (c) => {
     return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
   }
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
-  const { data, error } = await supabase
-    .from('partes')
-    .insert({ ...parsed.data, company_id: c.get('companyId') })
-    .select()
-    .single()
-  if (error) return c.json({ error: { code: 'DB_ERROR', message: error.message } }, 500)
+  const { data, error } = await supabase.rpc('crear_parte_con_variante', {
+    p_company_id: c.get('companyId'),
+    p_datos: parsed.data,
+  })
+  if (error) {
+    const msg = error.message ?? ''
+    if (msg.includes('partes_company_codigo_key') || msg.includes('duplicate key')) {
+      return c.json({ error: { code: 'CONFLICT', message: 'El código ya existe' } }, 409)
+    }
+    if (msg.includes('variante') && msg.includes('duplicate')) {
+      return c.json({ error: { code: 'CONFLICT', message: 'El código de variante ya existe para esta parte' } }, 409)
+    }
+    return c.json({ error: { code: 'DB_ERROR', message: msg } }, 500)
+  }
   return c.json({ data }, 201)
 })
 

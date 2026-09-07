@@ -38,7 +38,7 @@ describe('partes', () => {
     }
   })
 
-  it('crea y elimina una parte (rol admin)', async () => {
+  it('crea parte con variante default y elimina', async () => {
     // ids reales de tipos_partes y grupos_partes de la empresa 2
     const supabase = await import('../lib/supabase').then((m) => m.createAdminClient())
     const tp = await supabase.from('tipos_partes').select('id').limit(1)
@@ -48,11 +48,12 @@ describe('partes', () => {
 
     const app = new Hono().route('/api/v1/partes', partes)
     const ts = Date.now()
+    const codigo = `P${ts}`.slice(0, 50)
     const res = await app.request('/api/v1/partes', {
       method: 'POST',
       headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        codigo: `P${ts}`.slice(0, 50),
+        codigo,
         id_tipo: tipoParteId,
         id_grupo: grupoParteId,
         detalle: `test-parte-${ts}`,
@@ -60,11 +61,59 @@ describe('partes', () => {
     })
     expect(res.status).toBe(201)
     const body = await res.json()
-    const del = await app.request(`/api/v1/partes/${body.data.id}`, {
+    expect(body.data.parte.codigo).toBe(codigo)
+    // Variante default: mismo codigo que la parte, estado activa, lote 1
+    expect(body.data.variante.codigo_variante).toBe(codigo)
+    expect(body.data.variante.estado).toBe('activa')
+    expect(Number(body.data.variante.lote_minimo)).toBe(1)
+    expect(body.data.variante.id_parte).toBe(body.data.parte.id)
+
+    // La variante realmente persistida
+    const check = await app.request(`/api/v1/partes/${body.data.parte.id}/variantes`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    const variantes = await check.json()
+    expect(variantes.data.length).toBe(1)
+    expect(variantes.data[0].codigo_variante).toBe(codigo)
+
+    const del = await app.request(`/api/v1/partes/${body.data.parte.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${adminToken}` },
     })
     expect(del.status).toBe(204)
+  })
+
+  it('rechaza codigo duplicado con 409', async () => {
+    const supabase = await import('../lib/supabase').then((m) => m.createAdminClient())
+    const tp = await supabase.from('tipos_partes').select('id').limit(1)
+    const gp = await supabase.from('grupos_partes').select('id').limit(1)
+    const app = new Hono().route('/api/v1/partes', partes)
+    const ts = Date.now()
+    const base = {
+      id_tipo: tp.data![0].id,
+      id_grupo: gp.data![0].id,
+      detalle: `dup-${ts}`,
+    }
+    const first = await app.request('/api/v1/partes', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...base, codigo: `DUP${ts}` }),
+    })
+    expect(first.status).toBe(201)
+    const dup = await app.request('/api/v1/partes', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...base, codigo: `DUP${ts}` }),
+    })
+    expect(dup.status).toBe(409)
+    const errBody = await dup.json()
+    expect(errBody.error.message).toContain('ya existe')
+    // limpieza
+    const created = await first.json()
+    await app.request(`/api/v1/partes/${created.data.parte.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
   })
 
   it('rechaza validacion incompleta', async () => {

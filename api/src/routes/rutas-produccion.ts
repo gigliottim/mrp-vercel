@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth, type AuthEnv } from '../middleware/auth.js'
+import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth.js'
 import { createUserClient } from '../lib/supabase.js'
 import { parsePagination } from '../lib/pagination.js'
 import { validarReferencias } from '../lib/validate-fk.js'
@@ -259,7 +259,7 @@ const reordenarSchema = z.object({
   ids: z.array(z.number().int().positive()).min(1),
 })
 
-rutasProduccion.post('/bom/:bomId/operaciones/reordenar', async (c) => {
+rutasProduccion.post('/bom/:bomId/operaciones/reordenar', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const bomId = Number(c.req.param('bomId'))
   const body = await c.req.json().catch(() => null)
   const parsed = reordenarSchema.safeParse(body)
@@ -311,7 +311,7 @@ const clonarSchema = z.object({
   bom_destino_id: z.number().int().positive(),
 })
 
-rutasProduccion.post('/bom/:bomId/operaciones/clonar', async (c) => {
+rutasProduccion.post('/bom/:bomId/operaciones/clonar', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const bomOrigen = Number(c.req.param('bomId'))
   const body = await c.req.json().catch(() => null)
   const parsed = clonarSchema.safeParse(body)
@@ -325,6 +325,8 @@ rutasProduccion.post('/bom/:bomId/operaciones/clonar', async (c) => {
     )
   }
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+  const fk = await validarReferencias(supabase, { bom_cabecera: parsed.data.bom_destino_id })
+  if (!fk.ok) return c.json({ error: { code: 'VALIDATION', message: fk.error } }, 400)
 
   const { data: origen, error: eOrigen } = await supabase
     .from('rutas_produccion')

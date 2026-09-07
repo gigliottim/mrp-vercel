@@ -16,7 +16,7 @@ operaciones.get('/', async (c) => {
     supabase
       .from('ordenes_produccion')
       .select('id, numero_orden, estado, cantidad_planificada, cantidad_producida, prioridad, variante_id, variantes(id, codigo_variante, detalle)')
-      .in('estado', ['planificada', 'en_produccion', 'pausada'])
+      .in('estado', ['planificada', 'en_proceso', 'pausada'])
       .order('created_at', { ascending: false })
       .limit(10),
   ])

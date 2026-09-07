@@ -58,7 +58,7 @@ export default async function OrdenesPlanificadasPage() {
             ))}
             {ordenes.length === 0 ? (
               <tr>
-                <td colSpan={5} className="h-16 text-center text-muted-foreground">Sin órdenes planificadas</td>
+                <td colSpan={canAdmin ? 6 : 5} className="h-16 text-center text-muted-foreground">Sin órdenes planificadas</td>
               </tr>
             ) : null}
           </tbody>

@@ -14,6 +14,7 @@ export async function crear(data: Record<string, unknown>): Promise<ActionResult
   try {
     await apiFetch(PATH, session.accessToken, { method: 'POST', body: JSON.stringify(data) })
     revalidatePath('/produccion/ordenes')
+    revalidatePath('/planeamiento/ordenes')
     return { ok: true }
   } catch (e) {
     return { error: (e as Error).message }
@@ -30,6 +31,7 @@ export async function cambiarEstado(id: number, estado: string): Promise<ActionR
     })
     revalidatePath(`/produccion/ordenes/${id}`)
     revalidatePath('/produccion/ordenes')
+    revalidatePath('/planeamiento/ordenes')
     return { ok: true }
   } catch (e) {
     return { error: (e as Error).message }

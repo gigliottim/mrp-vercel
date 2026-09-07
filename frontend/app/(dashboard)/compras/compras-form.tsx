@@ -59,7 +59,7 @@ export function CompraForm({
         fecha,
         precio_unitario: Number(precio),
         id_entidad: entidadId,
-        nro_comprobante: comprobante || null,
+        nro_comprobante: comprobante || undefined,
       })
       return
     }

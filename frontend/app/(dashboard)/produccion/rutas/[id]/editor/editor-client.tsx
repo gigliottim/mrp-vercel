@@ -78,7 +78,7 @@ export function EditorClient({
     setBusy(false)
     if (res.ok) {
       toast.success('Operación agregada')
-      router.refresh()
+      window.location.reload()
     } else {
       setError(res.error ?? 'Error')
     }

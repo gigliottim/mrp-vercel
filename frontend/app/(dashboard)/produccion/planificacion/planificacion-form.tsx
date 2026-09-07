@@ -38,8 +38,18 @@ export function PlanificacionForm({
 }) {
   const [ordenId, setOrdenId] = useState(initial?.orden_produccion_id ?? 0)
   const [centroId, setCentroId] = useState(initial?.centro_trabajo_id ?? 0)
-  const [inicio, setInicio] = useState(new Date().toISOString().slice(0, 16))
-  const [fin, setFin] = useState(new Date(Date.now() + 3600000).toISOString().slice(0, 16))
+  // Prefill del periodo existente al editar (evita sobrescribir la programación)
+  const periodoInicial = initial?.periodo ?? ''
+  const parsePeriodo = (p: string, fallback: string) => {
+    const m = p.match(/^\[(.*),(.*)\)$/)
+    return m ? m[1].slice(0, 16) : fallback
+  }
+  const [inicio, setInicio] = useState(
+    parsePeriodo(periodoInicial, new Date().toISOString().slice(0, 16))
+  )
+  const [fin, setFin] = useState(
+    parsePeriodo(periodoInicial, new Date(Date.now() + 3600000).toISOString().slice(0, 16))
+  )
   const [error, setError] = useState('')
 
   const handleSubmit = async () => {

@@ -54,7 +54,7 @@ ordenesProduccion.get('/:id', async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const { data, error } = await supabase
     .from('ordenes_produccion')
-    .select('*')
+    .select('*, variantes(id, codigo_variante, detalle)')
     .eq('id', Number(c.req.param('id')))
     .single()
   if (error) return c.json({ error: { code: 'NOT_FOUND', message: 'No encontrada' } }, 404)

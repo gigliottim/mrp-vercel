@@ -36,6 +36,8 @@ export function RolesClient({ roles, canAdmin }: { roles: Rol[]; canAdmin: boole
     if (res.ok) {
       toast.success('Rol creado')
       setName('')
+      // router.refresh() conserva el estado client: actualizar la lista local
+      setList((prev) => [...prev, { id: Date.now(), name: name.trim(), guard_name: 'web' }])
       router.refresh()
     } else {
       toast.error(res.error ?? 'Error')

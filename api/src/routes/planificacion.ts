@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { requireAuth, type AuthEnv } from '../middleware/auth.js'
+import { requireAuth, requireRole, type AuthEnv } from '../middleware/auth.js'
 import { createUserClient } from '../lib/supabase.js'
 import { parsePagination } from '../lib/pagination.js'
 import { validarReferencias } from '../lib/validate-fk.js'
@@ -75,7 +75,7 @@ planificacion.post('/', async (c) => {
   return c.json({ data }, 201)
 })
 
-planificacion.patch('/:id', async (c) => {
+planificacion.patch('/:id', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const body = await c.req.json().catch(() => null)
   const parsed = schema.partial().safeParse(body)
   if (!parsed.success) {

@@ -65,7 +65,7 @@ compras.post('/', requireRole('Super Administrador', 'Administrador'), async (c)
   return c.json({ data }, 201)
 })
 
-compras.patch('/:id', async (c) => {
+compras.patch('/:id', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const body = await c.req.json().catch(() => null)
   const parsed = schema.partial().safeParse(body)
   if (!parsed.success) {

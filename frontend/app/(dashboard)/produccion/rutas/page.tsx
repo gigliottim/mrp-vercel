@@ -2,7 +2,8 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { RutaForm, type RutaRow, type BomOpt, type CentroOpt } from './ruta-form'
-import { makeColumns } from './columns'
+import { columns } from './columns'
+import { ClonarRutaDialog } from './clonar-dialog'
 import { crear, actualizar, eliminar } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -29,12 +30,15 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
           <p className="text-sm text-muted-foreground">Secuencias de operaciones por BOM</p>
         </div>
         {primerBomId > 0 ? (
-          <a
-            href={`/produccion/rutas/${primerBomId}/editor`}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-accent"
-          >
-            Editor de ruta
-          </a>
+          <div className="flex gap-2">
+            <a
+              href={`/produccion/rutas/${primerBomId}/editor`}
+              className="rounded-md border px-4 py-2 text-sm hover:bg-accent"
+            >
+              Editor de ruta
+            </a>
+            {canAdmin ? <ClonarRutaDialog bomId={primerBomId} boms={boms?.data ?? []} /> : null}
+          </div>
         ) : null}
       </div>
       <CrudPage
@@ -45,7 +49,7 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
         page={page}
         perPage={perPage}
         total={result?.pagination.total ?? 0}
-        columns={makeColumns(boms?.data ?? [])}
+        columns={columns}
         FormComponent={RutaForm}
         formExtraProps={{ boms: boms?.data ?? [], centros: centros?.data ?? [] }}
         onCreate={crear}

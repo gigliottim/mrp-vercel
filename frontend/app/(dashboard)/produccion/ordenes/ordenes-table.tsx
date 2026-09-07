@@ -88,8 +88,12 @@ export function OrdenesTable({ ordenes }: { ordenes: OrdenRow[] }) {
             </TableRow>
           ) : (
             ordenes.map((o) => (
-              <TableRow key={o.id}>
-                <TableCell className="font-mono text-sm">{o.numero_orden}</TableCell>
+              <TableRow key={o.id} className="cursor-pointer" onClick={() => router.push(`/produccion/ordenes/${o.id}`)}>
+                <TableCell className="font-mono text-sm">
+                  <a href={`/produccion/ordenes/${o.id}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
+                    {o.numero_orden}
+                  </a>
+                </TableCell>
                 <TableCell>#{o.variante_id}</TableCell>
                 <TableCell className="text-right">{o.cantidad_planificada}</TableCell>
                 <TableCell className="text-right">{o.cantidad_producida}</TableCell>

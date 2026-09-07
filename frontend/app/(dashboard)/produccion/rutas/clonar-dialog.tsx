@@ -22,13 +22,7 @@ import { Label } from '@/components/ui/label'
 import { clonarRuta } from './actions'
 import type { BomOpt } from './ruta-form'
 
-export function ClonarRutaDialog({
-  bomId,
-  boms,
-}: {
-  bomId: number
-  boms: BomOpt[]
-}) {
+export function ClonarRutaDialog({ bomId, boms }: { bomId: number; boms: BomOpt[] }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [destinoId, setDestinoId] = useState(0)
@@ -50,8 +44,8 @@ export function ClonarRutaDialog({
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Clonar
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Clonar ruta
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

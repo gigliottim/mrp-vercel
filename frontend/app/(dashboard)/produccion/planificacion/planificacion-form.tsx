@@ -38,17 +38,23 @@ export function PlanificacionForm({
 }) {
   const [ordenId, setOrdenId] = useState(initial?.orden_produccion_id ?? 0)
   const [centroId, setCentroId] = useState(initial?.centro_trabajo_id ?? 0)
-  // Prefill del periodo existente al editar (evita sobrescribir la programación)
+  // Prefill del periodo existente al editar (evita sobrescribir la programación).
+  // El tsrange llega en UTC: convertir al horario local para datetime-local,
+  // simétrico con el submit que hace new Date(local).toISOString().
   const periodoInicial = initial?.periodo ?? ''
-  const parsePeriodo = (p: string, fallback: string) => {
-    const m = p.match(/^\[(.*),(.*)\)$/)
-    return m ? m[1].slice(0, 16) : fallback
+  const toLocalInput = (utcText: string, fallback: string) => {
+    const m = utcText.match(/^\[(.*),(.*)\)$/)
+    if (!m) return fallback
+    const d = new Date(m[1])
+    if (Number.isNaN(d.getTime())) return fallback
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
   }
   const [inicio, setInicio] = useState(
-    parsePeriodo(periodoInicial, new Date().toISOString().slice(0, 16))
+    toLocalInput(periodoInicial, new Date().toISOString().slice(0, 16))
   )
   const [fin, setFin] = useState(
-    parsePeriodo(periodoInicial, new Date(Date.now() + 3600000).toISOString().slice(0, 16))
+    toLocalInput(periodoInicial, new Date(Date.now() + 3600000).toISOString().slice(0, 16))
   )
   const [error, setError] = useState('')
 

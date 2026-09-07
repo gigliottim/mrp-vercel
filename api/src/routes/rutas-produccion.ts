@@ -45,7 +45,7 @@ rutasProduccion.get('/:id', async (c) => {
   return c.json({ data })
 })
 
-rutasProduccion.post('/', async (c) => {
+rutasProduccion.post('/', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const body = await c.req.json().catch(() => null)
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
@@ -66,7 +66,7 @@ rutasProduccion.post('/', async (c) => {
   return c.json({ data }, 201)
 })
 
-rutasProduccion.patch('/:id', async (c) => {
+rutasProduccion.patch('/:id', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const body = await c.req.json().catch(() => null)
   const parsed = schema.partial().safeParse(body)
   if (!parsed.success) {
@@ -83,7 +83,7 @@ rutasProduccion.patch('/:id', async (c) => {
   return c.json({ data })
 })
 
-rutasProduccion.delete('/:id', async (c) => {
+rutasProduccion.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const { error } = await supabase
     .from('rutas_produccion')
@@ -202,7 +202,7 @@ rutasProduccion.get('/bom/:bomId/resumen', async (c) => {
 })
 
 // POST /bom/:bomId/operaciones → agregar operación a la ruta
-rutasProduccion.post('/bom/:bomId/operaciones', async (c) => {
+rutasProduccion.post('/bom/:bomId/operaciones', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const bomId = Number(c.req.param('bomId'))
   const body = await c.req.json().catch(() => null)
   const parsed = schema.omit({ bom_id: true }).safeParse(body)
@@ -225,7 +225,7 @@ rutasProduccion.post('/bom/:bomId/operaciones', async (c) => {
 })
 
 // PATCH /operaciones/:opId → actualizar operación
-rutasProduccion.patch('/operaciones/:opId', async (c) => {
+rutasProduccion.patch('/operaciones/:opId', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const body = await c.req.json().catch(() => null)
   const parsed = schema.omit({ bom_id: true }).partial().safeParse(body)
   if (!parsed.success) {
@@ -243,7 +243,7 @@ rutasProduccion.patch('/operaciones/:opId', async (c) => {
 })
 
 // DELETE /operaciones/:opId → eliminar operación
-rutasProduccion.delete('/operaciones/:opId', async (c) => {
+rutasProduccion.delete('/operaciones/:opId', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const { error } = await supabase
     .from('rutas_produccion')

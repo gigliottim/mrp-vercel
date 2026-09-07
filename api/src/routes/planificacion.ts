@@ -124,7 +124,7 @@ planificacion.patch('/:id', requireRole('Super Administrador', 'Administrador'),
   return c.json({ data })
 })
 
-planificacion.delete('/:id', async (c) => {
+planificacion.delete('/:id', requireRole('Super Administrador', 'Administrador'), async (c) => {
   const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
   const { error } = await supabase
     .from('planificacion_recursos')

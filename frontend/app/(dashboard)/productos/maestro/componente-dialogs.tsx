@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -153,6 +153,13 @@ export function EditarComponenteDialog({
   const [cantidad, setCantidad] = useState(String(hijo?.cantidad ?? ''))
   const [umId, setUmId] = useState(hijo?.unidad_medida_id ?? 0)
   const { loading, submit } = useSubmit(() => onOpenChange(false))
+
+  // Re-sincronizar cuando cambia el componente a editar (el dialog puede
+  // montarse antes de que hijo llegue por props)
+  useEffect(() => {
+    setCantidad(String(hijo?.cantidad ?? ''))
+    setUmId(hijo?.unidad_medida_id ?? 0)
+  }, [hijo])
 
   if (!hijo?.bom_detalle_id) return null
 

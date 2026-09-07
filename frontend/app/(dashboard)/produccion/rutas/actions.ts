@@ -43,3 +43,19 @@ export async function actualizar(id: number, data: Record<string, unknown>): Pro
     return { error: (e as Error).message }
   }
 }
+
+export async function clonarRuta(bomOrigenId: number, bomDestinoId: number): Promise<ActionResult> {
+  const session = await getSession()
+  if (!session) return { error: 'Sin sesión' }
+  try {
+    await apiFetch(
+      `/api/v1/rutas-produccion/bom/${bomOrigenId}/operaciones/clonar`,
+      session.accessToken,
+      { method: 'POST', body: JSON.stringify({ bom_destino_id: bomDestinoId }) }
+    )
+    revalidatePath('/produccion/rutas')
+    return { ok: true }
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}

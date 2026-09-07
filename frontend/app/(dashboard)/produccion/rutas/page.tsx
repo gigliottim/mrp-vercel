@@ -2,7 +2,7 @@ import { getSession } from '@/lib/session'
 import { apiFetch, type Paginated } from '@/lib/api'
 import { CrudPage } from '@/components/crud/crud-page'
 import { RutaForm, type RutaRow, type BomOpt, type CentroOpt } from './ruta-form'
-import { columns } from './columns'
+import { makeColumns } from './columns'
 import { crear, actualizar, eliminar } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -45,7 +45,7 @@ export default async function RutasPage({ searchParams }: { searchParams: Promis
         page={page}
         perPage={perPage}
         total={result?.pagination.total ?? 0}
-        columns={columns}
+        columns={makeColumns(boms?.data ?? [])}
         FormComponent={RutaForm}
         formExtraProps={{ boms: boms?.data ?? [], centros: centros?.data ?? [] }}
         onCreate={crear}

@@ -304,3 +304,60 @@ rutasProduccion.post('/bom/:bomId/operaciones/reordenar', async (c) => {
 
   return c.json({ data: { reordenadas: ids.length } })
 })
+
+// POST /bom/:bomId/operaciones/clonar → copiar operaciones a otro BOM
+// (paridad con botón Clonar del PHP en rutas/index.php)
+const clonarSchema = z.object({
+  bom_destino_id: z.number().int().positive(),
+})
+
+rutasProduccion.post('/bom/:bomId/operaciones/clonar', async (c) => {
+  const bomOrigen = Number(c.req.param('bomId'))
+  const body = await c.req.json().catch(() => null)
+  const parsed = clonarSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: { code: 'VALIDATION', message: parsed.error.message } }, 400)
+  }
+  if (bomOrigen === parsed.data.bom_destino_id) {
+    return c.json(
+      { error: { code: 'VALIDATION', message: 'El BOM de origen y destino no pueden ser iguales' } },
+      400
+    )
+  }
+  const supabase = createUserClient(c.req.header('Authorization')!.slice(7))
+
+  const { data: origen, error: eOrigen } = await supabase
+    .from('rutas_produccion')
+    .select('secuencia, centro_trabajo_id, descripcion, tiempo_setup_mins, tiempo_proceso_unitario_mins, tiempo_cola_mins, tiempo_movimiento_mins, capacidad_requerida, costo_operacion_fijo, costo_operacion_variable, instrucciones')
+    .eq('bom_id', bomOrigen)
+    .order('secuencia')
+  if (eOrigen) return c.json({ error: { code: 'DB_ERROR', message: eOrigen.message } }, 500)
+  if (!origen || origen.length === 0) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'El BOM de origen no tiene operaciones' } }, 404)
+  }
+
+  const { data: destinoExistentes, error: eDest } = await supabase
+    .from('rutas_produccion')
+    .select('id')
+    .eq('bom_id', parsed.data.bom_destino_id)
+  if (eDest) return c.json({ error: { code: 'DB_ERROR', message: eDest.message } }, 500)
+  if ((destinoExistentes ?? []).length > 0) {
+    return c.json(
+      { error: { code: 'CONFLICT', message: 'El BOM de destino ya tiene operaciones' } },
+      409
+    )
+  }
+
+  const rows = origen.map((o: Record<string, unknown>) => ({
+    ...o,
+    bom_id: parsed.data.bom_destino_id,
+    company_id: c.get('companyId'),
+  }))
+  const { data: creadas, error: eIns } = await supabase
+    .from('rutas_produccion')
+    .insert(rows)
+    .select('id')
+  if (eIns) return c.json({ error: { code: 'DB_ERROR', message: eIns.message } }, 500)
+
+  return c.json({ data: { clonadas: creadas?.length ?? 0 } }, 201)
+})

@@ -17,3 +17,15 @@ export async function actualizarEmpresa(data: Record<string, unknown>): Promise<
     return { error: (e as Error).message }
   }
 }
+
+export async function eliminarEmpresa(id: number): Promise<ActionResult> {
+  const session = await getSession()
+  if (!session) return { error: 'Sin sesión' }
+  try {
+    await apiFetch(`/api/v1/companies/${id}`, session.accessToken, { method: 'DELETE' })
+    revalidatePath('/empresa-usuarios/empresa')
+    return { ok: true }
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}

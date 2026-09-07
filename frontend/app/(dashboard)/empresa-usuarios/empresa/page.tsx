@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/session'
 import { apiFetch } from '@/lib/api'
 import { EmpresaForm, type Empresa } from './empresa-form'
+import { EmpresasList, type EmpresaItem } from './empresas-list'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +9,12 @@ export default async function EmpresaPage() {
   const session = await getSession()
   if (!session) return null
   const res = await apiFetch<{ data: Empresa }>('/api/v1/empresa', session.accessToken).catch(() => null)
+  const empresasRes = await apiFetch<{ data: EmpresaItem[] }>(
+    '/api/v1/companies',
+    session.accessToken
+  ).catch(() => null)
   const canAdmin = session.role === 'Super Administrador' || session.role === 'Administrador'
+  const esSuperAdmin = session.role === 'Super Administrador'
 
   return (
     <div className="space-y-6">
@@ -25,6 +31,9 @@ export default async function EmpresaPage() {
       ) : (
         <p className="text-sm text-muted-foreground">No se pudieron cargar los datos.</p>
       )}
+      {esSuperAdmin ? (
+        <EmpresasList empresas={empresasRes?.data ?? []} empresaActivaId={Number(session.companyId)} />
+      ) : null}
     </div>
   )
 }

@@ -11,6 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { registrarMovimientoPartes } from './actions'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -100,16 +110,29 @@ export function MovimientoForm({
     setTipo(sugerirTipo(origenActual?.origen_codigo, destino?.codigo))
   }
 
-  const handleSubmit = async () => {
-    setError('')
-    if (!varianteId) return setError('Seleccioná la variante')
-    if (!origenId) return setError('Seleccioná el depósito origen')
-    if (!destinoId) return setError('Seleccioná el depósito destino')
-    if (!cantidad || Number(cantidad) <= 0) return setError('Cantidad inválida')
+  const [confirmar, setConfirmar] = useState(false)
+
+  const validar = (): string | null => {
+    if (!varianteId) return 'Seleccioná la variante'
+    if (!origenId) return 'Seleccioná el depósito origen'
+    if (!destinoId) return 'Seleccioná el depósito destino'
+    if (!cantidad || Number(cantidad) <= 0) return 'Cantidad inválida'
     if (esOrigenProveedor) {
-      if (!entidadId) return setError('Seleccioná la entidad (proveedor)')
-      if (!importeTotal || Number(importeTotal) <= 0) return setError('Importe total inválido')
+      if (!entidadId) return 'Seleccioná la entidad (proveedor)'
+      if (!importeTotal || Number(importeTotal) <= 0) return 'Importe total inválido'
     }
+    return null
+  }
+
+  const pedirConfirmacion = () => {
+    setError('')
+    const err = validar()
+    if (err) return setError(err)
+    setConfirmar(true)
+  }
+
+  const handleSubmit = async () => {
+    setConfirmar(false)
     setBusy(true)
     const res = await registrarMovimientoPartes({
       variante_id: varianteId,
@@ -244,9 +267,25 @@ export function MovimientoForm({
         <Input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
       </div>
       <div className="flex items-end">
-        <Button onClick={handleSubmit} disabled={busy} className="w-full">
+        <Button onClick={pedirConfirmacion} disabled={busy} className="w-full">
           {busy ? 'Registrando...' : 'Registrar movimiento'}
         </Button>
+        <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Registrar movimiento?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {tipo} de {cantidad} u. desde {origenActual?.origen_nombre ?? 'el origen'} hacia{' '}
+                {destinoActual?.nombre ?? 'el destino'}.
+                Esta acción ajusta el stock y no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleSubmit}>Registrar</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       {error ? <p className="text-sm text-destructive sm:col-span-2 lg:col-span-3">{error}</p> : null}
     </div>

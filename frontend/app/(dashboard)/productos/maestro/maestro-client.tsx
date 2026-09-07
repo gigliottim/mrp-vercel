@@ -47,15 +47,21 @@ export function MaestroClient({
   const nodo = filas.find((f) => f.variante_id === selectedNodeId) ?? null
 
   return (
-    <div className="space-y-6">
-      <ArbolEstructura filas={filas} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} />
-      <DetallePanel
-        nodo={nodo}
-        filas={filas}
-        variantes={variantes}
-        ums={ums}
-        canAdmin={canAdmin}
-      />
+    <div className="grid items-start gap-6 lg:grid-cols-[2fr_3fr]">
+      <div className="min-w-0">
+        <h2 className="mb-2 text-base font-semibold">Estructura</h2>
+        <ArbolEstructura filas={filas} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} />
+      </div>
+      <div className="min-w-0">
+        <h2 className="mb-2 text-base font-semibold">Composición</h2>
+        <DetallePanel
+          nodo={nodo}
+          filas={filas}
+          variantes={variantes}
+          ums={ums}
+          canAdmin={canAdmin}
+        />
+      </div>
     </div>
   )
 }
